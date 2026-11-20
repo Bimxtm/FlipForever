@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 14
+# FlipForever 2.5 Beta 15
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Combat helper waits for cooldowns.** Your big abilities fire the moment they're ready, and the rest of the rotation only moves on after a spell was really cast. Nothing is skipped because it wasn't ready yet. The icon shows what your next press casts, and the small icons show your cooldowns.
 
 **Best deals on top.** The shopping list in game now puts deals first and shows the expected profit per item.
 

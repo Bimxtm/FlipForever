@@ -356,6 +356,19 @@ function C:UpdateIcons()
     small2:SetTexture(nil)
     local name = nextId and C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(nextId)
     btn.label:SetText((name or "Blizzard assistant") .. "  |cff888888(Blizzard mode)|r")
+  elseif self.cds or self.seq then
+    -- smart mode: the big icon is what the next press will cast; the small ones are your
+    -- cooldown abilities, dimmed while they aren't ready
+    local nextSpell = self:SmartNext()
+    btn.icon:SetTexture(iconOf(nextSpell) or "Interface\\Icons\\INV_Misc_QuestionMark")
+    local others = {}
+    for _, s in ipairs(self.cds or {}) do if s ~= nextSpell then others[#others + 1] = s end end
+    for k, tex in ipairs({ small1, small2 }) do
+      local s = others[k]
+      tex:SetTexture(iconOf(s))
+      if tex.SetDesaturated then tex:SetDesaturated(s ~= nil and C.CooldownLeft(s) > 1.6) end
+    end
+    btn.label:SetText(nextSpell or "no spells yet")
   else
     local steps = self.steps or {}
     local n = btn:GetAttribute("count") or 0
@@ -420,6 +433,93 @@ function C:BlizzardAssistSpell()
   return ok2 and id or nil
 end
 
+-- Smart mode: one macro the game itself evaluates on every press -------------------------------
+-- Cooldown abilities get their own "/cast" lines: the game casts one the moment it's ready and
+-- skips the line silently while it isn't. Everything else goes into a "/castsequence", which
+-- only moves on after a successful cast - so a spell that isn't ready is never skipped.
+-- (Addons can't check cooldowns themselves in combat; the game's macro system can.)
+local KNOWN_CD = {}
+for _, s in ipairs({ "Mortal Strike", "Bloodthirst", "Whirlwind", "Shield Slam", "Sweeping Strikes", "Concussion Blow",
+  "Thunder Clap", "Taunt", "Growl", "Righteous Defense", "Judgement", "Swift Judgement", "Holy Shock", "Consecration",
+  "Holy Shield", "Exorcism", "Hammer of Wrath", "Repentance", "Aimed Shot", "Multi-Shot", "Arcane Shot", "Rapid Fire",
+  "Bestial Wrath", "Sniper Shot", "Mongoose Bite", "Strider Kick", "Blade Flurry", "Adrenaline Rush", "Ghostly Strike",
+  "Death Mark", "Shank", "Mind Blast", "Shadow Word: Death", "Penance", "Devouring Plague", "Power Word: Shield",
+  "Stormstrike", "Earth Shock", "Flame Shock", "Frost Shock", "Lava Burst", "Chain Lightning", "Elemental Mastery",
+  "Fire Blast", "Presence of Mind", "Combustion", "Cone of Cold", "Arcane Power", "Conflagrate", "Shadowburn",
+  "Faerie Fire (Feral)", "Primal Bite", "Wrack", "Bane of Doom" }) do KNOWN_CD[s] = true end
+
+function C:Smart() return FlipForeverDB.settings.combatSmart ~= false end
+
+-- does this spell have its own cooldown (beyond the global one)?
+function C:HasCooldown(spell)
+  local id
+  if C_Spell and C_Spell.GetSpellInfo then
+    local info = C_Spell.GetSpellInfo(spell)
+    id = info and info.spellID
+  elseif GetSpellInfo then
+    id = select(7, GetSpellInfo(spell))
+  end
+  if id and GetSpellBaseCooldown then
+    local ok, ms = pcall(GetSpellBaseCooldown, id)
+    if ok and type(ms) == "number" then return ms > 1500 end
+  end
+  return KNOWN_CD[spell] or false
+end
+
+-- the macro text for the steps; also returns the cooldown spells and the sequence spells
+function C:SmartMacro(prefix, steps)
+  local cds, seq, seen = {}, {}, {}
+  for _, s in ipairs(steps) do
+    if self:HasCooldown(s) then
+      if not seen[s] then seen[s] = true cds[#cds + 1] = s end
+    else
+      seq[#seq + 1] = s
+    end
+  end
+  local function render(nseq)
+    local lines = prefix
+    for _, s in ipairs(cds) do lines = lines .. "/cast " .. s .. "\n" end
+    if nseq > 0 then lines = lines .. "/castsequence reset=target/combat " .. table.concat(seq, ", ", 1, nseq) end
+    return lines
+  end
+  -- macros are limited to 255 characters: drop sequence spells from the end until it fits
+  local n = #seq
+  local text = render(n)
+  while #text > 255 and n > 1 do n = n - 1 text = render(n) end
+  for i = #seq, n + 1, -1 do seq[i] = nil end
+  return text, cds, seq
+end
+
+local function cooldownLeft(spell)
+  local start, dur
+  if C_Spell and C_Spell.GetSpellCooldown then
+    local cd = C_Spell.GetSpellCooldown(spell)
+    if cd then start, dur = cd.startTime, cd.duration end
+  elseif GetSpellCooldown then
+    start, dur = GetSpellCooldown(spell)
+  end
+  start, dur = plain(start), plain(dur)
+  if not start or start == 0 or not dur then return 0 end
+  return math.max(0, start + dur - GetTime())
+end
+C.CooldownLeft = cooldownLeft
+
+-- what the button will cast next: a ready cooldown, else the cast sequence's next spell
+function C:SmartNext()
+  for _, s in ipairs(self.cds or {}) do
+    if cooldownLeft(s) <= 1.6 then return s end      -- ready (or only the global cooldown left)
+  end
+  local seq = self.seq or {}
+  if #seq == 0 then return nil end
+  if QueryCastSequence and self.seqText then
+    local ok, a, b, c = pcall(QueryCastSequence, self.seqText)
+    for _, v in ipairs({ a, b, c }) do
+      if ok and type(v) == "string" and v ~= "" then return v end
+    end
+  end
+  return seq[1]
+end
+
 function C:Rebuild()
   if not btn then return end
   if InCombatLockdown() then pendingRebuild = true return end
@@ -446,6 +546,17 @@ function C:Rebuild()
   end
   self.steps = steps
   for i = 1, 20 do btn:SetAttribute("step" .. i, nil) end
+  if self:Smart() and #steps > 0 then
+    local text, cds, seq = self:SmartMacro(prefix, steps)
+    self.cds, self.seq = cds, seq
+    self.seqText = #seq > 0 and ("reset=target/combat " .. table.concat(seq, ", ")) or nil
+    btn:SetAttribute("count", 0)            -- the game moves the sequence on, not the click
+    btn:SetAttribute("type", "macro")
+    btn:SetAttribute("macrotext", text)
+    self:UpdateIcons()
+    return
+  end
+  self.cds, self.seq, self.seqText = nil, nil, nil
   for i, spell in ipairs(steps) do
     btn:SetAttribute("step" .. i, prefix .. "/cast " .. spell)
   end
@@ -489,6 +600,13 @@ local function create()
   hintText:SetPoint("TOP", btn.label, "BOTTOM", 0, -4)
   hintText:SetWidth(420)
 
+  -- smart mode: cooldowns tick down, so keep the icons current (5 times a second)
+  local since = 0
+  bar:SetScript("OnUpdate", function(_, elapsed)
+    since = since + (elapsed or 0)
+    if since >= 0.2 then since = 0 if C.cds or C.seq then C:UpdateIcons() end end
+  end)
+
   -- After each click: step to the next spell. Runs in Blizzard's secure code, so it also
   -- works in combat - and it can't look at cooldowns, buffs or targets.
   SecureHandlerWrapScript(btn, "PostClick", btn, [[
@@ -514,7 +632,7 @@ local function create()
   btn:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
     GameTooltip:AddLine("FlipForever combat helper")
-    GameTooltip:AddLine("Click (or your key) = cast the big icon, then the next one appears.", 1, 1, 1, true)
+    GameTooltip:AddLine(C:Smart() and "Click (or your key) = cast the big icon. Cooldown abilities go first whenever they're ready; the rest of the rotation only moves on after a successful cast, so nothing is skipped." or "Click (or your key) = cast the big icon, then the next one appears.", 1, 1, 1, true)
     GameTooltip:AddLine("Follows your chosen build and the spells you know; adapts to the target you select before a fight.", 1, 1, 1, true)
     GameTooltip:AddLine("Shift + right-drag to move. /ff combat to hide.", 0.7, 0.7, 0.7, true)
     GameTooltip:Show()

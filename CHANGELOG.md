@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.15] - 2026-11-20 (beta)
+### Changed
+- **Combat helper waits for cooldowns (smart mode, on by default).** Each press now uses one macro that the game itself evaluates:
+  - abilities with a cooldown (Mortal Strike, Judgement, Mind Blast, Stormstrike, Fire Blast, Bestial Wrath and so on) are cast the moment they're ready
+  - the rest of the rotation is a cast sequence that only moves on after a successful cast, so a spell that isn't ready is never skipped
+  - the big icon shows what the next press really casts; the small icons are your cooldown abilities, dimmed while they recharge
+  - the old one-step-per-press mode is still there: untick *Wait for cooldowns* in the FlipForever window
+
 ## [2.5.0-beta.14] - 2026-11-20 (beta)
 ### Changed
 - In-game shopping list: deals come first (best profit first), then items being watched, then done and skipped ones. A new *Profit* column shows the expected profit per unit at today's lowest price, after the AH cut (green when positive).

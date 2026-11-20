@@ -244,6 +244,7 @@ L = lua.eval
 lua.execute("""
 Fire("ADDON_LOADED", "FlipForever")
 FlipForeverDB.settings.livePlanning = false   -- in-game planning is tested on its own (Beta 4 block)
+FlipForeverDB.settings.combatSmart = false    -- the step mode is tested first; smart mode has its own block
 Fire("PLAYER_LOGIN")
 Fire("AUCTION_HOUSE_SHOW")
 """)
@@ -1480,6 +1481,45 @@ P.SellsPerDay, C_AuctionHouse.CalculateCommodityDeposit = oldSpeed, oldCalc
 """)
 print("durations (30/day, 5/day, 0.5/day, unknown):", L("DUR"), "| deposit asked for duration", L("AUTO"), "| switched off:", L("OFF"))
 assert L("DUR") == "1232" and L("AUTO") == 1 and L("OFF") == 2
+
+# --- combat helper smart mode: cooldowns go first when ready, the rest only moves on after a cast
+lua.execute("""
+local C, AD = FlipForever.Combat, FlipForever.Advisor
+local oldLevel = UnitLevel
+FlipForeverDB.settings.combatSmart = nil
+FlipForeverDB.settings.combatTarget = false
+FlipForeverDB.settings.combatTank = false
+UnitClass = function() return "Warrior", "WARRIOR" end
+UnitLevel = function() return 50 end
+AD:CharStore().build = "arms"
+KNOWN = { "Battle Shout", "Rend", "Heroic Strike", "Mortal Strike", "Whirlwind", "Sweeping Strikes" }
+TARGET = nil
+if not C:Enabled() then C:Toggle() end
+C:Rebuild()
+CB = FlipForeverCombatButton
+SMART_MACRO = CB:GetAttribute("macrotext")
+SMART_COUNT = CB:GetAttribute("count")
+-- Mortal Strike on cooldown (5 s left), Whirlwind ready: the icon shows Whirlwind
+CDS = { ["Mortal Strike"] = 5 }
+GetSpellCooldown = function(s) local left = CDS[s] if left then return GetTime() - 1, left + 1 end return 0, 0 end
+NEXT1 = C:SmartNext()
+CDS["Whirlwind"] = 8; CDS["Sweeping Strikes"] = 20
+QueryCastSequence = function(seq) return "Rend" end
+NEXT2 = C:SmartNext()
+C:Toggle()
+FlipForeverDB.settings.combatTarget = nil
+FlipForeverDB.settings.combatTank = nil
+FlipForeverDB.settings.combatSmart = false
+UnitLevel = oldLevel
+AD:CharStore().build = nil
+""")
+print("smart macro:", repr(L("SMART_MACRO")))
+print("next with MS on cooldown:", L("NEXT1"), "| with all cooldowns busy:", L("NEXT2"))
+_m = L("SMART_MACRO")
+assert "/cast Mortal Strike\n" in _m and "/cast Whirlwind\n" in _m and "/cast Sweeping Strikes\n" in _m
+assert _m.split("\n")[-1].startswith("/castsequence reset=target/combat Battle Shout, Rend, Heroic Strike")
+assert "Mortal Strike" not in _m.split("\n")[-1] and len(_m) <= 255 and L("SMART_COUNT") == 0
+assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Rend"
 
 # --- per-character plans
 lua.execute("""
