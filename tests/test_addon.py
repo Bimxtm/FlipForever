@@ -1025,6 +1025,33 @@ lua.execute("FlipForever_Plans['Tester @ Testrealm - Horde'].generated = LIVE.ge
 assert L("FlipForever:Plan().live") is None
 lua.execute("FlipForever.livePlan = nil; FlipForeverDB.settings.livePlanning = false; NOW = OLD_NOW")
 
+# --- 2.4.0: Advisor names your best farming zone (measured gold/hour)
+lua.execute("""
+local ns = FlipForever.gatherNS
+GZ = ns ~= nil and not ns.skipGather
+local oldDB = ns and ns.db
+if GZ then
+  ns.db = ns.db or { nodes = {}, zoneStats = {} }
+  OLD_CMAP = C_Map
+  C_Map = { GetMapInfo = function(id) return { name = id == 1411 and "Durotar" or "Elsewhere" } end }
+  PROFS = { 1 }
+  PROFS_INFO = { { "Mining", 120 } }
+  ns.db.zoneStats = { [1411] = { active = 1200, value = 300000, nodes = 25 }, [1412] = { active = 300, value = 900000, nodes = 4 } }
+  FlipForever.Advisor:Refresh()
+  GATHERSTEP = nil
+  for _, r in ipairs(FlipForever.Advisor:Compute()) do if r.text:find("farming") then GATHERSTEP = r.text end end
+  ns.db.zoneStats = {}
+  ns.db = oldDB
+  C_Map = OLD_CMAP
+  PROFS = {}
+end
+""")
+if L("GZ"):
+    print("advisor gather step:", L("GATHERSTEP"))
+    assert L("GATHERSTEP") and "Best farming zone so far" in L("GATHERSTEP") and "Durotar" in L("GATHERSTEP") and "about 90g" in L("GATHERSTEP")
+else:
+    print("advisor gather step: gathering module not active in this mock - skipped")
+
 # --- 2.4.0: tabbed FlipForever window, shopping-list view with Skip
 lua.execute("""
 FlipForever_Plan = nil

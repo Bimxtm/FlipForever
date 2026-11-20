@@ -338,7 +338,21 @@ function AD:Compute()
   end
   for _, pr in ipairs(profs) do
     if (pr.name == "Mining" or pr.name == "Herbalism") and ns and ns.db and not ns.skipGather then
-      add(25, "gather", ("%s %d: open /ore to plan a farming loop here (profit uses FlipForever prices)"):format(pr.name, pr.rank))
+      -- your best measured zone (gold per hour of actual farming there, at your skill, at FlipForever prices)
+      local bestMap, bestRate = nil, 0
+      if ns.ZoneRate then
+        for mapID in pairs(ns.db.zoneStats or {}) do
+          local rate = ns.ZoneRate(mapID)
+          if rate and rate > bestRate then bestMap, bestRate = mapID, rate end
+        end
+      end
+      if bestMap then
+        local zoneName = ns.MapName and ns.MapName(bestMap) or ("map " .. bestMap)
+        add(25, "gather", ("Best farming zone so far: |cffffd200%s|r, about %s/hour from your own runs - open Gathering to plan a loop"):format(
+          zoneName, FF:Money(math.floor(bestRate))))
+      else
+        add(25, "gather", ("%s %d: open Gathering to plan a farming loop here (farm 10+ min in a zone to learn its gold/hour)"):format(pr.name, pr.rank))
+      end
       break
     end
   end

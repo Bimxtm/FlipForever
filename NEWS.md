@@ -1,9 +1,7 @@
-# FlipForever 2.4 Beta 2 - for testing
+# FlipForever 2.4 Beta 3 - for testing
 
 **This is a beta.** Only apps with *Get beta versions* ticked (About & updates) see it.
 
-- 🖥️ **A cleaner app:** a sidebar (Trading · Character · App) instead of eleven tabs in a row, and a title and short explanation on every page.
-- 🎨 **Colours with meaning:** profit is green when you're up and red when you're down, the cards have colour strips, and tables have striped rows that are easier to read.
-- 🗂️ **In game (Beta 1):** the FlipForever window has tabs (Overview · Shopping list · Settings), a shopping-list view with prices, and a Skip box per item.
-
-Next: the same consistent look on the other in-game panels.
+- ⛏️ **Where to farm:** the Advisor now names your best gathering zone so far, with its gold per hour from your own runs.
+- 🎨 **One look everywhere:** the Gathering window and tracker now match the rest of FlipForever.
+- 🖥️ **Also in 2.4 so far:** the app has a sidebar, page titles, striped tables and colours with meaning. In game, the FlipForever window has tabs and a shopping-list view with a Skip box.

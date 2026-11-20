@@ -414,7 +414,7 @@ function handlers.ADDON_LOADED(name)
   if name ~= addonName then return end
   if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition) then
     ns.disabled = true
-    ns.Print("this game client doesn't give addons map positions, so Ore Farmer can't work here.")
+    ns.Print("this game client doesn't give addons map positions, so Gathering can't work here.")
     return
   end
   OreFarmerDB = OreFarmerDB or {}

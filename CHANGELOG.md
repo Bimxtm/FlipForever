@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.4.0-beta.3] - 2026-11-20 (beta)
+### Added
+- **Advisor: your best farming zone.** If you mine or pick herbs, the Advisor names the zone that has made you the most gold per hour so far (after 10+ minutes and 10+ nodes there, at FlipForever's prices). Until then it tells you how to measure one.
+
+### Changed
+- **Better GUI, part 3:** the Gathering window and tracker match the rest of FlipForever (green frame, same background, "FlipForever Gathering" title). Map-pin tooltips say "Your gathering spot", and the last messages still naming Ore Farmer now say Gathering.
+
 ## [2.4.0-beta.2] - 2026-11-20 (beta)
 ### Changed
 - **Better GUI, part 2 (app):** a sidebar grouped into Trading, Character and App replaces the long tab row. Each page has a title and a one-line explanation.

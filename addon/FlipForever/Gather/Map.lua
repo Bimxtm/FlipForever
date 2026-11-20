@@ -43,7 +43,7 @@ function ns.ShowNodeTooltip(pin)
   GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
   local total = 0
   for _, c in pairs(node.t) do total = total + c end
-  GameTooltip:AddLine(node.ext and "Spot from GatherLite" or "Ore Farmer spot")
+  GameTooltip:AddLine(node.ext and "Spot from GatherLite" or "Your gathering spot")
   for k, c in pairs(node.t) do
     local def = ns.OreByKey[k]
     local col = resColor(k)
