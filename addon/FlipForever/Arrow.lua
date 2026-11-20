@@ -142,6 +142,15 @@ function A:Refresh()
   if self:Target() then frame:Show() else frame:Hide() end
 end
 
+A.PlayerPos = playerPos
+
+-- point at a map position (e.g. a quest giver from the Advisor); x, y are 0-1
+function A:SetTarget(mapID, x, y, label)
+  self.manual = { mapID = mapID, x = x, y = y, label = label or "" }
+  FF:Print(("%s %s"):format(FF:T("Arrow points to"), label or ""))
+  self:Refresh()
+end
+
 function A:SetManual(x, y)
   local mapID = playerPos()
   if not (x and y and mapID) then
