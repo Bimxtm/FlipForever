@@ -5,6 +5,9 @@
 2. **Waypoint arrow.** One arrow on screen for the next gathering stop, an advisor target (a dungeon or quest hub) or a vendor. Inspired by Schmendrick's arrow and TomTom.
 3. **Quest locations, built in.** The advisor shows where class quests and gear quests start, with map pins, without Questie. Inspired by Questie and GearQuestForever.
 
+## Approved
+- **Better GUI** (requested 20 Nov). In game: one tabbed FlipForever window instead of separate panels, a consistent look, and a shopping-list view (item, price now, max, bought, status) you can edit. In the app: a cleaner modern layout. Planned Fri/Sat as 2.4.0 betas.
+
 ## Small improvements (queue)
 - Profession planner: exact skill-up chances learned from recipe colour changes, instead of averages per colour.
 - Advisor: a "why" tooltip on each step (which guide said so).

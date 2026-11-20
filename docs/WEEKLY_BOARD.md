@@ -19,6 +19,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | Thu 20, 11:07 | **Top priority (your request):** shopping list rebuilt in game after every scan, no /reload: the app passes its learned settings at login, and the addon plans with fresh prices · "Save & sync with app" button (one click instead of /reload) · then, if there's room: exact skill-up chances, "why" tooltips, "sells ~N/day", window size | 2.3.0 Beta 2 |
 | Thu 20, ~19:11 | Cycle: everything since 2.2.0 | **2.3.0 stable** |
 | Fri 21 | **In-game test checklist** for you · fix whatever you report · zone names for gathering stats on first login | 2.3.x betas → 2.3.1 at a cycle |
+| Fri 21 / Sat 22 | **Better GUI (your request):** in game, one consistent FlipForever window with tabs (Overview · Shopping list you can see and edit · Autopilot · Gathering · Advisor · Professions · Settings), a matching look on every panel, and a shopping-list view showing price, max, bought and status · in the app, a cleaner modern layout (cards, clearer tables, colours with meaning) | 2.4.0 betas |
 | Sat 22 | Gathering: value per node on our own map-pin tooltips · Advisor: "best farming zone for your skill" step | 2.4.0 beta |
 | Sun 23 | Auction: smarter undercut (ignore single dumped units, never undercut your own) · per-item sale-speed learning shown in the app | 2.4.0 stable at a cycle |
 | Mon 24 | Language-independent spells (spell IDs) · combat helper: more sequences for low levels (1-10) | 2.5.0 beta |
