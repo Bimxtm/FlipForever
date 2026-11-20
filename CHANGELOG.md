@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.12] - 2026-11-20 (beta)
+### Added
+- **Gear finder checks your bags too.** Gear you carry that beats what you wear is listed first in the Gear tab (marked *in bags*), with an **Equip** button. The Advisor tells you to put it on. It updates when your bags or gear change.
+
 ## [2.5.0-beta.11] - 2026-11-20 (beta)
 ### Changed
 - **Auction length by sell speed.** The deposit grows with the auction length, so items that sell 12 or more a day are now posted for 12 hours (smallest deposit). Items selling 3-12 a day get 24 hours and slower ones 48 hours, to find a buyer. Items without sales data use your usual setting. It can be switched off in the FlipForever window (Settings).

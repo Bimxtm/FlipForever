@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 11
+# FlipForever 2.5 Beta 12
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Forgot to equip something?** The Gear tab now also shows better gear already in your bags, with an Equip button.
 
 **Smaller deposits.** Fast sellers now go up for 12 hours, where the deposit is smallest, and slow sellers get 48 hours to find a buyer.
 

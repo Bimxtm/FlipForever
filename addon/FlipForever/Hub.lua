@@ -200,7 +200,8 @@ function H:RefreshGear()
     if r then
       w.slot:SetText(G.SLOT_NAMES[r.slot] or "")
       w.name:SetText((QUALITY[r.quality] or "|cffffffff") .. r.name .. "|r")
-      w.price:SetText(FF:Money(r.price))
+      w.price:SetText(r.bag and ("|cff33ff99" .. FF:T("in bags") .. "|r") or FF:Money(r.price))
+      w.buy:SetText(r.bag and FF:T("Equip") or FF:T("Buy"))
       w.gain:SetText(r.pct and ("|cff33ff99+%d%%|r"):format(math.floor(r.pct * 100 + 0.5)) or "|cff33ff99new|r")
     end
   end

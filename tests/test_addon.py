@@ -1417,6 +1417,37 @@ LATE = FIRED
 assert L("EARLY") == 0 and L("LATE") == 1, (L("EARLY"), L("LATE"))
 print("mock timers: a 10 s timer waits through a 5 s run and fires in the next one")
 
+# --- gear finder: upgrades already in your bags come first, with an Equip button
+lua.execute("""
+local FF = FlipForever
+local oldModel, oldInfo, oldInstant, oldCont = FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, C_Container
+FF.Planner.Model = function() return { [103] = { cur_min = 2000 } } end
+local ITEMS = {
+  [100] = { "Scaled Chestguard", 2, 28, "INVTYPE_CHEST", 4, 3, { ITEM_MOD_STRENGTH_SHORT = 10 } },
+  [103] = { "Heavy Claymore", 2, 25, "INVTYPE_2HWEAPON", 2, 8, { ITEM_MOD_DAMAGE_PER_SECOND_SHORT = 20 } },
+}
+C_Item.GetItemInfoInstant = function(id) local it = ITEMS[id] if it then return id, "", "", it[4], 0, it[5], it[6] end end
+C_Item.GetItemInfo = function(id) local it = ITEMS[id] if it then return it[1], "link:" .. id, it[2], 30, it[3] end end
+GetItemStats = function(link) local id = tonumber(link:match("link:(%d+)")) return id and ITEMS[id][7] or nil end
+GetInventoryItemLink = function() return nil end
+C_Container = { GetContainerNumSlots = function(bag) return bag == 0 and 1 or 0 end,
+  GetContainerItemInfo = function(bag, slot) return { itemID = 100, stackCount = 1 } end }
+UnitClass = function() return "Warrior", "WARRIOR" end
+UnitLevel = function() return 30 end
+GetMoney = function() return 100000 end
+EQUIPPED_LINK = nil
+EquipItemByName = function(link) EQUIPPED_LINK = link end
+FF.Gear:Search()
+RunTimers(5)
+BAGFIRST = FF.Gear.results[1]
+FF.Gear:Buy(BAGFIRST)
+BAGSTEP = FF.Gear:TopStep()
+FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, C_Container = oldModel, oldInfo, oldInstant, oldCont
+""")
+print("bag upgrade:", L("BAGFIRST").name, "| bag:", L("BAGFIRST").bag, "| equipped:", L("EQUIPPED_LINK"), "| step:", L("BAGSTEP"))
+assert L("BAGFIRST").name == "Scaled Chestguard" and L("BAGFIRST").bag is True and L("EQUIPPED_LINK") == "link:100"
+assert L("BAGSTEP").startswith("Equip Scaled Chestguard from your bags")
+
 # --- auction length by sell speed (deposit grows with the duration)
 lua.execute("""
 local T, P = FlipForever.Trader, FlipForever.Planner

@@ -30,6 +30,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 12: gear finder lists upgrades already in your bags, with Equip.
 - 2.5.0 beta 11: auction length by sell speed (12 h for fast sellers, smaller deposits).
 - Test harness: mock timers now keep delayed callbacks (P9 fixed).
 - 2.5.0 beta 10: Advisor steps translated into all 11 languages; test that every translation keeps its placeholders.
