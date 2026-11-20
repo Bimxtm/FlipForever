@@ -9,7 +9,14 @@ FF.QuestStarts = Q
 -- match: part of the Advisor's quest text. Per faction (or "Both"), optionally per race.
 Q.DATA = {
   WARRIOR = {
-    { match = "Defensive Stance", Horde = { npc = "Sorek / Krang Stonehoof / Tarshaw Jaggedscar", zone = "Orgrimmar, Thunder Bluff or the Barrens",
+    { match = "Defensive Stance",
+      races = {
+        Human = { npc = "Bartleby", zone = "Stormwind" },
+        ["Night Elf"] = { npc = "Vorlus Vilehoof", zone = "Darnassus" },
+        Dwarf = { npc = "Muren Stormpike", zone = "Dun Morogh", after = "then Vejrek (level 11)" },
+        Undead = { npc = "Ulag the Cleaver", zone = "Tirisfal Glades" },
+      },
+      Horde = { npc = "Sorek / Krang Stonehoof / Tarshaw Jaggedscar", zone = "Orgrimmar, Thunder Bluff or the Barrens",
       after = "then Uzzek near Far Watch Post (the Barrens)" } },
     { match = "Berserker Stance", Alliance = { npc = "Wu Shen / Kelv Sternhammer", zone = "Stormwind or Ironforge" },
       Horde = { npc = "Baltus Fowler / Torm Ragetotem / Sorek", zone = "Undercity, Thunder Bluff or Orgrimmar" } },
@@ -18,6 +25,39 @@ Q.DATA = {
   PALADIN = {
     { match = "Redemption", Alliance = { npc = "Brother Wilhelm / Azar Stronghammer / Brandur Ironhammer / Lord Grayson Shadowbreaker",
       zone = "Elwynn Forest, Dun Morogh, Ironforge or Stormwind" } },
+    { match = "Test of Righteousness", Alliance = { npc = "Duthorian Rall", zone = "Stormwind", after = "then Jordan Stilwell in Ironforge" } },
+  },
+  ROGUE = {
+    { match = "Blade of Cunning", races = {
+        Human = { npc = "Master Mathias Shaw", zone = "Stormwind" },
+        Dwarf = { npc = "Onin MacHammar", zone = "Ironforge", after = "then Hulfdan Blackbeard" },
+        Gnome = { npc = "Onin MacHammar", zone = "Ironforge", after = "then Hulfdan Blackbeard" },
+        ["Night Elf"] = { npc = "Syurna", zone = "Teldrassil" },
+        Orc = { npc = "Kaplak", zone = "Orgrimmar (Cleft of Shadow)", after = "then Therzok" },
+        Troll = { npc = "Kaplak", zone = "Orgrimmar (Cleft of Shadow)", after = "then Therzok" },
+        Undead = { npc = "Marion Call", zone = "Undercity (Rogues' Quarter)", after = "then Mennet Carkad" } } },
+  },
+  WARLOCK = {
+    { match = "Voidwalker", races = {
+        Human = { npc = "Remen Marcot", zone = "Stormwind", after = "then Gakin the Darkbinder (Mage Quarter)" },
+        Gnome = { npc = "Remen Marcot", zone = "Stormwind", after = "then Gakin the Darkbinder (Mage Quarter)" },
+        Orc = { npc = "Ophek", zone = "Orgrimmar", after = "then Gan'rul Bloodeye" },
+        Troll = { npc = "Ophek", zone = "Orgrimmar", after = "then Gan'rul Bloodeye" },
+        Undead = { npc = "Ageron Kargal", zone = "Undercity", after = "then Carendin Halgar" } } },
+    { match = "Succubus", Alliance = { npc = "Lago Blackwrench", zone = "Stormwind", after = "then Gakin the Darkbinder" },
+      races = {
+        Orc = { npc = "Gan'rul Bloodeye", zone = "Orgrimmar", after = "then Cazul (Cleft of Shadow)" },
+        Troll = { npc = "Gan'rul Bloodeye", zone = "Orgrimmar", after = "then Cazul (Cleft of Shadow)" },
+        Undead = { npc = "Carendin Halgar", zone = "Undercity", after = "then Godrick Farsan" } } },
+    { match = "Soran'ruk", Both = { npc = "Doan Karhan", zone = "the Barrens" } },
+    { match = "Felhunter", Alliance = { npc = "Gakin the Darkbinder", zone = "Stormwind (Mage Quarter)" },
+      races = {
+        Orc = { npc = "Gan'rul Bloodeye", zone = "Orgrimmar" }, Troll = { npc = "Gan'rul Bloodeye", zone = "Orgrimmar" },
+        Undead = { npc = "Carendin Halgar", zone = "Undercity" } } },
+    { match = "Felsteed", races = {
+        Human = { npc = "Demisette Cloyce", zone = "Stormwind" }, Gnome = { npc = "Briarthorn", zone = "Ironforge" },
+        Orc = { npc = "Zevrost", zone = "Orgrimmar" }, Troll = { npc = "Zevrost", zone = "Orgrimmar" },
+        Undead = { npc = "Kaal Soulreaper", zone = "Undercity" } } },
   },
   HUNTER = {
     { match = "Taming the Beast",
@@ -53,8 +93,8 @@ Q.DATA = {
 function Q:Find(class, text, faction, race)
   for _, e in ipairs(Q.DATA[class] or {}) do
     if text and text:find(e.match, 1, true) then
-      if e.races then return e.races[race] end
-      return e[faction] or e.Both
+      -- race-specific start first, then the faction's, then one for everyone
+      return (e.races and e.races[race]) or e[faction] or e.Both
     end
   end
   return nil

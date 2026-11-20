@@ -1426,6 +1426,9 @@ local QS, AD = FlipForever.QuestStarts, FlipForever.Advisor
 HUNTER_NE = QS:Find("HUNTER", "Taming the Beast - get your first pet", "Alliance", "Night Elf")
 DRUID_H = QS:Find("DRUID", "Cure Poison quest (Lessons Anew)", "Horde", "Tauren")
 NONE = QS:Find("MAGE", "anything", "Horde", "Orc")
+VW_UD = QS:Find("WARLOCK", "Voidwalker class quest", "Horde", "Undead").npc
+DS_TAUREN = QS:Find("WARRIOR", "Defensive Stance class quest", "Horde", "Tauren").npc
+SORAN = QS:Find("WARLOCK", "Staff or Orb of Soran'ruk quest", "Alliance", "Human").npc
 local m, x, y = QS:Locate(HUNTER_NE)
 SEED = m and (m .. ":" .. x .. ":" .. y)
 -- talk to Turak Runetotem: his position is remembered
@@ -1456,6 +1459,7 @@ C_Map = oldMap
 print("quest starts:", dict(L("HUNTER_NE")), "| seed", L("SEED"), "| learned", L("LEARNED"))
 print("advisor step:", L("STEP"), "| arrow target:", L("TARGET"))
 assert L("HUNTER_NE").npc == "Dazalar" and L("DRUID_H").npc == "Turak Runetotem" and L("NONE") is None
+assert L("VW_UD") == "Ageron Kargal" and L("DS_TAUREN").startswith("Sorek") and L("SORAN") == "Doan Karhan"
 _s = [float(v) for v in L("SEED").split(":")]
 assert _s[0] == 1438 and abs(_s[1] - 0.567) < 1e-9 and abs(_s[2] - 0.595) < 1e-9 and L("LEARNED") == "1456:0.7:0.3"
 assert "Turak Runetotem" in L("STEP") and L("TARGET") == "Turak Runetotem" and "Click to point" in L("WHY")
