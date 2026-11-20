@@ -1,11 +1,9 @@
-# FlipForever 2.5 Beta 3
+# FlipForever 2.5 Beta 4
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
 
-**Your language.** FlipForever now speaks every language the game supports: English, Deutsch, Français, Español (España and México), Italiano, Português (Brasil), Русский, 한국어, 简体中文 and 繁體中文. In game it follows your client automatically, or pick one in the FlipForever window (Settings tab, then Reload). In the app, choose it in Settings. Menus, buttons and window names are translated now; longer texts follow in upcoming versions.
+**Vendor flips.** Someone listed an item for less than a merchant pays? FlipForever now spots it in every scan, puts it on your shopping list, and sells it automatically at the next merchant you visit: guaranteed profit, no auction needed.
 
-**Also in 2.5**
-- Gear finder: affordable auction house upgrades for your character (Gear tab).
-- Crafting profit finder in the profession planner.
-- Your GitHub token is stored encrypted.
-- Reasons on every Advisor step, smarter undercutting, a tabbed in-game window and a redesigned desktop app.
+**Sharper auction math.** Profit estimates now account for the deposit being refunded when an item sells, so good deals aren't passed over. Posting never goes below what a merchant would pay, and loot that's barely worth more than its vendor price is left for the vendor. Cheaper items (from 50 copper) are now considered, since deposits have become tiny.
+
+**Also in 2.5:** all 11 game languages, a gear finder for affordable upgrades, a crafting profit finder, encrypted token storage, and a redesigned app and in-game window.

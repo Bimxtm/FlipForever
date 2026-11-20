@@ -2,6 +2,15 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.4] - 2026-11-20 (beta)
+### Added
+- **Vendor flips.** After every scan, listings priced below what a merchant pays (at least 15% and 5 copper per unit under) go on the shopping list. Items bought this way are sold automatically the next time you open any merchant. It can be switched off in the FlipForever window (Settings).
+
+### Changed
+- **More accurate profit math:** the deposit is refunded when an item sells, so only auctions that expire cost it. Max buy prices are about 1-2% higher where that was too cautious. This applies equally in the app and in game.
+- **Never sell below vendor price:** posting never goes under what a merchant pays (after the AH cut). Loot the auction house values at under 1.5x its vendor price is skipped, with a hint to vendor it, because an expired auction costs the deposit and time.
+- Cheaper items are worth flipping now that the minimum deposit is tiny: the default "ignore items worth less than" drops from 1 silver to 50 copper for new setups.
+
 ## [2.5.0-beta.3] - 2026-11-20 (beta)
 ### Added
 - **Languages.** The app and the addon support every language the game does: English, German, French, Spanish (Spain and Mexico), Italian, Brazilian Portuguese, Russian, Korean, and Simplified and Traditional Chinese.

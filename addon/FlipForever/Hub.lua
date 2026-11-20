@@ -333,7 +333,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 652)
+  f:SetSize(400, 680)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -442,6 +442,11 @@ local function build()
   f.langLabel:SetPoint("TOPLEFT", 20, -594)
   f.lang = button(pg, "Language", 178, function() H:NextLanguage() end)
   f.lang:SetPoint("TOPLEFT", 206, -588)
+  f.vendorFlips = check(pg, "Vendor flips: buy below merchant price, sell at merchants", function(self)
+    FlipForeverDB.settings.vendorFlips = self:GetChecked() and true or false
+    FlipForeverDB.settings.autoVendor = FlipForeverDB.settings.vendorFlips
+  end)
+  f.vendorFlips:SetPoint("TOPLEFT", 14, -614)
   f.livePlan = check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
     FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
   end)
@@ -514,6 +519,7 @@ function H:Refresh()
   frame.livePlan:SetChecked(s.livePlanning ~= false)
   frame.langLabel:SetText(FF:T("Language") .. ":")
   frame.lang:SetText(H:LanguageName(s.language))
+  frame.vendorFlips:SetChecked(s.vendorFlips ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

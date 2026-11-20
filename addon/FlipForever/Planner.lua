@@ -17,7 +17,7 @@ local FULL = { full = true, ["full-browse"] = true }
 local DEFAULTS = {
   min_margin = 0.20, ah_cut = 0.05, deposit_pct = 0.015, hold_days = 2.0, min_sales_per_day = 3.0,
   min_sell_chance = 0.55, starter_mode = true, starter_min_listed = 50, max_units_per_item = 200,
-  max_plan_items = 40, min_value_copper = 100, min_scans = 3, duration = 2, sell_farmed = true,
+  max_plan_items = 40, min_value_copper = 50, min_scans = 3, duration = 2, sell_farmed = true,
 }
 
 local floor, sqrt, exp = math.floor, math.sqrt, math.exp
@@ -180,7 +180,8 @@ function P:Recommend(model, c, now, nameOf)
         local pEv = 1 - (1 - p) ^ 3
         local cycles = p > 0 and pEv / p or 3
         local depUnit = c.dep[id] or expected * s.deposit_pct
-        local net = pEv * expected * (1 - cut) - cycles * depUnit
+        -- the deposit comes back when the item sells: only postings that expire lose it
+        local net = pEv * expected * (1 - cut) - (cycles - pEv) * depUnit
         local margin = marginBase + math.min(0.25, m.volatility * 0.5) + (c.adj[id] or 0)
         local maxBuy = trunc(net / (1 + margin))
         if maxBuy > 0 then
@@ -318,6 +319,59 @@ function P:Compute(scans, ctx, now, nameOf, heldSells, extraHeld)
   return self:BuildPlan(deals, model, c, nameOf, heldSells)
 end
 
+-- Vendor flips: listings priced below what a merchant pays. Buying and vendoring them is a
+-- guaranteed profit (no auction, no deposit, no waiting). Only fresh scan data, at least 15%
+-- and 5 copper profit per unit, best first.
+function P:VendorFlips(model, now, maxCount)
+  local out = {}
+  for id, m in pairs(model or {}) do
+    if m.cur_min > 0 and m.cur_min <= 50000 and now - m.cur_t <= 8 * 3600 then
+      local v = FF:VendorPrice(id)
+      if v and m.cur_min <= v * 0.85 and v - m.cur_min >= 5 then
+        out[#out + 1] = { id = id, max = math.floor(v * 0.9), qty = math.max(1, math.min(m.cur_qty, 40)),
+          vendor = true, profit = v - m.cur_min }
+      end
+    end
+  end
+  table.sort(out, function(a, b)
+    local pa, pb = a.profit * a.qty, b.profit * b.qty
+    if pa ~= pb then return pa > pb end
+    return a.id < b.id
+  end)
+  for i = #out, (maxCount or 15) + 1, -1 do out[i] = nil end
+  for _, e in ipairs(out) do e.name = FF:ItemName(e.id) end
+  return out
+end
+
+-- At a merchant: sell what you bought as vendor flips (setting: autoVendor)
+function P:SellVendorFlips()
+  local db = FF:DB()
+  local flips = db.vendorFlips
+  if not (flips and next(flips)) or FlipForeverDB.settings.autoVendor == false then return 0 end
+  local C = C_Container
+  if not (C and C.GetContainerNumSlots and C.GetContainerItemInfo and C.UseContainerItem) then return 0 end
+  -- forget flips you no longer carry (sold earlier, or used)
+  for id in pairs(flips) do if (C_Item.GetItemCount and C_Item.GetItemCount(id, false) or 0) == 0 then flips[id] = nil end end
+  local sold, gold = 0, 0
+  for bag = 0, 4 do
+    for slot = 1, C.GetContainerNumSlots(bag) or 0 do
+      local info = C.GetContainerItemInfo(bag, slot)
+      local id = info and info.itemID
+      if id and flips[id] and not info.isLocked then
+        gold = gold + (FF:VendorPrice(id) or 0) * (info.stackCount or 1)
+        C.UseContainerItem(bag, slot)
+        sold = sold + (info.stackCount or 1)
+      end
+    end
+  end
+  if sold > 0 then
+    FF:Print(("Sold %d vendor-flip item%s to the merchant for %s."):format(sold, sold > 1 and "s" or "", FF:Money(gold)))
+  end
+  return sold
+end
+
+FF:On("MERCHANT_SHOW", function() pcall(P.SellVendorFlips, P) end)
+
 function P:Enabled() return FlipForeverDB.settings.livePlanning ~= false end
 
 local function newestScan()
@@ -350,6 +404,10 @@ function P:Rebuild()
   if not ok or type(plan) ~= "table" then
     FF.livePlan = nil
     return nil
+  end
+  -- plus vendor flips from the same scan (bought below what a merchant pays)
+  if FlipForeverDB.settings.vendorFlips ~= false then
+    for _, e in ipairs(self:VendorFlips(self:Model(), time(), 15)) do plan.buy[#plan.buy + 1] = e end
   end
   plan.generated = newestScan()   -- stable across reloads, so progress on this list is kept
   plan.realm = FF:RealmKey()

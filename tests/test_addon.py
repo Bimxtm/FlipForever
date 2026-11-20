@@ -1194,6 +1194,52 @@ print("languages:", L("N_LANGS"), "| game (frFR):", L("T_GAME"), "| de:", L("T_D
 assert L("N_LANGS") == 11 and L("T_GAME") == "Aperçu" and L("T_DE") == "Übersicht" and L("T_EN") == "Overview"
 assert L("T_MISSING") == "Some text not translated yet" and L("T_NEXT") == "enUS"
 
+# --- 2.5.0: vendor flips, auto-sell at a merchant, vendor floor when posting
+lua.execute("""
+local FF = FlipForever
+local oldInfo = C_Item.GetItemInfo
+local VENDOR = { [900] = 100, [901] = 100, [902] = 1000 }
+C_Item.GetItemInfo = function(id)
+  if VENDOR[id] then return "Vendor item " .. id, "link", 1, 1, 1, "", "", 20, "", "", VENDOR[id] end
+  return oldInfo(id)
+end
+local now = time()
+FLIPS = FF.Planner:VendorFlips({
+  [900] = { cur_min = 60, cur_qty = 12, cur_t = now },        -- 40c below vendor: flip
+  [901] = { cur_min = 95, cur_qty = 50, cur_t = now },        -- only 5% below: not worth it
+  [902] = { cur_min = 500, cur_qty = 3, cur_t = now - 9 * 3600 }, -- stale scan: skip
+}, now, 15)
+-- merchant: the flip in the bags gets sold, other items don't
+local BAGS = { [0] = { [1] = { itemID = 900, stackCount = 12 }, [2] = { itemID = 4306, stackCount = 5 } } }
+SOLDSLOTS = {}
+C_Container = C_Container or {}
+C_Container.GetContainerNumSlots = function(bag) return BAGS[bag] and 2 or 0 end
+C_Container.GetContainerItemInfo = function(bag, slot) return BAGS[bag] and BAGS[bag][slot] end
+C_Container.UseContainerItem = function(bag, slot) SOLDSLOTS[#SOLDSLOTS + 1] = BAGS[bag][slot].itemID end
+local oldCount = C_Item.GetItemCount
+C_Item.GetItemCount = function(id) return id == 900 and 12 or 0 end
+FF:DB().vendorFlips = { [900] = true, [777] = true }
+Fire("MERCHANT_SHOW")
+FORGOT777 = FF:DB().vendorFlips[777] == nil
+C_Item.GetItemCount = oldCount
+-- posting loot the AH values at under 1.5x its vendor price: held, told to vendor it
+FlipForever_Plans = { ["Tester @ Testrealm - Horde"] = { generated = 5, budget = 1, buy = {}, sell = { { id = 902, floor = 1, normal = 1300, ceil = 3000 } } } }
+FF.Trader:Stop()
+FF.Trader.target = { id = 902, floor = 1, normal = 1300, ceil = 3000 }
+FF.Trader.mode = "sell"
+FF.Trader.NextSellTarget = function(self) VENDOR_HOLD = true end
+VENDOR_HOLD = false
+FF.Trader:EvaluateSell({ { unitPrice = 1200, quantity = 5 } })
+FF.Trader.NextSellTarget = nil
+FF.Trader:Stop()
+C_Item.GetItemInfo = oldInfo
+""")
+_f = [dict(L("FLIPS")[i]) for i in range(1, len(L("FLIPS")) + 1)]
+print("vendor flips:", [(e["id"], e["max"], e["qty"]) for e in _f], "| sold at merchant:", list(L("SOLDSLOTS").values()),
+      "| held for vendor:", L("VENDOR_HOLD"))
+assert [(e["id"], e["max"], e["qty"]) for e in _f] == [(900, 90, 12)]
+assert list(L("SOLDSLOTS").values()) == [900] and L("FORGOT777") is True and L("VENDOR_HOLD") is True
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

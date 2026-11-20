@@ -15,7 +15,7 @@
 - Advisor: more builds per class as post-launch level-60 guides are published.
 
 ## Done
-- 2.5.0 (betas): crafting profit finder in the profession planner; gear finder for affordable auction house upgrades; encrypted token storage; setup for other players; all 11 game languages (menus and buttons so far).
+- 2.5.0 (betas): crafting profit finder in the profession planner; gear finder for affordable auction house upgrades; encrypted token storage; setup for other players; all 11 game languages (menus and buttons so far); vendor flips; deposit-accurate profit math; vendor floor when posting.
 - 2.4.0 (betas): tabbed in-game window with a shopping-list view, app sidebar and layout, Gathering in the common look, best farming zone in the Advisor, smarter undercut, a reason on every Advisor step.
 - 2.3.0: in-game planning after each scan, one-key combat targeting with tank mode, scan alerts, lists built automatically after import, sell speed in tooltips, window position remembered, in-game test checklist, beta channel, Development tab.
 - 2.2.0: profession planner, buying missing materials at the AH.

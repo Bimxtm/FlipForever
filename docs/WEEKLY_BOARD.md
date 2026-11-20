@@ -33,6 +33,7 @@
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 4: auction house accuracy from current WoW: Forever guides (deposit refunded on sale, minimum deposit now 1 copper, 5% cut), vendor flips with automatic merchant selling, vendor floor when posting, cheaper items considered.
 - 2.5.0 beta 3: language selector with all 11 game languages (app and addon), one shared translation source.
 - 2.5.0 beta 2: gear finder (Gear tab, Advisor step), encrypted GitHub token, setup for other players. Next: language selector.
 - 2.5.0 beta 1: crafting profit finder (approved feature), ahead of schedule. The next stable release will be 2.5.0 and include the 2.4 betas.

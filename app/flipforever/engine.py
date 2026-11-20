@@ -549,7 +549,8 @@ def recommend(settings: Settings, model: dict, learned: Learned, ledger: Ledger,
         p_ev = 1 - (1 - p) ** 3                  # sells within 3 postings
         cycles = p_ev / p if p > 0 else 3
         dep_unit = (led.deposits_paid / led.posted_units) if led and led.posted_units else expected * settings.deposit_pct
-        net = p_ev * expected * (1 - cut) - cycles * dep_unit
+        # the deposit comes back when the item sells: only postings that expire lose it
+        net = p_ev * expected * (1 - cut) - (cycles - p_ev) * dep_unit
         margin = margin_base + min(0.25, m.volatility * 0.5) + learned.item_margin_adj.get(iid, 0.0)
         max_buy = int(net / (1 + margin))
         if max_buy <= 0:

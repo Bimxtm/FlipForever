@@ -255,7 +255,17 @@ function T:RecordBuy(qty, unit)
   local prog = FF:Progress()
   prog.bought[t.id] = (prog.bought[t.id] or 0) + qty
   prog.spent = (prog.spent or 0) + math.floor(qty * unit)
-  FF:Log({ e = "buy", id = t.id, name = FF:ItemName(t.id), q = qty, p = math.floor(unit), exp = t.liveExp or t.exp })
+  FF:Log({ e = "buy", id = t.id, name = FF:ItemName(t.id), q = qty, p = math.floor(unit), exp = t.liveExp or t.exp,
+    kind = t.vendor and "vendor" or nil })
+  if t.vendor then
+    -- bought below what a merchant pays: sold automatically next time you open a merchant
+    local db = FF:DB()
+    db.vendorFlips = db.vendorFlips or {}
+    db.vendorFlips[t.id] = true
+    FF:Print(("Bought %d x %s at %s each - sell it to any merchant for %s each."):format(qty, FF:ItemName(t.id),
+      FF:Money(unit), FF:Money(FF:VendorPrice(t.id) or 0)))
+    return
+  end
   FF:Print(("Bought %d x %s at %s each."):format(qty, FF:ItemName(t.id), FF:Money(unit)))
 end
 
@@ -445,8 +455,22 @@ function T:EvaluateSell(rows)
   end
   -- never sell a flip at a loss: floor covers what you paid + the AH cut
   local floor = s.floor or 0
+  local cut = plan().cut or 0.05
   local cost = self:CostBasis(s.id)
-  if cost then floor = math.max(floor, math.ceil(cost * 1.02 / (1 - (plan().cut or 0.05)))) end
+  if cost then floor = math.max(floor, math.ceil(cost * 1.02 / (1 - cut))) end
+  -- never take less than a merchant pays; and loot the market barely values above the vendor
+  -- price isn't worth the auction risk (an expired auction costs the deposit and the time)
+  local vendor = FF:VendorPrice(s.id)
+  if vendor then
+    floor = math.max(floor, math.ceil(vendor / (1 - cut)))
+    if not cost and price * (1 - cut) < vendor * 1.5 then
+      FF:Print(("%s: the auction house pays barely more than a vendor (%s) - sell it to a merchant instead."):format(
+        FF:ItemName(s.id), FF:Money(vendor)))
+      FF:Log({ e = "hold", id = s.id, name = FF:ItemName(s.id), p = price })
+      self:NextSellTarget()
+      return
+    end
+  end
   if price < floor then
     FF:Print(("Holding %s: market %s is below your floor %s."):format(FF:ItemName(s.id), FF:Money(lowestOther or 0), FF:Money(floor)))
     FF:Log({ e = "hold", id = s.id, name = FF:ItemName(s.id), p = lowestOther or 0 })

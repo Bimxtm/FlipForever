@@ -125,6 +125,17 @@ function FF:ItemName(id)
   return self:DB().names[id] or ("item:" .. tostring(id))
 end
 
+-- what a merchant pays for one (nil if unknown or not sellable)
+function FF:VendorPrice(id)
+  local fn = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+  if not (fn and id) then return nil end
+  local res = { pcall(fn, id) }
+  if not res[1] then return nil end
+  local p = res[12]                    -- 11th return value: sell price
+  if issecretvalue and p ~= nil and issecretvalue(p) then return nil end
+  return (type(p) == "number" and p > 0) and p or nil
+end
+
 function FF:IdFromName(name)
   for id, n in pairs(self:DB().names) do
     if n == name then return id end

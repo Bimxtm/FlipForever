@@ -119,7 +119,7 @@ class Settings:
     starter_min_listed: int = 50    # "deep market" = at least this many units listed
     max_units_per_item: int = 200
     max_plan_items: int = 40
-    min_value_copper: int = 100   # ignore items worth less than this
+    min_value_copper: int = 50    # ignore items worth less than this (deposits are tiny since 17 Nov)
     min_scans: int = 3            # need at least this many price snapshots
     duration: int = 2             # 1=12h 2=24h 3=48h
     sell_farmed: bool = True      # also post items you didn't flip (farmed loot) at fair value
