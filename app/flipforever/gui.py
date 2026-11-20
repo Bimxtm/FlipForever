@@ -880,6 +880,7 @@ class App(tk.Tk):
             budget = self.settings.budget_for(key)
             plan, spent = engine.build_plan(self.settings, self.deals, self.model, self.learned, self.ledger,
                                             engine.item_names(self.con, self.realm), self.realm, budget)
+            plan["ctx"] = engine.planner_context(self.settings, self.learned, self.ledger_all, self.ledger, budget)
             engine.write_plan(self.settings, key, plan)
         except Exception:  # noqa: BLE001
             traceback.print_exc()
@@ -930,6 +931,7 @@ class App(tk.Tk):
         budget = self.settings.budget_for(key)
         plan, spent = engine.build_plan(self.settings, self.deals, self.model, self.learned, self.ledger,
                                         engine.item_names(self.con, self.realm), self.realm, budget)
+        plan["ctx"] = engine.planner_context(self.settings, self.learned, self.ledger_all, self.ledger, budget)
         try:
             out = engine.write_plan(self.settings, key, plan)
         except Exception as e:  # noqa: BLE001

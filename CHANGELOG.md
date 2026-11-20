@@ -2,6 +2,16 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.3.0-beta.4] - 2026-11-20 (beta)
+### Added
+- **No more reload for a new list:** when a scan finishes, the addon rebuilds your shopping list in game straight away, with the same rules and everything the app has learned (margin tuning, price calibration, sell chances, deposits, your own selling times, what you hold). Autopilot keeps going with the new list, and you see and hear "Shopping list updated from the new scan". At login, a scan newer than the app's list is planned the same way.
+- The app now hands its learning to the addon with every list it builds. The app's own list still wins whenever it's newer (after your next reload or logout).
+- Switch: FlipForever window → *After a scan: rebuild my shopping list in game (no reload)*. With it off, you get Beta 3's alert and pause instead.
+- Panels say when a list was "built in game from a scan".
+
+### Developer
+- `Planner.lua`, a port of the app's planner. A new test runs both planners on the same demo data and requires the same items, prices and amounts.
+
 ## [2.3.0-beta.3] - 2026-11-20 (beta)
 ### Added
 - **Combat helper, one key for everything:** with *Auto-target* on (default), each press first picks the nearest enemy if you have no target, or yours is dead or friendly. **Tank mode** (on automatically for Protection builds, or tick it yourself): click an ally, and the key hits whatever is on them (`/assist`), with Taunt/Growl early in each round. A red line warns "Your target is attacking <ally>!". Only Blizzard-allowed macro targeting is used.

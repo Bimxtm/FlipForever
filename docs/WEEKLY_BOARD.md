@@ -41,12 +41,13 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P6 | Random-stat gear ("of the Bear") priced together by item | 🟡 low | Buy logic already prefers commodities; revisit if it causes bad buys |
 | P7 | Planner skill-up chances are colour averages | 🟡 low | Exact chances in Beta 2 |
 | P8 | Gathering stats show "map 1411" until the addon has run once | 🟡 low | Names saved at login (done); verify Fri |
-| P10 | **New shopping lists need /reload, and scans only reach the app after /reload or logout** (WoW only reads and writes addon data at load and logout) | 🟠 med | In-game planning after each scan + one-click sync (Beta 2) |
+| P10 | ✅ **Fixed in Beta 4:** new shopping lists needed /reload. The addon now plans in game after each scan with the app's learning. Scans still reach the app only after a reload or logout (a WoW limit), which is fine because the in-game list carries on | ✅ done | Verify in the real game (P1) |
 | P11 | **After a scan you don't know when to reload, and autopilot keeps buying from the old list** | 🟠 med | Beta 3: scan-done alert (sound, raid warning, flashing Reload), autopilot pauses until the reload, app auto-builds the list and notifies |
 | P12 | **Combat helper: one key should also pick targets, adapting to your role** (top priority, user request) | 🟠 med | Beta 3. Every step gets `/targetenemy [noharm][dead]`, so it picks the nearest enemy when you have none or yours is dead/friendly. Tank builds (Protection, Bear) also target your friendly target's attacker (`[@targettarget,harm]`), get Taunt/Growl steps and an "enemy on <ally>" warning. Blizzard doesn't let addons choose targets by "who is attacking whom" in combat, so this uses the allowed macro targeting only. |
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
+- 2.3.0 Beta 4 (Thu 12:20): in-game planning after every scan, no reload (P10 ✔). The Lua planner matches the app exactly on the demo data (test).
 - 2.3.0 Beta 3 (Thu 11:00-11:40): one-key targeting + tank mode (P12 ✔), scan-done alert + autopilot pause (P11 ✔), app auto-builds the list after import (P11 ✔). Next: in-game planning (P10) as Beta 4.
 - 2.0.0 all-in-one · 2.1.0 tooltips/minimap/today · 2.2.0 profession planner · 2.3.0 Beta 1 (beta channel, crafted mats, gather hint, mailbox summary)
 - Repo, releases, self-updater, beta channel, tests in repo, cycle rules

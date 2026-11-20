@@ -80,7 +80,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 600)
+  f:SetSize(400, 624)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -168,10 +168,14 @@ local function build()
     FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false
   end)
   f.popup:SetPoint("TOPLEFT", 14, -392)
-  f.pauseScan = check(f, "After a scan: alert + pause autopilot until Reload", function(self)
+  f.pauseScan = check(f, "Otherwise: alert + pause autopilot until Reload", function(self)
     FlipForeverDB.settings.reloadAfterScan = self:GetChecked() and true or false
   end)
-  f.pauseScan:SetPoint("TOPLEFT", 14, -536)
+  f.pauseScan:SetPoint("TOPLEFT", 14, -560)
+  f.livePlan = check(f, "After a scan: rebuild my shopping list in game (no reload)", function(self)
+    FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
+  end)
+  f.livePlan:SetPoint("TOPLEFT", 14, -536)
   f.tips = check(f, "Prices in item tooltips", function(self)
     FlipForeverDB.settings.tooltips = self:GetChecked() and true or false
   end)
@@ -222,12 +226,13 @@ function H:Refresh()
   frame.auto:SetChecked(FF.Auto:Enabled())
   frame.ahKeyText:SetText("Big-button key: " .. (s.key and ("|cffffff00" .. s.key .. "|r") or "|cff888888none - click it|r"))
   local plan = FF:Plan()
-  frame.planText:SetText(plan and plan.buy and ("Shopping list for " .. (UnitName("player") or "?") .. ": " .. #plan.buy .. " buys, " .. #(plan.sell or {}) .. " sell prices.")
+  frame.planText:SetText(plan and plan.buy and ("Shopping list for " .. (UnitName("player") or "?") .. ": " .. #plan.buy .. " buys, " .. #(plan.sell or {}) .. " sell prices" .. (plan.live and " (built in game from your newest scan)." or "."))
     or "No shopping list for this character yet - build one in the FlipForever app.")
   frame.popup:SetChecked(s.advisorPopup ~= false)
   frame.tips:SetChecked(s.tooltips ~= false)
   frame.profPanel:SetChecked(s.profPanel ~= false)
   frame.pauseScan:SetChecked(s.reloadAfterScan ~= false)
+  frame.livePlan:SetChecked(s.livePlanning ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

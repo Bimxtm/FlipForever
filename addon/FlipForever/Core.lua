@@ -68,11 +68,21 @@ function FF:CharKey()
   return (UnitName("player") or "?") .. " @ " .. self:RealmKey()
 end
 
--- The shopping list for the character you're playing (the app writes one per character)
-function FF:Plan()
+-- The shopping list the app wrote for the character you're playing (one per character)
+function FF:FilePlan()
   local plans = _G.FlipForever_Plans
   if plans then return plans[self:CharKey()] end
   return _G.FlipForever_Plan
+end
+
+-- The list in use: the in-game planner's (Planner.lua) when it's newer than the app's
+function FF:Plan()
+  local file = self:FilePlan()
+  local live = self.livePlan
+  if live and live.key == self:CharKey() and (not file or (live.generated or 0) > (file.generated or 0)) then
+    return live
+  end
+  return file
 end
 
 -- Remember each character's gold so the app can show it and size budgets
@@ -337,6 +347,17 @@ end
 -- autopilot until the reload, so it doesn't keep buying from a list made with old prices.
 -- The reload saves the scan for the app, which builds the new shopping list.
 function FF:ScanFinished(items)
+  -- Beta 4: rebuild the list in game from the new scan - no reload needed
+  local live = self.Planner and self.Planner:Rebuild()
+  if live then
+    self.needReload = nil
+    if self.Alert then
+      self:Alert(("Shopping list updated from the new scan: %d to buy, %d to sell."):format(#live.buy, #live.sell),
+        SOUNDKIT and SOUNDKIT.READY_CHECK)
+    end
+    if self.UI then self.UI:Refresh() end
+    return
+  end
   if FlipForeverDB.settings.reloadAfterScan == false then return end
   self.needReload = true
   if self.Alert then

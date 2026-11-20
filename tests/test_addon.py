@@ -235,6 +235,7 @@ print("all files compile and load")
 L = lua.eval
 lua.execute("""
 Fire("ADDON_LOADED", "FlipForever")
+FlipForeverDB.settings.livePlanning = false   -- in-game planning is tested on its own (Beta 4 block)
 Fire("PLAYER_LOGIN")
 Fire("AUCTION_HOUSE_SHOW")
 """)
@@ -945,6 +946,73 @@ assert L("DPS1") == "/targetenemy [noharm][dead]\n/cast Frostbolt" and L("OFF1")
 print("ally warning:", L("FlipForever.Combat:AllyUnderAttack()"))
 assert L("FlipForever.Combat:AllyUnderAttack()") == "Healbot"
 lua.execute("FlipForever.Combat:Toggle()")
+
+# --- Beta 4: the in-game planner gives the same list as the app (same demo data, same learning)
+import json as _json  # noqa: E402
+import sqlite3 as _sqlite3  # noqa: E402
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "app"))
+from flipforever import demo as _demo, engine as _engine, luaio as _luaio, store as _store  # noqa: E402
+
+_con = _sqlite3.connect(":memory:")
+_con.row_factory = _sqlite3.Row
+_con.executescript(_store.SCHEMA)
+_realm = _demo.create_demo(_con)
+NOW = _con.execute("SELECT MAX(t) FROM scans").fetchone()[0] + 600
+_set = _store.Settings()
+_set.budget_gold = 50.0
+_model = _engine.market_model(_con, _realm, NOW)
+_all = _engine.build_ledger(_con, _realm)
+_mine = _engine.build_ledger(_con, _realm, "Demochar")
+_learned = _engine.learn(_con, _realm, _set, _all, _model, commit_tuning=False)
+_names = {iid: f"item {iid}" for iid in _model}
+_deals = _engine.recommend(_set, _model, _learned, _all, _names, now=NOW, holder=_mine)
+_py, _ = _engine.build_plan(_set, _deals, _model, _learned, _mine, _names, _realm)
+# the context goes through plans.json like in the app (number keys become strings)
+_ctx = _json.loads(_json.dumps(_engine.planner_context(_set, _learned, _all, _mine)))
+_scans = []
+for (_t,) in _con.execute("SELECT DISTINCT t FROM scans WHERE realm=? ORDER BY t", (_realm,)):
+    rows = _con.execute("SELECT id, min, p25, qty, n FROM prices WHERE realm=? AND t=?", (_realm, _t)).fetchall()
+    _scans.append({"t": _t, "src": "full", "n": len(rows), "d": ";".join(":".join(str(v) for v in r) for r in rows)})
+_held = [s for s in _py["sell"] if s.get("held")]
+lua.execute("PY_CTX = " + _luaio.to_lua(_ctx) + "\nPY_SCANS = " + _luaio.to_lua(_scans) + "\nPY_HELD = " + _luaio.to_lua(_held))
+lua.execute(f"""
+LUA_PLAN = FlipForever.Planner:Compute(PY_SCANS, PY_CTX, {NOW}, function(id) return "item " .. id end, PY_HELD, {{}})
+""")
+_lp = L("LUA_PLAN")
+_lbuy = [dict(_lp.buy[i]) for i in range(1, len(_lp.buy) + 1)]
+print("planner: app", [(b["id"], b["max"], b["qty"]) for b in _py["buy"]])
+print("planner: game", [(b["id"], b["max"], b["qty"]) for b in _lbuy])
+assert len(_py["buy"]) > 0, "demo data should give something to buy"
+assert [b["id"] for b in _py["buy"]] == [b["id"] for b in _lbuy], "in-game planner picked different items"
+for a, b in zip(_py["buy"], _lbuy):
+    assert abs(a["max"] - b["max"]) <= max(1, a["max"] * 0.01), (a, b)
+    assert a["qty"] == b["qty"], (a, b)
+assert _lp.budget == _py["budget"] and len(_lp.sell) == len(_py["sell"])
+print("in-game planner matches the app:", len(_lbuy), "buys,", len(_lp.sell), "sells")
+
+# --- Beta 4: after a scan the list is rebuilt in game; no reload, autopilot keeps going
+lua.execute(f"""
+FlipForever_Plan = nil
+FlipForever_Plans = {{ ["Tester @ Testrealm - Horde"] = {{ generated = 1, budget = 1, buy = {{}}, sell = {{}}, ctx = PY_CTX }} }}
+FlipForeverDB.settings.livePlanning = nil
+FlipForeverDB.settings.reloadAfterScan = nil
+local db = FlipForever:DB()
+for _, s in ipairs(PY_SCANS) do db.scans[#db.scans + 1] = s end
+OLD_NOW = NOW; NOW = {NOW}
+ALERTS = {{}}
+FlipForever.needReload = nil
+FlipForever:ScanFinished(5)
+LIVE_ALERT = false
+for _, a in ipairs(ALERTS) do if a:find("Shopping list updated") then LIVE_ALERT = true end end
+LIVE = FlipForever:Plan()
+""")
+print("after scan (live):", L("LIVE.live"), "| buys", L("#LIVE.buy"), "| needReload", L("FlipForever.needReload"), "| alert", L("LIVE_ALERT"))
+assert L("LIVE.live") is True and L("FlipForever.needReload") is None and L("LIVE_ALERT") is True
+assert L("#LIVE.buy") >= len(_py["buy"])  # the test DB also holds scans from earlier test steps
+# a newer list from the app wins again
+lua.execute("FlipForever_Plans['Tester @ Testrealm - Horde'].generated = LIVE.generated + 1")
+assert L("FlipForever:Plan().live") is None
+lua.execute("FlipForever.livePlan = nil; FlipForeverDB.settings.livePlanning = false; NOW = OLD_NOW")
 
 # --- per-character plans
 lua.execute("""

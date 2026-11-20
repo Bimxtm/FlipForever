@@ -601,8 +601,46 @@ def recommend(settings: Settings, model: dict, learned: Learned, ledger: Ledger,
         deals.append(Deal(iid, names.get(iid, f"item {iid}"), m.cur_min, int(m.market), int(expected), max_buy,
                           profit_unit, roi, p, m.vol_day, max(0, qty_cap), confidence, score, is_deal, held, reason,
                           fast, est_days, own_days))
-    deals.sort(key=lambda d: (not d.is_deal, not d.fast, d.starter, -d.score))
+    deals.sort(key=lambda d: (not d.is_deal, not d.fast, d.starter, -d.score, d.id))
     return deals
+
+
+PLANNER_SETTINGS = ("min_margin", "ah_cut", "deposit_pct", "hold_days", "min_sales_per_day", "min_sell_chance",
+                    "starter_mode", "starter_min_listed", "max_units_per_item", "max_plan_items",
+                    "min_value_copper", "min_scans", "duration", "sell_farmed")
+
+
+def planner_context(settings: Settings, learned: Learned, ledger: Ledger, holder: Ledger,
+                    budget_gold: float | None = None) -> dict:
+    """What the in-game planner (Planner.lua) needs to rebuild this character's list from a
+    fresh scan exactly like recommend() + build_plan() would: the settings, everything
+    learned, and the few ledger facts (deposits, own sell times, what this character holds)."""
+    s = {k: getattr(settings, k) for k in PLANNER_SETTINGS}
+    s["budget"] = settings.budget_gold if budget_gold is None else budget_gold
+    s["blacklist"] = [int(x) for x in settings.blacklist if str(x).isdigit()]
+    dep, own, held = {}, {}, {}
+    for iid, led in ledger.items.items():
+        if not isinstance(iid, int) or iid < 0:
+            continue
+        if led.posted_units:
+            dep[iid] = led.deposits_paid / led.posted_units
+        if len(led.days_to_sell) >= 2:
+            own[iid] = statistics.median(led.days_to_sell)
+    for iid, led in holder.items.items():
+        if isinstance(iid, int) and iid >= 0 and led.held > 0:
+            held[iid] = led.held
+    return {
+        "s": s,
+        "mf": learned.margin_factor,
+        "gc": learned.global_calib,
+        "ic": dict(learned.item_calib),
+        "ps": {k: [v[0], v[1]] for k, v in learned.item_sell.items()},
+        "adj": {k: v for k, v in learned.item_margin_adj.items() if v},
+        "paused": {k: True for k in learned.paused},
+        "dep": dep,
+        "own": own,
+        "held": held,
+    }
 
 
 def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Learned, ledger: Ledger, names: dict,
@@ -669,7 +707,7 @@ def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Lear
             floor = max(floor, unit_cost * 0.85)
         normal = max(normal, int(floor * 1.05))
         sells.append({"id": iid, "name": led.name, "floor": int(floor), "normal": normal,
-                      "ceil": int(max(normal * 1.6, floor * 1.3))})
+                      "ceil": int(max(normal * 1.6, floor * 1.3)), "held": True})
         seen.add(iid)
     if settings.sell_farmed:
         # selling needs less history than buying: the addon re-checks live prices before every post
@@ -680,7 +718,7 @@ def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Lear
         farmed = [m for iid, m in model.items()
                   if iid not in seen and m.market >= settings.min_value_copper
                   and (m.cur_qty >= 10 or (m.vol_day or 0) >= 1)]
-        farmed.sort(key=lambda m: -(liquidity(m) * math.sqrt(m.market)))
+        farmed.sort(key=lambda m: (-(liquidity(m) * math.sqrt(m.market)), m.id))
         for m in farmed[:600]:
             iid = m.id
             normal = int(m.market * learned.item_calib.get(iid, learned.global_calib))

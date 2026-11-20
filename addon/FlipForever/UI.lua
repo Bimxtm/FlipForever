@@ -155,8 +155,8 @@ function UI:Refresh()
     local ageText = age < 90 and (age .. " min") or (math.floor(age / 60) .. " h")
     local budget = (T.custom and "  ·  |cffffd200buying profession mats|r")
       or (p.budget and ("  ·  budget left " .. FF:Money(T:BudgetLeft()))) or ""
-    self.planText:SetText(("%s: |cffffff00%d|r buys, |cffffff00%d|r sells%s\nmade %s ago%s\n|cffaaaaaa%s|r"):format(
-      UnitName("player") or "?", #p.buy, #(p.sell or {}), budget, ageText, age > 360 and " |cffff8800(old - rebuild it)|r" or "",
+    self.planText:SetText(("%s: |cffffff00%d|r buys, |cffffff00%d|r sells%s\n%s %s ago%s\n|cffaaaaaa%s|r"):format(
+      UnitName("player") or "?", #p.buy, #(p.sell or {}), budget, p.live and "built in game from a scan" or "made", ageText, age > 360 and " |cffff8800(old - rebuild it)|r" or "",
       FF:TodayLine()))
   else
     self.planText:SetText(("|cffff8800No shopping list for %s yet.|r\nScan, pick this character in the app, build, /reload."):format(UnitName("player") or "?"))
