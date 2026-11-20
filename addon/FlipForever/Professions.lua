@@ -383,7 +383,7 @@ local function build()
 
   f.h1 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   f.h1:SetPoint("TOPLEFT", 14, -68)
-  f.h1:SetText("Cheapest skill-ups")
+  f.h1:SetText(FF:T("Cheapest skill-ups"))
   f.mode = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   f.mode:SetSize(130, 20)
   f.mode:SetPoint("TOPRIGHT", -14, -64)
@@ -399,7 +399,7 @@ local function build()
   end
   f.h2 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   f.h2:SetPoint("TOPLEFT", 14, -70 - (ROWS + 1) * 20)
-  f.h2:SetText("Materials for the top craft")
+  f.h2:SetText(FF:T("Materials for the top craft"))
   f.mats = {}
   for i = 1, 6 do
     local fs = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -411,7 +411,7 @@ local function build()
   f.buy = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   f.buy:SetSize(200, 24)
   f.buy:SetPoint("BOTTOMLEFT", 14, 14)
-  f.buy:SetText("Buy missing mats at the AH")
+  f.buy:SetText(FF:T("Buy missing mats at the AH"))
   f.buy:SetScript("OnClick", function() if P.mode == "profit" then P:QueueProfitMats() else P:QueueMats() end end)
   f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   f.hint:SetPoint("BOTTOMLEFT", 14, 44)
@@ -440,10 +440,10 @@ end
 
 -- Profit mode: every profession you've opened, best total profit first
 function P:RefreshProfit()
-  frame.h1:SetText("Crafts that sell for more than their materials")
-  frame.h2:SetText("Materials for the top craft")
-  frame.mode:SetText("Show skill-ups")
-  frame.buy:SetText("Buy mats for the top craft")
+  frame.h1:SetText(FF:T("Crafts that sell for more than their materials"))
+  frame.h2:SetText(FF:T("Materials for the top craft"))
+  frame.mode:SetText(FF:T("Show skill-ups"))
+  frame.buy:SetText(FF:T("Buy mats for the top craft"))
   local list = self:ProfitList()
   frame.prof:SetText(#list > 0 and ("%d profitable craft%s across your professions"):format(#list, #list > 1 and "s" or "")
     or "No profitable fast-selling crafts right now.")
@@ -489,9 +489,9 @@ function P:Refresh()
   frame.title:SetText("|cff33ff99Flip|rForever Profession planner")
   self.mode = self.mode or FlipForeverDB.settings.profMode or "skill"
   if self.mode == "profit" then return self:RefreshProfit() end
-  frame.h1:SetText("Cheapest skill-ups")
-  frame.mode:SetText("Show profitable crafts")
-  frame.buy:SetText("Buy missing mats at the AH")
+  frame.h1:SetText(FF:T("Cheapest skill-ups"))
+  frame.mode:SetText(FF:T("Show profitable crafts"))
+  frame.buy:SetText(FF:T("Buy missing mats at the AH"))
   if not self.current then
     for name in pairs(self:Store()) do self.current = name break end
   end

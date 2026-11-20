@@ -1178,6 +1178,7 @@ FlipForeverDB.settings.language = nil
 T_GAME = FF:T("Overview")                 -- follows the game client
 FlipForeverDB.settings.language = "deDE"
 T_DE = FF:T("Overview")
+T_DE2 = FF:T("Show profitable crafts") .. "|" .. FF:T("Do this next:")
 T_MISSING = FF:T("Some text not translated yet")
 FlipForeverDB.settings.language = ""
 FF.Hub:Show("settings")
@@ -1193,6 +1194,7 @@ FF.needReload = nil
 print("languages:", L("N_LANGS"), "| game (frFR):", L("T_GAME"), "| de:", L("T_DE"), "| next after game language:", L("T_NEXT"))
 assert L("N_LANGS") == 11 and L("T_GAME") == "Aperçu" and L("T_DE") == "Übersicht" and L("T_EN") == "Overview"
 assert L("T_MISSING") == "Some text not translated yet" and L("T_NEXT") == "enUS"
+assert L("T_DE2") == "Gewinnbringende Herstellungen|Als Nächstes:"
 
 # --- 2.5.0: vendor flips, auto-sell at a merchant, vendor floor when posting
 lua.execute("""

@@ -32,6 +32,7 @@
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 7: settings, Advisor window and profession planner translated into all 11 languages.
 - 2.5.0 beta 6: 9 builds per class from Method, Warcraft Tavern and RankedBoost, with roles, points, rotations, and combat rotations for every new build style.
 - 2.5.0 beta 5: combat helper level bands 1-10 / 11-39 / 40-60 for all classes and builds; exact skill-up chances learned from colour changes (P7).
 - 2.5.0 beta 4: auction house accuracy from current WoW: Forever guides (deposit refunded on sale, minimum deposit now 1 copper, 5% cut), vendor flips with automatic merchant selling, vendor floor when posting, cheaper items considered.

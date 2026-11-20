@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.7] - 2026-11-20 (beta)
+### Changed
+- More of the addon is translated into all 11 languages: every checkbox in the FlipForever window's Settings tab, the Advisor window (Do this next, Build details, Re-check, pop-up option) and the profession planner (headings, view switch and buy buttons).
+
 ## [2.5.0-beta.6] - 2026-11-20 (beta)
 ### Added
 - **9 builds for every class**, collected from the current WoW: Forever guides: Method's leveling guides (updated 14-19 Nov), Warcraft Tavern's level 60 class guides (updated 1-11 Nov) and RankedBoost's build list (updated 8 Nov). Every spec is covered, with leveling, dungeon and raid damage, tank, healer and PvP builds.

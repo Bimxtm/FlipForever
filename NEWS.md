@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 6
+# FlipForever 2.5 Beta 7
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**More translated.** The FlipForever window's settings, the Advisor window and the profession planner now appear in your language too.
 
 **9 builds for every class.** The Advisor now offers every build the current WoW: Forever guides publish: Method, Warcraft Tavern and RankedBoost. That covers leveling, dungeon and raid damage, tanking, healing and PvP for all specs. Each build shows its role, point split, talents, the guide's advice and its rotation, and the combat helper follows the build you pick. Pick one in the Advisor with the < > buttons.
 
