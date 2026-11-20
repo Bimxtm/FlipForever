@@ -19,7 +19,7 @@ What happens in each cycle, and the rules it follows.
 3. Check:
    - `python tests/test_addon.py` passes (ALL ADDON TESTS PASSED)
    - the app opens (GUI smoke test) and the engine runs on demo data
-4. Version: patch (x.y.Z) for fixes, minor (x.Y.0) for features. Bump `app/flipforever/version.py` and `## Version` in `addon/FlipForever/FlipForever.toc`.
+4. Version (owner's rule, 20 Nov): the **last number** (x.y.Z) for every normal update: fixes, polish, small features (2.4.1, 2.4.2, ...). The **middle number** (x.Y.0) only for a **big update**: an approved major feature or overhaul (2.4.0 Better GUI, 2.5.0 crafting profit finder). Betas preview the version they lead to (`2.4.0-beta.N`, `2.4.1-beta.N`). Bump `app/flipforever/version.py` and `## Version` in `addon/FlipForever/FlipForever.toc`.
 5. Add a CHANGELOG.md section, and rewrite NEWS.md for the player.
 6. `python tools/build_release.py`.
 7. Commit, push, and `gh release create vX.Y.Z dist/FlipForever-vX.Y.Z.zip dist/SHA256SUMS.txt --notes-file dist/release-notes.md`.

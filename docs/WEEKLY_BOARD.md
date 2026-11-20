@@ -46,6 +46,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
+- 2.4.0 Beta 1+2 (Thu evening, Better GUI started early since you asked to use the weekly limit up to the Sat 14:00 reset): in-game tabbed window + shopping-list view with Skip; app sidebar, page headers, striped tables, colour-coded cards. New versioning rule: patch for normal updates, middle number only for big ones.
 - **2.3.0 stable** (Thu ~18:15 cycle): Betas 1-4 + "sells ~N/day" tooltips + in-game test checklist (docs/IN_GAME_TEST.md, in the Development tab) + the app remembers its window. Usage: 5h 3%, week 34%.
 - 2.3.0 Beta 4 (Thu 12:20): in-game planning after every scan, no reload (P10 ✔). The Lua planner matches the app exactly on the demo data (test).
 - 2.3.0 Beta 3 (Thu 11:00-11:40): one-key targeting + tank mode (P12 ✔), scan-done alert + autopilot pause (P11 ✔), app auto-builds the list after import (P11 ✔). Next: in-game planning (P10) as Beta 4.

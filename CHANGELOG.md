@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.4.0-beta.2] - 2026-11-20 (beta)
+### Changed
+- **Better GUI, part 2 (app):** a sidebar grouped into Trading, Character and App replaces the long tab row. Each page has a title and a one-line explanation.
+  - Tables have striped rows, and the stripes stay right after sorting.
+  - Dashboard cards have a colour strip: green for profit, gold for stock, blue for market data. Profit numbers turn green when you're up and red when you're down.
+  - Tighter top bar: everything fits at the smallest window size.
+- Dashboard steps and How to use describe the new flow: the list builds itself in game after a scan, and you reload only now and then to sync with the app.
+
 ## [2.4.0-beta.1] - 2026-11-20 (beta)
 ### Added
 - **Better GUI, part 1 (in game):** the FlipForever window now has tabs.

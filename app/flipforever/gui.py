@@ -32,6 +32,8 @@ MUTED = "#8b93a1"
 ACCENT = "#3ddc97"
 GOLD = "#f2c14e"
 RED = "#ff6b6b"
+STRIPE = "#20252d"
+BLUE = "#6aa9ff"
 FONT = ("Segoe UI", 10)
 FONT_B = ("Segoe UI Semibold", 10)
 
@@ -134,6 +136,19 @@ class App(tk.Tk):
         self.option_add("*TCombobox*Listbox.foreground", FG)
         st.configure("TEntry", fieldbackground=PANEL, foreground=FG, insertcolor=FG)
         st.configure("TSpinbox", fieldbackground=PANEL, foreground=FG, arrowcolor=FG)
+        # 2.4: sidebar navigation instead of a long tab row (the notebook keeps the pages, its tabs are hidden)
+        st.configure("Pages.TNotebook", background=BG, borderwidth=0)
+        st.layout("Pages.TNotebook.Tab", [])
+        st.configure("Side.TFrame", background=PANEL)
+        st.configure("Side.TLabel", background=PANEL, foreground=MUTED, font=("Segoe UI Semibold", 8))
+        st.configure("Nav.TButton", background=PANEL, foreground=MUTED, anchor="w", padding=(14, 7), font=FONT,
+                     borderwidth=0, focusthickness=0)
+        st.map("Nav.TButton", background=[("active", CARD)], foreground=[("active", FG)])
+        st.configure("NavOn.TButton", background=CARD, foreground=FG, anchor="w", padding=(14, 7), font=FONT_B,
+                     borderwidth=0, focusthickness=0)
+        st.map("NavOn.TButton", background=[("active", CARD)])
+        st.configure("Page.TLabel", font=("Segoe UI Semibold", 15), foreground=FG)
+        st.configure("PageSub.TLabel", foreground=MUTED)
 
     # ------------------------------------------------------------- layout
     def _build(self):
@@ -142,12 +157,12 @@ class App(tk.Tk):
         ttk.Label(top, text="FlipForever", style="Title.TLabel", foreground=ACCENT).pack(side="left")
         ttk.Label(top, text="  realm:", style="Muted.TLabel").pack(side="left", padx=(18, 4))
         self.realm_var = tk.StringVar()
-        self.realm_box = ttk.Combobox(top, textvariable=self.realm_var, state="readonly", width=30)
+        self.realm_box = ttk.Combobox(top, textvariable=self.realm_var, state="readonly", width=22)
         self.realm_box.pack(side="left")
         self.realm_box.bind("<<ComboboxSelected>>", lambda e: self._realm_changed())
         ttk.Label(top, text="  character:", style="Muted.TLabel").pack(side="left", padx=(14, 4))
         self.char_var = tk.StringVar()
-        self.char_box = ttk.Combobox(top, textvariable=self.char_var, state="readonly", width=16)
+        self.char_box = ttk.Combobox(top, textvariable=self.char_var, state="readonly", width=13)
         self.char_box.pack(side="left")
         self.char_box.bind("<<ComboboxSelected>>", lambda e: self._char_changed())
         ttk.Label(top, text="  budget:", style="Muted.TLabel").pack(side="left", padx=(14, 4))
@@ -159,15 +174,28 @@ class App(tk.Tk):
         self.char_gold = tk.StringVar()
         ttk.Label(top, textvariable=self.char_gold, style="Muted.TLabel").pack(side="left", padx=(4, 0))
         ttk.Button(top, text="Build shopping list", style="Accent.TButton", command=self.build_plan).pack(side="right")
-        ttk.Button(top, text="Import from game", command=self.import_now).pack(side="right", padx=8)
+        ttk.Button(top, text="Import", command=self.import_now).pack(side="right", padx=8)
 
         self.status_var = tk.StringVar(value="Ready.")
         bar = ttk.Frame(self, padding=(16, 4))
         bar.pack(side="bottom", fill="x")
         ttk.Label(bar, textvariable=self.status_var, style="Muted.TLabel").pack(side="left")
 
-        self.nb = ttk.Notebook(self)
-        self.nb.pack(fill="both", expand=True, padx=12, pady=(0, 4))
+        body = ttk.Frame(self)
+        body.pack(fill="both", expand=True)
+        self.sidebar = ttk.Frame(body, style="Side.TFrame", width=200, padding=(0, 8))
+        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
+        content = ttk.Frame(body, padding=(16, 6, 12, 0))
+        content.pack(side="left", fill="both", expand=True)
+        head = ttk.Frame(content)
+        head.pack(fill="x", pady=(0, 6))
+        self.page_title = tk.StringVar()
+        self.page_sub = tk.StringVar()
+        ttk.Label(head, textvariable=self.page_title, style="Page.TLabel").pack(side="left")
+        ttk.Label(head, textvariable=self.page_sub, style="PageSub.TLabel").pack(side="left", padx=(12, 0), pady=(5, 0))
+        self.nb = ttk.Notebook(content, style="Pages.TNotebook")
+        self.nb.pack(fill="both", expand=True, pady=(0, 4))
         self.tab_dash = ttk.Frame(self.nb, padding=14)
         self.tab_deals = ttk.Frame(self.nb, padding=10)
         self.tab_sell = ttk.Frame(self.nb, padding=10)
@@ -185,6 +213,7 @@ class App(tk.Tk):
                           (self.tab_set, "Settings"), (self.tab_help, "How to use"), (self.tab_about, "About & updates"),
                           (self.tab_dev, "Development")):
             self.nb.add(tab, text=name)
+        self._build_nav()
         self._build_about()
         self._build_dev()
         self._build_dash()
@@ -196,6 +225,50 @@ class App(tk.Tk):
         self._build_gather()
         self._build_settings()
         self._build_help()
+
+    # sidebar: pages grouped by what you're doing, with a one-line explanation on top of each page
+    NAV = (
+        ("TRADING", (
+            ("tab_dash", "▦  Dashboard", "profit, stock and what to do next"),
+            ("tab_deals", "◆  Deals", "everything worth buying, best first"),
+            ("tab_sell", "▣  Inventory & selling", "what you hold and the prices the addon posts at"),
+            ("tab_hist", "≡  Trade history", "every buy, post, sale and expiry"),
+            ("tab_learn", "✦  What it learned", "sell chances, price accuracy and margin tuning"),
+        )),
+        ("CHARACTER", (
+            ("tab_adv", "➤  Advisor", "your build, gear and next steps"),
+            ("tab_gather", "⛏  Gathering", "gold per hour by zone and resource"),
+        )),
+        ("APP", (
+            ("tab_set", "⚙  Settings", "budget, speed rules and your WoW folder"),
+            ("tab_help", "?  How to use", "the short version"),
+            ("tab_about", "↑  About & updates", "news, changelog and updates"),
+            ("tab_dev", "✎  Development", "this week's plan, test checklist and roadmap"),
+        )),
+    )
+
+    def _build_nav(self):
+        self.nav_buttons = {}
+        self.nav_info = {}
+        for section, pages in self.NAV:
+            ttk.Label(self.sidebar, text=section, style="Side.TLabel").pack(anchor="w", padx=16, pady=(12, 4))
+            for attr, label, sub in pages:
+                tab = getattr(self, attr)
+                b = ttk.Button(self.sidebar, text=label, style="Nav.TButton", command=lambda t=tab: self.nb.select(t))
+                b.pack(fill="x", padx=6, pady=1)
+                self.nav_buttons[str(tab)] = b
+                self.nav_info[str(tab)] = (label.split("  ", 1)[-1], sub)
+        ttk.Label(self.sidebar, text=f"v{VERSION}", style="Side.TLabel").pack(side="bottom", anchor="w", padx=16, pady=8)
+        self.nb.bind("<<NotebookTabChanged>>", lambda e: self._nav_changed())
+        self._nav_changed()
+
+    def _nav_changed(self):
+        cur = self.nb.select()
+        for key, b in self.nav_buttons.items():
+            b.configure(style="NavOn.TButton" if key == cur else "Nav.TButton")
+        title, sub = self.nav_info.get(cur, ("", ""))
+        self.page_title.set(title)
+        self.page_sub.set(sub)
 
     # about & updates
     def _build_about(self):
@@ -475,8 +548,18 @@ class App(tk.Tk):
         tree.tag_configure("bad", foreground=RED)
         tree.tag_configure("muted", foreground=MUTED)
         tree.tag_configure("starter", foreground=GOLD)
+        tree.tag_configure("odd", background=STRIPE)
         tree._sortkeys = {}
         return frame, tree
+
+    @staticmethod
+    def _stripe(tree):
+        """Alternate row shading (kept correct after sorting)."""
+        for i, iid in enumerate(tree.get_children("")):
+            tags = [t for t in tree.item(iid, "tags") if t != "odd"]
+            if i % 2:
+                tags.append("odd")
+            tree.item(iid, tags=tags)
 
     def _sort(self, tree, col):
         rev = getattr(tree, "_rev", {}).get(col, False)
@@ -492,6 +575,7 @@ class App(tk.Tk):
         for i, iid in enumerate(items):
             tree.move(iid, "", i)
         tree._rev = {col: not rev}
+        self._stripe(tree)
 
     def _fill(self, tree, rows):
         tree.delete(*tree.get_children())
@@ -503,22 +587,29 @@ class App(tk.Tk):
             for c, s in zip(cols, sortvals):
                 if s is not None:
                     tree._sortkeys[(iid, c)] = s
+        self._stripe(tree)
 
     # dashboard
     def _build_dash(self):
         cards = ttk.Frame(self.tab_dash)
         cards.pack(fill="x")
         self.cards = {}
-        for i, (key, label) in enumerate((("realized", "Realized profit"), ("week", "Last 7 days"),
-                                          ("held", "Stock (cost -> value)"), ("st", "Sell-through"),
-                                          ("scan", "Last scan"), ("tracked", "Items tracked"))):
-            f = ttk.Frame(cards, style="Card.TFrame", padding=(14, 10))
-            f.grid(row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
+        self.card_values = {}
+        for i, (key, label, accent) in enumerate((("realized", "Realized profit", ACCENT), ("week", "Last 7 days", ACCENT),
+                                                  ("held", "Stock (cost -> value)", GOLD), ("st", "Sell-through", BLUE),
+                                                  ("scan", "Last scan", BLUE), ("tracked", "Items tracked", MUTED))):
+            outer = tk.Frame(cards, bg=CARD)
+            outer.grid(row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
             cards.columnconfigure(i, weight=1)
+            tk.Frame(outer, bg=accent, height=3).pack(fill="x")      # colour strip: what kind of number this is
+            f = ttk.Frame(outer, style="Card.TFrame", padding=(14, 8, 14, 10))
+            f.pack(fill="both", expand=True)
             ttk.Label(f, text=label, style="Card.TLabel").pack(anchor="w")
             v = tk.StringVar(value="-")
-            ttk.Label(f, textvariable=v, style="CardValue.TLabel").pack(anchor="w", pady=(4, 0))
+            lbl = ttk.Label(f, textvariable=v, style="CardValue.TLabel")
+            lbl.pack(anchor="w", pady=(4, 0))
             self.cards[key] = v
+            self.card_values[key] = lbl
         mid = ttk.Frame(self.tab_dash)
         mid.pack(fill="both", expand=True, pady=(14, 0))
         left = ttk.Frame(mid)
@@ -1108,6 +1199,9 @@ class App(tk.Tk):
         s = engine.summary(self.con, realm, self.ledger, self.model)
         self.cards["realized"].set(money(s["realized"], True))
         self.cards["week"].set(money(s["week"], True))
+        for key in ("realized", "week"):        # green when you're up, red when you're down
+            val = s[key] or 0
+            self.card_values[key].configure(foreground=ACCENT if val > 0 else RED if val < 0 else FG)
         self.cards["held"].set(f"{money(s['held_cost'], True)} -> {money(s['held_value'], True)}")
         self.cards["st"].set("-" if s["sell_through"] is None else f"{s['sell_through']:.0%}")
         self.cards["scan"].set(ago(s["last_scan"]["t"]) if s["last_scan"] else "never")
@@ -1132,11 +1226,11 @@ class App(tk.Tk):
         has_plan = bool(key and engine.plan_for(key))
         steps = [
             (installed, "Install the addon (Settings tab)"),
-            (scanned, "In game: open the auction house, click Full scan, then /reload"),
+            (scanned, "In game: open the auction house and click Full scan (the list builds itself in game)"),
             (fresh, "Keep data fresh: scan every few hours (more scans = smarter prices)"),
             (bool(self.char), "Pick your character at the top and set its budget"),
-            (has_plan, "Click 'Build shopping list' (top right)"),
-            (False, "In game: /reload, open the AH, press the big button to buy deals"),
+            (has_plan, "Once: click 'Build shopping list' and Reload in game, so the addon learns your budget"),
+            (False, "At the AH: press the big button (or your key) to buy deals; autopilot keeps checking"),
             (False, "Click 'Post my items' to sell; profits get learned automatically"),
         ]
         first_todo = next((i for i, (done, _) in enumerate(steps) if not done), None)
@@ -1236,8 +1330,8 @@ HELP = [
     ("h", "The loop"),
     ("p", "1. Settings -> Install / update the addon.\n"
           "2. In game: open the auction house, click 'Full scan' on the FlipForever panel (allowed once every 15 min).\n"
-          "3. Type /reload. The game saves the scan, and this app imports it automatically.\n"
-          "4. Click 'Build shopping list' here, then /reload in game again.\n"
+          "3. When the scan finishes, the addon rebuilds your shopping list in game - no reload needed.\n"
+          "4. Now and then click Reload in game: the app imports your scans and trades, learns from them and passes that back with the next list.\n"
           "5. At the auction house, press the big button: it searches each item and stops on deals - press again to buy "
           "(commodities ask once more to confirm the final price).\n"
           "6. Click 'Post my items' to list what you bought (and your farmed loot, if enabled). It undercuts the cheapest "
