@@ -352,6 +352,14 @@ function AD:Compute()
       if ok and step then add(40, "prof", step .. " - Professions planner",
         "The cheapest next skill-up from the Professions planner, priced with your auction scans.") end
     end
+    -- the most profitable craft across all professions you've opened
+    local okP, profit = pcall(FF.Professions.ProfitList, FF.Professions)
+    local best = okP and profit and profit[1]
+    if best then
+      add(38, "prof", ("Craft for profit: %dx %s, about +%s each - Professions planner, profit view"):format(
+        best.crafts, best.recipe.name, FF:Money(best.profit)),
+        "Sells for more than its materials after the AH cut and deposit, and sells at least 3 a day.")
+    end
   end
   for _, pr in ipairs(profs) do
     if (pr.name == "Mining" or pr.name == "Herbalism") and ns and ns.db and not ns.skipGather then

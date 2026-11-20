@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.1] - 2026-11-20 (beta)
+### Added
+- **Crafting profit finder.** The profession planner has a second view, *Show profitable crafts*. It lists every recipe you know, across all professions you've opened, whose result sells for more than its materials after the 5% AH cut and a deposit allowance. Materials you craft yourself are costed from their own materials.
+  - Only results that sell at least 3 a day, so nothing sits in your bags. The suggested amount is what you can sell in about two days (at most 20).
+  - **Buy mats for the top craft** queues the missing materials. At the auction house, *Buy profession mats* works through them with the usual price limit.
+  - The best profitable craft also appears as an Advisor step.
+
 ## [2.4.0-beta.5] - 2026-11-20 (beta)
 ### Added
 - Advisor: hover a step to see its full text and why it's suggested, e.g. your build's talent order and its guide, a gear upgrade for a weak slot, or gold per hour measured from your own gathering.

@@ -146,6 +146,76 @@ function P:Plan(profName)
   return recs, data
 end
 
+-- Crafting for profit -----------------------------------------------------------------------------------
+-- Crafts you know whose result sells for more than the materials cost, after the AH cut and a
+-- deposit allowance. Only results that sell fast (same "sells per day" rule as flipping), and
+-- never more than you can sell in about two days.
+P.DEPOSIT = 0.015
+
+function P:ProfitList(profName)
+  local s = FlipForeverDB.settings
+  local minPerDay = s.craftMinPerDay or 3
+  local minMargin = s.craftMinMargin or 0.10
+  local names = {}
+  if profName then names[1] = profName else for name in pairs(self:Store()) do names[#names + 1] = name end end
+  table.sort(names)
+  local out, seen = {}, {}
+  for _, prof in ipairs(names) do
+    local data = self:Store()[prof]
+    if data then
+      self:Plan(prof) -- fills craftCost / craftRecipe for things you make yourself
+      for _, r in ipairs(data.recipes) do
+        local price = r.learned and r.out and #r.mats > 0 and FF:PriceOf(r.out)
+        if price and not seen[r.id] then
+          seen[r.id] = true
+          local cost, unknown = 0, false
+          for _, m in ipairs(r.mats) do
+            local unit = self:UnitCost(m[1])
+            if unit then cost = cost + unit * m[2] else unknown = true end
+          end
+          local qty = r.outQty or 1
+          local value = math.floor(price * qty * (1 - 0.05 - P.DEPOSIT))
+          local profit = value - cost
+          local perDay = FF.Planner and FF.Planner:SellsPerDay(r.out)
+          local margin = cost > 0 and profit / cost or 0
+          if not unknown and profit > 0 and margin >= minMargin and perDay and perDay >= minPerDay then
+            -- about half the market's sales over ~2 days, at most 20 crafts
+            local crafts = math.max(1, math.min(20, math.floor(perDay * 0.5 * 2 / qty)))
+            out[#out + 1] = { recipe = r, prof = prof, cost = cost, value = value, profit = profit, margin = margin,
+              perDay = perDay, crafts = crafts, total = profit * crafts }
+          end
+        end
+      end
+    end
+  end
+  table.sort(out, function(a, b)
+    if a.total ~= b.total then return a.total > b.total end
+    return a.recipe.id < b.recipe.id
+  end)
+  return out
+end
+
+-- auction house buy list for the top profitable crafts (what you don't already have)
+function P:ProfitBuyList(profName, howMany)
+  local list, merged = {}, {}
+  for i, e in ipairs(self:ProfitList(profName)) do
+    if i > (howMany or 1) then break end
+    self:Plan(e.prof)
+    for _, m in ipairs(self:Missing({ recipe = e.recipe, crafts = e.crafts })) do
+      if m.missing > 0 and m.source == "ah" and m.unit then
+        local entry = merged[m.id]
+        if not entry then
+          entry = { id = m.id, qty = 0, max = math.floor(m.unit * 1.25) }
+          merged[m.id] = entry
+          list[#list + 1] = entry
+        end
+        entry.qty = entry.qty + m.missing
+      end
+    end
+  end
+  return list
+end
+
 -- can you gather this yourself? (ores/herbs the Gathering module knows, and you have the skill)
 function P:Gatherable(id)
   local ns = FF.gatherNS
@@ -265,9 +335,13 @@ local function build()
   f.prof:SetPoint("RIGHT", f, "RIGHT", -14, 0)
   f.prof:SetJustifyH("LEFT")
 
-  local h1 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  h1:SetPoint("TOPLEFT", 14, -68)
-  h1:SetText("Cheapest skill-ups")
+  f.h1 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  f.h1:SetPoint("TOPLEFT", 14, -68)
+  f.h1:SetText("Cheapest skill-ups")
+  f.mode = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+  f.mode:SetSize(130, 20)
+  f.mode:SetPoint("TOPRIGHT", -14, -64)
+  f.mode:SetScript("OnClick", function() P:SetMode(P.mode == "profit" and "skill" or "profit") end)
   f.rows = {}
   for i = 1, ROWS do
     local fs = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -277,9 +351,9 @@ local function build()
     fs:SetWordWrap(false)
     f.rows[i] = fs
   end
-  local h2 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  h2:SetPoint("TOPLEFT", 14, -70 - (ROWS + 1) * 20)
-  h2:SetText("Materials for the top craft")
+  f.h2 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  f.h2:SetPoint("TOPLEFT", 14, -70 - (ROWS + 1) * 20)
+  f.h2:SetText("Materials for the top craft")
   f.mats = {}
   for i = 1, 6 do
     local fs = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -292,7 +366,7 @@ local function build()
   f.buy:SetSize(200, 24)
   f.buy:SetPoint("BOTTOMLEFT", 14, 14)
   f.buy:SetText("Buy missing mats at the AH")
-  f.buy:SetScript("OnClick", function() P:QueueMats() end)
+  f.buy:SetScript("OnClick", function() if P.mode == "profit" then P:QueueProfitMats() else P:QueueMats() end end)
   f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   f.hint:SetPoint("BOTTOMLEFT", 14, 44)
   f.hint:SetPoint("RIGHT", -14, 0)
@@ -312,9 +386,66 @@ function P:Cycle(step)
   self:Refresh()
 end
 
+function P:SetMode(mode)
+  self.mode = mode
+  FlipForeverDB.settings.profMode = mode
+  self:Refresh()
+end
+
+-- Profit mode: every profession you've opened, best total profit first
+function P:RefreshProfit()
+  frame.h1:SetText("Crafts that sell for more than their materials")
+  frame.h2:SetText("Materials for the top craft")
+  frame.mode:SetText("Show skill-ups")
+  frame.buy:SetText("Buy mats for the top craft")
+  local list = self:ProfitList()
+  frame.prof:SetText(#list > 0 and ("%d profitable craft%s across your professions"):format(#list, #list > 1 and "s" or "")
+    or "No profitable fast-selling crafts right now.")
+  for i, fs in ipairs(frame.rows) do
+    local e = list[i]
+    if e then
+      fs:SetText(("%dx %s  |cff33ff99+%s|r each (%d%%)  ·  ~%s/day"):format(e.crafts, e.recipe.name, FF:Money(e.profit),
+        math.floor(e.margin * 100 + 0.5), e.perDay >= 10 and ("%d"):format(math.floor(e.perDay + 0.5)) or ("%.1f"):format(e.perDay)))
+    else
+      fs:SetText(i == 1 and "Open each profession window once so FlipForever knows your recipes; prices come from your scans." or "")
+    end
+  end
+  local top = list[1]
+  if top then self:Plan(top.prof) end
+  local missing = top and self:Missing({ recipe = top.recipe, crafts = top.crafts }) or {}
+  for i, fs in ipairs(frame.mats) do
+    local m = missing[i]
+    if m then
+      local color = m.missing > 0 and "|cffff8080" or "|cff80ff80"
+      fs:SetText(("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
+        m.unit and FF:Money(m.unit) or "?", m.source == "vendor" and " |cff888888(vendor)|r" or ""))
+    else
+      fs:SetText("")
+    end
+  end
+  frame.hint:SetText("Profit after the 5% AH cut and deposit. Only results that sell at least 3 a day; amounts sized to sell within about two days.")
+end
+
+function P:QueueProfitMats()
+  local list = self:ProfitBuyList(nil, 1)
+  if #list == 0 then
+    FF:Print("Nothing to buy for the top craft (you have the materials, or they come from a vendor).")
+    return
+  end
+  self.pendingMats = list
+  FF:Print(("%d material%s queued for crafting. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, #list > 1 and "s" or ""))
+  if AuctionHouseFrame and AuctionHouseFrame:IsShown() then self:BuyPending() end
+  if FF.UI then FF.UI:Refresh() end
+end
+
 function P:Refresh()
   if not (frame and frame:IsShown()) then return end
   frame.title:SetText("|cff33ff99Flip|rForever Profession planner")
+  self.mode = self.mode or FlipForeverDB.settings.profMode or "skill"
+  if self.mode == "profit" then return self:RefreshProfit() end
+  frame.h1:SetText("Cheapest skill-ups")
+  frame.mode:SetText("Show profitable crafts")
+  frame.buy:SetText("Buy missing mats at the AH")
   if not self.current then
     for name in pairs(self:Store()) do self.current = name break end
   end

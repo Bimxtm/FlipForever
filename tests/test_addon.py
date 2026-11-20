@@ -1098,6 +1098,33 @@ assert _rows[0]["status"] in ("deal", "watching") and _rows[1]["status"] == "wat
 assert L("ROWS2")[2].status == "skipped" and L("REM_SKIPPED") == 0 and L("REM_OK") == 5 and L("REM_BACK") == 3
 print("skip: skipped item not bought, back after unticking")
 
+# --- 2.5.0: crafting profit finder (uses the Tailoring recipes captured above)
+lua.execute("""
+local FF = FlipForever
+local oldPrice, oldSpeed = FF.PriceOf, FF.Planner.SellsPerDay
+local PRICES = { [2589] = 40, [2570] = 400, [4307] = 900 }
+FF.PriceOf = function(_, id) return PRICES[id] end
+FF.Planner.SellsPerDay = function(_, id) return ({ [2570] = 6, [4307] = 1 })[id] end
+BAGCOUNT[2996] = 0
+PROFIT = FF.Professions:ProfitList()
+PBUY = FF.Professions:ProfitBuyList(nil, 1)
+FF.Professions:SetMode("profit")
+FF.Professions:Show()
+FF.Professions:QueueProfitMats()
+PENDING = FF.Professions.pendingMats or (FF.Trader.custom and FF.Trader.list)
+FF.Professions.pendingMats = nil
+FF.Trader:Stop()
+FF.Professions:SetMode("skill")
+FF.PriceOf, FF.Planner.SellsPerDay = oldPrice, oldSpeed
+""")
+_p = [dict(L("PROFIT")[i]) for i in range(1, len(L("PROFIT")) + 1)]
+print("profitable crafts:", [(e["recipe"].name, e["profit"], e["crafts"]) for e in _p])
+assert [e["recipe"].name for e in _p] == ["Linen Cloak"]          # gloves not learned, shirt has no price
+assert _p[0]["cost"] == 120 and _p[0]["profit"] == 254 and _p[0]["crafts"] == 6
+_b = [dict(L("PBUY")[i]) for i in range(1, len(L("PBUY")) + 1)]
+print("mats to buy:", _b)
+assert _b == [{"id": 2589, "qty": 8, "max": 50}] and L("PENDING") is not None
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil
