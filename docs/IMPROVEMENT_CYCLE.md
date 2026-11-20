@@ -14,7 +14,7 @@ What happens in each cycle, and the rules it follows.
 - **Nothing ships without passing tests.**
 
 ## Steps
-1. Read ROADMAP.md. Pick 1-3 items from "Small improvements" (or approved items).
+1. Read **WEEKLY_BOARD.md** first (goals, usage budget, today's plan, open problems), then ROADMAP.md. Problems marked 🔴 come before features. Check usage; above 80% of the 5-hour limit, pause and schedule a resume.
 2. Implement. Add or extend tests in `tests/`.
 3. Check:
    - `python tests/test_addon.py` passes (ALL ADDON TESTS PASSED)
@@ -23,5 +23,5 @@ What happens in each cycle, and the rules it follows.
 5. Add a CHANGELOG.md section, and rewrite NEWS.md for the player.
 6. `python tools/build_release.py`.
 7. Commit, push, and `gh release create vX.Y.Z dist/FlipForever-vX.Y.Z.zip dist/SHA256SUMS.txt --notes-file dist/release-notes.md`.
-8. Update ROADMAP.md (move done items, add new small ideas, and add major ideas under "Waiting for your OK").
+8. Update WEEKLY_BOARD.md (done items, new problems found, usage used) and ROADMAP.md (move done items, add new small ideas, and add major ideas under "Waiting for your OK"). On Thursdays, write a short weekly review and a new board for the next week.
 9. Report briefly what shipped, and ask about any new major ideas.
