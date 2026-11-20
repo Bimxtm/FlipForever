@@ -24,6 +24,7 @@ from flipforever.version import VERSION  # noqa: E402
 
 DIST = ROOT / "dist"
 INCLUDE = ["FlipForever.exe", "addon", "tools", "docs", "README.md", "CHANGELOG.md", "NEWS.md", "flipforever.ico"]
+INTERNAL = {"docs/IMPROVEMENT_CYCLE.md"}   # maintainer notes, not part of the app
 
 
 def check_versions():
@@ -66,7 +67,8 @@ def make_zip() -> Path:
             if name == "FlipForever.exe":
                 continue
             p = ROOT / name
-            files = [p] if p.is_file() else [f for f in p.rglob("*") if f.is_file() and "__pycache__" not in f.parts]
+            files = [p] if p.is_file() else [f for f in p.rglob("*") if f.is_file() and "__pycache__" not in f.parts
+                                             and f.relative_to(ROOT).as_posix() not in INTERNAL]
             for f in files:
                 z.write(f, "FlipForever/" + f.relative_to(ROOT).as_posix())
     return zpath

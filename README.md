@@ -1,6 +1,8 @@
 # FlipForever
 
-**An all-in-one companion for World of Warcraft: Forever** (client 1.60.1, interface 16001): auction house flipping, gathering routes, a class/build advisor and a combat helper. It's a desktop app plus an in-game addon.
+by Alix
+
+**A companion for World of Warcraft: Forever** (client 1.60.1, interface 16001): auction house flipping, gathering routes, a class and build advisor, and a combat helper. It consists of a desktop app and an in-game addon.
 
 > What's new: see [NEWS.md](NEWS.md) and [CHANGELOG.md](CHANGELOG.md).
 
@@ -22,11 +24,10 @@ Every purchase, post and spell cast happens on your own key press or click, beca
 
 ## How the loop works
 1. In game, open the auction house and click **Full scan** on the FlipForever panel. The server allows one full scan every 15 minutes.
-2. Type `/reload`. The game writes the scan to disk, and the app imports it automatically.
-3. In the app, click **Build shopping list**, then `/reload` in game.
-4. At the auction house, press the big button, or bind a key with `/ff key SPACE`. The addon searches each item automatically and stops on deals. One press buys; bulk "commodity" items take a second press to confirm the final price.
-5. Click **Post my items**. It undercuts the cheapest competitor by 1c but never goes below the item's floor price.
-6. Check your mailbox now and then. Sale invoices tell the app real sale prices, and it learns from them.
+2. When the scan finishes, the addon builds your shopping list right away. With autopilot on, it keeps checking the list every minute and rescans every 30 minutes.
+3. Press the big button, or bind a key in the FlipForever window. The addon searches each item and stops on deals. One press buys; bulk "commodity" items take a second press to confirm the final price.
+4. Click **Post my items**. It undercuts the cheapest real competitor by 1c (tiny dumped lots are ignored) and never goes below the item's floor price.
+5. Click **Reload** now and then. The app imports your scans and sales, learns from them, and passes what it learned back with the next list.
 
 Blizzard requires a real key press for every purchase and every post. Fully automatic bots break the Terms of Service and get accounts banned.
 

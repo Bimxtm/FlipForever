@@ -54,7 +54,7 @@ def ago(t):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title(f"FlipForever {VERSION} - WoW Forever companion")
+        self.title(f"FlipForever {VERSION} - by Alix")
         self.geometry("1180x760")
         self.minsize(980, 620)
         self.configure(bg=BG)
@@ -229,35 +229,41 @@ class App(tk.Tk):
     # sidebar: pages grouped by what you're doing, with a one-line explanation on top of each page
     NAV = (
         ("TRADING", (
-            ("tab_dash", "▦  Dashboard", "profit, stock and what to do next"),
-            ("tab_deals", "◆  Deals", "everything worth buying, best first"),
-            ("tab_sell", "▣  Inventory & selling", "what you hold and the prices the addon posts at"),
-            ("tab_hist", "≡  Trade history", "every buy, post, sale and expiry"),
-            ("tab_learn", "✦  What it learned", "sell chances, price accuracy and margin tuning"),
+            ("tab_dash", "Dashboard", "profit, stock and what to do next"),
+            ("tab_deals", "Deals", "everything worth buying, best first"),
+            ("tab_sell", "Inventory & selling", "what you hold and the prices the addon posts at"),
+            ("tab_hist", "Trade history", "every buy, post, sale and expiry"),
+            ("tab_learn", "What it learned", "sell chances, price accuracy and margin tuning"),
         )),
         ("CHARACTER", (
-            ("tab_adv", "➤  Advisor", "your build, gear and next steps"),
-            ("tab_gather", "⛏  Gathering", "gold per hour by zone and resource"),
+            ("tab_adv", "Advisor", "your build, gear and next steps"),
+            ("tab_gather", "Gathering", "gold per hour by zone and resource"),
         )),
         ("APP", (
-            ("tab_set", "⚙  Settings", "budget, speed rules and your WoW folder"),
-            ("tab_help", "?  How to use", "the short version"),
-            ("tab_about", "↑  About & updates", "news, changelog and updates"),
-            ("tab_dev", "✎  Development", "this week's plan, test checklist and roadmap"),
+            ("tab_set", "Settings", "budget, speed rules and your WoW folder"),
+            ("tab_help", "How to use", "the short version"),
+            ("tab_about", "About & updates", "news, changelog and updates"),
+            ("tab_dev", "Development", "this week's plan, test checklist and roadmap"),
         )),
     )
 
     def _build_nav(self):
         self.nav_buttons = {}
+        self.nav_bars = {}
         self.nav_info = {}
         for section, pages in self.NAV:
             ttk.Label(self.sidebar, text=section, style="Side.TLabel").pack(anchor="w", padx=16, pady=(12, 4))
             for attr, label, sub in pages:
                 tab = getattr(self, attr)
-                b = ttk.Button(self.sidebar, text=label, style="Nav.TButton", command=lambda t=tab: self.nb.select(t))
-                b.pack(fill="x", padx=6, pady=1)
+                row = tk.Frame(self.sidebar, bg=PANEL)
+                row.pack(fill="x", padx=(0, 6), pady=1)
+                bar = tk.Frame(row, bg=PANEL, width=3)          # accent marker for the open page
+                bar.pack(side="left", fill="y")
+                b = ttk.Button(row, text=label, style="Nav.TButton", command=lambda t=tab: self.nb.select(t))
+                b.pack(side="left", fill="x", expand=True, padx=(3, 0))
                 self.nav_buttons[str(tab)] = b
-                self.nav_info[str(tab)] = (label.split("  ", 1)[-1], sub)
+                self.nav_bars[str(tab)] = bar
+                self.nav_info[str(tab)] = (label, sub)
         ttk.Label(self.sidebar, text=f"v{VERSION}", style="Side.TLabel").pack(side="bottom", anchor="w", padx=16, pady=8)
         self.nb.bind("<<NotebookTabChanged>>", lambda e: self._nav_changed())
         self._nav_changed()
@@ -266,6 +272,7 @@ class App(tk.Tk):
         cur = self.nb.select()
         for key, b in self.nav_buttons.items():
             b.configure(style="NavOn.TButton" if key == cur else "Nav.TButton")
+            self.nav_bars[key].configure(bg=ACCENT if key == cur else PANEL)
         title, sub = self.nav_info.get(cur, ("", ""))
         self.page_title.set(title)
         self.page_sub.set(sub)
@@ -276,7 +283,7 @@ class App(tk.Tk):
         top = ttk.Frame(f)
         top.pack(fill="x")
         ttk.Label(top, text=f"FlipForever {VERSION}", style="Title.TLabel", foreground=ACCENT).pack(side="left")
-        ttk.Label(top, text=f"   updates from github.com/{GITHUB_REPO}", style="Muted.TLabel").pack(side="left")
+        ttk.Label(top, text=f"   by Alix  ·  updates from github.com/{GITHUB_REPO}", style="Muted.TLabel").pack(side="left")
         row = ttk.Frame(f)
         row.pack(fill="x", pady=(10, 0))
         self.upd_check_btn = ttk.Button(row, text="Check for updates", style="Accent.TButton", command=self.check_updates)
@@ -355,9 +362,9 @@ class App(tk.Tk):
         self._show_markdown(self.board_text, board)
         self._show_markdown(self.road_text, road)
         problems = sum(1 for l in board.splitlines() if l.startswith("| P"))
-        open_high = sum(1 for l in board.splitlines() if l.startswith("| P") and "🔴" in l)
-        self.dev_info.set(f"version {VERSION}  ·  {problems} tracked problems ({open_high} high)  ·  "
-                          f"updated by every 12-hour cycle")
+        open_high = sum(1 for l in board.splitlines() if l.startswith("| P") and "| High |" in l)
+        self.dev_info.set(f"version {VERSION}  ·  {problems} open issues ({open_high} high priority)  ·  "
+                          f"updated with every release")
 
     def _show_markdown(self, widget, md):
         widget.configure(state="normal")
@@ -596,7 +603,7 @@ class App(tk.Tk):
         self.cards = {}
         self.card_values = {}
         for i, (key, label, accent) in enumerate((("realized", "Realized profit", ACCENT), ("week", "Last 7 days", ACCENT),
-                                                  ("held", "Stock (cost -> value)", GOLD), ("st", "Sell-through", BLUE),
+                                                  ("held", "Stock: cost / value", GOLD), ("st", "Sell-through", BLUE),
                                                   ("scan", "Last scan", BLUE), ("tracked", "Items tracked", MUTED))):
             outer = tk.Frame(cards, bg=CARD)
             outer.grid(row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0))
@@ -1202,7 +1209,7 @@ class App(tk.Tk):
         for key in ("realized", "week"):        # green when you're up, red when you're down
             val = s[key] or 0
             self.card_values[key].configure(foreground=ACCENT if val > 0 else RED if val < 0 else FG)
-        self.cards["held"].set(f"{money(s['held_cost'], True)} -> {money(s['held_value'], True)}")
+        self.cards["held"].set(f"{money(s['held_cost'], True)} / {money(s['held_value'], True)}")
         self.cards["st"].set("-" if s["sell_through"] is None else f"{s['sell_through']:.0%}")
         self.cards["scan"].set(ago(s["last_scan"]["t"]) if s["last_scan"] else "never")
         self.cards["tracked"].set(f"{s['tracked']:,}")

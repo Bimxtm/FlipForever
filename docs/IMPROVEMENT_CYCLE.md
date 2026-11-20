@@ -12,9 +12,14 @@ What happens in each cycle, and the rules it follows.
 - **Blizzard's rules stay intact:** every buy, post and cast needs a key press or click. No automation from game state in combat.
 - **Hands off while WoW is running:** never edit SavedVariables or AddOns.txt then.
 - **Nothing ships without passing tests.**
+- **House style for everything users see** (app, addon, NEWS, CHANGELOG, README, release notes, WEEKLY_BOARD, ROADMAP, IN_GAME_TEST, commit messages): plain, professional wording; no emoji or decorative symbols; no mention of how the project is built or of usage limits. Process notes stay in this file, which is not shipped or shown in the app.
+
+## Usage budget (internal)
+- Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.
+- The owner asked (20 Nov) to use the weekly allowance fully until the reset on Sat 21 Nov 14:00; after that, about 10% of the weekly limit per day, with ~15% kept for real-game bug fixes.
 
 ## Steps
-1. Read **WEEKLY_BOARD.md** first (goals, usage budget, today's plan, open problems), then ROADMAP.md. Problems marked 🔴 come before features. Check usage; above 80% of the 5-hour limit, pause and schedule a resume.
+1. Read **WEEKLY_BOARD.md** first (goals, schedule, open issues), then ROADMAP.md. High-severity issues come before features. Check usage (see Usage budget).
 2. Implement. Add or extend tests in `tests/`.
 3. Check:
    - `python tests/test_addon.py` passes (ALL ADDON TESTS PASSED)
@@ -23,5 +28,5 @@ What happens in each cycle, and the rules it follows.
 5. Add a CHANGELOG.md section, and rewrite NEWS.md for the player.
 6. `python tools/build_release.py`.
 7. Commit, push, and `gh release create vX.Y.Z dist/FlipForever-vX.Y.Z.zip dist/SHA256SUMS.txt --notes-file dist/release-notes.md`.
-8. Update WEEKLY_BOARD.md (done items, new problems found, usage used) and ROADMAP.md (move done items, add new small ideas, and add major ideas under "Waiting for your OK"). On Thursdays, write a short weekly review and a new board for the next week.
+8. Update WEEKLY_BOARD.md (done items, new issues found) and ROADMAP.md (move done items, add new small ideas, and add major ideas under "Waiting for your OK"). On Thursdays, write a short weekly review and a new board for the next week.
 9. Report briefly what shipped, and ask about any new major ideas.
