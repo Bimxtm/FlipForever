@@ -648,9 +648,8 @@ function C:Apply()
     if not btn then create() end
     bar:Show()
     self:Rebuild()
-    local key = FlipForeverDB.settings.combatKey
     ClearOverrideBindings(bar)
-    if key then SetOverrideBindingClick(bar, false, key, "FlipForeverCombatButton", "LeftButton") end
+    for _, key in ipairs(self:Keys()) do SetOverrideBindingClick(bar, false, key, "FlipForeverCombatButton", "LeftButton") end
   elseif bar then
     ClearOverrideBindings(bar)
     bar:Hide()
@@ -666,6 +665,15 @@ function C:Toggle()
   if FF.Hub then FF.Hub:Refresh() end
 end
 
+-- the combat helper's keys: the one you set, else + (main keyboard and numpad); none after Clear
+C.DEFAULT_KEYS = { "+", "NUMPADPLUS" }
+function C:Keys()
+  local key = FlipForeverDB.settings.combatKey
+  if key == false then return {} end
+  if key then return { key } end
+  return C.DEFAULT_KEYS
+end
+
 function C:SetKey(key)
   if InCombatLockdown() then FF:Print("Can't change keys during a fight.") return false end
   local clash = key and (FF:KeyConflict(key) or (key == FlipForeverDB.settings.key and "FlipForever's auction house key"))
@@ -673,7 +681,7 @@ function C:SetKey(key)
     FF:Print(("|cffff5555%s is already used by %s|r - pick another."):format(key, clash))
     return false
   end
-  FlipForeverDB.settings.combatKey = key
+  FlipForeverDB.settings.combatKey = key or false   -- false: you cleared it (no default key either)
   FF:Print(key and ("Combat helper key: |cffffff00" .. key .. "|r") or "Combat helper key cleared.")
   self:Apply()
   if FF.Hub then FF.Hub:Refresh() end

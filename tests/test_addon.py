@@ -1521,6 +1521,31 @@ assert _m.split("\n")[-1].startswith("/castsequence reset=target/combat Battle S
 assert "Mortal Strike" not in _m.split("\n")[-1] and len(_m) <= 255 and L("SMART_COUNT") == 0
 assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Rend"
 
+# --- combat helper key: + by default (main keyboard and numpad), your own key replaces it, Clear removes it
+lua.execute("""
+local C = FlipForever.Combat
+BOUND = {}
+local oldSet = SetOverrideBindingClick
+SetOverrideBindingClick = function(owner, prio, key, button) BOUND[#BOUND + 1] = key end
+FlipForeverDB.settings.combatKey = nil
+if not C:Enabled() then C:Toggle() end
+BOUND = {}
+C:Apply()
+KEYS_DEFAULT = table.concat(BOUND, ",")
+BOUND = {}
+C:SetKey("F")
+KEYS_OWN = table.concat(BOUND, ",")
+BOUND = {}
+C:SetKey(nil)
+KEYS_CLEARED = table.concat(BOUND, ",")
+STORED = tostring(FlipForeverDB.settings.combatKey)
+FlipForeverDB.settings.combatKey = nil
+C:Toggle()
+SetOverrideBindingClick = oldSet
+""")
+print("combat keys: default", L("KEYS_DEFAULT"), "| own", L("KEYS_OWN"), "| cleared", repr(L("KEYS_CLEARED")), "| stored", L("STORED"))
+assert L("KEYS_DEFAULT") == "+,NUMPADPLUS" and L("KEYS_OWN") == "F" and L("KEYS_CLEARED") == "" and L("STORED") == "false"
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

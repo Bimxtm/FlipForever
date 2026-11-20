@@ -30,6 +30,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 16 (your request): combat helper key + by default.
 - 2.5.0 beta 15 (your request): combat helper waits for cooldowns - cooldown abilities on ready, the rest as a cast sequence that only advances after a successful cast.
 - 2.5.0 beta 14: shopping list sorted by status with expected profit per item.
 - 2.5.0 beta 13: profit per character on the app Dashboard.

@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.16] - 2026-11-20 (beta)
+### Changed
+- The combat helper's key is **+** by default (the + key and numpad +). A key you set yourself replaces it; *Clear* removes all keys.
+
 ## [2.5.0-beta.15] - 2026-11-20 (beta)
 ### Changed
 - **Combat helper waits for cooldowns (smart mode, on by default).** Each press now uses one macro that the game itself evaluates:
