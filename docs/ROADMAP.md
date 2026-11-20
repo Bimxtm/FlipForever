@@ -10,7 +10,7 @@
 ## Smaller improvements
 - Translate the remaining texts (Advisor steps, chat messages, app pages) into all 11 languages.
 - Language-independent spells (spell IDs), so the advisor and combat helper work on any client language.
-- Advisor: more builds per class as post-launch level-60 guides are published.
+- Advisor: refresh builds when Warcraft Tavern replaces its level 30 beta builds, and add Mobalytics/Icy Veins builds once they can be read.
 
 ## Done
 - 2.5.0 (betas): crafting profit finder in the profession planner; gear finder for affordable auction house upgrades; encrypted token storage; setup for other players; all 11 game languages (menus and buttons so far); vendor flips; deposit-accurate profit math; vendor floor when posting; combat helper for levels 1-60; exact skill-up chances; 9 builds per class from Method, Warcraft Tavern and RankedBoost.
