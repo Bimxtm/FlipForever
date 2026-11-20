@@ -43,6 +43,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P8 | Gathering stats show "map 1411" until the addon has run once | 🟡 low | Names saved at login (done); verify Fri |
 | P10 | **New shopping lists need /reload, and scans only reach the app after /reload or logout** (WoW only reads and writes addon data at load and logout) | 🟠 med | In-game planning after each scan + one-click sync (Beta 2) |
 | P11 | **After a scan you don't know when to reload, and autopilot keeps buying from the old list** | 🟠 med | Beta 3: scan-done alert (sound, raid warning, flashing Reload), autopilot pauses until the reload, app auto-builds the list and notifies |
+| P12 | **Combat helper: one key should also pick targets, adapting to your role** (top priority, user request) | 🟠 med | Beta 3. Every step gets `/targetenemy [noharm][dead]`, so it picks the nearest enemy when you have none or yours is dead/friendly. Tank builds (Protection, Bear) also target your friendly target's attacker (`[@targettarget,harm]`), get Taunt/Growl steps and an "enemy on <ally>" warning. Blizzard doesn't let addons choose targets by "who is attacking whom" in combat, so this uses the allowed macro targeting only. |
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
