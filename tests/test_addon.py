@@ -1,0 +1,723 @@
+"""Addon tests: loads every addon file in a real Lua VM (lupa) with a mocked WoW API.
+Run: python tests/test_addon.py   (needs: pip install lupa)"""
+"""Load the addon in a real Lua VM with a mocked WoW API and drive scan/buy/sell flows."""
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent / "luapkg"))  # optional local copy: pip install --target tests/luapkg lupa
+import lupa  # noqa: E402
+
+ADDON = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent / "addon" / "FlipForever"
+lua = lupa.LuaRuntime(unpack_returned_tuples=True)
+
+MOCK = r"""
+unpack = table.unpack
+local timers = {}
+NOW = 1800000000
+function time() return NOW end
+function GetTime() return NOW end
+C_Timer = { After = function(d, fn) table.insert(timers, {d=d, fn=fn}) end }
+TICKERS = {}
+function C_Timer.NewTicker(d, fn)
+  local t = { fn = fn, cancelled = false }
+  function t:Cancel() self.cancelled = true end
+  table.insert(TICKERS, t)
+  return t
+end
+-- fire every live ticker once (simulates `secs` seconds passing per call)
+function RunTickers()
+  for _, t in ipairs(TICKERS) do if not t.cancelled then t.fn() end end
+end
+function hooksecurefunc(tbl, name, hook)
+  local orig = tbl[name]
+  tbl[name] = function(...) local r = {orig(...)} hook(...) return table.unpack(r) end
+end
+function InCombatLockdown() return false end
+function GetBindingAction(k) return "" end
+SOUNDKIT = { RAID_WARNING = 8959, READY_CHECK = 8960 }
+ALERTS = {}
+function PlaySound(k) table.insert(ALERTS, "sound:" .. k) end
+RaidWarningFrame = {}
+ChatTypeInfo = { RAID_WARNING = {} }
+function RaidNotice_AddMessage(f, text) table.insert(ALERTS, "rw:" .. text) end
+function FlashClientIcon() table.insert(ALERTS, "flash") end
+-- secure handler mock: compile the restricted snippet as plain Lua
+WRAPS = {}
+function SecureHandlerWrapScript(frame, script, header, body)
+  local fn = assert(load("local self, button, down = ...; " .. body))
+  WRAPS[frame] = WRAPS[frame] or {}
+  WRAPS[frame][script] = fn
+end
+-- simulate a click: secure action, then the wrapped PostClick, then hooks
+CASTS = {}
+function ClickButton(frame, down)
+  table.insert(CASTS, frame:GetAttribute("macrotext") or frame:GetAttribute("spell"))
+  local w = WRAPS[frame] and WRAPS[frame].PostClick
+  if w then w(frame, "LeftButton", down) end
+  for _, h in ipairs(frame.hooks.PostClick or {}) do h(frame, "LeftButton", down) end
+end
+function GetCVarBool(name) return false end
+TARGET = nil  -- {name=, ctype=, level=, class=, power=}
+function UnitExists(u) return u == "target" and TARGET ~= nil or u == "player" end
+function UnitCanAttack() return TARGET ~= nil end
+function UnitCreatureType() return TARGET and TARGET.ctype end
+function UnitClassification() return TARGET and TARGET.class or "normal" end
+function UnitPowerType() return TARGET and TARGET.power or 1 end
+COMBAT = false
+function InCombatLockdown() return COMBAT end
+function IsShiftKeyDown() return false end
+C_Spell = { GetSpellTexture = function(name) return "icon:" .. tostring(name) end }
+MODS = {}
+function IsAltKeyDown() return MODS.alt end
+function IsControlKeyDown() return MODS.ctrl end
+function IsShiftKeyDown() return MODS.shift end
+COMPARTMENT = {}
+AddonCompartmentFrame = { RegisterAddon = function(self, info) table.insert(COMPARTMENT, info.text) end }
+function RunTimers(maxd)
+  local guard = 0
+  while #timers > 0 and guard < 10000 do
+    guard = guard + 1
+    table.sort(timers, function(a,b) return a.d < b.d end)
+    local t = table.remove(timers, 1)
+    if t.d <= (maxd or 1e9) then t.fn() end
+  end
+end
+function DropTimers() timers = {} end
+printed = {}
+function print(...) local p = {} for i=1,select('#',...) do p[#p+1]=tostring(select(i,...)) end table.insert(printed, table.concat(p," ")) end
+function GetRealmName() return "Testrealm" end
+function UnitFactionGroup() return "Horde" end
+function UnitName() return "Tester" end
+function UnitClass() return "Mage", "MAGE" end
+PLEVEL = 22
+function UnitLevel() return PLEVEL end
+function UnitRace() return "Skyborne", "Skyborne" end
+C_AddOns = { GetAddOnEnableState = function(name, char) return OREFARMER_ON and 2 or 0 end }
+UISpecialFrames = {}
+tinsert = table.insert
+issecretvalue = function() return false end
+-- spellbook (classic API)
+KNOWN = { "Frostbolt", "Fireball", "Frost Nova" }
+function GetNumSpellTabs() return 1 end
+function GetSpellTabInfo(t) return "General", nil, 0, #KNOWN end
+function GetSpellBookItemName(i) return KNOWN[i] end
+-- gear: slot -> {id, name, quality, ilvl}
+GEAR = { [16] = {id=100, name="Apprentice's Staff", q=1} , [5] = {id=101, name="Robe", q=2} }
+ITEMNAMES = { [100] = "Apprentice's Staff", [101] = "Robe" }
+function GetInventoryItemID(u, s) return GEAR[s] and GEAR[s].id end
+function GetInventoryItemQuality(u, s) return GEAR[s] and GEAR[s].q end
+function GetInventoryItemLink(u, s) return nil end
+-- talents (classic): tab, index -> name, icon, tier, col, rank, max
+TALENTS = { {"Improved Frostbolt", 5, 5}, {"Precision", 3, 3}, {"Frostbite", 3, 3}, {"Ice Shards", 1, 3}, {"Ice Lance", 0, 1} }
+function GetNumTalentTabs() return 1 end
+function GetNumTalents(tab) return #TALENTS end
+function GetTalentInfo(tab, i) local t = TALENTS[i] return t[1], nil, 1, 1, t[2], t[3] end
+UNSPENT = 2
+function UnitCharacterPoints() return UNSPENT end
+-- professions
+PROFS = {}
+function GetProfessions() return PROFS[1], PROFS[2] end
+function GetProfessionInfo(idx) local p = PROFS_INFO[idx] return p[1], nil, p[2], 300 end
+PROFS_INFO = {}
+QUESTS = {}
+C_QuestLog = { GetNumQuestLogEntries = function() return #QUESTS end, GetInfo = function(i) return { title = QUESTS[i] } end }
+function GetMoney() return 1000000 end
+ERR_AUCTION_SOLD_S = "A buyer has been found for your auction of %s."
+ERR_AUCTION_EXPIRED_S = "Your auction of %s has expired."
+SlashCmdList = {}
+Enum = { AuctionHouseSortOrder = { Price = 0 } }
+NUM_BAG_SLOTS = 4
+
+local frames = {}
+local function newFrame()
+  local f = { events = {}, shown = true }
+  function f:RegisterEvent(e) self.events[e] = true end
+  function f:SetScript(k, fn) self[k] = fn end
+  local noop = function() end
+  setmetatable(f, { __index = function(t, k)
+    if type(k) == "string" and k:match("^Create") and k ~= "CreateFontString" then
+      return function() return newFrame() end
+    end
+    return function(self, ...) return nil end
+  end })
+  f.Show = function(self) self.shown = true end
+  f.Hide = function(self) self.shown = false end
+  f.IsShown = function(self) return self.shown end
+  f.CreateFontString = function() return setmetatable({}, { __index = function() return function() end end }) end
+  f.SetText = function(self, t) self.text = t end
+  f.SetEnabled = function(self, e) self.enabled = e end
+  f.attrs = {}
+  f.SetAttribute = function(self, k, v) self.attrs[k] = v end
+  f.GetAttribute = function(self, k) return self.attrs[k] end
+  f.hooks = {}
+  f.HookScript = function(self, script, fn) self.hooks[script] = self.hooks[script] or {} table.insert(self.hooks[script], fn) end
+  f.SetTexture = function(self, t) self.texture = t end
+  f.SetChecked = function(self, v) self.checked = v and true or false end
+  f.GetChecked = function(self) return self.checked end
+  f.SetScript = function(self, k, fn) self[k] = fn end
+  f.GetWidth = function() return 140 end
+  f.CreateTexture = function() return newFrame() end
+  table.insert(frames, f)
+  return f
+end
+function CreateFrame(kind, name, parent, template)
+  local f = newFrame()
+  if name then _G[name] = f end
+  return f
+end
+UIParent = newFrame()
+Minimap = newFrame()
+AuctionHouseFrame = newFrame()
+function ClearOverrideBindings() end
+function SetOverrideBindingClick(...) LAST_BIND = {...} end
+function Fire(event, ...)
+  for _, f in ipairs(frames) do
+    if f.events[event] and f.OnEvent then f.OnEvent(f, event, ...) end
+  end
+end
+
+-- auction house mock
+calls = {}
+local function rec(name) return function(...) table.insert(calls, {name, ...}) end end
+REPL = {}
+COMMODITY = {}  -- itemID -> rows
+C_AuctionHouse = {
+  ReplicateItems = rec("ReplicateItems"),
+  GetNumReplicateItems = function() return #REPL end,
+  GetReplicateItemInfo = function(i)
+    local r = REPL[i + 1]
+    if not r then error("replicate index out of range " .. i) end
+    return r.name, nil, r.count, 1, true, 1, 0, 0, 0, r.buyout, 0, false, nil, "x", "x", 0, r.id, true
+  end,
+  SendSearchQuery = function(key, sorts, sep) table.insert(calls, {"SendSearchQuery", key.itemID}) end,
+  MakeItemKey = function(id) return { itemID = id, itemLevel = 0, itemSuffix = 0 } end,
+  IsThrottledMessageSystemReady = function() return true end,
+  GetNumCommoditySearchResults = function(id) return #(COMMODITY[id] or {}) end,
+  GetCommoditySearchResultInfo = function(id, i) return COMMODITY[id][i] end,
+  StartCommoditiesPurchase = rec("StartCommoditiesPurchase"),
+  ConfirmCommoditiesPurchase = rec("ConfirmCommoditiesPurchase"),
+  CancelCommoditiesPurchase = rec("CancelCommoditiesPurchase"),
+  PlaceBid = rec("PlaceBid"),
+  PostCommodity = rec("PostCommodity"),
+  PostItem = rec("PostItem"),
+  CalculateCommodityDeposit = function(id, d, q) return 15 * q end,
+  IsSellItemValid = function() return true end,
+  GetItemKeyInfo = function() return nil end,
+}
+C_Item = { GetItemNameByID = function(id) return ITEMNAMES and ITEMNAMES[id] end, GetItemCount = function(id) return BAGCOUNT[id] or 0 end }
+BAGCOUNT = {}
+BAGS = {}  -- [bag][slot] = {itemID=, stackCount=}
+C_Container = {
+  GetContainerNumSlots = function(bag) return 16 end,
+  GetContainerItemInfo = function(bag, slot) return BAGS[bag] and BAGS[bag][slot] end,
+}
+ItemLocation = { CreateFromBagAndSlot = function(self, b, s) return { bag = b, slot = s } end }
+function GetInboxNumItems() return #INBOX end
+INBOX = {}
+function GetInboxInvoiceInfo(i) local m = INBOX[i] return "seller", m.name, "Buyer", m.bid, m.bid, m.dep, m.cut, 0, 0, 0, m.count end
+function GetInboxHeaderInfo(i) return nil, nil, "AH", "Sold", INBOX[i].bid, 0, INBOX[i].daysLeft end
+"""
+lua.execute(MOCK)
+toc = (ADDON / "FlipForever.toc").read_text(encoding="utf-8").splitlines()
+files = [l.strip() for l in toc if l.strip().endswith(".lua")]
+print("load order from TOC:", files)
+shared_ns = lua.table()   # WoW gives every file of one addon the same private table
+for f in files:
+    src = (ADDON / f.replace("\\", "/")).read_text(encoding="utf-8")
+    fn = lua.eval("function(src, name) local f, err = load(src, '@'..name) if not f then error(err) end return f end")(src, f)
+    fn("FlipForever", shared_ns)
+print("all files compile and load")
+
+L = lua.eval
+lua.execute("""
+Fire("ADDON_LOADED", "FlipForever")
+Fire("PLAYER_LOGIN")
+Fire("AUCTION_HOUSE_SHOW")
+""")
+
+# --- full scan
+lua.execute("""
+REPL = {
+  {name="Linen Cloth", id=2589, count=20, buyout=20*50},
+  {name="Linen Cloth", id=2589, count=10, buyout=10*40},
+  {name="Linen Cloth", id=2589, count=40, buyout=40*70},
+  {name="Copper Ore", id=2770, count=5, buyout=5*100},
+}
+FlipForeverDB.lastReplicate = 0
+FlipForever.Scan:StartFull()
+Fire("REPLICATE_ITEM_LIST_UPDATE")
+for i = 1, 6 do RunTickers() end
+RunTimers(5)
+""")
+db = L("FlipForeverDB.realms['Testrealm - Horde']")
+if not db.scans[1]:
+    print("DEBUG busy:", L("FlipForever.Scan.busy"), "| status:", L("FlipForever.status"), "| printed:", list(L("printed").values()),
+          "| watch:", L("FlipForever.Scan.watch and FlipForever.Scan.watch.stable"), "| tickers:", L("#TICKERS"))
+print("scan:", db.scans[1].src, db.scans[1].d, "| names:", db.names[2589])
+assert db.scans[1].src == "full"
+assert "2589:40:50:70:3" in db.scans[1].d, db.scans[1].d
+
+# --- buy flow (commodity)
+lua.execute("""
+FlipForever_Plan = { generated = 123, realm = "Testrealm - Horde", duration = 2,
+  buy = { {id=2589, max=60, qty=25, exp=80}, {id=2770, max=50, qty=5, exp=90} },
+  sell = { {id=2589, floor=60, normal=80, ceil=130} } }
+COMMODITY[2589] = {
+  {unitPrice=40, quantity=10, containsOwnerItem=false},
+  {unitPrice=50, quantity=20, containsOwnerItem=false},
+  {unitPrice=70, quantity=40, containsOwnerItem=false},
+}
+COMMODITY[2770] = { {unitPrice=100, quantity=5} }
+calls = {}
+FlipForever.Trader:Primary()      -- idle -> start buying -> search
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+T = L("FlipForever.Trader")
+print("after search:", T.state, T.pending.qty, T.pending.cost, "| button:", L("FlipForever.Trader:ButtonText()"))
+assert T.state == "ready_commodity" and T.pending.qty == 25 and T.pending.cost == 10 * 40 + 15 * 50
+lua.execute("""
+FlipForever.Trader:Primary()                 -- start purchase
+Fire("COMMODITY_PRICE_UPDATED", 46, 1150)
+""")
+print("quote:", T.state, L("FlipForever.Trader:ButtonText()"))
+assert T.state == "confirm_commodity"
+lua.execute("""
+FlipForever.Trader:Primary()                 -- confirm
+Fire("COMMODITY_PURCHASE_SUCCEEDED")
+RunTimers(1)
+""")
+log = db.log
+print("logged:", log[1].e, log[1].q, log[1].p, log[1].exp, "| state:", T.state, "searching for", T.searchID)
+assert log[1].e == "buy" and log[1].q == 25 and log[1].p == 46
+# second item: too expensive -> skipped, list done
+lua.execute("""
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2770)
+""")
+print("after copper:", T.state, L("FlipForever.status"))
+assert T.state == "idle"
+
+# --- sell flow
+lua.execute("""
+BAGS[0] = { [3] = {itemID=2589, stackCount=20}, [4] = {itemID=2589, stackCount=5} }
+BAGCOUNT[2589] = 25
+COMMODITY[2589] = {
+  {unitPrice=75, quantity=10, containsOwnerItem=false},
+  {unitPrice=90, quantity=20, containsOwnerItem=false},
+}
+calls = {}
+FlipForever.Trader:StartSelling()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("sell:", T.state, L("FlipForever.Trader:ButtonText()"), L("FlipForever.status"))
+assert T.state == "ready_post" and T.pending.unit == 74 and T.pending.qty == 25
+lua.execute("""
+FlipForever.Trader:Primary()
+Fire("AUCTION_HOUSE_AUCTION_CREATED", 99)
+""")
+c = L("calls[#calls]")
+print("post call:", c[1], c[3], c[4], c[5], "| log:", db.log[2].e, db.log[2].q, db.log[2].p, db.log[2].dep)
+assert c[1] == "PostCommodity" and c[4] == 25 and c[5] == 74 and db.log[2].dep == 375
+
+# floor respected
+lua.execute("""
+COMMODITY[2589] = { {unitPrice=55, quantity=10, containsOwnerItem=false} }
+FlipForever.Trader:StartSelling()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("below floor:", T.state, db.log[3].e)
+assert db.log[3].e == "hold"
+
+# --- sold / expired chat + invoice
+lua.execute("""
+Fire("CHAT_MSG_SYSTEM", "A buyer has been found for your auction of Linen Cloth.")
+Fire("CHAT_MSG_SYSTEM", "Your auction of Linen Cloth has expired.")
+INBOX = { {name="Linen Cloth", bid=1850, dep=375, cut=92, count=25, daysLeft=29.9} }
+Fire("MAIL_INBOX_UPDATE")
+Fire("MAIL_INBOX_UPDATE")
+""")
+n = L("#FlipForeverDB.realms['Testrealm - Horde'].log")
+kinds = [db.log[i].e for i in range(1, n + 1)]
+print("log kinds:", kinds, "| sold id:", db.log[4].id)
+assert kinds == ["buy", "post", "hold", "sold", "expired", "invoice"], kinds
+assert db.log[4].id == 2589
+
+# keybind + slash
+lua.execute('SlashCmdList.FLIPFOREVER("key SPACE")')
+print("bind:", L("LAST_BIND[3]"), L("LAST_BIND[4]"))
+errors = [p for p in L("printed").values() if "error" in p.lower()]
+print("addon errors printed:", errors)
+assert not errors
+# --- budget is a hard cap
+lua.execute("""
+FlipForever_Plan = { generated = 456, realm = "Testrealm - Horde", budget = 1000,
+  buy = { {id=2589, max=60, qty=25, exp=80} }, sell = {} }
+COMMODITY[2589] = {
+  {unitPrice=40, quantity=10}, {unitPrice=50, quantity=20},
+}
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("budget:", T.state, T.pending.qty, T.pending.cost)
+assert T.state == "ready_commodity" and T.pending.qty == 22 and T.pending.cost == 1000
+lua.execute("""
+FlipForever.Trader:Primary()
+Fire("COMMODITY_PRICE_UPDATED", 45, 1000)
+FlipForever.Trader:Primary()
+Fire("COMMODITY_PURCHASE_SUCCEEDED")
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("after budget spent:", T.state, "|", L("FlipForever.status"))
+spent = L("FlipForeverDB.realms['Testrealm - Horde'].charProgress.Tester.spent")
+print("spent:", spent, "of 1000")
+assert T.state == "idle" and spent == 990
+lua.execute("FlipForever.Trader:StartBuying() RunTimers(1) Fire('COMMODITY_SEARCH_RESULTS_UPDATED', 2589)")
+print("restart with 10c left:", T.state, "|", L("FlipForever.status"))
+assert T.state == "idle"
+# --- first-scan mode: price judged live from the listing ladder
+lua.execute("""
+FlipForever_Plan = { generated = 789, realm = "Testrealm - Horde", budget = 100000, cut = 0.05,
+  buy = { {id=4306, gap=0.25, qty=50, max=2000}, {id=4338, gap=0.25, qty=50} }, sell = {} }
+-- Silk: 8 cheap units at 300, then the wall at ~1000
+COMMODITY[4306] = {
+  {unitPrice=300, quantity=8}, {unitPrice=980, quantity=40}, {unitPrice=1000, quantity=200}, {unitPrice=1100, quantity=100},
+}
+-- Mageweave: no gap at all
+COMMODITY[4338] = { {unitPrice=500, quantity=100}, {unitPrice=510, quantity=100} }
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 4306)
+""")
+print("gap:", T.state, T.pending and T.pending.qty, T.target.liveMax, T.target.liveExp, "|", L("FlipForever.status"))
+# ref = 30% of 348 units -> 1000; live max = 1000*0.95/1.25 = 760 -> only the 8 @300
+assert T.state == "ready_commodity" and T.pending.qty == 8 and T.target.liveMax == 760
+lua.execute("""
+FlipForever.Trader:Primary()
+Fire("COMMODITY_PRICE_UPDATED", 300, 2400)
+FlipForever.Trader:Primary()
+Fire("COMMODITY_PURCHASE_SUCCEEDED")
+RunTimers(1)
+COMMODITY[4306] = { {unitPrice=980, quantity=40}, {unitPrice=1000, quantity=200} }
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 4306)
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 4338)
+""")
+n = L("#FlipForeverDB.realms['Testrealm - Horde'].log")
+last = db.log[n]
+print("gap buy logged:", last.e, last.q, last.p, "exp", last.exp, "| state:", T.state)
+assert last.e == "buy" and last.q == 8 and last.p == 300 and last.exp == 1000 and T.state == "idle"
+
+# selling the silk: no rule in plan.sell -> added from the buy; floor from cost
+lua.execute("""
+BAGS[1] = { [1] = {itemID=4306, stackCount=8} }
+BAGCOUNT[4306] = 8
+COMMODITY[4306] = { {unitPrice=975, quantity=40} }
+FlipForever.Trader:StartSelling()
+RunTimers(1)
+""")
+print("sell target:", T.target and T.target.id)
+lua.execute('Fire("COMMODITY_SEARCH_RESULTS_UPDATED", T and 4306 or 4306)')
+print("sell silk:", T.state, T.pending and T.pending.unit)
+assert T.state == "ready_post" and T.pending.unit == 974
+lua.execute("""
+FlipForever.Trader:Stop()
+COMMODITY[4306] = { {unitPrice=310, quantity=40} }
+FlipForever.Trader:StartSelling()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 4306)
+""")
+n = L("#FlipForeverDB.realms['Testrealm - Horde'].log")
+print("market crashed below cost:", T.state, db.log[n].e)
+assert db.log[n].e == "hold"
+# --- shared cooldown: a second full scan inside 15 min is refused for autopilot
+lua.execute("calls = {}")
+started = L("(FlipForever.Scan:StartFull(true))")
+wait = L("select(2, FlipForever.Scan:StartFull(true))")
+print("auto scan inside cooldown:", started, "wait", wait)
+assert started is False and wait > 800
+# Auctioneer's own request time counts too
+lua.execute("FlipForeverDB.lastReplicate = 0; AucAdvancedData = { ForeverReplicateRequested = time() - 60 }")
+print("Auctioneer scanned 1 min ago -> wait", L("select(2, FlipForever.Scan:StartFull(true))"))
+assert L("select(2, FlipForever.Scan:StartFull(true))") > 800
+lua.execute("AucAdvancedData = nil")
+
+# --- piggyback: another addon's replicate scan is read too
+lua.execute("""
+FlipForeverDB.lastReplicate = 0
+local before = #FlipForeverDB.realms['Testrealm - Horde'].scans
+REPL = { {name="Iron Ore", id=2772, count=10, buyout=10*700} }
+C_AuctionHouse.ReplicateItems()          -- called by 'another addon' (not flagged as ours)
+PIGGY_BUSY = FlipForever.Scan.busy
+Fire("REPLICATE_ITEM_LIST_UPDATE")
+for i = 1, 6 do RunTickers() end
+RunTimers(5)
+PIGGY_ADDED = #FlipForeverDB.realms['Testrealm - Horde'].scans - before
+""")
+print("external scan: busy while waiting =", L("PIGGY_BUSY"), "| scans added:", L("PIGGY_ADDED"))
+assert L("PIGGY_BUSY") == "external" and L("PIGGY_ADDED") == 1
+
+# --- autopilot: searches every minute, alerts on a deal, yields to other addons, pauses for scans
+lua.execute("""
+FlipForever_Plans = nil
+FlipForever_Plan = { generated = 999, realm = "Testrealm - Horde", budget = 100000, cut = 0.05,
+  buy = { {id=4306, gap=0.25, qty=50} }, sell = {} }
+COMMODITY[4306] = { {unitPrice=300, quantity=5}, {unitPrice=1000, quantity=300} }
+FlipForever.Trader:Stop()
+ALERTS = {}
+FlipForever.Auto:SetEnabled(true)
+FlipForever.Auto.nextScan = time() + 9999
+FlipForever.Auto.lastExternal = 0
+RunTickers()                      -- autopilot tick -> starts a sweep
+RunTimers(1)                      -- search sent
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 4306)
+RunTickers()
+""")
+print("auto deal:", L("FlipForever.Trader.state"), "| phase:", L("FlipForever.Auto.phase"), "| alerts:", list(L("ALERTS").values()))
+alerts = list(L("ALERTS").values())
+assert L("FlipForever.Trader.state") == "ready_commodity" and L("FlipForever.Auto.phase") == "deal"
+assert any(a.startswith("sound:") for a in alerts) and any(a.startswith("rw:FLIP FOUND") for a in alerts) and "flash" in alerts
+
+# deal ignored -> stays waiting; skip it, sweep ends, next check scheduled ~60s out
+lua.execute("""
+FlipForever.Trader:Skip()
+RunTickers()
+""")
+nxt = L("FlipForever.Auto.nextSearch - time()")
+print("after sweep: state", L("FlipForever.Trader.state"), "next search in", nxt)
+assert L("FlipForever.Trader.state") == "idle" and 55 <= nxt <= 60
+
+# another addon / the user sends a query -> autopilot steps aside
+lua.execute("""
+FlipForever.Auto.nextSearch = 0
+C_AuctionHouse.SendSearchQuery({itemID=1}, {}, true)   -- e.g. Auctionator
+RunTickers()
+""")
+print("after external query: phase", L("FlipForever.Auto.phase"), "trader", L("FlipForever.Trader.state"))
+assert L("FlipForever.Auto.phase") == "yield" and L("FlipForever.Trader.state") == "idle"
+
+# scan due -> scan starts, searching paused until it finishes
+lua.execute("""
+FlipForever.Auto.lastExternal = 0
+FlipForever.Auto.nextScan = 0
+FlipForeverDB.lastReplicate = 0
+REPL = { {name="Silk Cloth", id=4306, count=20, buyout=20*900} }
+RunTickers()
+SCAN_PHASE = FlipForever.Auto.phase
+SCAN_BUSY = FlipForever.Scan.busy
+RunTickers()
+SCAN_PHASE2 = FlipForever.Auto.phase
+SEARCHING_DURING = FlipForever.Trader.state
+Fire("REPLICATE_ITEM_LIST_UPDATE")
+for i = 1, 6 do RunTickers() end
+RunTimers(5)
+RunTickers()
+""")
+print("scan: phase", L("SCAN_PHASE"), L("SCAN_PHASE2"), "| busy", L("SCAN_BUSY"), "| trader during scan:", L("SEARCHING_DURING"),
+      "| after: next scan in", L("FlipForever.Auto.nextScan - time()"), "phase", L("FlipForever.Auto.phase"))
+assert L("SCAN_PHASE") == "scanning" and L("SCAN_PHASE2") == "scanning" and L("SEARCHING_DURING") == "idle"
+assert L("FlipForever.Auto.nextScan - time()") >= 1795 and L("FlipForever.Scan.busy") is None
+assert L("FlipForever.Auto.phase") == "searching"   # searches resume right after the scan
+
+# key conflict with Auctionator
+lua.execute('AUCTIONATOR_CONFIG = { selling_post_shortcut = "SPACE" }; printed = {}; FlipForeverDB.settings.key = nil')
+lua.execute('SlashCmdList.FLIPFOREVER("key SPACE")')
+print("key SPACE:", L("printed[#printed]"), "| saved:", L("FlipForeverDB.settings.key"))
+assert "Auctionator" in L("printed[#printed]") and L("FlipForeverDB.settings.key") != "SPACE"
+lua.execute('SlashCmdList.FLIPFOREVER("key CTRL-SPACE")')
+assert L("FlipForeverDB.settings.key") == "CTRL-SPACE"
+lua.execute("FlipForever.Auto:SetEnabled(false)")
+
+# --- advisor: level 22 Skyborne Frost mage, 2 unspent points, white staff, empty bag slots, no professions
+lua.execute("""
+UnitName = function() return 'Tester' end
+BAGS = {}
+C_Container.GetContainerNumSlots = function(bag) if bag >= 3 then return 0 end return 16 end  -- 2 empty bag slots
+FlipForever.Advisor:Show()
+ADV = {}
+for i, r in ipairs(FlipForever.Advisor.last) do ADV[i] = r.text:gsub('|T.-|t%s*', ''):gsub('|c%x%x%x%x%x%x%x%x', ''):gsub('|r', '') end
+""")
+adv = list(L("ADV").values())
+print("ADVISOR (level 22 mage):")
+for a in adv: print("   -", a)
+assert any("Spend 2 talent points" in a and "Ice Shards (1/3)" in a for a in adv), "talent advice"
+assert any("Hypnotic" not in a for a in adv)
+assert any("Coldspire Staff" in a for a in adv), "gear advice"
+assert any("Learn Tailoring + Enchanting" in a for a in adv), "profession advice"
+assert any("Weak slots" in a and "Main hand (white)" in a for a in adv), "weak slot"
+assert any("Dungeons for your level" in a and "Shadowfang Keep" in a for a in adv), "dungeon"
+assert any("empty bag slot" in a for a in adv), "bags"
+assert any("Next power spike at level 24: Counterspell" in a for a in adv), "spike"
+
+# a level-up and a new staff change the advice; Ice Lance follows once Ice Shards is done
+lua.execute("""
+TALENTS[4][2] = 3
+GEAR[16] = {id=102, name="Coldspire Staff", q=2}; ITEMNAMES[102] = "Coldspire Staff"
+UNSPENT = 1
+Fire("PLAYER_LEVEL_UP", 23)
+RunTimers(5)
+ADV = {}
+for i, r in ipairs(FlipForever.Advisor.last) do ADV[i] = r.text:gsub('|T.-|t%s*', ''):gsub('|c%x%x%x%x%x%x%x%x', ''):gsub('|r', '') end
+""")
+adv = list(L("ADV").values())
+print("after level-up + new staff:", adv[:3])
+assert any("Ice Lance (0/1)" in a for a in adv)
+assert not any("Get Coldspire Staff" in a for a in adv)
+snap = L("FlipForeverDB.realms['Testrealm - Horde'].chars.Tester.advisor")
+print("snapshot for app:", snap.build, "|", snap.steps[1])
+assert snap.build.startswith("Frost")
+
+# warlock: class quest due -> recommended until the spell is learned
+lua.execute("""
+UnitClass = function() return "Warlock", "WARLOCK" end
+PLEVEL = 10
+KNOWN = { "Shadow Bolt", "Summon Imp" }
+FlipForever.Advisor:Refresh()
+W1 = FlipForever.Advisor.last
+KNOWN = { "Shadow Bolt", "Summon Imp", "Summon Voidwalker" }
+FlipForever.Advisor:Refresh()
+W2 = FlipForever.Advisor.last
+""")
+def has(name, needle): return any(needle in r.text for r in L(name).values())
+print("warlock L10 voidwalker quest shown before/after learning:", has("W1", "Voidwalker class quest"), has("W2", "Voidwalker class quest"))
+assert has("W1", "Voidwalker class quest") and not has("W2", "Voidwalker class quest")
+
+# build switching cycles and is remembered per character
+lua.execute("UnitClass = function() return 'Warrior', 'WARRIOR' end; FlipForever.Advisor:CycleBuild(1)")
+print("warrior build after one click:", L("FlipForever.Advisor:Build(FlipForever.Advisor:Player()).name"))
+assert L("FlipForever.Advisor:Build(FlipForever.Advisor:Player()).id") == "prot"
+
+# --- combat helper: frost mage, steps cycle one per click, adapt to target between fights
+lua.execute("""
+UnitClass = function() return "Mage", "MAGE" end
+UnitName = function(u) if u == "target" then return TARGET and TARGET.name end return "Tester" end
+PLEVEL = 30
+KNOWN = { "Frostbolt", "Fireball", "Fire Blast", "Ice Lance", "Frost Nova" }
+FlipForever.Advisor:CharStore().build = "frost"
+TARGET = { name = "Defias Bandit", ctype = "Humanoid", level = 30, power = 1 }
+FlipForever.Combat:Toggle()       -- on
+CB = FlipForeverCombatButton
+SEQ1 = {}
+for i = 1, 6 do SEQ1[i] = CB:GetAttribute("macrotext"); ClickButton(CB, false) end
+ICON = CB.icon.texture
+""")
+seq1 = list(L("SEQ1").values())
+print("frost mage vs humanoid, 6 clicks:", [s.replace("/cast ", "") for s in seq1])
+assert seq1[:5] == ["/cast Frostbolt", "/cast Frostbolt", "/cast Ice Lance", "/cast Frostbolt", "/cast Fire Blast"] and seq1[5] == "/cast Frostbolt"
+print("big icon after 6 clicks:", L("ICON"))
+assert L("ICON") == "icon:Frostbolt"
+
+# the 'up' half of a key press must not skip a step
+lua.execute("BEFORE = CB:GetAttribute('step'); ClickButton(CB, true); AFTER = CB:GetAttribute('step')")
+assert L("BEFORE") == L("AFTER")
+
+# target a water elemental out of combat -> frost swapped for fire; hint mentions it
+lua.execute("""
+TARGET = { name = "Tide Elemental", ctype = "Elemental", level = 33, class = "elite", power = 0 }
+Fire("PLAYER_TARGET_CHANGED")
+SEQ2 = {}
+for i = 1, 5 do SEQ2[i] = CB:GetAttribute("macrotext"); ClickButton(CB, false) end
+""")
+seq2 = [s.replace("/cast ", "") for s in L("SEQ2").values()]
+hint = L("FlipForeverCombatBar") and None
+print("vs water elemental:", seq2)
+assert "Frostbolt" not in seq2 and "Ice Lance" not in seq2 and seq2[0] == "Fireball"
+
+# in combat: target change can't rebuild (secure rule) -> waits for the fight to end
+lua.execute("""
+COMBAT = true
+TARGET = { name = "Skeleton", ctype = "Undead", level = 30 }
+Fire("PLAYER_TARGET_CHANGED")
+MID = CB:GetAttribute("step1")
+COMBAT = false
+Fire("PLAYER_REGEN_ENABLED")
+AFTERFIGHT = CB:GetAttribute("step1")
+""")
+print("in combat step1 stays:", L("MID"), "| after fight:", L("AFTERFIGHT"))
+assert L("MID") == "/cast Fireball" and L("AFTERFIGHT") == "/cast Frostbolt"
+
+# paladin vs undead gets Exorcism; warrior vs mechanical drops Rend
+lua.execute("""
+UnitClass = function() return "Paladin", "PALADIN" end
+KNOWN = { "Seal of Righteousness", "Judgement", "Holy Strike", "Exorcism" }
+FlipForever.Combat:Rebuild()
+PAL = {} for i = 1, CB:GetAttribute("count") do PAL[i] = CB:GetAttribute("step" .. i) end
+UnitClass = function() return "Warrior", "WARRIOR" end
+FlipForever.Advisor:CharStore().build = "arms"
+KNOWN = { "Battle Shout", "Rend", "Heroic Strike" }
+TARGET = { name = "Mechano-Tank", ctype = "Mechanical", level = 30 }
+FlipForever.Combat:Rebuild()
+WAR = {} for i = 1, CB:GetAttribute("count") do WAR[i] = CB:GetAttribute("step" .. i) end
+""")
+pal = [s.split("/cast ")[-1] for s in L("PAL").values()]
+war = [s.split("/cast ")[-1] for s in L("WAR").values()]
+print("paladin vs undead:", pal)
+print("warrior vs mechanical:", war, "| melee prefix:", "/startattack" in L("WAR")[1])
+assert "Exorcism" in pal and "Rend" not in war and "/startattack" in L("WAR")[1]
+print("target hint:", L("FlipForever.Combat:TargetHint(FlipForever.Combat:Target())"))
+lua.execute("FlipForever.Combat:Toggle()")
+
+# --- the FlipForever window: everything reachable with the mouse
+lua.execute("""
+COMPARTMENT = {}
+Fire("PLAYER_LOGIN")
+SlashCmdList.FLIPFOREVER("")                    -- plain /ff opens the window
+HUB = FlipForeverHub
+HUB_SHOWN = HUB:IsShown()
+MM = FlipForeverMinimapButton ~= nil
+HUB.combat.OnClick(HUB.combat)                  -- tick "Show the combat helper"
+COMBAT_ON = FlipForever.Combat:Enabled()
+-- Set key (combat) -> press CTRL+Q
+HUB.combatKeyButton.OnClick(HUB.combatKeyButton)
+CAP_SHOWN = FlipForeverKeyCapture:IsShown()
+MODS.ctrl = true
+FlipForeverKeyCapture.OnKeyDown(FlipForeverKeyCapture, "LCTRL")   -- modifier alone: keep waiting
+FlipForeverKeyCapture.OnKeyDown(FlipForeverKeyCapture, "Q")
+MODS.ctrl = false
+COMBAT_KEY = FlipForeverDB.settings.combatKey
+-- Set key (auction house) -> press CTRL+Q too: must be refused (already the combat key)
+FlipForeverDB.settings.key = nil
+HUB.ahKeyButton.OnClick(HUB.ahKeyButton)
+MODS.ctrl = true
+FlipForeverKeyCapture.OnKeyDown(FlipForeverKeyCapture, "Q")
+MODS.ctrl = false
+AH_KEY_AFTER_CLASH = FlipForeverDB.settings.key
+-- Escape cancels
+HUB.ahKeyButton.OnClick(HUB.ahKeyButton)
+FlipForeverKeyCapture.OnKeyDown(FlipForeverKeyCapture, "ESCAPE")
+AH_KEY_AFTER_ESC = FlipForeverDB.settings.key
+-- autopilot + minimap checkboxes
+HUB.auto.OnClick(HUB.auto)
+AUTO_ON = FlipForever.Auto:Enabled()
+HUB.mm:SetChecked(false); HUB.mm.OnClick(HUB.mm)
+MM_HIDDEN = FlipForeverDB.settings.hideMinimap
+""")
+print("hub shown:", L("HUB_SHOWN"), "| minimap button:", L("MM"), "| AddOns menu:", list(L("COMPARTMENT").values()))
+print("combat checkbox:", L("COMBAT_ON"), "| capture box shown:", L("CAP_SHOWN"), "| combat key:", L("COMBAT_KEY"))
+print("AH key after pressing the combat key:", L("AH_KEY_AFTER_CLASH"), "| after Escape:", L("AH_KEY_AFTER_ESC"))
+print("autopilot checkbox:", L("AUTO_ON"), "| minimap hidden:", L("MM_HIDDEN"))
+assert L("HUB_SHOWN") and L("MM") and list(L("COMPARTMENT").values()) == ["FlipForever"]
+assert L("COMBAT_ON") is True and L("CAP_SHOWN") and L("COMBAT_KEY") == "CTRL-Q"
+assert L("AH_KEY_AFTER_CLASH") is None and L("AH_KEY_AFTER_ESC") is None
+assert L("AUTO_ON") is True and L("MM_HIDDEN") is True
+lua.execute("FlipForever.Combat:SetKey(nil); FlipForever.Combat:Toggle(); FlipForever.Auto:SetEnabled(false)")
+# --- per-character plans
+lua.execute("""
+FlipForever_Plan = nil
+FlipForever_Plans = {
+  ["Tester @ Testrealm - Horde"] = { generated = 1, budget = 5000, buy = { {id=1, max=10, qty=1} }, sell = {} },
+  ["Alt @ Testrealm - Horde"] = { generated = 2, budget = 99, buy = {}, sell = {} },
+}
+""")
+print("plan for Tester:", L("FlipForever:Plan().budget"), "| char record:", L("FlipForever:UpdateChar() or FlipForeverDB.realms['Testrealm - Horde'].chars.Tester.money"))
+assert L("FlipForever:Plan().budget") == 5000
+lua.execute("UnitName = function() return 'Other' end")
+print("plan for char without list:", L("FlipForever:Plan()"))
+assert L("FlipForever:Plan()") is None
+lua.execute("FlipForever.Trader:StartBuying()")
+print("status:", L("FlipForever.status"))
+assert "No shopping list for Other" in L("FlipForever.status")
+print("ALL ADDON TESTS PASSED")

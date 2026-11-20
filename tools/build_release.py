@@ -35,20 +35,36 @@ def check_versions():
         sys.exit(f"CHANGELOG.md has no section for {VERSION}.")
 
 
+EXE_OUT = DIST / "exe"
+
+
 def build_exe(skip: bool):
-    if skip and (ROOT / "FlipForever.exe").exists():
+    """Builds into dist/exe/ so a running FlipForever.exe in the project folder is never touched."""
+    if skip and (EXE_OUT / "FlipForever.exe").exists():
         return
     work = DIST / "build"
     subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--onefile", "--windowed", "--name", "FlipForever",
-                    "--icon", str(ROOT / "flipforever.ico"), "--paths", str(ROOT / "app"), "--distpath", str(ROOT),
+                    "--icon", str(ROOT / "flipforever.ico"), "--paths", str(ROOT / "app"), "--distpath", str(EXE_OUT),
                     "--workpath", str(work), "--specpath", str(work), "--log-level", "WARN",
                     str(ROOT / "FlipForever.pyw")], check=True)
+
+
+def refresh_local_exe():
+    """Put the new exe in the project folder too - only if the app isn't running (file would be locked)."""
+    try:
+        shutil.copy2(EXE_OUT / "FlipForever.exe", ROOT / "FlipForever.exe")
+        print("local FlipForever.exe updated")
+    except PermissionError:
+        print("FlipForever.exe is open - your copy updates through About & updates (or rerun later)")
 
 
 def make_zip() -> Path:
     zpath = DIST / f"FlipForever-v{VERSION}.zip"
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
+        z.write(EXE_OUT / "FlipForever.exe", "FlipForever/FlipForever.exe")
         for name in INCLUDE:
+            if name == "FlipForever.exe":
+                continue
             p = ROOT / name
             files = [p] if p.is_file() else [f for f in p.rglob("*") if f.is_file() and "__pycache__" not in f.parts]
             for f in files:
@@ -70,6 +86,7 @@ def main():
     check_versions()
     DIST.mkdir(exist_ok=True)
     build_exe(skip="--skip-exe" in sys.argv)
+    refresh_local_exe()
     z = make_zip()
     digest = hashlib.sha256(z.read_bytes()).hexdigest()
     (DIST / "SHA256SUMS.txt").write_text(f"{digest}  {z.name}\n", encoding="utf-8")
