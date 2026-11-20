@@ -1,7 +1,7 @@
 # Roadmap
 
-## Proposed (waiting for approval)
-1. **Quest locations.** The advisor shows where class and gear quests start, with map pins, using built-in data.
+## Ready for approval (built, not released)
+- **Quest locations** (branch `feature/quest-locations`). Class quest steps in the Advisor say who starts them and where, per faction and race (Warcraft Wiki data for warrior, paladin, hunter, shaman and druid quests). The addon remembers where every NPC you talk to stands; when a quest giver's position is known, clicking the step points the waypoint arrow there. Tested; merged and released once approved. Limits: the wiki gives coordinates for few quest givers, so most positions are learned as you play, and warlock, rogue and some warrior quests have no start data yet.
 
 ## Planned
 - **GUI overhaul (2.4.0, in progress).** In game: a tabbed FlipForever window, a common look for every panel, and an editable shopping-list view. In the app: sidebar navigation and a cleaner layout.

@@ -16,7 +16,7 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- Quest locations for advisor steps (where class quests start, with map pins)
+- Quest locations: built on branch feature/quest-locations, ready to merge when approved
 
 ## Open issues
 | # | Issue | Severity | Plan |

@@ -21,7 +21,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [x] App: show the addon's gear upgrades and profitable crafts in the desktop app (addon saves them; new app page or Advisor section)
 - [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language
 - [x] Test harness: make mock timers keep delayed callbacks (board issue P9)
-- [ ] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
+- [x] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
 
 ## Usage budget (internal)
