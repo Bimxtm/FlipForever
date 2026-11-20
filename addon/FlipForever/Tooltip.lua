@@ -1,0 +1,63 @@
+-- FlipForever: price lines in item tooltips (like Auctionator's), so you see at a glance
+-- what an item usually goes for and whether it's on your shopping or sell list.
+-- Read-only: it only adds lines to Blizzard's tooltip.
+local FF = FlipForever
+local TT = {}
+FF.Tooltip = TT
+
+local function plain(v)
+  if v == nil then return nil end
+  if issecretvalue and issecretvalue(v) then return nil end
+  return v
+end
+
+-- index the current character's shopping list by item (rebuilt when the list changes)
+local index, indexGen = {}, nil
+local function planIndex()
+  local plan = FF:Plan()
+  local gen = plan and plan.generated or 0
+  if gen ~= indexGen then
+    indexGen, index = gen, {}
+    if plan then
+      for _, b in ipairs(plan.buy or {}) do index[b.id] = index[b.id] or {} index[b.id].buy = b end
+      for _, s in ipairs(plan.sell or {}) do index[s.id] = index[s.id] or {} index[s.id].sell = s end
+    end
+  end
+  return index
+end
+
+function TT:Enabled()
+  return FlipForeverDB and FlipForeverDB.settings.tooltips ~= false
+end
+
+-- the lines for one item (also used by the tests)
+function TT:Lines(itemID)
+  local out = {}
+  if not itemID then return out end
+  local price = FF:PriceOf(itemID)
+  if price then out[#out + 1] = { "|cff33ff99FlipForever|r typical price", FF:Money(price) } end
+  local entry = planIndex()[itemID]
+  if entry and entry.buy then
+    local b = entry.buy
+    out[#out + 1] = { "  on your shopping list", b.gap and "price checked live" or ("max " .. FF:Money(b.max)) }
+  end
+  if entry and entry.sell then
+    out[#out + 1] = { "  you post at", FF:Money(entry.sell.normal) .. " (never below " .. FF:Money(entry.sell.floor) .. ")" }
+  end
+  return out
+end
+
+local function addTo(tooltip, itemID)
+  if not TT:Enabled() then return end
+  local lines = TT:Lines(itemID)
+  if #lines == 0 then return end
+  for _, l in ipairs(lines) do tooltip:AddDoubleLine(l[1], l[2], 0.8, 0.8, 0.8, 1, 1, 1) end
+end
+
+if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
+  TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+    if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return end
+    local id = data and plain(data.id)
+    if type(id) == "number" then pcall(addTo, tooltip, id) end
+  end)
+end

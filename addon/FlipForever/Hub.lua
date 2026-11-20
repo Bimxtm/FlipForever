@@ -160,6 +160,10 @@ local function build()
     FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false
   end)
   f.popup:SetPoint("TOPLEFT", 14, -392)
+  f.tips = check(f, "Prices in item tooltips", function(self)
+    FlipForeverDB.settings.tooltips = self:GetChecked() and true or false
+  end)
+  f.tips:SetPoint("TOPLEFT", 206, -392)
 
   -- Buttons on screen ---------------------------------------------------
   heading(f, "Buttons on screen", -424)
@@ -203,6 +207,7 @@ function H:Refresh()
   frame.planText:SetText(plan and plan.buy and ("Shopping list for " .. (UnitName("player") or "?") .. ": " .. #plan.buy .. " buys, " .. #(plan.sell or {}) .. " sell prices.")
     or "No shopping list for this character yet - build one in the FlipForever app.")
   frame.popup:SetChecked(s.advisorPopup ~= false)
+  frame.tips:SetChecked(s.tooltips ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather
@@ -223,6 +228,29 @@ function H:Show()
   frame = frame or build()
   frame:Show()
   H:Refresh()
+end
+
+-- Quick summary for the minimap tooltip ------------------------------------------------------------
+function H:Summary()
+  local out = {}
+  local plan = FF:Plan()
+  if plan and plan.buy then
+    local left = plan.budget and ("  ·  budget left " .. FF:Money(FF.Trader:BudgetLeft())) or ""
+    out[#out + 1] = ("Shopping list: %d to check%s"):format(#plan.buy, left)
+  else
+    out[#out + 1] = "No shopping list for this character yet"
+  end
+  out[#out + 1] = FF:TodayLine()
+  if FF.Auto:Enabled() then
+    local now = time()
+    local nextScan = FF.Auto.nextScan and math.max(0, FF.Auto.nextScan - now)
+    out[#out + 1] = "Autopilot on" .. (nextScan and ("  ·  next scan in " .. math.floor(nextScan / 60) .. " min") or "") .. " (at the AH)"
+  end
+  local adv = FF.Advisor and FF.Advisor.last
+  if adv and adv[1] then
+    out[#out + 1] = "Next: " .. adv[1].text:gsub("|T.-|t%s*", "")
+  end
+  return out
 end
 
 -- Minimap button (gold coin) ------------------------------------------------------------------------
@@ -266,6 +294,8 @@ local function createMinimap()
   mmButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:AddLine("|cff33ff99Flip|rForever")
+    for _, l in ipairs(H:Summary()) do GameTooltip:AddLine(l, 0.85, 0.85, 0.85, true) end
+    GameTooltip:AddLine(" ")
     GameTooltip:AddLine("Left-click: FlipForever window", 1, 1, 1)
     GameTooltip:AddLine("Right-click: Advisor (what to do next)", 1, 1, 1)
     GameTooltip:AddLine("Drag: move this button", 0.7, 0.7, 0.7)

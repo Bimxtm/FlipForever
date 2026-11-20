@@ -14,7 +14,11 @@ MOCK = r"""
 unpack = table.unpack
 local timers = {}
 NOW = 1800000000
-function time() return NOW end
+function time(t) if t then return os.time(t) end return NOW end
+function date(fmt, t) return os.date(fmt, t or NOW) end
+TT_HOOKS = {}
+Enum_TT = { Item = 0 }
+TooltipDataProcessor = { AddTooltipPostCall = function(kind, fn) TT_HOOKS[kind] = fn end }
 function GetTime() return NOW end
 C_Timer = { After = function(d, fn) table.insert(timers, {d=d, fn=fn}) end }
 TICKERS = {}
@@ -125,7 +129,7 @@ function GetMoney() return 1000000 end
 ERR_AUCTION_SOLD_S = "A buyer has been found for your auction of %s."
 ERR_AUCTION_EXPIRED_S = "Your auction of %s has expired."
 SlashCmdList = {}
-Enum = { AuctionHouseSortOrder = { Price = 0 } }
+Enum = { AuctionHouseSortOrder = { Price = 0 }, TooltipDataType = { Item = 0 } }
 NUM_BAG_SLOTS = 4
 
 local frames = {}
@@ -704,6 +708,45 @@ assert L("COMBAT_ON") is True and L("CAP_SHOWN") and L("COMBAT_KEY") == "CTRL-Q"
 assert L("AH_KEY_AFTER_CLASH") is None and L("AH_KEY_AFTER_ESC") is None
 assert L("AUTO_ON") is True and L("MM_HIDDEN") is True
 lua.execute("FlipForever.Combat:SetKey(nil); FlipForever.Combat:Toggle(); FlipForever.Auto:SetEnabled(false)")
+# --- 2.1: tooltip prices, today's results, minimap summary
+lua.execute("""
+UnitName = function(u) return "Tester" end
+GameTooltip = { lines = {} }
+function GameTooltip:AddDoubleLine(a, b) table.insert(self.lines, a .. " = " .. b) end
+FlipForever_Plans = nil
+FlipForever_Plan = { generated = 2101, realm = "Testrealm - Horde", budget = 50000,
+  buy = { {id = 2589, max = 60, qty = 10} }, sell = { {id = 2589, floor = 55, normal = 80, ceil = 120} } }
+TT_HOOKS[0](GameTooltip, { id = 2589 })
+TIPLINES = GameTooltip.lines
+-- a tooltip for an item FlipForever knows nothing about adds nothing
+GameTooltip.lines = {}
+TT_HOOKS[0](GameTooltip, { id = 999999 })
+TIP_UNKNOWN = #GameTooltip.lines
+-- switched off in the window -> no lines
+FlipForeverDB.settings.tooltips = false
+GameTooltip.lines = {}
+TT_HOOKS[0](GameTooltip, { id = 2589 })
+TIP_OFF = #GameTooltip.lines
+FlipForeverDB.settings.tooltips = nil
+-- today's results: one sale and one buy today, one sale yesterday
+local log = FlipForeverDB.realms['Testrealm - Horde'].log
+table.insert(log, { e = "invoice", t = NOW - 60, gross = 2000, cut = 100, q = 20, char = "Tester" })
+table.insert(log, { e = "invoice", t = NOW - 2 * 86400, gross = 5000, cut = 250, q = 50, char = "Tester" })
+table.insert(log, { e = "buy", t = NOW - 30, q = 10, p = 50, char = "Tester" })
+TODAY = FlipForever:Today()
+SUMMARY = FlipForever.Hub:Summary()
+""")
+tips = list(L("TIPLINES").values())
+print("tooltip for Linen:", tips)
+assert any("typical price" in t for t in tips) and any("on your shopping list" in t for t in tips) and any("you post at" in t for t in tips)
+assert L("TIP_UNKNOWN") == 0 and L("TIP_OFF") == 0
+today = L("TODAY")
+print("today:", dict(today.items()) if hasattr(today, "items") else today)
+assert today.sold >= 1900 and today.sales >= 1 and today.spent >= 500 and today.buys >= 1
+summary = list(L("SUMMARY").values())
+print("minimap summary:", summary)
+assert summary[0].startswith("Shopping list: 1 to check") and summary[1].startswith("Today: sold")
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

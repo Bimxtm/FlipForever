@@ -1,12 +1,9 @@
-# FlipForever 2.0 - one addon for everything
+# FlipForever 2.1 - see more at a glance
 
-**FlipForever is now your all-in-one companion for WoW: Forever.**
+- 🏷️ **Prices in tooltips:** hover any item to see what it usually sells for, and whether it's on your shopping or sell list (and at what price).
+- 🪙 **Smarter minimap button:** hover the gold coin for your budget left, today's trading, autopilot status and your next advisor step.
+- 📈 **Today's results** on the auction house panel: what you sold and bought today.
 
-- 🪙 **Auction house flipping** works as before, with autopilot and alerts.
-- ⛏️ **Gathering is built in.** Ore Farmer is part of FlipForever now, with farming loops and gold per hour priced from your own scans. Your old spots came along.
-- 🧭 **Advisor:** it knows your race, class and the build you chose, and tells you what to do next after every level-up, quest and gear change.
-- ⚔️ **Combat helper:** click the icon, and the next spell appears. It adapts to your build, your level and the enemy you target.
-- 🖱️ **Everything has a button.** Use the gold coin on the minimap or the AddOns menu; no commands needed.
-- 🔄 **Updates:** the desktop app can update itself from GitHub (About & updates).
+Don't want tooltip lines? Untick *Prices in item tooltips* in the FlipForever window.
 
-**After updating:** restart WoW once (new addon files), then open the FlipForever window from the gold coin on the minimap.
+**After updating:** restart WoW once (a new addon file was added).

@@ -8,14 +8,13 @@
 
 ## Small improvements (queue)
 - Language-independent spells: use spell IDs instead of English names, so the advisor and combat helper work on any client language.
-- Item tooltips: FlipForever's fair price, max buy and "sells ~N/day" on items (like Auctionator's tooltip lines).
+- Item tooltips: add "sells ~N/day" (needs the app's sales-speed data passed to the addon with the shopping list).
 - Gathering: a value-per-node line in GatherLite's node tooltips.
 - Mailbox: a sales summary ("you earned Xg since last time") when the mail opens.
-- AH panel: show today's profit and the budget left at a glance.
 - Advisor: a "why" tooltip on each step (which guide said so).
 - Advisor: more builds per class as Method/Warcraft Tavern publish post-launch level-60 builds.
-- Minimap button tooltip: a quick summary (deals waiting, next autopilot scan, top advisor step).
 - App: dark/light option and window size memory.
 
 ## Done
+- 2.1.0: prices in item tooltips, minimap summary, today's results on the AH panel.
 - 2.0.0: all-in-one (Gathering, Advisor, Combat helper, FlipForever window, updater).

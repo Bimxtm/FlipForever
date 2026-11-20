@@ -274,6 +274,32 @@ function FF:SetActionKey(key)
   return true
 end
 
+-- Today's trading for the character you're playing (since local midnight)
+function FF:Today()
+  local d = date("*t")
+  local start = time({ year = d.year, month = d.month, day = d.day, hour = 0 })
+  local me = UnitName("player")
+  local r = { sold = 0, sales = 0, spent = 0, buys = 0 }
+  for _, e in ipairs(self:DB().log) do
+    if (e.t or 0) >= start and (e.char == nil or e.char == me) then
+      if e.e == "invoice" then
+        r.sold = r.sold + (e.gross or 0) - (e.cut or 0)
+        r.sales = r.sales + 1
+      elseif e.e == "buy" then
+        r.spent = r.spent + (e.q or 0) * (e.p or 0)
+        r.buys = r.buys + 1
+      end
+    end
+  end
+  return r
+end
+
+function FF:TodayLine()
+  local t = self:Today()
+  if t.sales == 0 and t.buys == 0 then return "Today: no trades yet" end
+  return ("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
+end
+
 function FF:ResetProgress()
   FF:DB().charProgress[UnitName("player") or "?"] = nil
   FF:Print("Shopping list progress reset - every item on the list will be checked again.")
