@@ -30,6 +30,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 14: shopping list sorted by status with expected profit per item.
 - 2.5.0 beta 13: profit per character on the app Dashboard.
 - 2.5.0 beta 12: gear finder lists upgrades already in your bags, with Equip.
 - 2.5.0 beta 11: auction length by sell speed (12 h for fast sellers, smaller deposits).

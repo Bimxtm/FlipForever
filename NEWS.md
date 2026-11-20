@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 13
+# FlipForever 2.5 Beta 14
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Best deals on top.** The shopping list in game now puts deals first and shows the expected profit per item.
 
 **Which character earns the most?** With more than one trader, the app's Dashboard now shows profit per character.
 

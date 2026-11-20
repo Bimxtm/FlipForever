@@ -122,18 +122,19 @@ local function buildList(f)
   local pg = CreateFrame("Frame", nil, f)
   pg:SetAllPoints(f)
   pg.summary = text(pg, "GameFontNormal", 16, -64, 368)
-  local cols = { { "Item", 20 }, { "Now", 170 }, { "Max", 232 }, { "Got", 294 }, { "Skip", 336 } }
+  local cols = { { "Item", 20 }, { "Now", 140 }, { "Max", 196 }, { "Profit", 252 }, { "Got", 306 }, { "Skip", 344 } }
   for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -86):SetText(FF:T(c[1])) end
   pg.rows = {}
   for i = 1, LIST_ROWS do
     local y = -102 - (i - 1) * 22
     local r = {}
-    r.name = text(pg, "GameFontHighlightSmall", 20, y - 5, 146)
-    r.now = text(pg, "GameFontHighlightSmall", 170, y - 5, 60)
-    r.max = text(pg, "GameFontHighlightSmall", 232, y - 5, 60)
-    r.got = text(pg, "GameFontHighlightSmall", 294, y - 5, 40)
+    r.name = text(pg, "GameFontHighlightSmall", 20, y - 5, 118)
+    r.now = text(pg, "GameFontHighlightSmall", 140, y - 5, 54)
+    r.max = text(pg, "GameFontHighlightSmall", 196, y - 5, 54)
+    r.profit = text(pg, "GameFontHighlightSmall", 252, y - 5, 52)
+    r.got = text(pg, "GameFontHighlightSmall", 306, y - 5, 36)
     r.skip = check(pg, "", function(self) H:SetSkipped(r.id, self:GetChecked()) end)
-    r.skip:SetPoint("TOPLEFT", 334, y)
+    r.skip:SetPoint("TOPLEFT", 342, y)
     pg.rows[i] = r
   end
   pg.offset = 0
@@ -240,9 +241,20 @@ function H:ListRows()
     elseif got >= (b.qty or 0) then status = "done"
     elseif now and not b.gap and now <= (b.max or 0) then status = "deal"
     else status = "watching" end
+    -- expected profit per unit if bought at today's lowest price: the expected sale after the AH cut, minus the price
+    local cut = plan.cut or 0.05
+    local sale = b.exp or (m and m.market)
+    local profit = (sale and now) and math.floor(sale * (1 - cut) - now) or nil
     rows[#rows + 1] = { id = b.id, name = b.name or FF:ItemName(b.id), now = now, max = b.max, live = b.gap ~= nil,
-      got = got, qty = b.qty or 0, status = status }
+      got = got, qty = b.qty or 0, status = status, profit = profit }
   end
+  -- deals first (best profit first), then items being watched, then done and skipped ones
+  local ORDER = { deal = 1, watching = 2, done = 3, skipped = 4 }
+  table.sort(rows, function(a, b)
+    if ORDER[a.status] ~= ORDER[b.status] then return ORDER[a.status] < ORDER[b.status] end
+    if (a.profit or -math.huge) ~= (b.profit or -math.huge) then return (a.profit or -math.huge) > (b.profit or -math.huge) end
+    return a.id < b.id
+  end)
   return rows
 end
 
@@ -264,13 +276,13 @@ function H:RefreshList()
   for i, w in ipairs(pg.rows) do
     local r = rows[i + pg.offset]
     w.id = r and r.id
-    w.name:SetShown(r ~= nil); w.now:SetShown(r ~= nil); w.max:SetShown(r ~= nil); w.got:SetShown(r ~= nil); w.skip:SetShown(r ~= nil)
+    w.name:SetShown(r ~= nil); w.now:SetShown(r ~= nil); w.max:SetShown(r ~= nil); w.profit:SetShown(r ~= nil); w.got:SetShown(r ~= nil); w.skip:SetShown(r ~= nil)
     if r then
       local c = STATUS_COLOR[r.status] or "|cffffffff"
       w.name:SetText(c .. r.name .. "|r")
       w.now:SetText(r.now and ((r.status == "deal" and "|cff33ff99" or "") .. FF:Money(r.now)) or "-")
       w.max:SetText(r.live and "live" or FF:Money(r.max or 0))
-      w.got:SetText(("%d/%d"):format(r.got, r.qty))
+      w.profit:SetText(r.profit and ((r.profit > 0 and "|cff33ff99" or "|cffff8080") .. FF:Money(r.profit) .. "|r") or "-")
       w.skip:SetChecked(r.status == "skipped")
     end
   end

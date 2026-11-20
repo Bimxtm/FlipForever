@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.14] - 2026-11-20 (beta)
+### Changed
+- In-game shopping list: deals come first (best profit first), then items being watched, then done and skipped ones. A new *Profit* column shows the expected profit per unit at today's lowest price, after the AH cut (green when positive).
+
 ## [2.5.0-beta.13] - 2026-11-20 (beta)
 ### Added
 - App Dashboard: **profit per character** (realized profit, last 7 days, stock at cost, sales and units bought), best first. It appears when more than one character on the realm trades.

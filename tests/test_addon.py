@@ -1115,9 +1115,11 @@ FlipForever.Hub:SelectTab("settings")
 _rows = [dict(L("ROWS")[i]) for i in range(1, 4)]
 print("hub tabs:", L("TAB1"), "->", L("TAB2"), "| rows:", [(r["name"], r["status"], r.get("now")) for r in _rows])
 assert L("TAB1") == "overview" and L("TAB2") == "list"
-assert [r["name"] for r in _rows] == ["Silk Cloth", "Linen Cloth", "Wool Cloth"] and _rows[2]["live"] is True
-assert _rows[0]["status"] in ("deal", "watching") and _rows[1]["status"] == "watching"
-assert L("ROWS2")[2].status == "skipped" and L("REM_SKIPPED") == 0 and L("REM_OK") == 5 and L("REM_BACK") == 3
+_byname = {r["name"]: r for r in _rows}
+assert _rows[0]["name"] == "Silk Cloth" and _rows[0]["status"] == "deal" and _byname["Wool Cloth"]["live"] is True
+assert _byname["Silk Cloth"]["profit"] is not None
+assert _byname["Linen Cloth"]["status"] == "watching"
+assert L("ROWS2")[3].status == "skipped" and L("ROWS2")[3].name == "Linen Cloth" and L("REM_SKIPPED") == 0 and L("REM_OK") == 5 and L("REM_BACK") == 3
 print("skip: skipped item not bought, back after unticking")
 
 # --- 2.5.0: crafting profit finder (uses the Tailoring recipes captured above)
