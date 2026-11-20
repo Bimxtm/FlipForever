@@ -16,7 +16,6 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- Quest locations: built on branch feature/quest-locations, ready to merge when approved
 
 ## Open issues
 | # | Issue | Severity | Plan |
@@ -30,6 +29,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 17: quest locations (approved): start NPCs for every class quest, learned NPC positions, arrow from Advisor steps.
 - 2.5.0 beta 16 (your request): combat helper key + by default.
 - 2.5.0 beta 15 (your request): combat helper waits for cooldowns - cooldown abilities on ready, the rest as a cast sequence that only advances after a successful cast.
 - 2.5.0 beta 14: shopping list sorted by status with expected profit per item.
