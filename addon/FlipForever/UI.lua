@@ -11,7 +11,7 @@ local WIDTH = 290
 local function button(parent, text, w, h)
   local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   b:SetSize(w, h or 24)
-  b:SetText(text)
+  b:SetText(FF:T(text))
   return b
 end
 
@@ -169,10 +169,10 @@ function UI:Refresh()
   self.matsButton:SetShown(pendingMats ~= nil)
   -- after a scan: the Reload button lights up
   if FF.needReload then
-    self.reloadButton:SetText("|cffffd200RELOAD|r")
+    self.reloadButton:SetText("|cffffd200" .. FF:T("Reload"):upper() .. "|r")
     self.reloadButton:LockHighlight()
   else
-    self.reloadButton:SetText("Reload")
+    self.reloadButton:SetText(FF:T("Reload"))
     self.reloadButton:UnlockHighlight()
   end
   if pendingMats then self.matsButton:SetText(("Buy profession mats (%d)"):format(#pendingMats)) end

@@ -600,16 +600,16 @@ end
 
 function T:ButtonText()
   local s, p = self.state, self.pending
-  if s == "idle" then return "Start" end
-  if s == "searching" then return "Searching..." end
+  if s == "idle" then return FF:T("Start") end
+  if s == "searching" then return FF:T("Searching...") end
   if s == "ready_commodity" then return ("BUY %d x %s"):format(p.qty, FF:ItemName(p.id)) end
-  if s == "quoting" then return "Getting price..." end
+  if s == "quoting" then return FF:T("Getting price...") end
   if s == "confirm_commodity" then return ("CONFIRM %s"):format(FF:Money(p.quoteTotal or p.cost)) end
   if s == "ready_item" then return ("BUY %s"):format(FF:Money(p.buyout)) end
-  if s == "purchasing" then return "Buying..." end
+  if s == "purchasing" then return FF:T("Buying...") end
   if s == "ready_post" then return ("POST %d x %s"):format(p.qty, FF:ItemName(p.id)) end
-  if s == "confirm_post" then return "CONFIRM POST" end
-  if s == "posting" then return "Posting..." end
+  if s == "confirm_post" then return FF:T("CONFIRM POST") end
+  if s == "posting" then return FF:T("Posting...") end
   return s
 end
 

@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.3] - 2026-11-20 (beta)
+### Added
+- **Languages.** The app and the addon support every language the game does: English, German, French, Spanish (Spain and Mexico), Italian, Brazilian Portuguese, Russian, Korean, and Simplified and Traditional Chinese.
+  - In game, the language follows your game client by default. Change it in the FlipForever window under Settings, then Reload.
+  - In the app, pick it in Settings; it applies on the next start.
+  - Covered so far: window and tab names, menus, buttons and the auction house panel. Other texts stay in English until they're translated.
+  - Russian, Korean and Chinese letters need the game client in that language, because it brings the fonts.
+
 ## [2.5.0-beta.2] - 2026-11-20 (beta)
 ### Added
 - **Gear finder.** A new *Gear* tab in the FlipForever window lists auction house upgrades for the character you're playing:

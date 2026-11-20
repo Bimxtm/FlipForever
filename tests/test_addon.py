@@ -1170,6 +1170,30 @@ assert [r["name"] for r in _g] == ["Heavy Claymore", "Scaled Chestguard"]
 assert abs(_g[0]["gain"] - 35) < 0.01 and abs(_g[1]["gain"] - 15.8) < 0.01
 assert "Heavy Claymore" in L("GEARSTEP")
 
+# --- 2.5.0: languages - every client language, chosen in the FlipForever window
+lua.execute("""
+local FF = FlipForever
+GetLocale = function() return "frFR" end
+FlipForeverDB.settings.language = nil
+T_GAME = FF:T("Overview")                 -- follows the game client
+FlipForeverDB.settings.language = "deDE"
+T_DE = FF:T("Overview")
+T_MISSING = FF:T("Some text not translated yet")
+FlipForeverDB.settings.language = ""
+FF.Hub:Show("settings")
+FF.Hub:NextLanguage()
+T_NEXT = FlipForeverDB.settings.language
+N_LANGS = #FF.LANGUAGES
+FlipForeverDB.settings.language = "enUS"
+T_EN = FF:T("Overview")
+FlipForeverDB.settings.language = nil
+GetLocale = function() return "enUS" end
+FF.needReload = nil
+""")
+print("languages:", L("N_LANGS"), "| game (frFR):", L("T_GAME"), "| de:", L("T_DE"), "| next after game language:", L("T_NEXT"))
+assert L("N_LANGS") == 11 and L("T_GAME") == "Aperçu" and L("T_DE") == "Übersicht" and L("T_EN") == "Overview"
+assert L("T_MISSING") == "Some text not translated yet" and L("T_NEXT") == "enUS"
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

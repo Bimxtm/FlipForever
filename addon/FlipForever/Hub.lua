@@ -11,7 +11,7 @@ local frame, mmButton, capture
 local function button(parent, text, w, onClick)
   local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   b:SetSize(w, 22)
-  b:SetText(text)
+  b:SetText(FF:T(text))
   b:SetScript("OnClick", onClick)
   return b
 end
@@ -21,7 +21,7 @@ local function check(parent, label, onClick)
   c:SetSize(24, 24)
   c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   c.text:SetPoint("LEFT", c, "RIGHT", 2, 0)
-  c.text:SetText(label)
+  c.text:SetText(FF:T(label))
   c:SetScript("OnClick", onClick)
   return c
 end
@@ -29,7 +29,7 @@ end
 local function heading(parent, label, y)
   local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   fs:SetPoint("TOPLEFT", 16, y)
-  fs:SetText(label)
+  fs:SetText(FF:T(label))
   local line = parent:CreateTexture(nil, "ARTWORK")
   line:SetColorTexture(0.2, 0.8, 0.5, 0.35)
   line:SetHeight(1)
@@ -123,7 +123,7 @@ local function buildList(f)
   pg:SetAllPoints(f)
   pg.summary = text(pg, "GameFontNormal", 16, -64, 368)
   local cols = { { "Item", 20 }, { "Now", 170 }, { "Max", 232 }, { "Got", 294 }, { "Skip", 336 } }
-  for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -86):SetText(c[1]) end
+  for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -86):SetText(FF:T(c[1])) end
   pg.rows = {}
   for i = 1, LIST_ROWS do
     local y = -102 - (i - 1) * 22
@@ -160,7 +160,7 @@ local function buildGear(f)
   end)
   pg.search:SetPoint("TOPRIGHT", -16, -60)
   local cols = { { "Slot", 20 }, { "Item", 86 }, { "Price", 236 }, { "Better", 296 } }
-  for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -90):SetText(c[1]) end
+  for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -90):SetText(FF:T(c[1])) end
   pg.rows = {}
   for i = 1, GEAR_ROWS do
     local y = -106 - (i - 1) * 24
@@ -295,6 +295,31 @@ function H:RefreshOverview()
   pg.autopilot:SetChecked(FF.Auto:Enabled())
 end
 
+-- Language ---------------------------------------------------------------------------------------
+function H:LanguageName(code)
+  if not code or code == "" then return FF:T("Game language") end
+  for _, l in ipairs(FF.LANGUAGES) do if l[1] == code then return l[2] end end
+  return code
+end
+
+function H:NextLanguage()
+  local s = FlipForeverDB.settings
+  local order = { "" }
+  for _, l in ipairs(FF.LANGUAGES) do order[#order + 1] = l[1] end
+  local cur = s.language or ""
+  local idx = 1
+  for i, code in ipairs(order) do if code == cur then idx = i end end
+  s.language = order[idx % #order + 1]
+  local chosen = s.language ~= "" and s.language or FF:Language()
+  local msg = ("Language: %s. Click Reload to switch every window."):format(H:LanguageName(s.language))
+  if FF.SCRIPT_LANGS[chosen] and GetLocale and GetLocale() ~= chosen then
+    msg = msg .. " If letters show as boxes, set the game client to this language too: it brings the fonts."
+  end
+  FF:Print(msg)
+  FF.needReload = true
+  H:Refresh()
+end
+
 function H:SelectTab(name)
   if not frame then return end
   H.tab = name
@@ -308,7 +333,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 624)
+  f:SetSize(400, 652)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -412,6 +437,11 @@ local function build()
     FlipForeverDB.settings.reloadAfterScan = self:GetChecked() and true or false
   end)
   f.pauseScan:SetPoint("TOPLEFT", 14, -560)
+  -- language: click to go through every language the game supports ("Game language" follows the client)
+  f.langLabel = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.langLabel:SetPoint("TOPLEFT", 20, -594)
+  f.lang = button(pg, "Language", 178, function() H:NextLanguage() end)
+  f.lang:SetPoint("TOPLEFT", 206, -588)
   f.livePlan = check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
     FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
   end)
@@ -482,6 +512,8 @@ function H:Refresh()
   frame.profPanel:SetChecked(s.profPanel ~= false)
   frame.pauseScan:SetChecked(s.reloadAfterScan ~= false)
   frame.livePlan:SetChecked(s.livePlanning ~= false)
+  frame.langLabel:SetText(FF:T("Language") .. ":")
+  frame.lang:SetText(H:LanguageName(s.language))
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

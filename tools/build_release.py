@@ -87,6 +87,8 @@ def release_notes() -> str:
 
 
 def main():
+    import gen_locale
+    gen_locale.main()          # addon translations from app/flipforever/i18n.py
     check_versions()
     DIST.mkdir(exist_ok=True)
     build_exe(skip="--skip-exe" in sys.argv)

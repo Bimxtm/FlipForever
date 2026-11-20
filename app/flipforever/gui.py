@@ -13,7 +13,8 @@ from tkinter import filedialog, messagebox, ttk
 import sys
 import webbrowser
 
-from . import demo, engine, store, updater
+from . import demo, engine, i18n, store, updater
+from .i18n import tr
 from .engine import money
 from .version import GITHUB_REPO, VERSION
 
@@ -63,6 +64,7 @@ class App(tk.Tk):
         except (tk.TclError, OSError):
             pass
         self.settings = store.Settings.load()
+        i18n.set_language(self.settings.language)
         self._restore_window()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.con = store.connect()
@@ -101,6 +103,14 @@ class App(tk.Tk):
         except (tk.TclError, OSError):
             pass
         self.destroy()
+
+    def _language_changed(self):
+        name = self.lang_var.get()
+        code = next((c for c, n in i18n.LANGUAGES.items() if n == name), "enUS")
+        self.settings.language = code
+        self.settings.save()
+        self.status(f"{name}: " + i18n.TRANSLATIONS.get(code, {}).get(
+            "Language changes apply after restarting the app.", "Language changes apply after restarting the app."))
 
     # ------------------------------------------------------------- styling
     def _style(self):
@@ -155,17 +165,17 @@ class App(tk.Tk):
         top = ttk.Frame(self, padding=(16, 12))
         top.pack(fill="x")
         ttk.Label(top, text="FlipForever", style="Title.TLabel", foreground=ACCENT).pack(side="left")
-        ttk.Label(top, text="  realm:", style="Muted.TLabel").pack(side="left", padx=(18, 4))
+        ttk.Label(top, text="  " + tr("realm:"), style="Muted.TLabel").pack(side="left", padx=(18, 4))
         self.realm_var = tk.StringVar()
         self.realm_box = ttk.Combobox(top, textvariable=self.realm_var, state="readonly", width=22)
         self.realm_box.pack(side="left")
         self.realm_box.bind("<<ComboboxSelected>>", lambda e: self._realm_changed())
-        ttk.Label(top, text="  character:", style="Muted.TLabel").pack(side="left", padx=(14, 4))
+        ttk.Label(top, text="  " + tr("character:"), style="Muted.TLabel").pack(side="left", padx=(14, 4))
         self.char_var = tk.StringVar()
         self.char_box = ttk.Combobox(top, textvariable=self.char_var, state="readonly", width=13)
         self.char_box.pack(side="left")
         self.char_box.bind("<<ComboboxSelected>>", lambda e: self._char_changed())
-        ttk.Label(top, text="  budget:", style="Muted.TLabel").pack(side="left", padx=(14, 4))
+        ttk.Label(top, text="  " + tr("budget:"), style="Muted.TLabel").pack(side="left", padx=(14, 4))
         self.budget_var = tk.StringVar()
         self.budget_entry = ttk.Entry(top, textvariable=self.budget_var, width=7)
         self.budget_entry.pack(side="left")
@@ -173,8 +183,8 @@ class App(tk.Tk):
         self.budget_entry.bind("<FocusOut>", lambda e: self._budget_changed())
         self.char_gold = tk.StringVar()
         ttk.Label(top, textvariable=self.char_gold, style="Muted.TLabel").pack(side="left", padx=(4, 0))
-        ttk.Button(top, text="Build shopping list", style="Accent.TButton", command=self.build_plan).pack(side="right")
-        ttk.Button(top, text="Import", command=self.import_now).pack(side="right", padx=8)
+        ttk.Button(top, text=tr("Build shopping list"), style="Accent.TButton", command=self.build_plan).pack(side="right")
+        ttk.Button(top, text=tr("Import"), command=self.import_now).pack(side="right", padx=8)
 
         self.status_var = tk.StringVar(value="Ready.")
         bar = ttk.Frame(self, padding=(16, 4))
@@ -252,18 +262,18 @@ class App(tk.Tk):
         self.nav_bars = {}
         self.nav_info = {}
         for section, pages in self.NAV:
-            ttk.Label(self.sidebar, text=section, style="Side.TLabel").pack(anchor="w", padx=16, pady=(12, 4))
+            ttk.Label(self.sidebar, text=tr(section), style="Side.TLabel").pack(anchor="w", padx=16, pady=(12, 4))
             for attr, label, sub in pages:
                 tab = getattr(self, attr)
                 row = tk.Frame(self.sidebar, bg=PANEL)
                 row.pack(fill="x", padx=(0, 6), pady=1)
                 bar = tk.Frame(row, bg=PANEL, width=3)          # accent marker for the open page
                 bar.pack(side="left", fill="y")
-                b = ttk.Button(row, text=label, style="Nav.TButton", command=lambda t=tab: self.nb.select(t))
+                b = ttk.Button(row, text=tr(label), style="Nav.TButton", command=lambda t=tab: self.nb.select(t))
                 b.pack(side="left", fill="x", expand=True, padx=(3, 0))
                 self.nav_buttons[str(tab)] = b
                 self.nav_bars[str(tab)] = bar
-                self.nav_info[str(tab)] = (label, sub)
+                self.nav_info[str(tab)] = (tr(label), tr(sub))
         ttk.Label(self.sidebar, text=f"v{VERSION}", style="Side.TLabel").pack(side="bottom", anchor="w", padx=16, pady=8)
         self.nb.bind("<<NotebookTabChanged>>", lambda e: self._nav_changed())
         self._nav_changed()
@@ -860,6 +870,16 @@ class App(tk.Tk):
             row += 1
             return w
 
+        # language (all languages the game supports); saved right away, applied on restart
+        ttk.Label(f, text=tr("Language")).grid(row=row, column=0, sticky="w", pady=5, padx=(0, 14))
+        names = list(i18n.LANGUAGES.values())
+        self.lang_var = tk.StringVar(value=i18n.LANGUAGES.get(self.settings.language or "enUS", "English"))
+        lang_box = ttk.Combobox(f, textvariable=self.lang_var, values=names, state="readonly", width=24)
+        lang_box.grid(row=row, column=1, sticky="w")
+        ttk.Label(f, text=tr("Language changes apply after restarting the app."), style="Muted.TLabel").grid(
+            row=row, column=2, sticky="w", padx=12)
+        lang_box.bind("<<ComboboxSelected>>", lambda e: self._language_changed())
+        row += 1
         self.path_box = add("WoW Forever folder", "wow_path", "combo", 60, store.find_wow_installs(), "the _forever_ folder")
         ttk.Button(f, text="Browse...", command=self._browse).grid(row=row - 1, column=2, sticky="w", padx=12)
         self.acct_box = add("Account folder", "account", "combo", 30, store.find_accounts(self.settings.wow_path),

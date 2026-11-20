@@ -33,6 +33,7 @@
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 3: language selector with all 11 game languages (app and addon), one shared translation source.
 - 2.5.0 beta 2: gear finder (Gear tab, Advisor step), encrypted GitHub token, setup for other players. Next: language selector.
 - 2.5.0 beta 1: crafting profit finder (approved feature), ahead of schedule. The next stable release will be 2.5.0 and include the 2.4 betas.
 - 2.4.0 betas 1-4: tabbed in-game window with a shopping-list view and Skip; app sidebar, page headers, striped tables and colour-coded cards; Gathering in the common look; best farming zone in the Advisor; smarter undercut; a reason on every Advisor step (beta 5).
