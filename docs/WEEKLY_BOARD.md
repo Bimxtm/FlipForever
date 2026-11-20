@@ -16,7 +16,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 ## 📅 Plan by day
 | Day | Focus | Ships as |
 |---|---|---|
-| Thu 20, 11:07 | Planner: exact skill-up chances from colour changes · "why" tooltips on advisor steps · "sells ~N/day" in tooltips · app remembers window size | 2.3.0 Beta 2 |
+| Thu 20, 11:07 | **Top priority (your request):** shopping list rebuilt in game after every scan, no /reload: the app passes its learned settings at login, and the addon plans with fresh prices · "Save & sync with app" button (one click instead of /reload) · then, if there's room: exact skill-up chances, "why" tooltips, "sells ~N/day", window size | 2.3.0 Beta 2 |
 | Thu 20, ~19:11 | Cycle: everything since 2.2.0 | **2.3.0 stable** |
 | Fri 21 | **In-game test checklist** for you · fix whatever you report · zone names for gathering stats on first login | 2.3.x betas → 2.3.1 at a cycle |
 | Sat 22 | Gathering: value per node on our own map-pin tooltips · Advisor: "best farming zone for your skill" step | 2.4.0 beta |
@@ -40,6 +40,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P6 | Random-stat gear ("of the Bear") priced together by item | 🟡 low | Buy logic already prefers commodities; revisit if it causes bad buys |
 | P7 | Planner skill-up chances are colour averages | 🟡 low | Exact chances in Beta 2 |
 | P8 | Gathering stats show "map 1411" until the addon has run once | 🟡 low | Names saved at login (done); verify Fri |
+| P10 | **New shopping lists need /reload, and scans only reach the app after /reload or logout** (WoW only reads and writes addon data at load and logout) | 🟠 med | In-game planning after each scan + one-click sync (Beta 2) |
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
