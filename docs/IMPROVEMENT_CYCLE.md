@@ -19,9 +19,14 @@ What happens in each cycle, and the rules it follows.
 Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 14:00). Work sessions run every 10 minutes; keep going inside a session while there's work, ship each finished item as a beta.
 - [x] Performance: in-game market model parses all 60 scans on every rebuild; cache parsed points per scan so a new scan only adds its own rows
 - [x] App: show the addon's gear upgrades and profitable crafts in the desktop app (addon saves them; new app page or Advisor section)
-- [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language
 - [x] Test harness: make mock timers keep delayed callbacks (board issue P9)
-- [ ] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
+- [x] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
+- [x] Auction duration by speed: post fast sellers for 12 h (smaller deposit) and slow ones for 24/48 h, using the learned sales per day
+- [x] Gear finder: also check your bags for items that beat what you wear ("equip this")
+- [x] App Dashboard: profit per character (chart or table) when several characters trade
+- [x] Shopping list view in game: sort by status and show the expected profit per item
+- [ ] Quest locations branch: add warlock, rogue and the missing warrior/paladin quest starts (research), keep on the branch
+- [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language (last: can't be checked without a non-English client)
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
 
 ## Usage budget (internal)

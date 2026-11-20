@@ -648,6 +648,12 @@ class App(tk.Tk):
         self.chart = tk.Canvas(left, bg=PANEL, highlightthickness=0, height=300)
         self.chart.pack(fill="both", expand=True, pady=(6, 0))
         self.chart.bind("<Configure>", lambda e: self._draw_chart())
+        # profit per character (shown when more than one character trades)
+        self.char_frame = ttk.Frame(left)
+        ttk.Label(self.char_frame, text="Profit per character", style="H.TLabel").pack(anchor="w", pady=(12, 4))
+        frame, self.char_tree = self._tree(self.char_frame, ("Character", "Realized profit", "Last 7 days", "Stock (cost)", "Sales", "Bought"),
+                                           (180, 120, 110, 110, 70, 80), height=4)
+        frame.pack(fill="x")
         right = ttk.Frame(mid, width=360)
         right.pack(side="left", fill="y", padx=(14, 0))
         right.pack_propagate(False)
@@ -660,6 +666,19 @@ class App(tk.Tk):
         ttk.Label(right, text="Best deals right now", style="H.TLabel").pack(anchor="w", pady=(12, 0))
         self.top_deals = tk.Text(right, bg=PANEL, fg=FG, relief="flat", wrap="none", font=FONT, padx=12, pady=8, height=7)
         self.top_deals.pack(fill="x", pady=(6, 0))
+
+    def _fill_char_profit(self, realm):
+        """Profit per character on the Dashboard; only shown when more than one character trades."""
+        rows = engine.profit_by_char(self.con, realm) if realm else []
+        if len(rows) < 2:
+            self.char_frame.pack_forget()
+            return
+        self.char_frame.pack(fill="x")
+        self._fill(self.char_tree, [
+            ((r["char"], money(r["realized"], True), money(r["week"], True), money(r["held_cost"], True), r["sold"], r["bought"]),
+             (r["char"].lower(), r["realized"], r["week"], r["held_cost"], r["sold"], r["bought"]),
+             "deal" if r["realized"] > 0 else "bad" if r["realized"] < 0 else None)
+            for r in rows])
 
     def _draw_chart(self):
         c = self.chart
@@ -1247,6 +1266,7 @@ class App(tk.Tk):
         self.cards["scan"].set(ago(s["last_scan"]["t"]) if s["last_scan"] else "never")
         self.cards["tracked"].set(f"{s['tracked']:,}")
         self._draw_chart()
+        self._fill_char_profit(realm)
         self._fill_steps(installed, s)
         self._fill_deals()
         self._fill_top_deals()

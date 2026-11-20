@@ -1,6 +1,18 @@
-# FlipForever 2.5 Beta 10
+# FlipForever 2.5 Beta 16
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Press + to fight.** The combat helper now listens to the + key (and numpad +) right away. Set your own key in the FlipForever window if you prefer another.
+
+**Combat helper waits for cooldowns.** Your big abilities fire the moment they're ready, and the rest of the rotation only moves on after a spell was really cast. Nothing is skipped because it wasn't ready yet. The icon shows what your next press casts, and the small icons show your cooldowns.
+
+**Best deals on top.** The shopping list in game now puts deals first and shows the expected profit per item.
+
+**Which character earns the most?** With more than one trader, the app's Dashboard now shows profit per character.
+
+**Forgot to equip something?** The Gear tab now also shows better gear already in your bags, with an Equip button.
+
+**Smaller deposits.** Fast sellers now go up for 12 hours, where the deposit is smallest, and slow sellers get 48 hours to find a buyer.
 
 **The Advisor speaks your language.** Its next steps (talents, quests, gear, dungeons, gold to save and more) now appear in your chosen language.
 

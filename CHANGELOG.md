@@ -2,6 +2,34 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.16] - 2026-11-20 (beta)
+### Changed
+- The combat helper's key is **+** by default (the + key and numpad +). A key you set yourself replaces it; *Clear* removes all keys.
+
+## [2.5.0-beta.15] - 2026-11-20 (beta)
+### Changed
+- **Combat helper waits for cooldowns (smart mode, on by default).** Each press now uses one macro that the game itself evaluates:
+  - abilities with a cooldown (Mortal Strike, Judgement, Mind Blast, Stormstrike, Fire Blast, Bestial Wrath and so on) are cast the moment they're ready
+  - the rest of the rotation is a cast sequence that only moves on after a successful cast, so a spell that isn't ready is never skipped
+  - the big icon shows what the next press really casts; the small icons are your cooldown abilities, dimmed while they recharge
+  - the old one-step-per-press mode is still there: untick *Wait for cooldowns* in the FlipForever window
+
+## [2.5.0-beta.14] - 2026-11-20 (beta)
+### Changed
+- In-game shopping list: deals come first (best profit first), then items being watched, then done and skipped ones. A new *Profit* column shows the expected profit per unit at today's lowest price, after the AH cut (green when positive).
+
+## [2.5.0-beta.13] - 2026-11-20 (beta)
+### Added
+- App Dashboard: **profit per character** (realized profit, last 7 days, stock at cost, sales and units bought), best first. It appears when more than one character on the realm trades.
+
+## [2.5.0-beta.12] - 2026-11-20 (beta)
+### Added
+- **Gear finder checks your bags too.** Gear you carry that beats what you wear is listed first in the Gear tab (marked *in bags*), with an **Equip** button. The Advisor tells you to put it on. It updates when your bags or gear change.
+
+## [2.5.0-beta.11] - 2026-11-20 (beta)
+### Changed
+- **Auction length by sell speed.** The deposit grows with the auction length, so items that sell 12 or more a day are now posted for 12 hours (smallest deposit). Items selling 3-12 a day get 24 hours and slower ones 48 hours, to find a buyer. Items without sales data use your usual setting. It can be switched off in the FlipForever window (Settings).
+
 ## [2.5.0-beta.10] - 2026-11-20 (beta)
 ### Changed
 - The Advisor's steps are translated into all 11 languages: talents, class quests, weak slots, dungeons, zones, professions, profitable crafts, farming zone, bags, gold milestones and power spikes. Item, quest and zone names stay as the guides write them.

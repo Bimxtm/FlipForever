@@ -196,6 +196,12 @@ function G:Search(onDone)
       return a.price < b.price
     end)
     local perSlot, list = {}, {}
+    -- what you already carry comes first: it's free
+    local okB, bagList = pcall(self.BagUpgrades, self)
+    for _, r in ipairs(okB and bagList or {}) do
+      perSlot[r.slot] = (perSlot[r.slot] or 0) + 1
+      list[#list + 1] = r
+    end
     for _, r in ipairs(found) do
       perSlot[r.slot] = (perSlot[r.slot] or 0) + 1
       if perSlot[r.slot] <= 3 then list[#list + 1] = r end
@@ -208,9 +214,40 @@ function G:Search(onDone)
   step()
 end
 
--- buy one piece at the auction house (same price-limit rules as the shopping list)
+-- Gear already in your bags that beats what you wear (green-quality drops you forgot to equip)
+function G:BagUpgrades()
+  local C = C_Container
+  if not (C and C.GetContainerNumSlots and C.GetContainerItemInfo) then return {} end
+  local level = UnitLevel("player") or 1
+  local weights = self:Weights()
+  local out = {}
+  for bag = 0, 4 do
+    for slot = 1, C.GetContainerNumSlots(bag) or 0 do
+      local info = C.GetContainerItemInfo(bag, slot)
+      local id = info and info.itemID
+      if id then
+        local ok, r = pcall(self.Check, self, id, 0, level, weights, math.huge, 1)
+        if ok and type(r) == "table" then
+          r.bag, r.price = true, 0
+          out[#out + 1] = r
+        end
+      end
+    end
+  end
+  table.sort(out, function(a, b) return a.gain > b.gain end)
+  return out
+end
+
+-- buy one piece at the auction house (same price-limit rules as the shopping list);
+-- for gear already in your bags: put it on
 function G:Buy(r)
   if not r then return end
+  if r.bag then
+    if InCombatLockdown() then FF:Print("Can't change gear during a fight.") return end
+    if EquipItemByName and r.link then EquipItemByName(r.link) end
+    FF:Print(("Equipped %s."):format(r.name))
+    return
+  end
   FF.Trader:StartBuying({ { id = r.id, qty = 1, max = math.floor(r.price * 1.15) } }, "gear upgrade")
 end
 
@@ -218,6 +255,7 @@ end
 function G:TopStep()
   local r = self.results and self.results[1]
   if not r then return nil end
+  if r.bag then return ("Equip %s from your bags (%s)"):format(r.name, G.SLOT_NAMES[r.slot] or "") end
   return ("Auction house upgrade: %s (%s) for %s"):format(r.name, G.SLOT_NAMES[r.slot] or "", FF:Money(r.price))
 end
 
@@ -225,3 +263,21 @@ end
 local function later(sec) C_Timer.After(sec, function() if not G.running then pcall(G.Search, G) end end) end
 FF:On("PLAYER_LOGIN", function() later(12) end)
 FF:On("PLAYER_LEVEL_UP", function() later(3) end)
+
+-- bags change often: refresh only the "in your bags" part (cheap), at most every 5 seconds
+function G:RefreshBags()
+  if self.running or not self.searched then return end
+  local list = {}
+  local okB, bagList = pcall(self.BagUpgrades, self)
+  for _, r in ipairs(okB and bagList or {}) do list[#list + 1] = r end
+  for _, r in ipairs(self.results or {}) do if not r.bag then list[#list + 1] = r end end
+  self.results = list
+  if FF.Hub and FF.Hub.RefreshGear then FF.Hub:RefreshGear() end
+end
+local bagPending = false
+FF:On("BAG_UPDATE_DELAYED", function()
+  if bagPending then return end
+  bagPending = true
+  C_Timer.After(5, function() bagPending = false pcall(G.RefreshBags, G) end)
+end)
+FF:On("PLAYER_EQUIPMENT_CHANGED", function() C_Timer.After(1, function() pcall(G.RefreshBags, G) end) end)

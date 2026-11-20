@@ -16,7 +16,7 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- Quest locations for advisor steps (where class quests start, with map pins)
+- Quest locations: built on branch feature/quest-locations, ready to merge when approved
 
 ## Open issues
 | # | Issue | Severity | Plan |
@@ -30,6 +30,12 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 16 (your request): combat helper key + by default.
+- 2.5.0 beta 15 (your request): combat helper waits for cooldowns - cooldown abilities on ready, the rest as a cast sequence that only advances after a successful cast.
+- 2.5.0 beta 14: shopping list sorted by status with expected profit per item.
+- 2.5.0 beta 13: profit per character on the app Dashboard.
+- 2.5.0 beta 12: gear finder lists upgrades already in your bags, with Equip.
+- 2.5.0 beta 11: auction length by sell speed (12 h for fast sellers, smaller deposits).
 - Test harness: mock timers now keep delayed callbacks (P9 fixed).
 - 2.5.0 beta 10: Advisor steps translated into all 11 languages; test that every translation keeps its placeholders.
 - 2.5.0 beta 9: scans parsed once (faster in-game planning); gear upgrades and profitable crafts in the app's Advisor page.

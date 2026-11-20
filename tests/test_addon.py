@@ -244,6 +244,7 @@ L = lua.eval
 lua.execute("""
 Fire("ADDON_LOADED", "FlipForever")
 FlipForeverDB.settings.livePlanning = false   -- in-game planning is tested on its own (Beta 4 block)
+FlipForeverDB.settings.combatSmart = false    -- the step mode is tested first; smart mode has its own block
 Fire("PLAYER_LOGIN")
 Fire("AUCTION_HOUSE_SHOW")
 """)
@@ -1115,9 +1116,11 @@ FlipForever.Hub:SelectTab("settings")
 _rows = [dict(L("ROWS")[i]) for i in range(1, 4)]
 print("hub tabs:", L("TAB1"), "->", L("TAB2"), "| rows:", [(r["name"], r["status"], r.get("now")) for r in _rows])
 assert L("TAB1") == "overview" and L("TAB2") == "list"
-assert [r["name"] for r in _rows] == ["Silk Cloth", "Linen Cloth", "Wool Cloth"] and _rows[2]["live"] is True
-assert _rows[0]["status"] in ("deal", "watching") and _rows[1]["status"] == "watching"
-assert L("ROWS2")[2].status == "skipped" and L("REM_SKIPPED") == 0 and L("REM_OK") == 5 and L("REM_BACK") == 3
+_byname = {r["name"]: r for r in _rows}
+assert _rows[0]["name"] == "Silk Cloth" and _rows[0]["status"] == "deal" and _byname["Wool Cloth"]["live"] is True
+assert _byname["Silk Cloth"]["profit"] is not None
+assert _byname["Linen Cloth"]["status"] == "watching"
+assert L("ROWS2")[3].status == "skipped" and L("ROWS2")[3].name == "Linen Cloth" and L("REM_SKIPPED") == 0 and L("REM_OK") == 5 and L("REM_BACK") == 3
 print("skip: skipped item not bought, back after unticking")
 
 # --- 2.5.0: crafting profit finder (uses the Tailoring recipes captured above)
@@ -1456,6 +1459,131 @@ assert L("HUNTER_NE").npc == "Dazalar" and L("DRUID_H").npc == "Turak Runetotem"
 _s = [float(v) for v in L("SEED").split(":")]
 assert _s[0] == 1438 and abs(_s[1] - 0.567) < 1e-9 and abs(_s[2] - 0.595) < 1e-9 and L("LEARNED") == "1456:0.7:0.3"
 assert "Turak Runetotem" in L("STEP") and L("TARGET") == "Turak Runetotem" and "Click to point" in L("WHY")
+# --- gear finder: upgrades already in your bags come first, with an Equip button
+lua.execute("""
+local FF = FlipForever
+local oldModel, oldInfo, oldInstant, oldCont = FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, C_Container
+FF.Planner.Model = function() return { [103] = { cur_min = 2000 } } end
+local ITEMS = {
+  [100] = { "Scaled Chestguard", 2, 28, "INVTYPE_CHEST", 4, 3, { ITEM_MOD_STRENGTH_SHORT = 10 } },
+  [103] = { "Heavy Claymore", 2, 25, "INVTYPE_2HWEAPON", 2, 8, { ITEM_MOD_DAMAGE_PER_SECOND_SHORT = 20 } },
+}
+C_Item.GetItemInfoInstant = function(id) local it = ITEMS[id] if it then return id, "", "", it[4], 0, it[5], it[6] end end
+C_Item.GetItemInfo = function(id) local it = ITEMS[id] if it then return it[1], "link:" .. id, it[2], 30, it[3] end end
+GetItemStats = function(link) local id = tonumber(link:match("link:(%d+)")) return id and ITEMS[id][7] or nil end
+GetInventoryItemLink = function() return nil end
+C_Container = { GetContainerNumSlots = function(bag) return bag == 0 and 1 or 0 end,
+  GetContainerItemInfo = function(bag, slot) return { itemID = 100, stackCount = 1 } end }
+UnitClass = function() return "Warrior", "WARRIOR" end
+UnitLevel = function() return 30 end
+GetMoney = function() return 100000 end
+EQUIPPED_LINK = nil
+EquipItemByName = function(link) EQUIPPED_LINK = link end
+FF.Gear:Search()
+RunTimers(5)
+BAGFIRST = FF.Gear.results[1]
+FF.Gear:Buy(BAGFIRST)
+BAGSTEP = FF.Gear:TopStep()
+FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, C_Container = oldModel, oldInfo, oldInstant, oldCont
+""")
+print("bag upgrade:", L("BAGFIRST").name, "| bag:", L("BAGFIRST").bag, "| equipped:", L("EQUIPPED_LINK"), "| step:", L("BAGSTEP"))
+assert L("BAGFIRST").name == "Scaled Chestguard" and L("BAGFIRST").bag is True and L("EQUIPPED_LINK") == "link:100"
+assert L("BAGSTEP").startswith("Equip Scaled Chestguard from your bags")
+
+# --- app: profit per character
+import hashlib as _hashlib  # noqa: E402
+for _ev in [(1000, "buy", 2589, "Linen Cloth", 10, 30, None, None, None, 40), (1100, "post", 2589, "Linen Cloth", 10, 45, 5, None, None, None),
+            (2000, "invoice", 2589, "Linen Cloth", 10, None, 5, 450, 22, None)]:
+    _t, _e, _iid, _nm, _q, _p, _dep, _gross, _cut, _exp = _ev
+    _con.execute("INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                 (_hashlib.sha1(repr(_ev).encode()).hexdigest(), _realm, _t, _e, _iid, _nm, _q, _p, _dep, _gross, _cut, _exp, "Altchar"))
+_pc = {r["char"]: r for r in _engine.profit_by_char(_con, _realm)}
+print("profit per character:", {k: v["realized"] for k, v in _pc.items()})
+assert _pc["Altchar"]["realized"] == 128 and _pc["Altchar"]["sold"] == 1 and "Demochar" in _pc
+
+# --- auction length by sell speed (deposit grows with the duration)
+lua.execute("""
+local T, P = FlipForever.Trader, FlipForever.Planner
+local oldSpeed, oldCalc = P.SellsPerDay, C_AuctionHouse.CalculateCommodityDeposit
+P.SellsPerDay = function(_, id) return ({ [1] = 30, [2] = 5, [3] = 0.5 })[id] end
+DUR = T:DurationFor(1, 2) .. T:DurationFor(2, 2) .. T:DurationFor(3, 2) .. T:DurationFor(4, 2)
+USED = nil
+C_AuctionHouse.CalculateCommodityDeposit = function(id, d, q) USED = d return 10 end
+FlipForeverDB.settings.autoDuration = nil
+T:Deposit({ id = 1, commodity = true, qty = 5 })
+AUTO = USED
+FlipForeverDB.settings.autoDuration = false
+T:Deposit({ id = 1, commodity = true, qty = 5 })
+OFF = USED
+FlipForeverDB.settings.autoDuration = nil
+P.SellsPerDay, C_AuctionHouse.CalculateCommodityDeposit = oldSpeed, oldCalc
+""")
+print("durations (30/day, 5/day, 0.5/day, unknown):", L("DUR"), "| deposit asked for duration", L("AUTO"), "| switched off:", L("OFF"))
+assert L("DUR") == "1232" and L("AUTO") == 1 and L("OFF") == 2
+
+# --- combat helper smart mode: cooldowns go first when ready, the rest only moves on after a cast
+lua.execute("""
+local C, AD = FlipForever.Combat, FlipForever.Advisor
+local oldLevel = UnitLevel
+FlipForeverDB.settings.combatSmart = nil
+FlipForeverDB.settings.combatTarget = false
+FlipForeverDB.settings.combatTank = false
+UnitClass = function() return "Warrior", "WARRIOR" end
+UnitLevel = function() return 50 end
+AD:CharStore().build = "arms"
+KNOWN = { "Battle Shout", "Rend", "Heroic Strike", "Mortal Strike", "Whirlwind", "Sweeping Strikes" }
+TARGET = nil
+if not C:Enabled() then C:Toggle() end
+C:Rebuild()
+CB = FlipForeverCombatButton
+SMART_MACRO = CB:GetAttribute("macrotext")
+SMART_COUNT = CB:GetAttribute("count")
+-- Mortal Strike on cooldown (5 s left), Whirlwind ready: the icon shows Whirlwind
+CDS = { ["Mortal Strike"] = 5 }
+GetSpellCooldown = function(s) local left = CDS[s] if left then return GetTime() - 1, left + 1 end return 0, 0 end
+NEXT1 = C:SmartNext()
+CDS["Whirlwind"] = 8; CDS["Sweeping Strikes"] = 20
+QueryCastSequence = function(seq) return "Rend" end
+NEXT2 = C:SmartNext()
+C:Toggle()
+FlipForeverDB.settings.combatTarget = nil
+FlipForeverDB.settings.combatTank = nil
+FlipForeverDB.settings.combatSmart = false
+UnitLevel = oldLevel
+AD:CharStore().build = nil
+""")
+print("smart macro:", repr(L("SMART_MACRO")))
+print("next with MS on cooldown:", L("NEXT1"), "| with all cooldowns busy:", L("NEXT2"))
+_m = L("SMART_MACRO")
+assert "/cast Mortal Strike\n" in _m and "/cast Whirlwind\n" in _m and "/cast Sweeping Strikes\n" in _m
+assert _m.split("\n")[-1].startswith("/castsequence reset=target/combat Battle Shout, Rend, Heroic Strike")
+assert "Mortal Strike" not in _m.split("\n")[-1] and len(_m) <= 255 and L("SMART_COUNT") == 0
+assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Rend"
+
+# --- combat helper key: + by default (main keyboard and numpad), your own key replaces it, Clear removes it
+lua.execute("""
+local C = FlipForever.Combat
+BOUND = {}
+local oldSet = SetOverrideBindingClick
+SetOverrideBindingClick = function(owner, prio, key, button) BOUND[#BOUND + 1] = key end
+FlipForeverDB.settings.combatKey = nil
+if not C:Enabled() then C:Toggle() end
+BOUND = {}
+C:Apply()
+KEYS_DEFAULT = table.concat(BOUND, ",")
+BOUND = {}
+C:SetKey("F")
+KEYS_OWN = table.concat(BOUND, ",")
+BOUND = {}
+C:SetKey(nil)
+KEYS_CLEARED = table.concat(BOUND, ",")
+STORED = tostring(FlipForeverDB.settings.combatKey)
+FlipForeverDB.settings.combatKey = nil
+C:Toggle()
+SetOverrideBindingClick = oldSet
+""")
+print("combat keys: default", L("KEYS_DEFAULT"), "| own", L("KEYS_OWN"), "| cleared", repr(L("KEYS_CLEARED")), "| stored", L("STORED"))
+assert L("KEYS_DEFAULT") == "+,NUMPADPLUS" and L("KEYS_OWN") == "F" and L("KEYS_CLEARED") == "" and L("STORED") == "false"
 
 # --- per-character plans
 lua.execute("""
