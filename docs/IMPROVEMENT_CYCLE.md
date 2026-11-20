@@ -22,6 +22,11 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language
 - [x] Test harness: make mock timers keep delayed callbacks (board issue P9)
 - [x] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
+- [ ] Auction duration by speed: post fast sellers for 12 h (smaller deposit) and slow ones for 24/48 h, using the learned sales per day
+- [ ] Gear finder: also check your bags for items that beat what you wear ("equip this")
+- [ ] App Dashboard: profit per character (chart or table) when several characters trade
+- [ ] Shopping list view in game: sort by status and show the expected profit per item
+- [ ] Quest locations branch: add warlock, rogue and the missing warrior/paladin quest starts (research), keep on the branch
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
 
 ## Usage budget (internal)
