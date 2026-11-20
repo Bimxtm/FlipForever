@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT / "app"))
 from flipforever.version import VERSION  # noqa: E402
 
 DIST = ROOT / "dist"
-INCLUDE = ["FlipForever.exe", "addon", "tools", "README.md", "CHANGELOG.md", "NEWS.md", "flipforever.ico"]
+INCLUDE = ["FlipForever.exe", "addon", "tools", "docs", "README.md", "CHANGELOG.md", "NEWS.md", "flipforever.ico"]
 
 
 def check_versions():

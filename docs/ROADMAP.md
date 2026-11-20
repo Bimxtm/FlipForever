@@ -1,23 +1,23 @@
 # Roadmap
 
 ## Waiting for your OK (major ideas)
-2. **Crafting profit finder.** It flags recipes you know that sell for more than their mats cost, then adds the mats to the shopping list. *Inspired by Auctionator and TSM-style crafting tabs.*
-3. **Waypoint arrow.** One arrow on screen for the next gathering stop, an advisor target (a dungeon or quest hub) or a vendor. *Inspired by Schmendrick's arrow and TomTom.*
-4. **Questie link-up.** The advisor reads Questie's quest database, so "class quest" and "gear from quest X" show where to start, with map pins. *Inspired by Questie and GearQuestForever.*
+1. **Crafting profit finder.** It flags recipes you know that sell for more than their mats cost, then adds the mats to the shopping list. Inspired by Auctionator and TSM-style crafting tabs.
+2. **Waypoint arrow.** One arrow on screen for the next gathering stop, an advisor target (a dungeon or quest hub) or a vendor. Inspired by Schmendrick's arrow and TomTom.
+3. **Quest locations, built in.** The advisor shows where class quests and gear quests start, with map pins, without Questie. Inspired by Questie and GearQuestForever.
 
 ## Small improvements (queue)
-- Profession planner: exact skill-up chances from each recipe's colour thresholds (learned in game as your skill moves), instead of averages per colour.
-- Profession planner: when the top craft needs something you craft yourself (e.g. bolts), add *its* materials to the mats list too.
-- Profession planner: "farm it instead" hint using Gathering's gold/hour for ores and herbs.
-- Language-independent spells: use spell IDs instead of English names, so the advisor and combat helper work on any client language.
-- Item tooltips: add "sells ~N/day" (needs the app's sales-speed data passed to the addon with the shopping list).
-- Gathering: a value-per-node line in GatherLite's node tooltips.
-- Mailbox: a sales summary ("you earned Xg since last time") when the mail opens.
+- Profession planner: exact skill-up chances learned from recipe colour changes, instead of averages per colour.
 - Advisor: a "why" tooltip on each step (which guide said so).
+- Item tooltips: "sells ~N/day" (the app passes its sales-speed data along with the shopping list).
+- App: remember window size and position.
+- Gathering: value per node on FlipForever's own map-pin tooltips; an Advisor step for the best farming zone at your skill.
+- Auction: smarter undercut (ignore single dumped units; never undercut yourself across characters).
+- Language-independent spells (spell IDs), so the advisor and combat helper work on any client language.
+- Combat helper: sequences for levels 1-10.
 - Advisor: more builds per class as Method/Warcraft Tavern publish post-launch level-60 builds.
-- App: dark/light option and window size memory.
 
 ## Done
+- 2.3.0 Beta 1: beta channel, crafted materials list their own mats, "you can gather this", mailbox summary. In the app (next build): Development tab.
 - 2.2.0: profession planner (self-contained), buy missing mats at the AH.
 - 2.1.0: prices in item tooltips, minimap summary, today's results on the AH panel.
 - 2.0.0: all-in-one (Gathering, Advisor, Combat helper, FlipForever window, updater).

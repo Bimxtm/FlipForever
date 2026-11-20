@@ -85,7 +85,7 @@ class App(tk.Tk):
         st.configure("Title.TLabel", font=("Segoe UI Semibold", 16))
         st.configure("H.TLabel", font=("Segoe UI Semibold", 12))
         st.configure("TNotebook", background=BG, borderwidth=0)
-        st.configure("TNotebook.Tab", background=PANEL, foreground=MUTED, padding=(16, 8), font=FONT_B)
+        st.configure("TNotebook.Tab", background=PANEL, foreground=MUTED, padding=(9, 7), font=FONT_B)
         st.map("TNotebook.Tab", background=[("selected", CARD)], foreground=[("selected", FG)])
         st.configure("TButton", background=CARD, foreground=FG, padding=(12, 6), borderwidth=0)
         st.map("TButton", background=[("active", "#2d3441")])
@@ -149,12 +149,15 @@ class App(tk.Tk):
         self.tab_adv = ttk.Frame(self.nb, padding=10)
         self.tab_gather = ttk.Frame(self.nb, padding=10)
         self.tab_about = ttk.Frame(self.nb, padding=14)
+        self.tab_dev = ttk.Frame(self.nb, padding=10)
         for tab, name in ((self.tab_dash, "Dashboard"), (self.tab_deals, "Deals"), (self.tab_sell, "Inventory & selling"),
                           (self.tab_hist, "Trade history"), (self.tab_learn, "What it learned"),
                           (self.tab_adv, "Advisor"), (self.tab_gather, "Gathering"),
-                          (self.tab_set, "Settings"), (self.tab_help, "How to use"), (self.tab_about, "About & updates")):
+                          (self.tab_set, "Settings"), (self.tab_help, "How to use"), (self.tab_about, "About & updates"),
+                          (self.tab_dev, "Development")):
             self.nb.add(tab, text=name)
         self._build_about()
+        self._build_dev()
         self._build_dash()
         self._build_deals()
         self._build_sell()
@@ -214,11 +217,60 @@ class App(tk.Tk):
         self._show_markdown(self.log_text, _read_doc("CHANGELOG.md"))
         self._release = None
 
+    # development overview: the weekly board + roadmap the improvement cycles keep up to date
+    def _build_dev(self):
+        f = self.tab_dev
+        top = ttk.Frame(f)
+        top.pack(fill="x")
+        ttk.Label(top, text="Development overview", style="Title.TLabel", foreground=ACCENT).pack(side="left")
+        self.dev_info = tk.StringVar()
+        ttk.Label(top, textvariable=self.dev_info, style="Muted.TLabel").pack(side="left", padx=12)
+        ttk.Button(top, text="Releases on GitHub",
+                   command=lambda: webbrowser.open(f"https://github.com/{GITHUB_REPO}/releases")).pack(side="right")
+        ttk.Button(top, text="Refresh", command=self._fill_dev).pack(side="right", padx=8)
+        panes = ttk.Frame(f)
+        panes.pack(fill="both", expand=True, pady=(10, 0))
+        panes.columnconfigure(0, weight=3)
+        panes.columnconfigure(1, weight=2)
+        panes.rowconfigure(1, weight=1)
+        ttk.Label(panes, text="This week's board", style="H.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(panes, text="Roadmap", style="H.TLabel").grid(row=0, column=1, sticky="w", padx=(12, 0))
+        self.board_text = tk.Text(panes, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
+        self.board_text.grid(row=1, column=0, sticky="nsew")
+        self.road_text = tk.Text(panes, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
+        self.road_text.grid(row=1, column=1, sticky="nsew", padx=(12, 0))
+        for t in (self.board_text, self.road_text):
+            t.tag_configure("h1", font=("Segoe UI Semibold", 13), foreground=ACCENT, spacing3=4)
+            t.tag_configure("h2", font=("Segoe UI Semibold", 11), foreground=GOLD, spacing1=10, spacing3=2)
+            t.tag_configure("h3", font=FONT_B, foreground=FG, spacing1=4)
+            t.tag_configure("row", lmargin1=8, lmargin2=24)
+            t.tag_configure("head", font=FONT_B, foreground=MUTED, lmargin1=8)
+        self._fill_dev()
+
+    def _fill_dev(self):
+        board = _read_doc("docs/WEEKLY_BOARD.md")
+        road = _read_doc("docs/ROADMAP.md")
+        self._show_markdown(self.board_text, board)
+        self._show_markdown(self.road_text, road)
+        problems = sum(1 for l in board.splitlines() if l.startswith("| P"))
+        open_high = sum(1 for l in board.splitlines() if l.startswith("| P") and "🔴" in l)
+        self.dev_info.set(f"version {VERSION}  ·  {problems} tracked problems ({open_high} high)  ·  "
+                          f"updated by every 12-hour cycle")
+
     def _show_markdown(self, widget, md):
         widget.configure(state="normal")
         widget.delete("1.0", "end")
         for line in md.splitlines():
-            line = line.replace("**", "")
+            line = line.replace("**", "").replace("*", "")
+            if line.startswith("|"):
+                cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                if all(set(c) <= set("-: ") for c in cells):
+                    continue  # table divider
+                is_head = widget.index("end-1c").endswith(".0") and getattr(widget, "_in_table", False) is False
+                widget._in_table = True
+                widget.insert("end", "   ·   ".join(cells) + "\n", "head" if is_head else "row")
+                continue
+            widget._in_table = False
             if line.startswith("### "):
                 widget.insert("end", line[4:] + "\n", "h3")
             elif line.startswith("## "):
