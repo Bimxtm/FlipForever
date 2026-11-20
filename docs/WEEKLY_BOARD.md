@@ -28,11 +28,11 @@
 | P4 | Guide data gaps: druid talents not final, warlock from a beta-era source, rogue/priest/shaman talents only as images | Medium | Re-check sources; add post-launch builds as they appear |
 | P5 | Spell names are English only (fine on enUS clients) | Low | Spell IDs |
 | P6 | Random-stat gear ("of the Bear") is priced per item, not per suffix | Low | Buying already prefers commodities; revisit if it causes bad buys |
-| P7 | Profession planner uses average skill-up chances per colour | Low | Learn exact chances from recipe colour changes |
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 5: combat helper level bands 1-10 / 11-39 / 40-60 for all classes and builds; exact skill-up chances learned from colour changes (P7).
 - 2.5.0 beta 4: auction house accuracy from current WoW: Forever guides (deposit refunded on sale, minimum deposit now 1 copper, 5% cut), vendor flips with automatic merchant selling, vendor floor when posting, cheaper items considered.
 - 2.5.0 beta 3: language selector with all 11 game languages (app and addon), one shared translation source.
 - 2.5.0 beta 2: gear finder (Gear tab, Advisor step), encrypted GitHub token, setup for other players. Next: language selector.

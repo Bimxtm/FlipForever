@@ -1,9 +1,9 @@
-# FlipForever 2.5 Beta 4
+# FlipForever 2.5 Beta 5
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
 
-**Vendor flips.** Someone listed an item for less than a merchant pays? FlipForever now spots it in every scan, puts it on your shopping list, and sells it automatically at the next merchant you visit: guaranteed profit, no auction needed.
+**Combat helper for every level, 1 to 60.** At levels 1-10 it uses the few spells you start with, from 11 your build's core rotation, and from 40 the full rotation with your big abilities and talents. As you learn new spells they join in by themselves.
 
-**Sharper auction math.** Profit estimates now account for the deposit being refunded when an item sells, so good deals aren't passed over. Posting never goes below what a merchant would pay, and loot that's barely worth more than its vendor price is left for the vendor. Cheaper items (from 50 copper) are now considered, since deposits have become tiny.
+**Exact profession skill-up chances.** Once a recipe changes colour in front of FlipForever, the planner knows where its colour bands start and uses the real chance to skill up, not an average.
 
-**Also in 2.5:** all 11 game languages, a gear finder for affordable upgrades, a crafting profit finder, encrypted token storage, and a redesigned app and in-game window.
+**Also in 2.5:** vendor flips, sharper auction math, all 11 game languages, a gear finder, a crafting profit finder, and a redesigned app and in-game window.

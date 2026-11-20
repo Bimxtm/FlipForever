@@ -58,9 +58,55 @@ function P:Capture()
       recipes[#recipes + 1] = e
     end
   end
-  self:Store()[name] = { skill = plain(info.skillLevel) or 0, max = plain(info.maxSkillLevel) or 0, t = time(), recipes = recipes }
+  local skill = plain(info.skillLevel) or 0
+  self:LearnThresholds(self:Store()[name], recipes, skill)
+  self:Store()[name] = { skill = skill, max = plain(info.maxSkillLevel) or 0, t = time(), recipes = recipes }
   self.current = name
   return name
+end
+
+-- Exact skill-up chances -------------------------------------------------------------------------
+-- The game only tells us a recipe's colour. When a recipe changes colour between two reads, the
+-- skill at that moment is where its yellow / green / grey band starts. With those, the classic
+-- formula gives the real chance: (grey - skill) / (grey - yellow). Shared by all characters.
+local BAND = { [1] = "yellow", [2] = "green", [3] = "grey" }
+
+function P:Thresholds()
+  FlipForeverDB.recipeThresholds = FlipForeverDB.recipeThresholds or {}
+  return FlipForeverDB.recipeThresholds
+end
+
+function P:LearnThresholds(prev, recipes, skill)
+  if not (prev and prev.recipes) or (prev.skill or 0) >= skill then return end
+  local old = {}
+  for _, r in ipairs(prev.recipes) do old[r.id] = r.diff end
+  local T = self:Thresholds()
+  for _, r in ipairs(recipes) do
+    local before, now = old[r.id], r.diff
+    if before and now and now > before then
+      local t = T[r.id] or {}
+      -- it changed somewhere between the two reads: only an exact step of one band is trusted
+      if now - before == 1 and skill - (prev.skill or 0) <= 1 then t[BAND[now]] = skill
+      elseif not t[BAND[now]] then t[BAND[now] .. "Max"] = skill end
+      T[r.id] = t
+    end
+  end
+end
+
+function P:Chance(r, skill)
+  local diff = r.diff or 3
+  if diff == 0 then return 1.0 end
+  if diff >= 3 then return 0 end
+  local t = self:Thresholds()[r.id]
+  if t then
+    local yellow, green, grey = t.yellow, t.green, t.grey
+    if not grey and yellow and green then grey = green + (green - yellow) end -- bands are evenly spaced
+    if grey and t.greyMax and grey > t.greyMax then grey = t.greyMax end      -- seen grey by then at the latest
+    if grey and yellow and grey > yellow then
+      return math.max(0.05, math.min(1, (grey - skill) / (grey - yellow))), true
+    end
+  end
+  return P.CHANCE[diff] or 0, false
 end
 
 -- Prices --------------------------------------------------------------------------------------------
@@ -113,7 +159,7 @@ function P:Plan(profName)
   end
   local recs = {}
   for _, r in ipairs(data.recipes) do
-    local chance = P.CHANCE[r.diff or 3] or 0
+    local chance, exact = self:Chance(r, data.skill or 0)
     if chance > 0 and #r.mats > 0 then
       local cost, unknown = 0, false
       for _, m in ipairs(r.mats) do
@@ -122,7 +168,7 @@ function P:Plan(profName)
       end
       local value = self:ItemValue(r.out) * (r.outQty or 1)
       local net = cost - value
-      recs[#recs + 1] = { recipe = r, chance = chance, cost = cost, value = value, net = net,
+      recs[#recs + 1] = { recipe = r, chance = chance, exact = exact, cost = cost, value = value, net = net,
         perPoint = net / chance, unknown = unknown, learnable = not r.learned,
         crafts = math.min(math.ceil(POINTS_PER_STEP / chance), math.max(1, math.ceil(((data.max or 300) - (data.skill or 0)) / chance))) }
     end
@@ -484,7 +530,7 @@ function P:Refresh()
       fs:SetText("")
     end
   end
-  frame.hint:SetText("Chance to skill up: orange 100%, yellow ~75%, green ~25%. Prices: FlipForever's scans, vendor goods ~4x sell price.")
+  frame.hint:SetText("Chance to skill up: orange 100%; yellow and green exact once a recipe has changed colour in front of FlipForever (else ~75% / ~25%). Prices: your scans, vendor goods ~4x sell price.")
 end
 
 function P:QueueMats()

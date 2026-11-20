@@ -2,6 +2,15 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.5] - 2026-11-20 (beta)
+### Added
+- **Combat helper from level 1 to 60.** Every class follows three level bands:
+  - Levels 1-10: starter sequences built from the first spells you learn, e.g. Raptor Strike for hunters before their pet, seal and judge for paladins.
+  - Levels 11-39: your build's core rotation, as before.
+  - Levels 40-60: the full rotation with the later abilities and talents, such as Whirlwind and Sweeping Strikes, Bestial Wrath and Rapid Fire, Blade Flurry and Adrenaline Rush, Vampiric Embrace, Chain Lightning, Presence of Mind, Conflagrate, Insect Swarm and Starfire.
+  - Spells you don't know yet are skipped, and reactive abilities are left out so no key press is wasted.
+- **Exact skill-up chances.** The profession planner remembers the skill level at which each recipe turns yellow, green or grey. It then uses the real chance, (grey - skill) / (grey - yellow), instead of the colour average. This is shared by all your characters.
+
 ## [2.5.0-beta.4] - 2026-11-20 (beta)
 ### Added
 - **Vendor flips.** After every scan, listings priced below what a merchant pays (at least 15% and 5 copper per unit under) go on the shopping list. Items bought this way are sold automatically the next time you open any merchant. It can be switched off in the FlipForever window (Settings).

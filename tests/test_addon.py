@@ -1240,6 +1240,61 @@ print("vendor flips:", [(e["id"], e["max"], e["qty"]) for e in _f], "| sold at m
 assert [(e["id"], e["max"], e["qty"]) for e in _f] == [(900, 90, 12)]
 assert list(L("SOLDSLOTS").values()) == [900] and L("FORGOT777") is True and L("VENDOR_HOLD") is True
 
+# --- 2.5.0: exact skill-up chances learned from colour changes
+lua.execute("""
+local P = FlipForever.Professions
+local oldBase, oldInfo = C_TradeSkillUI.GetBaseProfessionInfo, C_TradeSkillUI.GetRecipeInfo
+SKILL, DIFF2 = 59, 0
+C_TradeSkillUI.GetBaseProfessionInfo = function() return { professionName = "Tailoring", skillLevel = SKILL, maxSkillLevel = 150 } end
+C_TradeSkillUI.GetRecipeInfo = function(id)
+  local r = oldInfo(id)
+  if id == 2 then r = { name = r.name, learned = true, relativeDifficulty = DIFF2 } end
+  return r
+end
+FlipForeverDB.recipeThresholds = {}
+local function read(skill, diff) SKILL, DIFF2 = skill, diff P:Capture() end
+read(59, 0) read(60, 1)        -- turned yellow at 60
+read(69, 1) read(70, 2)        -- turned green at 70
+read(72, 2)
+CH, EXACT = P:Chance({ id = 2, diff = 2 }, 72)
+CH_UNKNOWN = P:Chance({ id = 3, diff = 1 }, 72)  -- never seen changing: colour average
+read(80, 3)                   -- jump of 8 skill points: not trusted as exact
+TH = FlipForeverDB.recipeThresholds[2]
+C_TradeSkillUI.GetBaseProfessionInfo, C_TradeSkillUI.GetRecipeInfo = oldBase, oldInfo
+""")
+print("exact chance at 72:", L("CH"), L("EXACT"), "| unknown recipe:", L("CH_UNKNOWN"), "| thresholds:", dict(L("TH")))
+assert abs(L("CH") - 0.4) < 1e-9 and L("EXACT") is True and L("CH_UNKNOWN") == 0.75
+assert L("TH").yellow == 60 and L("TH").green == 70 and L("TH").grey is None and L("TH").greyMax == 80
+
+# --- 2.5.0: combat helper level bands 1-10 / 11-39 / 40-60
+lua.execute("""
+local C, AD = FlipForever.Combat, FlipForever.Advisor
+local oldLevel = UnitLevel
+TARGET = nil
+local function steps(class, build, level, spells)
+  UnitClass = function() return class, class:upper() end
+  UnitLevel = function() return level end
+  AD:CharStore().build = build
+  KNOWN = spells
+  local s = C:BuildSteps()
+  return table.concat(s, ",") .. " [" .. C.band .. "]"
+end
+HUNTER5 = steps("Hunter", nil, 5, { "Raptor Strike" })
+PALA3 = steps("Paladin", nil, 3, { "Seal of Righteousness" })
+ARMS20 = steps("Warrior", "arms", 20, { "Battle Shout", "Rend", "Heroic Strike", "Mortal Strike", "Whirlwind" })
+ARMS50 = steps("Warrior", "arms", 50, { "Battle Shout", "Rend", "Heroic Strike", "Mortal Strike", "Whirlwind" })
+FERAL50_NOCAT = steps("Druid", "feral", 50, { "Moonfire", "Wrath", "Starfire" })
+UnitLevel = oldLevel
+AD:CharStore().build = nil
+""")
+for k in ("HUNTER5", "PALA3", "ARMS20", "ARMS50", "FERAL50_NOCAT"):
+    print(k, "->", L(k))
+assert L("HUNTER5") == "Raptor Strike,Raptor Strike [1-10]"
+assert L("PALA3") == "Seal of Righteousness,Seal of Righteousness [1-10]"
+assert "Whirlwind" not in L("ARMS20") and L("ARMS20").endswith("[11-39]")
+assert "Whirlwind" in L("ARMS50") and L("ARMS50").endswith("[40-60]")
+assert L("FERAL50_NOCAT").startswith("Moonfire,Wrath,Starfire") and L("FERAL50_NOCAT").endswith("[40-60]")
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

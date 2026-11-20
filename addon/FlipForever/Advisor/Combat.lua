@@ -27,23 +27,31 @@ C.SEQ = {
     arms = { prefix = MELEE, steps = { "Battle Shout", "Rend", { "Mortal Strike", "Heroic Strike" }, "Heroic Strike", { "Mortal Strike", "Heroic Strike" }, "Heroic Strike" } },
     prot = { prefix = MELEE, steps = { "Battle Shout", "Thunder Clap", "Sunder Armor", "Heroic Strike", "Sunder Armor", { "Shield Slam", "Heroic Strike" } } },
     default = { prefix = MELEE, steps = { "Battle Shout", "Rend", "Heroic Strike", "Heroic Strike" } },
+    low = { prefix = MELEE, steps = { "Battle Shout", "Rend", "Heroic Strike", "Heroic Strike", "Heroic Strike" } },
   },
   PALADIN = {
     default = { prefix = MELEE, steps = { { "Seal of Command", "Seal of Righteousness" }, "Judgement", "Holy Strike", { "Consecration", "Holy Strike" }, "Holy Strike" } },
+    -- levels 1-10: seal, judge it as soon as you can, seal again (auto-attack does the rest)
+    low = { prefix = MELEE, steps = { "Seal of Righteousness", "Judgement", "Seal of Righteousness" } },
   },
   HUNTER = {
     default = { prefix = PET, steps = { "Hunter's Mark", "Serpent Sting", "Arcane Shot", { "Aimed Shot", "Arcane Shot" }, { "Multi-Shot", "Arcane Shot" } } },
+    -- levels 1-10, no pet yet: shoot, sting, and Raptor Strike once they reach you
+    low = { steps = { { "Hunter's Mark", "Auto Shot" }, { "Serpent Sting", "Auto Shot" }, { "Arcane Shot", "Raptor Strike" }, "Raptor Strike" } },
   },
   ROGUE = {
     sub_bleed = { prefix = MELEE, steps = { { "Hemorrhage", "Sinister Strike" }, { "Hemorrhage", "Sinister Strike" }, "Slice and Dice", { "Hemorrhage", "Sinister Strike" }, { "Hemorrhage", "Sinister Strike" }, "Eviscerate" } },
     default = { prefix = MELEE, steps = { "Sinister Strike", "Sinister Strike", "Slice and Dice", "Sinister Strike", "Sinister Strike", "Eviscerate" } },
+    low = { prefix = MELEE, steps = { "Sinister Strike", "Sinister Strike", "Eviscerate" } },
   },
   PRIEST = {
     default = { steps = { "Power Word: Shield", "Shadow Word: Pain", "Mind Blast", { "Mind Flay", "Smite" }, { "Mind Flay", "Smite" } } },
+    low = { steps = { "Power Word: Shield", "Shadow Word: Pain", "Smite", "Smite", "Smite" } },
   },
   SHAMAN = {
     enh = { prefix = MELEE, steps = { "Lightning Shield", "Flame Shock", { "Stormstrike", "Earth Shock" }, "Earth Shock", { "Stormstrike", "Lightning Bolt" } } },
     default = { steps = { "Lightning Shield", "Flame Shock", "Lightning Bolt", "Earth Shock", "Lightning Bolt" } },
+    low = { prefix = MELEE, steps = { "Lightning Bolt", "Earth Shock", "Lightning Bolt" } },
   },
   MAGE = {
     frost = { steps = { "Frostbolt", "Frostbolt", { "Ice Lance", "Fire Blast" }, "Frostbolt", "Fire Blast" } },
@@ -52,6 +60,7 @@ C.SEQ = {
   WARLOCK = {
     aff = { prefix = PET, steps = { "Corruption", { "Bane of Agony", "Curse of Agony" }, "Siphon Life", "Shadow Bolt", "Shadow Bolt", "Shadow Bolt" } },
     default = { prefix = PET, steps = { "Corruption", { "Bane of Agony", "Curse of Agony" }, "Immolate", "Shadow Bolt", "Shadow Bolt" } },
+    low = { prefix = PET, steps = { "Immolate", "Corruption", "Shadow Bolt", "Shadow Bolt" } },
   },
   DRUID = {
     -- Cat steps are only used once you know Cat Form (stay in Cat Form while using it)
@@ -60,12 +69,74 @@ C.SEQ = {
   },
 }
 
+-- Levels 40-60: the full rotations with the later abilities and talents, per build. Anything you
+-- don't know yet is skipped (alternatives in { } are tried in order), so a build keeps working
+-- while you collect its spells. No reactive abilities (Overpower, Revenge, Riposte): a step that
+-- can't fire would waste a key press.
+local HIGH = {
+  WARRIOR = {
+    arms = { prefix = MELEE, steps = { "Battle Shout", "Rend", { "Mortal Strike", "Heroic Strike" }, { "Whirlwind", "Heroic Strike" },
+      "Heroic Strike", { "Mortal Strike", "Heroic Strike" }, { "Sweeping Strikes", "Heroic Strike" } } },
+    prot = { prefix = MELEE, steps = { "Battle Shout", "Thunder Clap", "Sunder Armor", { "Shield Slam", "Heroic Strike" },
+      "Sunder Armor", { "Concussion Blow", "Heroic Strike" }, { "Demoralizing Shout", "Heroic Strike" } } },
+    default = { prefix = MELEE, steps = { "Battle Shout", "Rend", { "Bloodthirst", "Mortal Strike", "Heroic Strike" },
+      { "Whirlwind", "Heroic Strike" }, "Heroic Strike", { "Bloodthirst", "Mortal Strike", "Heroic Strike" } } },
+  },
+  PALADIN = {
+    default = { prefix = MELEE, steps = { { "Seal of Command", "Seal of Righteousness" }, "Judgement", "Holy Strike",
+      { "Consecration", "Holy Strike" }, { "Seal of Command", "Seal of Righteousness" }, "Holy Strike", { "Repentance", "Holy Strike" } } },
+  },
+  HUNTER = {
+    bm = { prefix = PET, steps = { "Hunter's Mark", { "Bestial Wrath", "Serpent Sting" }, "Serpent Sting", "Arcane Shot",
+      { "Multi-Shot", "Arcane Shot" }, { "Rapid Fire", "Arcane Shot" } } },
+    default = { prefix = PET, steps = { "Hunter's Mark", "Serpent Sting", { "Aimed Shot", "Arcane Shot" }, { "Multi-Shot", "Arcane Shot" },
+      { "Rapid Fire", "Arcane Shot" }, { "Aimed Shot", "Arcane Shot" } } },
+  },
+  ROGUE = {
+    combat = { prefix = MELEE, steps = { "Sinister Strike", "Slice and Dice", "Sinister Strike", { "Blade Flurry", "Sinister Strike" },
+      "Sinister Strike", { "Adrenaline Rush", "Sinister Strike" }, "Eviscerate" } },
+    sub_bleed = { prefix = MELEE, steps = { "Hemorrhage", "Hemorrhage", "Slice and Dice", "Hemorrhage", "Hemorrhage", { "Rupture", "Eviscerate" },
+      "Hemorrhage", "Eviscerate" } },
+    default = { prefix = MELEE, steps = { "Sinister Strike", "Slice and Dice", "Sinister Strike", "Sinister Strike", "Sinister Strike", "Eviscerate" } },
+  },
+  PRIEST = {
+    default = { steps = { "Power Word: Shield", { "Vampiric Embrace", "Shadow Word: Pain" }, "Shadow Word: Pain", "Mind Blast",
+      { "Mind Flay", "Smite" }, { "Mind Flay", "Smite" }, "Mind Blast", { "Mind Flay", "Smite" } } },
+  },
+  SHAMAN = {
+    enh = { prefix = MELEE, steps = { "Lightning Shield", { "Stormstrike", "Earth Shock" }, "Flame Shock", { "Stormstrike", "Earth Shock" },
+      "Earth Shock", { "Stormstrike", "Lightning Bolt" } } },
+    ele_wct = { steps = { "Flame Shock", "Lightning Bolt", { "Chain Lightning", "Lightning Bolt" }, "Earth Shock", "Lightning Bolt",
+      { "Elemental Mastery", "Lightning Bolt" } } },
+    default = { steps = { "Lightning Shield", "Flame Shock", "Lightning Bolt", { "Chain Lightning", "Lightning Bolt" }, "Earth Shock", "Lightning Bolt" } },
+  },
+  MAGE = {
+    frost = { steps = { "Frostbolt", "Frostbolt", { "Ice Lance", "Fire Blast" }, "Frostbolt", { "Presence of Mind", "Frostbolt" }, "Frostbolt",
+      { "Arcane Missiles", "Fire Blast" } } },
+    default = { steps = { { "Frostbolt", "Fireball" }, { "Frostbolt", "Fireball" }, "Fire Blast", { "Frostbolt", "Fireball" },
+      { "Scorch", "Fire Blast" }, { "Frostbolt", "Fireball" } } },
+  },
+  WARLOCK = {
+    aff = { prefix = PET, steps = { "Corruption", { "Bane of Agony", "Curse of Agony" }, "Siphon Life", "Shadow Bolt",
+      { "Drain Soul", "Shadow Bolt" }, "Shadow Bolt", "Shadow Bolt" } },
+    default = { prefix = PET, steps = { "Corruption", { "Bane of Agony", "Curse of Agony" }, "Immolate", "Shadow Bolt",
+      { "Conflagrate", "Shadow Bolt" }, "Shadow Bolt" } },
+  },
+  DRUID = {
+    feral = { prefix = MELEE, requires = "Cat Form", steps = { { "Faerie Fire (Feral)", "Rake" }, "Rake", "Claw", "Claw", "Rip",
+      "Claw", "Claw", "Ferocious Bite" } },
+    default = { steps = { "Moonfire", { "Insect Swarm", "Wrath" }, { "Starfire", "Wrath" }, "Wrath", { "Starfire", "Wrath" } } },
+  },
+}
+for class, t in pairs(HIGH) do if C.SEQ[class] then C.SEQ[class].high = t end end
+
 -- What each spell is, for immunities
 local TAG = {
   Rend = "bleed", Rip = "bleed", Rake = "bleed", Garrote = "bleed", Rupture = "bleed", Hemorrhage = "physical",
   Fireball = "fire", ["Fire Blast"] = "fire", Immolate = "fire", ["Flame Shock"] = "fire", ["Searing Pain"] = "fire",
   Frostbolt = "frost", ["Ice Lance"] = "frost", ["Frost Shock"] = "frost", ["Cone of Cold"] = "frost",
   ["Serpent Sting"] = "poison", Corruption = "shadow", ["Shadow Bolt"] = "shadow",
+  Scorch = "fire", Conflagrate = "fire", ["Drain Soul"] = "shadow", ["Siphon Life"] = "shadow",
 }
 
 -- Creature types: what doesn't work, what works extra, and crowd control
@@ -130,9 +201,20 @@ function C:BuildSteps()
   local build = AD:Build(p)
   local cls = C.SEQ[p.class]
   if not cls then return {}, "" end
-  local seq = (build and cls[build.id]) or cls.default
+  -- three level bands: 1-10 starter spells, 11-39 the build's core, 40-60 the full rotation
+  local level = p.level or 60
+  local key = build and build.id or "default"
   local known = AD:KnownSpells()
+  local seq
+  if level <= 10 and cls.low then
+    seq = cls.low
+  elseif level >= 40 and cls.high then
+    seq = cls.high[key] or cls.high.default
+    if seq and seq.requires and not known[seq.requires] then seq = cls.high.default end
+  end
+  seq = seq or (build and cls[build.id]) or cls.default
   if seq.requires and not known[seq.requires] then seq = cls.default end
+  self.band = (level <= 10 and cls.low and "1-10") or (level >= 40 and cls.high and "40-60") or "11-39"
   local target = self:Target()
   local immune = target and target.immune or {}
 
@@ -173,7 +255,7 @@ function C:BuildSteps()
   end
   -- a frost mage against a frost-immune target: swap to fire / arcane
   if #steps == 0 then
-    for _, sp in ipairs({ "Fireball", "Arcane Missiles", "Shadow Bolt", "Wrath", "Lightning Bolt", "Smite", "Heroic Strike", "Sinister Strike", "Arcane Shot", "Holy Strike" }) do
+    for _, sp in ipairs({ "Fireball", "Arcane Missiles", "Shadow Bolt", "Wrath", "Lightning Bolt", "Smite", "Heroic Strike", "Sinister Strike", "Arcane Shot", "Holy Strike", "Raptor Strike", "Seal of Righteousness" }) do
       if usable(sp) then steps[1] = sp break end
     end
   end
