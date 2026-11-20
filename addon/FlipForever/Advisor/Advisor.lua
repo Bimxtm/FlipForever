@@ -229,7 +229,23 @@ function AD:Compute()
   local cd = self:ClassData(p)
   local build = self:Build(p)
   local recs = {}
-  local function add(prio, kind, text) recs[#recs + 1] = { prio = prio, kind = kind, text = ICON[kind] .. " " .. text } end
+  -- why each kind of step is suggested (shown when you hover the step)
+  local src = build and G.SOURCES[build.source]
+  local WHY = {
+    talent = src and ("Talent order of your chosen build (" .. build.name .. "), from " .. src .. ".") or "Pick a build to get a talent order.",
+    quest = "Class quests unlock spells or gear for your class at this level (" .. G.SOURCES.wiki .. ").",
+    soon = "Coming up soon for your class or build, so you can plan for it.",
+    gear = "An upgrade for a weak or empty slot at your level, with where it comes from.",
+    dungeon = "Dungeons whose level range matches yours right now.",
+    zone = "Questing zones that match your level and faction.",
+    prof = src and ("Professions that suit your class, from " .. src .. ".") or "Professions that suit your class.",
+    gold = "Gold milestones: mount at 40 (100g), dual spec (50g), riding at 60 (1,000g).",
+    bag = "Counted from your bags right now.",
+    gather = "Measured from your own gathering, valued at FlipForever's auction prices.",
+  }
+  local function add(prio, kind, text, why)
+    recs[#recs + 1] = { prio = prio, kind = kind, text = ICON[kind] .. " " .. text, why = why or WHY[kind] }
+  end
   local L = p.level
 
   local known = self:KnownSpells()
@@ -333,7 +349,8 @@ function AD:Compute()
   if FF.Professions then
     for name in pairs(FF.Professions:Store()) do
       local ok, step = pcall(FF.Professions.TopStep, FF.Professions, name)
-      if ok and step then add(40, "prof", step .. " - Professions planner") end
+      if ok and step then add(40, "prof", step .. " - Professions planner",
+        "The cheapest next skill-up from the Professions planner, priced with your auction scans.") end
     end
   end
   for _, pr in ipairs(profs) do
@@ -471,6 +488,21 @@ local function makeFrame()
     fs:SetJustifyH("LEFT")
     fs:SetWordWrap(false)
     f.rows[i] = fs
+    -- hover a step to see the full text and why it's suggested
+    local hit = CreateFrame("Frame", nil, f)
+    hit:SetPoint("TOPLEFT", fs, "TOPLEFT", -2, 3)
+    hit:SetPoint("BOTTOMRIGHT", fs, "BOTTOMRIGHT", 2, -3)
+    hit:EnableMouse(true)
+    hit:SetScript("OnEnter", function(self)
+      local r = f.recs and f.recs[i]
+      if not (r and fs:IsShown()) then return end
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:AddLine(r.text, 1, 1, 1, true)
+      if r.why then GameTooltip:AddLine(r.why, 0.6, 0.8, 1, true) end
+      GameTooltip:Show()
+    end)
+    hit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    fs.hit = hit
   end
 
   -- details page (talent order, stats, professions, gear list, sources)
@@ -602,6 +634,7 @@ function AD:Refresh()
   else
     frame.scroll:Hide()
     frame.header:Show()
+    frame.recs = recs
     for i, fs in ipairs(frame.rows) do
       local r = recs[i]
       fs:SetText(r and r.text or "")

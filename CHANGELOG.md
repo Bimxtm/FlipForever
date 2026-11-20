@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.4.0-beta.5] - 2026-11-20 (beta)
+### Added
+- Advisor: hover a step to see its full text and why it's suggested, e.g. your build's talent order and its guide, a gear upgrade for a weak slot, or gold per hour measured from your own gathering.
+
 ## [2.4.0-beta.4] - 2026-11-20 (beta)
 ### Changed
 - **Smarter undercut when posting:** if the cheapest listing is a tiny lot (5% or less of what others have up) priced 30%+ below the next one, it's a dump that will sell in minutes. FlipForever now prices against the next real listing instead of chasing it down, and says so in chat. At most the two cheapest lots are ignored like this. Your own auctions, from any character on your account, are still never undercut.

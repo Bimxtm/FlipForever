@@ -33,7 +33,7 @@
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
-- 2.4.0 betas 1-4: tabbed in-game window with a shopping-list view and Skip; app sidebar, page headers, striped tables and colour-coded cards; Gathering in the common look; best farming zone in the Advisor; smarter undercut.
+- 2.4.0 betas 1-4: tabbed in-game window with a shopping-list view and Skip; app sidebar, page headers, striped tables and colour-coded cards; Gathering in the common look; best farming zone in the Advisor; smarter undercut; a reason on every Advisor step (beta 5).
 - 2.3.0: in-game planning after every scan (P10), scan alert and autopilot pause (P11), one-key targeting and tank mode (P12), app builds the list after import, sell speed in tooltips, in-game test checklist, window position remembered.
 - 2.0.0 - 2.2.0: all-in-one addon, tooltips, minimap summary, profession planner.
 - Repository, releases, self-updater, beta channel, test suite.

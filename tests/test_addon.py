@@ -1039,7 +1039,11 @@ if GZ then
   ns.db.zoneStats = { [1411] = { active = 1200, value = 300000, nodes = 25 }, [1412] = { active = 300, value = 900000, nodes = 4 } }
   FlipForever.Advisor:Refresh()
   GATHERSTEP = nil
-  for _, r in ipairs(FlipForever.Advisor:Compute()) do if r.text:find("farming") then GATHERSTEP = r.text end end
+  ALLWHY = true
+  for _, r in ipairs(FlipForever.Advisor:Compute()) do
+    if r.text:find("farming") then GATHERSTEP = r.text GATHERWHY = r.why end
+    if not r.why or r.why == "" then ALLWHY = false end
+  end
   ns.db.zoneStats = {}
   ns.db = oldDB
   C_Map = OLD_CMAP
@@ -1048,6 +1052,8 @@ end
 """)
 if L("GZ"):
     print("advisor gather step:", L("GATHERSTEP"))
+    print("why:", L("GATHERWHY"), "| every step explained:", L("ALLWHY"))
+    assert L("ALLWHY") is True and "your own gathering" in L("GATHERWHY")
     assert L("GATHERSTEP") and "Best farming zone so far" in L("GATHERSTEP") and "Durotar" in L("GATHERSTEP") and "about 90g" in L("GATHERSTEP")
 else:
     print("advisor gather step: gathering module not active in this mock - skipped")
