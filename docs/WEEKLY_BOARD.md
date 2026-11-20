@@ -28,9 +28,9 @@
 | P5 | Spell names are English only (fine on enUS clients) | Low | Spell IDs |
 | P6 | Random-stat gear ("of the Bear") is priced per item, not per suffix | Low | Buying already prefers commodities; revisit if it causes bad buys |
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
-| P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- Test harness: mock timers now keep delayed callbacks (P9 fixed).
 - 2.5.0 beta 10: Advisor steps translated into all 11 languages; test that every translation keeps its placeholders.
 - 2.5.0 beta 9: scans parsed once (faster in-game planning); gear upgrades and profitable crafts in the app's Advisor page.
 - 2.5.0 beta 8: waypoint arrow (approved 20 Nov): map pin, /ffway, next gathering stop.

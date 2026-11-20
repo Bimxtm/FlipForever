@@ -20,7 +20,8 @@ TT_HOOKS = {}
 Enum_TT = { Item = 0 }
 TooltipDataProcessor = { AddTooltipPostCall = function(kind, fn) TT_HOOKS[kind] = fn end }
 function GetTime() return NOW end
-C_Timer = { After = function(d, fn) table.insert(timers, {d=d, fn=fn}) end }
+CLOCK = 0   -- mock time for C_Timer: timers keep their due time until it comes
+C_Timer = { After = function(d, fn) table.insert(timers, {due = CLOCK + (d or 0), fn = fn}) end }
 TICKERS = {}
 function C_Timer.NewTicker(d, fn)
   local t = { fn = fn, cancelled = false }
@@ -79,13 +80,20 @@ COMPARTMENT = {}
 AddonCompartmentFrame = { RegisterAddon = function(self, info) table.insert(COMPARTMENT, info.text) end }
 function RunTimers(maxd)
   local guard = 0
-  while #timers > 0 and guard < 10000 do
+  -- run everything due within the next maxd seconds (including timers those schedule); later ones wait
+  local limit = CLOCK + (maxd or 1e9)
+  while guard < 10000 do
     guard = guard + 1
-    table.sort(timers, function(a,b) return a.d < b.d end)
-    local t = table.remove(timers, 1)
-    if t.d <= (maxd or 1e9) then t.fn() end
+    table.sort(timers, function(a,b) return a.due < b.due end)
+    local t = timers[1]
+    if not t or t.due > limit then break end
+    table.remove(timers, 1)
+    if t.due > CLOCK then CLOCK = t.due end
+    t.fn()
   end
+  if maxd then CLOCK = limit end
 end
+function PendingTimers() return #timers end
 function DropTimers() timers = {} end
 printed = {}
 function print(...) local p = {} for i=1,select('#',...) do p[#p+1]=tostring(select(i,...)) end table.insert(printed, table.concat(p," ")) end
@@ -1396,6 +1404,18 @@ DE_STEP = FlipForever:T("At level %d: %s"):format(20, "Mount")
 FlipForeverDB.settings.language = nil
 """)
 assert L("DE_STEP") == "Auf Stufe 20: Mount"
+
+# --- test harness: delayed timers wait for their time instead of being dropped (issue P9)
+lua.execute("""
+FIRED = 0
+C_Timer.After(10, function() FIRED = FIRED + 1 end)
+RunTimers(5)
+EARLY = FIRED
+RunTimers(10)
+LATE = FIRED
+""")
+assert L("EARLY") == 0 and L("LATE") == 1, (L("EARLY"), L("LATE"))
+print("mock timers: a 10 s timer waits through a 5 s run and fires in the next one")
 
 # --- per-character plans
 lua.execute("""
