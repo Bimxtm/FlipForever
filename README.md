@@ -11,8 +11,11 @@ by Alix
 2. Run `FlipForever.exe`, then go to *Settings → Install / update the addon*.
 3. Restart WoW once, and click the gold coin on the minimap.
 
+## Sharing with other players
+Everyone runs their own copy: unzip, start `FlipForever.exe`, and the first-run setup finds the WoW: Forever folder and account. All data stays in that copy's `data\` folder: prices, trades, settings and each character's budget. Any character on any account works; pick one at the top of the app.
+
 ## Update
-The app checks GitHub on start (*About & updates*). **Install update** downloads the new version, verifies its SHA-256 checksum, swaps the files in, keeps your `data\` folder, and updates the WoW addon too.
+The app checks GitHub on start (*About & updates*). While the repository is private, each user needs a read-only GitHub token with access to it, stored encrypted with Windows data protection. **Install update** downloads the new version, verifies its SHA-256 checksum, swaps the files in, keeps your `data\` folder, and updates the WoW addon too.
 
 ## Fair play
 Every purchase, post and spell cast happens on your own key press or click, because that's what Blizzard allows addons to do. FlipForever searches, calculates and suggests; it never plays for you.
@@ -43,6 +46,5 @@ Blizzard requires a real key press for every purchase and every post. Fully auto
 * **Gathering** (`/ore` or `/ff gather`): the former Ore Farmer addon, merged in. It maps your ore, herb, fishing and treasure spots, reads GatherLite's 35,000+ spots, plans a farming loop and estimates gold per hour using FlipForever's own prices. Your old Ore Farmer data was moved over, and the old addon is switched off. If it's ever switched back on, FlipForever's copy stays quiet so nothing runs twice.
 * **Advisor** (`/ff guide`): detects your race and class, lets you pick a build (< > buttons), and re-checks after every level-up, quest, gear change, talent point, skill-up and zone change. It covers talents, class quests, gear to hunt (and which dungeon has it), zones, dungeons, professions, bags, and gold to save for the mount (40, 100g), dual spec (40, 50g) and riding at 60 (1,000g). Sources: Method guides (updated 14-19 Nov 2026), Warcraft Tavern (beta-era, marked as such), Conquest Capped, FoReverDB and Warcraft Wiki.
 * **Combat helper** (`/ff combat`, key: `/ff combatkey <KEY>`): an icon bar near the top of the screen. Each click casts the big icon, then the next one appears. It follows your build and known spells, and adapts to the target you select before a fight: immunities (no bleeds on elementals or mechanicals, no fire on fire elementals, and so on), extras (Exorcism vs undead and demons), plus a danger/CC line. `/ff combatmode` uses Blizzard's own one-button assistant instead, if the client has it. Shift + right-drag moves the bar.
-* **Tools:** `tools/fix_addon_conflicts.py` (turns off duplicate addons) and `tools/migrate_orefarmer.py` (moves Ore Farmer's data into FlipForever). Both refuse to run while WoW is open and keep backups.
 
 Slash commands: `/ff guide | combat | combatkey <KEY> | combatmode | gather | scan | buy | sell | stop | auto | key <KEY> | reset`

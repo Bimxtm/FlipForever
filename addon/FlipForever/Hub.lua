@@ -78,7 +78,7 @@ local function startCapture(label, onKey)
 end
 
 -- Pages ------------------------------------------------------------------------------------------
-local TABS = { { "overview", "Overview" }, { "list", "Shopping list" }, { "settings", "Settings" } }
+local TABS = { { "overview", "Overview" }, { "list", "Shopping list" }, { "gear", "Gear" }, { "settings", "Settings" } }
 local LIST_ROWS = 18
 
 local function text(parent, font, x, y, w)
@@ -145,6 +145,65 @@ local function buildList(f)
   pg.hint = text(pg, "GameFontDisableSmall", 16, -506, 368)
   pg.hint:SetText("Scroll with the mouse wheel. Skipped items are never bought on this character, on this list or later ones, until you untick them. Green 'Now' = cheaper than your max in the last scan.")
   return pg
+end
+
+-- Gear: affordable auction house upgrades for this character (GearFinder.lua)
+local GEAR_ROWS = 14
+local function buildGear(f)
+  local pg = CreateFrame("Frame", nil, f)
+  pg:SetAllPoints(f)
+  pg.summary = text(pg, "GameFontNormal", 16, -64, 260)
+  pg.search = button(pg, "Search my scan", 110, function()
+    if FF.Gear.running then return end
+    pg.summary:SetText("Searching your latest scan...")
+    FF.Gear:Search()
+  end)
+  pg.search:SetPoint("TOPRIGHT", -16, -60)
+  local cols = { { "Slot", 20 }, { "Item", 86 }, { "Price", 236 }, { "Better", 296 } }
+  for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -90):SetText(c[1]) end
+  pg.rows = {}
+  for i = 1, GEAR_ROWS do
+    local y = -106 - (i - 1) * 24
+    local r = {}
+    r.slot = text(pg, "GameFontHighlightSmall", 20, y - 5, 64)
+    r.name = text(pg, "GameFontHighlightSmall", 86, y - 5, 148)
+    r.price = text(pg, "GameFontHighlightSmall", 236, y - 5, 58)
+    r.gain = text(pg, "GameFontHighlightSmall", 296, y - 5, 40)
+    r.buy = button(pg, "Buy", 44, function() FF.Gear:Buy(r.data) end)
+    r.buy:SetPoint("TOPLEFT", 340, y)
+    pg.rows[i] = r
+  end
+  pg.hint = text(pg, "GameFontDisableSmall", 16, -452, 368)
+  pg.hint:SetText("Upgrades over what you're wearing, scored with your class's stat weights. Only gear you can use at your level, at most a quarter of your gold. Random-suffix items are scored by their base stats. Buy works at the auction house, one key press per purchase.")
+  return pg
+end
+
+local QUALITY = { [0] = "|cff9d9d9d", [1] = "|cffffffff", [2] = "|cff1eff00", [3] = "|cff0070dd", [4] = "|cffa335ee" }
+
+function H:RefreshGear()
+  local pg = frame and frame.pages and frame.pages.gear
+  if not (pg and pg:IsShown()) then return end
+  local G = FF.Gear
+  local list = G.results or {}
+  if G.running then
+    pg.summary:SetText("Searching your latest scan...")
+  elseif G.searched then
+    pg.summary:SetText(#list > 0 and ("%d upgrade%s you can afford (budget %s)"):format(#list, #list > 1 and "s" or "", FF:Money(G:Budget()))
+      or "No affordable upgrades in your latest scan.")
+  else
+    pg.summary:SetText("Find upgrades for your character in your latest scan.")
+  end
+  for i, w in ipairs(pg.rows) do
+    local r = list[i]
+    w.data = r
+    w.slot:SetShown(r ~= nil); w.name:SetShown(r ~= nil); w.price:SetShown(r ~= nil); w.gain:SetShown(r ~= nil); w.buy:SetShown(r ~= nil)
+    if r then
+      w.slot:SetText(G.SLOT_NAMES[r.slot] or "")
+      w.name:SetText((QUALITY[r.quality] or "|cffffffff") .. r.name .. "|r")
+      w.price:SetText(FF:Money(r.price))
+      w.gain:SetText(r.pct and ("|cff33ff99+%d%%|r"):format(math.floor(r.pct * 100 + 0.5)) or "|cff33ff99new|r")
+    end
+  end
 end
 
 -- Items the playing character never wants to buy (ticked "Skip" in the list)
@@ -281,10 +340,11 @@ local function build()
   f.pages.settings = pg
   f.pages.overview = buildOverview(f)
   f.pages.list = buildList(f)
+  f.pages.gear = buildGear(f)
   f.tabs = {}
   for i, t in ipairs(TABS) do
-    local b = button(f, t[2], 112, function() H:SelectTab(t[1]) end)
-    b:SetPoint("TOPLEFT", 16 + (i - 1) * 118, -34)
+    local b = button(f, t[2], 88, function() H:SelectTab(t[1]) end)
+    b:SetPoint("TOPLEFT", 16 + (i - 1) * 92, -34)
     f.tabs[t[1]] = b
   end
 
@@ -402,6 +462,7 @@ function H:Refresh()
   if not (frame and frame:IsShown()) then return end
   H:RefreshOverview()
   H:RefreshList()
+  H:RefreshGear()
   local s = FlipForeverDB.settings
   frame.combat:SetChecked(FF.Combat:Enabled())
   frame.autoTarget:SetChecked(FF.Combat:AutoTarget())

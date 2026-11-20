@@ -1,12 +1,11 @@
-# FlipForever 2.5 Beta 1
+# FlipForever 2.5 Beta 2
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
 
-**Crafting for profit.** Open a profession window and click *Show profitable crafts* in the FlipForever planner beside it. You get every recipe you know whose result sells for more than its materials, after the auction house cut and deposit, with the profit per craft and how many sell per day. Only fast sellers are listed, and the suggested amount is what you can sell in about two days. *Buy mats for the top craft* queues the materials, and the FlipForever panel buys them at the auction house. The Advisor also shows your best craft.
+**Gear upgrades from the auction house.** The FlipForever window has a new *Gear* tab. It goes through your latest scan and lists gear your class can use at your level that beats what you're wearing, scored with your class's stat weights, and only at prices you can afford (up to a quarter of your gold). Click *Buy* at the auction house to get it. The search runs by itself after login, level-ups and scans, and the Advisor points out the best upgrade.
 
-**Also in this beta series**
-- Hover any Advisor step to see why it's suggested.
-- Posting ignores tiny dumped lots and prices against the real market.
-- A tabbed FlipForever window in game with a shopping-list view and a Skip box per item.
-- A redesigned desktop app with sidebar navigation.
-- The Gathering window matches the rest of FlipForever, and the Advisor names your most profitable farming zone.
+**Safer settings.** Your GitHub token is now stored encrypted, so it's unreadable outside your Windows account.
+
+**Also in 2.5**
+- Crafting profit finder in the profession planner (*Show profitable crafts*).
+- Reasons on every Advisor step, smarter undercutting, a tabbed in-game window with a shopping-list view, and a redesigned desktop app.

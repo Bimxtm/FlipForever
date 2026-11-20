@@ -352,6 +352,12 @@ function AD:Compute()
       if ok and step then add(40, "prof", step .. " - Professions planner",
         "The cheapest next skill-up from the Professions planner, priced with your auction scans.") end
     end
+    -- the best affordable gear upgrade on the auction house (GearFinder.lua)
+    local gstep = FF.Gear and FF.Gear:TopStep()
+    if gstep then
+      add(75, "gear", gstep .. " - FlipForever window, Gear tab",
+        "Better than what you wear in that slot for your class's stats, usable at your level, and within a quarter of your gold.")
+    end
     -- the most profitable craft across all professions you've opened
     local okP, profit = pcall(FF.Professions.ProfitList, FF.Professions)
     local best = okP and profit and profit[1]

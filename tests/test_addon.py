@@ -1125,6 +1125,51 @@ _b = [dict(L("PBUY")[i]) for i in range(1, len(L("PBUY")) + 1)]
 print("mats to buy:", _b)
 assert _b == [{"id": 2589, "qty": 8, "max": 50}] and L("PENDING") is not None
 
+# --- 2.5.0: gear finder - affordable AH upgrades for the class and level
+lua.execute("""
+local FF = FlipForever
+local oldModel, oldInfo, oldInstant = FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant
+FF.Planner.Model = function() return {
+  [100] = { cur_min = 5000 },    -- mail chest, level 28: an upgrade
+  [101] = { cur_min = 900000 },  -- the same, but too expensive
+  [102] = { cur_min = 3000 },    -- cloth chest: wrong armor type for a warrior
+  [103] = { cur_min = 2000 },    -- two-handed sword, level 25
+  [104] = { cur_min = 2000 },    -- plate legs: warriors wear plate only from 40
+  [105] = { cur_min = 1000 },    -- level 45 helm: too high
+} end
+local ITEMS = {
+  [100] = { "Scaled Chestguard", 2, 28, "INVTYPE_CHEST", 4, 3, { ITEM_MOD_STRENGTH_SHORT = 10, ITEM_MOD_STAMINA_SHORT = 8, RESISTANCE0_NAME = 200 } },
+  [101] = { "Pricey Chestguard", 3, 28, "INVTYPE_CHEST", 4, 3, { ITEM_MOD_STRENGTH_SHORT = 30 } },
+  [102] = { "Silk Robe", 2, 28, "INVTYPE_ROBE", 4, 1, { ITEM_MOD_INTELLECT_SHORT = 12 } },
+  [103] = { "Heavy Claymore", 2, 25, "INVTYPE_2HWEAPON", 2, 8, { ITEM_MOD_DAMAGE_PER_SECOND_SHORT = 20, ITEM_MOD_STRENGTH_SHORT = 5 } },
+  [104] = { "Plate Legguards", 2, 28, "INVTYPE_LEGS", 4, 4, { ITEM_MOD_STRENGTH_SHORT = 15 } },
+  [105] = { "Mail Helm", 2, 45, "INVTYPE_HEAD", 4, 3, { ITEM_MOD_STRENGTH_SHORT = 15 } },
+}
+local EQUIPPED = { [5] = { ITEM_MOD_STRENGTH_SHORT = 3 }, [16] = { ITEM_MOD_DAMAGE_PER_SECOND_SHORT = 10 } }
+C_Item.GetItemInfoInstant = function(id) local it = ITEMS[id] if it then return id, "", "", it[4], 0, it[5], it[6] end end
+C_Item.GetItemInfo = function(id) local it = ITEMS[id] if it then return it[1], "link:" .. id, it[2], 30, it[3] end end
+GetItemStats = function(link)
+  local id = tonumber(link:match("link:(%d+)")) if id then return ITEMS[id][7] end
+  local slot = tonumber(link:match("eq:(%d+)")) return slot and EQUIPPED[slot]
+end
+GetInventoryItemLink = function(_, slot) return EQUIPPED[slot] and ("eq:" .. slot) or nil end
+UnitClass = function() return "Warrior", "WARRIOR" end
+UnitLevel = function() return 30 end
+GetMoney = function() return 100000 end
+FF.Advisor:CharStore().build = nil
+FF.Gear:Search()
+RunTimers(5)
+GEAR = FF.Gear.results
+GEARSTEP = FF.Gear:TopStep()
+FF.Hub:Show("gear")
+FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant = oldModel, oldInfo, oldInstant
+""")
+_g = [dict(L("GEAR")[i]) for i in range(1, len(L("GEAR")) + 1)]
+print("gear upgrades:", [(r["name"], round(r["gain"], 1), r["price"]) for r in _g], "| step:", L("GEARSTEP"))
+assert [r["name"] for r in _g] == ["Heavy Claymore", "Scaled Chestguard"]
+assert abs(_g[0]["gain"] - 35) < 0.01 and abs(_g[1]["gain"] - 15.8) < 0.01
+assert "Heavy Claymore" in L("GEARSTEP")
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

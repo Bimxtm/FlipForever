@@ -347,6 +347,7 @@ end
 -- autopilot until the reload, so it doesn't keep buying from a list made with old prices.
 -- The reload saves the scan for the app, which builds the new shopping list.
 function FF:ScanFinished(items)
+  if self.Gear and not self.Gear.running then C_Timer.After(2, function() pcall(self.Gear.Search, self.Gear) end) end
   -- Beta 4: rebuild the list in game from the new scan - no reload needed
   local live = self.Planner and self.Planner:Rebuild()
   if live then

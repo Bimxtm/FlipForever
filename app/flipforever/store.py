@@ -9,6 +9,51 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import sys
+import base64
+
+# Secrets (the GitHub token) are encrypted with Windows' own data protection (DPAPI): only the
+# same Windows user on the same PC can decrypt them, so a copied settings.json reveals nothing.
+_PREFIX = "dpapi:"
+
+
+def _dpapi(data: bytes, encrypt: bool) -> bytes | None:
+    if os.name != "nt":
+        return None
+    import ctypes
+    from ctypes import wintypes
+
+    class BLOB(ctypes.Structure):
+        _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))]
+
+    buf = ctypes.create_string_buffer(data, len(data))
+    blob_in, blob_out = BLOB(len(data), buf), BLOB()
+    entropy_bytes = b"FlipForever settings"
+    ebuf = ctypes.create_string_buffer(entropy_bytes, len(entropy_bytes))
+    entropy = BLOB(len(entropy_bytes), ebuf)
+    crypt32, kernel32 = ctypes.windll.crypt32, ctypes.windll.kernel32
+    fn = crypt32.CryptProtectData if encrypt else crypt32.CryptUnprotectData
+    ok = fn(ctypes.byref(blob_in), None, ctypes.byref(entropy), None, None, 0x1, ctypes.byref(blob_out))  # 0x1: no UI
+    if not ok:
+        return None
+    try:
+        return ctypes.string_at(blob_out.pbData, blob_out.cbData)
+    finally:
+        kernel32.LocalFree(blob_out.pbData)
+
+
+def protect(secret: str) -> str:
+    if not secret:
+        return ""
+    enc = _dpapi(secret.encode("utf-8"), True)
+    return _PREFIX + base64.b64encode(enc).decode("ascii") if enc else secret
+
+
+def unprotect(stored: str) -> str:
+    if not stored or not stored.startswith(_PREFIX):
+        return stored or ""          # older plain-text value: re-saved encrypted on the next save
+    dec = _dpapi(base64.b64decode(stored[len(_PREFIX):]), False)
+    return dec.decode("utf-8") if dec else ""
+
 
 if getattr(sys, "frozen", False):
     # running as FlipForever.exe: everything lives next to the .exe
@@ -98,13 +143,16 @@ class Settings:
         try:
             data = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
             known = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
+            known["github_token"] = unprotect(known.get("github_token", ""))
             return cls(**known)
         except (OSError, ValueError, TypeError):
             return cls()
 
     def save(self):
         DATA_DIR.mkdir(parents=True, exist_ok=True)
-        SETTINGS_PATH.write_text(json.dumps(asdict(self), indent=2), encoding="utf-8")
+        data = asdict(self)
+        data["github_token"] = protect(self.github_token)   # never stored in plain text
+        SETTINGS_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     # derived paths
     def savedvars_path(self) -> Path | None:

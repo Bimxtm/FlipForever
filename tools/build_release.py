@@ -24,7 +24,9 @@ from flipforever.version import VERSION  # noqa: E402
 
 DIST = ROOT / "dist"
 INCLUDE = ["FlipForever.exe", "addon", "tools", "docs", "README.md", "CHANGELOG.md", "NEWS.md", "flipforever.ico"]
-INTERNAL = {"docs/IMPROVEMENT_CYCLE.md"}   # maintainer notes, not part of the app
+INTERNAL = {"docs/IMPROVEMENT_CYCLE.md",            # maintainer notes, not part of the app
+            "tools/fix_addon_conflicts.py",          # one-off tools for the maintainer's own setup
+            "tools/migrate_orefarmer.py"}
 
 
 def check_versions():

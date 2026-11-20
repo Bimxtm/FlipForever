@@ -2,6 +2,18 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.2] - 2026-11-20 (beta)
+### Added
+- **Gear finder.** A new *Gear* tab in the FlipForever window lists auction house upgrades for the character you're playing:
+  - It covers gear your class can use (your best armor type, mail or plate from level 40, and your weapon types), with a required level from 10 below yours up to yours.
+  - Each item is scored with your class's stat weights and compared with what you wear in that slot. Rings, trinkets and two-handers are compared sensibly.
+  - It only lists what costs at most a quarter of your gold. *Buy* buys it at the auction house with one key press.
+  - It searches by itself after login, after a level-up and after every scan. The best upgrade also appears as an Advisor step.
+- Setup for other players: the README explains how a friend sets up their own copy. The download no longer contains maintainer-only tools.
+
+### Security
+- The GitHub token is now stored encrypted with Windows data protection (DPAPI). Only your Windows account on your PC can decrypt it, and existing tokens are encrypted on the next save.
+
 ## [2.5.0-beta.1] - 2026-11-20 (beta)
 ### Added
 - **Crafting profit finder.** The profession planner has a second view, *Show profitable crafts*. It lists every recipe you know, across all professions you've opened, whose result sells for more than its materials after the 5% AH cut and a deposit allowance. Materials you craft yourself are costed from their own materials.
