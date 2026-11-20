@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 16
+# FlipForever 2.5 Beta 17
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Where does my class quest start?** The Advisor now names the quest giver and where to find them. Once you've talked to them, clicking the step points the waypoint arrow there.
 
 **Press + to fight.** The combat helper now listens to the + key (and numpad +) right away. Set your own key in the FlipForever window if you prefer another.
 

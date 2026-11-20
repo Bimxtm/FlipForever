@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.17] - 2026-11-20 (beta)
+### Added
+- **Quest locations.** Class quest steps in the Advisor now say who starts the quest and where, for your race and faction: warrior, paladin, hunter, rogue, shaman, warlock and druid quests, from Warcraft Wiki. Hover a step to see the full chain.
+- FlipForever remembers where every NPC you talk to stands. Once it knows where a quest giver is, click the quest step in the Advisor and the waypoint arrow points there.
+
 ## [2.5.0-beta.16] - 2026-11-20 (beta)
 ### Changed
 - The combat helper's key is **+** by default (the + key and numpad +). A key you set yourself replaces it; *Clear* removes all keys.
