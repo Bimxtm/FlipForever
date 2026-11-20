@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 8
+# FlipForever 2.5 Beta 9
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Upgrades and crafts in the app.** The app's Advisor page now lists each character's best auction house gear upgrades and most profitable crafts. In game, new shopping lists are built faster after each scan.
 
 **Waypoint arrow.** An arrow on screen shows the way and the distance: to the pin you place on your map, to a point you type with `/ffway 45 60`, or to the next stop on your gathering loop. It turns green when you're heading the right way. Drag it wherever you like, or switch it off in the FlipForever window.
 

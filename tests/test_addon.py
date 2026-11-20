@@ -989,6 +989,20 @@ for a, b in zip(_py["buy"], _lbuy):
     assert a["qty"] == b["qty"], (a, b)
 assert _lp.budget == _py["budget"] and len(_lp.sell) == len(_py["sell"])
 print("in-game planner matches the app:", len(_lbuy), "buys,", len(_lp.sell), "sells")
+# scans are parsed once: a second rebuild parses nothing, a new scan only itself
+lua.execute(f"""
+local P = FlipForever.Planner
+local c0 = P.parseCount
+P:MarketModel(PY_SCANS, {NOW})
+PARSE_AGAIN = P.parseCount - c0
+PY_SCANS[#PY_SCANS + 1] = {{ t = {NOW} - 60, src = "full", n = 1, d = "2589:40:45:100:10" }}
+c0 = P.parseCount
+P:MarketModel(PY_SCANS, {NOW})
+PARSE_NEW = P.parseCount - c0
+table.remove(PY_SCANS)
+""")
+print("re-parsed scans on rebuild:", L("PARSE_AGAIN"), "| after one new scan:", L("PARSE_NEW"))
+assert L("PARSE_AGAIN") == 0 and L("PARSE_NEW") == 1
 
 # --- Beta 4: after a scan the list is rebuilt in game; no reload, autopilot keeps going
 lua.execute(f"""
@@ -1161,6 +1175,9 @@ FF.Gear:Search()
 RunTimers(5)
 GEAR = FF.Gear.results
 GEARSTEP = FF.Gear:TopStep()
+FF.Advisor:Refresh()
+local adv = FF.Advisor:CharStore().advisor
+GEARSAVED = adv and adv.gear and adv.gear[1] and adv.gear[1].name
 FF.Hub:Show("gear")
 FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant = oldModel, oldInfo, oldInstant
 """)
@@ -1168,7 +1185,7 @@ _g = [dict(L("GEAR")[i]) for i in range(1, len(L("GEAR")) + 1)]
 print("gear upgrades:", [(r["name"], round(r["gain"], 1), r["price"]) for r in _g], "| step:", L("GEARSTEP"))
 assert [r["name"] for r in _g] == ["Heavy Claymore", "Scaled Chestguard"]
 assert abs(_g[0]["gain"] - 35) < 0.01 and abs(_g[1]["gain"] - 15.8) < 0.01
-assert "Heavy Claymore" in L("GEARSTEP")
+assert "Heavy Claymore" in L("GEARSTEP") and L("GEARSAVED") == "Heavy Claymore"
 
 # --- 2.5.0: languages - every client language, chosen in the FlipForever window
 lua.execute("""

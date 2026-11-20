@@ -15,6 +15,17 @@ What happens in each cycle, and the rules it follows.
 - **Nothing ships without passing tests.**
 - **House style for everything users see** (app, addon, NEWS, CHANGELOG, README, release notes, WEEKLY_BOARD, ROADMAP, IN_GAME_TEST, commit messages): plain, professional wording; no emoji or decorative symbols; no mention of how the project is built or of usage limits. Process notes stay in this file, which is not shipped or shown in the app.
 
+## Night queue (internal, until Sat 21 Nov 13:30) - take the first open item, mark it [x] when shipped
+Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 14:00). Work sessions run every 10 minutes; keep going inside a session while there's work, ship each finished item as a beta.
+- [x] Performance: in-game market model parses all 60 scans on every rebuild; cache parsed points per scan so a new scan only adds its own rows
+- [x] App: show the addon's gear upgrades and profitable crafts in the desktop app (addon saves them; new app page or Advisor section)
+- [ ] Translate the remaining in-game texts: Advisor steps, common chat messages, auction panel status lines
+- [ ] Translate the app's pages (Dashboard cards, Deals/Inventory/History column headers, Settings labels, How to use)
+- [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language
+- [ ] Test harness: make mock timers keep delayed callbacks (board issue P9)
+- [ ] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
+- [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas)
+
 ## Usage budget (internal)
 - Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.
 - The owner asked (20 Nov) to use the weekly allowance fully until the reset on Sat 21 Nov 14:00; after that, about 10% of the weekly limit per day, with ~15% kept for real-game bug fixes.

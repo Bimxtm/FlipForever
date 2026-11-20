@@ -494,6 +494,7 @@ class App(tk.Tk):
         self.adv_text.pack(fill="both", expand=True)
         self.adv_text.tag_configure("h", font=("Segoe UI Semibold", 13), foreground=ACCENT, spacing1=8, spacing3=4)
         self.adv_text.tag_configure("muted", foreground=MUTED)
+        self.adv_text.tag_configure("sub", font=FONT_B, foreground=GOLD)
 
     def _fill_advisor(self):
         t = self.adv_text
@@ -517,6 +518,18 @@ class App(tk.Tk):
             steps = steps if isinstance(steps, list) else list(steps.values())
             for i, s in enumerate(steps[:12], 1):
                 t.insert("end", f"  {i}. {s}\n")
+            gear = engine._as_list(adv.get("gear"))
+            if gear:
+                t.insert("end", "\n  Auction house upgrades (Gear tab in game)\n", "sub")
+                for g in gear:
+                    better = f"+{g['pct']}%" if g.get("pct") is not None else "new slot"
+                    t.insert("end", f"    {g.get('slot', '')}: {g.get('name', '?')}  {money(g.get('price'), True)}  ({better})\n")
+            crafts = engine._as_list(adv.get("crafts"))
+            if crafts:
+                t.insert("end", "\n  Profitable crafts (profession planner)\n", "sub")
+                for c in crafts:
+                    t.insert("end", f"    {c.get('crafts', 1)}x {c.get('name', '?')} ({c.get('prof', '')}): "
+                                    f"+{money(c.get('profit'), True)} each, ~{c.get('perDay', '?')}/day\n")
             t.insert("end", "\n")
         if not shown:
             t.insert("end", "Nothing yet - log in with the character, let the addon check it once, then /reload.", "muted")

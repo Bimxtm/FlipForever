@@ -430,8 +430,20 @@ function AD:Save(recs, p, build)
   for i = 1, math.min(12, #recs) do
     lines[i] = recs[i].text:gsub("|T.-|t%s*", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
   end
+  -- the gear finder's and the crafting finder's top picks, for the app
+  local gear, crafts = {}, {}
+  for i, r in ipairs(FF.Gear and FF.Gear.results or {}) do
+    if i > 5 then break end
+    gear[i] = { name = r.name, slot = FF.Gear.SLOT_NAMES[r.slot], price = r.price, pct = r.pct and math.floor(r.pct * 100 + 0.5) or nil }
+  end
+  local okP, list = pcall(FF.Professions.ProfitList, FF.Professions)
+  for i, e in ipairs(okP and list or {}) do
+    if i > 5 then break end
+    crafts[i] = { name = e.recipe.name, prof = e.prof, crafts = e.crafts, profit = math.floor(e.profit), perDay = math.floor(e.perDay * 10 + 0.5) / 10 }
+  end
   store.advisor = { t = time(), level = p.level, race = p.race, class = p.class, className = p.className,
-    build = build and build.name or nil, source = build and G.SOURCES[build.source] or nil, steps = lines }
+    build = build and build.name or nil, source = build and G.SOURCES[build.source] or nil, steps = lines,
+    gear = gear, crafts = crafts }
   store.level, store.race, store.class = p.level, p.race, p.class
 end
 

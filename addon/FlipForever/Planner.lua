@@ -61,18 +61,37 @@ local function numKeys(t)
 end
 
 -- Market model ---------------------------------------------------------------------------------
+-- A scan's text is turned into rows once and kept (scans never change after they're saved),
+-- so rebuilding the model after a new scan only parses that one scan.
+local parsed = setmetatable({}, { __mode = "k" })
+P.parseCount = 0
+local function rows(sc)
+  local r = parsed[sc]
+  if r and r.d == sc.d then return r end
+  local t = tonumber(sc.t)
+  local full = FULL[sc.src or "full"] and true or false
+  r = { d = sc.d, n = 0 }
+  for sid, mn, p25, qty in (sc.d or ""):gmatch("(%d+):(%d+):(%d+):(%d+):%d+") do
+    r.n = r.n + 1
+    r[r.n] = { id = tonumber(sid), t = t, min = tonumber(mn), p25 = tonumber(p25), qty = tonumber(qty), full = full }
+  end
+  parsed[sc] = r
+  P.parseCount = P.parseCount + 1
+  return r
+end
+
 function P:MarketModel(scans, now)
   local since = now - HISTORY_DAYS * DAY
   local hist = {}
   for _, sc in ipairs(scans or {}) do
     local t = tonumber(sc.t)
     if t and t >= since then
-      local full = FULL[sc.src or "full"] and true or false
-      for sid, mn, p25, qty in (sc.d or ""):gmatch("(%d+):(%d+):(%d+):(%d+):%d+") do
-        local id = tonumber(sid)
-        local h = hist[id]
-        if not h then h = {} hist[id] = h end
-        h[#h + 1] = { t = t, min = tonumber(mn), p25 = tonumber(p25), qty = tonumber(qty), full = full }
+      local r = rows(sc)
+      for i = 1, r.n do
+        local p = r[i]
+        local h = hist[p.id]
+        if not h then h = {} hist[p.id] = h end
+        h[#h + 1] = p
       end
     end
   end

@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.9] - 2026-11-20 (beta)
+### Added
+- App, Advisor page: each character's top auction house gear upgrades and most profitable crafts, as found in game (shown after the next Reload or logout).
+
+### Changed
+- Faster in-game planning: every saved scan is read only once and then kept. Rebuilding the shopping list after a new scan reads just that one scan, not all of them, so it's much quicker with many scans.
+
 ## [2.5.0-beta.8] - 2026-11-20 (beta)
 ### Added
 - **Waypoint arrow.** A movable on-screen arrow with the distance in yards; it turns green when you face the right way. It points to, in this order:

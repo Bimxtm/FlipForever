@@ -31,6 +31,7 @@
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 9: scans parsed once (faster in-game planning); gear upgrades and profitable crafts in the app's Advisor page.
 - 2.5.0 beta 8: waypoint arrow (approved 20 Nov): map pin, /ffway, next gathering stop.
 - 2.5.0 beta 7: settings, Advisor window and profession planner translated into all 11 languages.
 - 2.5.0 beta 6: 9 builds per class from Method, Warcraft Tavern and RankedBoost, with roles, points, rotations, and combat rotations for every new build style.
