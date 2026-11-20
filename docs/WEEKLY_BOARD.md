@@ -23,10 +23,9 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | Sat 22 | Gathering: value per node on our own map-pin tooltips · Advisor: "best farming zone for your skill" step | 2.4.0 beta |
 | Sun 23 | Auction: smarter undercut (ignore single dumped units, never undercut your own) · per-item sale-speed learning shown in the app | 2.4.0 stable at a cycle |
 | Mon 24 | Language-independent spells (spell IDs) · combat helper: more sequences for low levels (1-10) | 2.5.0 beta |
-| Tue 25-Thu 27 | Approved major feature, if any, otherwise polish + bug fixes · weekly review on Thu | 2.5.0 stable |
+| Tue 25-Thu 27 | **Crafting profit finder (approved 20 Nov)**, after the Better GUI · bug fixes from the in-game checklist come first · weekly review on Thu | 2.5.0 betas → stable |
 
 ## 🧱 Waiting for your OK (major)
-- Crafting profit finder (recipes that sell for more than their mats, mats added to the shopping list)
 - Waypoint arrow (next gathering stop / dungeon / vendor)
 - Quest locations for advisor steps (where class quests start, with map pins), built in, no Questie needed
 

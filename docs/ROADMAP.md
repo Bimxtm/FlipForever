@@ -1,12 +1,12 @@
 # Roadmap
 
 ## Waiting for your OK (major ideas)
-1. **Crafting profit finder.** It flags recipes you know that sell for more than their mats cost, then adds the mats to the shopping list. Inspired by Auctionator and TSM-style crafting tabs.
-2. **Waypoint arrow.** One arrow on screen for the next gathering stop, an advisor target (a dungeon or quest hub) or a vendor. Inspired by Schmendrick's arrow and TomTom.
-3. **Quest locations, built in.** The advisor shows where class quests and gear quests start, with map pins, without Questie. Inspired by Questie and GearQuestForever.
+1. **Waypoint arrow.** One arrow on screen for the next gathering stop, an advisor target (a dungeon or quest hub) or a vendor. Inspired by Schmendrick's arrow and TomTom.
+2. **Quest locations, built in.** The advisor shows where class quests and gear quests start, with map pins, without Questie. Inspired by Questie and GearQuestForever.
 
 ## Approved
 - **Better GUI** (requested 20 Nov). In game: one tabbed FlipForever window instead of separate panels, a consistent look, and a shopping-list view (item, price now, max, bought, status) you can edit. In the app: a cleaner modern layout. Planned Fri/Sat as 2.4.0 betas.
+- **Crafting profit finder** (approved 20 Nov, after the Better GUI). For recipes you know, it compares material cost (scan prices, or the cost of your own crafts) with what the result sells for, after the AH cut and deposit. It only suggests crafts that sell fast, and one click adds the mats to the shopping list. Planned Sun-Tue as 2.5.0 betas.
 
 ## Small improvements (queue)
 - Profession planner: exact skill-up chances learned from recipe colour changes, instead of averages per colour.
