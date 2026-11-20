@@ -33,5 +33,6 @@ Advisor\Advisor.lua
 Advisor\Combat.lua
 Professions.lua
 GearFinder.lua
+Arrow.lua
 
 Hub.lua
