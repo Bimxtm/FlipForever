@@ -2,6 +2,16 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.3.0-beta.2] - 2026-11-20 (beta)
+### Added
+- **Reload button** on the auction house panel and in the FlipForever window: one click loads the newest shopping list and saves your scans for the app. It's refused during combat, while a purchase is waiting, and during a scan.
+- **Development tab** in the app: this week's board (goals, usage budget, plan by day, problems) and the roadmap, as kept up to date by the improvement cycles.
+- Weekly board, problem tracking and usage budget in `docs/`, shipped with the app.
+
+### Changed
+- App: tighter tab bar (all tabs fit); "list ready" message points to the Reload button.
+- Releases: every finished change goes out as a beta right away; stable versions at the 12-hour cycle.
+
 ## [2.3.0-beta.1] - 2026-11-20 (beta)
 ### Added
 - **Beta channel:** a "Get beta versions (for testing)" checkbox in About & updates. Betas are GitHub pre-releases; without the box ticked you only get stable versions.
