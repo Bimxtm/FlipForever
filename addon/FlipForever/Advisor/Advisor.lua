@@ -582,9 +582,14 @@ local function detailsText(p, cd, build)
   local out = {}
   local function line(s) out[#out + 1] = s end
   line("|cffffd200" .. build.name .. "|r  -  " .. (G.SOURCES[build.source] or ""))
+  local ROLE = { leveling = "Leveling", dps = "Damage (dungeons and raids)", tank = "Tank", healer = "Healer", pvp = "PvP" }
+  if build.role or build.points then
+    line(((build.role and ROLE[build.role]) or "") .. (build.points and ("   |cff888888points " .. build.points .. "|r") or ""))
+  end
   if build.note then line(build.note) end
+  if build.rotation then line("|cffffd200Rotation|r  " .. build.rotation) end
   line(" ")
-  line("|cffffd200Talent order|r")
+  line(build.keyOnly and "|cffffd200Key talents|r |cff888888(the guide gives no pick order)|r" or "|cffffd200Talent order|r")
   if build.talents then
     for i, t in ipairs(build.talents) do
       line(("%d. %s%s%s"):format(i, t[1], t[2] and (" " .. t[2] .. " pts") or "", t[3] and (" (from level " .. t[3] .. ")") or ""))
@@ -593,7 +598,7 @@ local function detailsText(p, cd, build)
     line("This guide shows its talents only as a picture - follow it on the guide's page.")
   end
   line(" ")
-  line("|cffffd200Stats|r  " .. cd.stats)
+  line("|cffffd200Stats|r  " .. (build.stats or cd.stats))
   line("|cffffd200Professions|r  " .. table.concat(cd.professions, " + ") .. ". " .. cd.profNote)
   line(" ")
   line("|cffffd200Class quests|r")

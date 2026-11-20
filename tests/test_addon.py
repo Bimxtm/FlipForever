@@ -1295,6 +1295,43 @@ assert "Whirlwind" not in L("ARMS20") and L("ARMS20").endswith("[11-39]")
 assert "Whirlwind" in L("ARMS50") and L("ARMS50").endswith("[40-60]")
 assert L("FERAL50_NOCAT").startswith("Moonfire,Wrath,Starfire") and L("FERAL50_NOCAT").endswith("[40-60]")
 
+# --- 2.5.0: more builds per class from the guides, each with its own rotation
+lua.execute("""
+local G, C, AD = FlipForever.Guide, FlipForever.Combat, FlipForever.Advisor
+COUNTS, BAD = {}, {}
+for class, cd in pairs(G.CLASSES) do
+  COUNTS[class] = #cd.builds
+  local ids = {}
+  for _, b in ipairs(cd.builds) do
+    if ids[b.id] then BAD[#BAD + 1] = class .. ":dup:" .. b.id end
+    ids[b.id] = true
+    if not G.SOURCES[b.source] then BAD[#BAD + 1] = class .. ":source:" .. b.id end
+    if b.role and not ({ leveling = 1, dps = 1, tank = 1, healer = 1, pvp = 1 })[b.role] then BAD[#BAD + 1] = class .. ":role:" .. b.id end
+  end
+end
+local oldLevel = UnitLevel
+local function pick(class, build, level, spells)
+  UnitClass = function() return class, class:upper() end
+  UnitLevel = function() return level end
+  AD:CharStore().build = build
+  KNOWN = spells
+  return table.concat(C:BuildSteps(), ",")
+end
+DESTRO = pick("Warlock", "destro_wct", 50, { "Immolate", "Corruption", "Conflagrate", "Incinerate", "Shadowburn", "Shadow Bolt" })
+FURY = pick("Warrior", "fury_rb", 30, { "Battle Shout", "Bloodthirst", "Heroic Strike", "Sunder Armor" })
+FlipForeverDB.settings.combatTank = nil
+pick("Druid", "bear_rb", 50, {})
+BEAR_TANK = C:IsTank()
+UnitLevel = oldLevel
+AD:CharStore().build = nil
+""")
+counts = dict(L("COUNTS"))
+print("builds per class:", counts, "| problems:", list(L("BAD").values()))
+print("destro:", L("DESTRO"), "| fury:", L("FURY"), "| bear is tank:", L("BEAR_TANK"))
+assert all(7 <= n <= 10 for n in counts.values()) and len(counts) == 9 and not list(L("BAD").values())
+assert "Conflagrate" in L("DESTRO") and "Incinerate" in L("DESTRO") and L("FURY").startswith("Battle Shout,Bloodthirst")
+assert L("BEAR_TANK") is True
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

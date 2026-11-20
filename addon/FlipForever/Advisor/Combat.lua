@@ -130,6 +130,76 @@ local HIGH = {
 }
 for class, t in pairs(HIGH) do if C.SEQ[class] then C.SEQ[class].high = t end end
 
+-- Rotations for the other builds in the guides (GuideBuilds.lua sets each build's "combat" key).
+-- Used from level 11; spells you don't know yet are skipped, so one list covers 11-60.
+local MORE = {
+  WARRIOR = {
+    fury = { prefix = MELEE, steps = { "Battle Shout", { "Bloodthirst", "Heroic Strike" }, { "Whirlwind", "Heroic Strike" }, "Heroic Strike",
+      { "Bloodthirst", "Heroic Strike" }, "Sunder Armor" } },
+  },
+  PALADIN = {
+    prot = { prefix = MELEE, steps = { { "Seal of Fury", "Seal of Righteousness" }, "Judgement", { "Consecration", "Holy Strike" },
+      { "Holy Shield", "Holy Strike" }, "Holy Strike", { "Swift Judgement", "Judgement" } } },
+    holy = { prefix = MELEE, steps = { "Seal of Righteousness", "Judgement", { "Holy Shock", "Holy Strike" }, "Holy Strike" } },
+  },
+  HUNTER = {
+    mm = { prefix = PET, steps = { "Hunter's Mark", { "Sniper Shot", "Aimed Shot", "Arcane Shot" }, "Serpent Sting", { "Aimed Shot", "Arcane Shot" },
+      "Arcane Shot", { "Rapid Fire", "Arcane Shot" } } },
+    sv = { prefix = MELEE, steps = { "Serpent Sting", "Arcane Shot", { "Mongoose Bite", "Raptor Strike" }, "Raptor Strike",
+      { "Strider Kick", "Raptor Strike" }, { "Rapid Fire", "Raptor Strike" } } },
+  },
+  ROGUE = {
+    dagger = { prefix = MELEE, steps = { { "Backstab", "Sinister Strike" }, { "Backstab", "Sinister Strike" }, "Slice and Dice",
+      { "Backstab", "Sinister Strike" }, { "Backstab", "Sinister Strike" }, "Eviscerate" } },
+    assa = { prefix = MELEE, steps = { { "Mutilate", "Sinister Strike" }, { "Mutilate", "Sinister Strike" }, "Slice and Dice",
+      { "Mutilate", "Sinister Strike" }, { "Venom", "Eviscerate" }, "Eviscerate" } },
+    sub = { prefix = MELEE, steps = { { "Hemorrhage", "Sinister Strike" }, { "Ghostly Strike", "Hemorrhage", "Sinister Strike" }, "Slice and Dice",
+      { "Hemorrhage", "Sinister Strike" }, { "Hemorrhage", "Sinister Strike" }, { "Death Mark", "Eviscerate" }, "Eviscerate" } },
+  },
+  PRIEST = {
+    shadow = { steps = { "Shadow Word: Pain", { "Devouring Plague", "Mind Blast" }, "Mind Blast", { "Shadow Word: Death", "Mind Flay", "Smite" },
+      { "Vampiric Embrace", "Mind Flay", "Smite" }, { "Mind Flay", "Smite" } } },
+    holy = { steps = { { "Holy Fire", "Smite" }, "Shadow Word: Pain", "Smite", "Smite" } },
+  },
+  SHAMAN = {
+    ele = { steps = { "Flame Shock", { "Lava Burst", "Lightning Bolt" }, "Lightning Bolt", { "Chain Lightning", "Lightning Bolt" }, "Earth Shock" } },
+    resto = { steps = { "Flame Shock", "Lightning Bolt", "Earth Shock", "Lightning Bolt" } },
+  },
+  MAGE = {
+    fire = { steps = { { "Pyroblast", "Fireball" }, "Fireball", { "Scorch", "Fireball" }, "Fire Blast", "Fireball", { "Combustion", "Fireball" } } },
+    frostfire = { steps = { { "Frostfire Bolt", "Frostbolt" }, { "Frostfire Bolt", "Frostbolt" }, "Fire Blast", { "Ice Lance", "Frostbolt" },
+      { "Pyroblast", "Frostfire Bolt", "Frostbolt" } } },
+    arcane = { steps = { { "Arcane Blast", "Arcane Missiles" }, { "Arcane Blast", "Arcane Missiles" }, "Arcane Missiles", { "Arcane Blast", "Arcane Missiles" },
+      { "Arcane Wrath", "Arcane Missiles" }, "Fire Blast" } },
+  },
+  WARLOCK = {
+    wrack = { prefix = PET, steps = { "Corruption", { "Bane of Agony", "Curse of Agony" }, "Siphon Life", { "Wrack", "Shadow Bolt" }, { "Wrack", "Shadow Bolt" } } },
+    demo = { prefix = PET, steps = { { "Searing Pain", "Immolate" }, "Immolate", { "Bane of Agony", "Curse of Agony" }, "Corruption",
+      { "Soul Fire", "Searing Pain", "Shadow Bolt" }, { "Searing Pain", "Shadow Bolt" } } },
+    demo_shadow = { prefix = PET, steps = { { "Searing Pain", "Immolate" }, "Immolate", "Corruption", "Shadow Bolt", "Shadow Bolt" } },
+    destro = { prefix = PET, steps = { "Immolate", "Corruption", { "Conflagrate", "Incinerate", "Shadow Bolt" }, { "Shadowburn", "Incinerate", "Shadow Bolt" },
+      { "Incinerate", "Shadow Bolt" }, { "Incinerate", "Shadow Bolt" } } },
+  },
+  DRUID = {
+    bear = { prefix = MELEE, requires = "Bear Form", steps = { { "Faerie Fire (Feral)", "Demoralizing Roar" }, "Demoralizing Roar",
+      { "Primal Bite", "Maul" }, { "Lacerate", "Maul" }, { "Lacerate", "Maul" }, { "Swipe", "Maul" } } },
+    balance = { steps = { "Moonfire", { "Insect Swarm", "Wrath" }, { "Starfire", "Wrath" }, { "Starfire", "Wrath" }, "Wrath" } },
+  },
+}
+for class, t in pairs(MORE) do
+  local cls = C.SEQ[class]
+  if cls then
+    cls.high = cls.high or {}
+    for key, seq in pairs(t) do
+      cls[key] = cls[key] or seq
+      cls.high[key] = cls.high[key] or seq
+    end
+  end
+end
+-- builds that share a rotation under another name
+C.SEQ.SHAMAN.high.ele = C.SEQ.SHAMAN.high.ele_wct
+C.SEQ.PALADIN.ret = C.SEQ.PALADIN.default
+
 -- What each spell is, for immunities
 local TAG = {
   Rend = "bleed", Rip = "bleed", Rake = "bleed", Garrote = "bleed", Rupture = "bleed", Hemorrhage = "physical",
@@ -137,6 +207,8 @@ local TAG = {
   Frostbolt = "frost", ["Ice Lance"] = "frost", ["Frost Shock"] = "frost", ["Cone of Cold"] = "frost",
   ["Serpent Sting"] = "poison", Corruption = "shadow", ["Shadow Bolt"] = "shadow",
   Scorch = "fire", Conflagrate = "fire", ["Drain Soul"] = "shadow", ["Siphon Life"] = "shadow",
+  Pyroblast = "fire", Incinerate = "fire", ["Soul Fire"] = "fire", ["Lava Burst"] = "fire", Shadowburn = "shadow",
+  ["Devouring Plague"] = "shadow", ["Shadow Word: Death"] = "shadow", Wrack = "shadow", Lacerate = "bleed",
 }
 
 -- Creature types: what doesn't work, what works extra, and crowd control
@@ -203,7 +275,7 @@ function C:BuildSteps()
   if not cls then return {}, "" end
   -- three level bands: 1-10 starter spells, 11-39 the build's core, 40-60 the full rotation
   local level = p.level or 60
-  local key = build and build.id or "default"
+  local key = build and (build.combat or build.id) or "default"
   local known = AD:KnownSpells()
   local seq
   if level <= 10 and cls.low then
@@ -212,7 +284,7 @@ function C:BuildSteps()
     seq = cls.high[key] or cls.high.default
     if seq and seq.requires and not known[seq.requires] then seq = cls.high.default end
   end
-  seq = seq or (build and cls[build.id]) or cls.default
+  seq = seq or cls[key] or (build and cls[build.id]) or cls.default
   if seq.requires and not known[seq.requires] then seq = cls.default end
   self.band = (level <= 10 and cls.low and "1-10") or (level >= 40 and cls.high and "40-60") or "11-39"
   local target = self:Target()
@@ -313,6 +385,7 @@ function C:IsTank()
   local AD = FF.Advisor
   local p = AD:Player()
   local build = AD:Build(p)
+  if build and build.role == "tank" then return true end
   return (TANK_BUILDS[p.class] and build and TANK_BUILDS[p.class][build.id]) and true or false
 end
 

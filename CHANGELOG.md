@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.6] - 2026-11-20 (beta)
+### Added
+- **9 builds for every class**, collected from the current WoW: Forever guides: Method's leveling guides (updated 14-19 Nov), Warcraft Tavern's level 60 class guides (updated 1-11 Nov) and RankedBoost's build list (updated 8 Nov). Every spec is covered, with leveling, dungeon and raid damage, tank, healer and PvP builds.
+  - Each build shows its role, point split, the guide's note and rotation, and its talents. Builds whose guide gives no pick order are marked *Key talents*. Warcraft Tavern's older level 30 beta builds are marked as beta.
+  - Pick a build in the Advisor with the < > buttons, as before.
+- **Combat helper rotations for the new builds:** Fury, Marksmanship, Survival, Assassination, dagger Combat, Subtlety, Shadow, Holy/Discipline (solo damage), Elemental, Fire, Frostfire, Arcane, Wrack Affliction, Demonology (Fire and Shadow), Destruction, bear tanking and Balance.
+- Tank mode now turns on for every tank build, not only Protection and Feral.
+
 ## [2.5.0-beta.5] - 2026-11-20 (beta)
 ### Added
 - **Combat helper from level 1 to 60.** Every class follows three level bands:

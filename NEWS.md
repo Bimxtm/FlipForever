@@ -1,9 +1,7 @@
-# FlipForever 2.5 Beta 5
+# FlipForever 2.5 Beta 6
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
 
-**Combat helper for every level, 1 to 60.** At levels 1-10 it uses the few spells you start with, from 11 your build's core rotation, and from 40 the full rotation with your big abilities and talents. As you learn new spells they join in by themselves.
+**9 builds for every class.** The Advisor now offers every build the current WoW: Forever guides publish: Method, Warcraft Tavern and RankedBoost. That covers leveling, dungeon and raid damage, tanking, healing and PvP for all specs. Each build shows its role, point split, talents, the guide's advice and its rotation, and the combat helper follows the build you pick. Pick one in the Advisor with the < > buttons.
 
-**Exact profession skill-up chances.** Once a recipe changes colour in front of FlipForever, the planner knows where its colour bands start and uses the real chance to skill up, not an average.
-
-**Also in 2.5:** vendor flips, sharper auction math, all 11 game languages, a gear finder, a crafting profit finder, and a redesigned app and in-game window.
+**Also in 2.5:** combat helper from level 1 to 60, exact profession skill-up chances, vendor flips, sharper auction math, all 11 game languages, a gear finder, a crafting profit finder, and a redesigned app and in-game window.

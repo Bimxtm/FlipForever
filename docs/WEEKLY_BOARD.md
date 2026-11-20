@@ -25,13 +25,14 @@
 | P1 | Nothing has run in the real game yet (auction house API, combat helper, profession API, tooltips) | High | In-game test checklist (Development tab); reported problems get fixed first |
 | P2 | Unverified game API details: full-scan timing, silver-only commodity prices, talent API shape, the step button in combat | High | Built with fallbacks; confirm in game (P1) |
 | P3 | Private repository: the app can't see updates until a read-only GitHub token is entered (About & updates) | Medium | Or make the repository public when ready |
-| P4 | Guide data gaps: druid talents not final, warlock from a beta-era source, rogue/priest/shaman talents only as images | Medium | Re-check sources; add post-launch builds as they appear |
+| P4 | Guide data: 9 builds per class now; some are key talents only (no pick order), some Warcraft Tavern builds are still level 30 beta builds, and Mobalytics/Icy Veins block automated reading | Medium | Refresh when the guides update |
 | P5 | Spell names are English only (fine on enUS clients) | Low | Spell IDs |
 | P6 | Random-stat gear ("of the Bear") is priced per item, not per suffix | Low | Buying already prefers commodities; revisit if it causes bad buys |
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 6: 9 builds per class from Method, Warcraft Tavern and RankedBoost, with roles, points, rotations, and combat rotations for every new build style.
 - 2.5.0 beta 5: combat helper level bands 1-10 / 11-39 / 40-60 for all classes and builds; exact skill-up chances learned from colour changes (P7).
 - 2.5.0 beta 4: auction house accuracy from current WoW: Forever guides (deposit refunded on sale, minimum deposit now 1 copper, 5% cut), vendor flips with automatic merchant selling, vendor floor when posting, cheaper items considered.
 - 2.5.0 beta 3: language selector with all 11 game languages (app and addon), one shared translation source.
