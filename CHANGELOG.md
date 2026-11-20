@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.3.0-beta.3] - 2026-11-20 (beta)
+### Added
+- **Combat helper, one key for everything:** with *Auto-target* on (default), each press first picks the nearest enemy if you have no target, or yours is dead or friendly. **Tank mode** (on automatically for Protection builds, or tick it yourself): click an ally, and the key hits whatever is on them (`/assist`), with Taunt/Growl early in each round. A red line warns "Your target is attacking <ally>!". Only Blizzard-allowed macro targeting is used.
+- **Scan finished → alert:** a sound and raid warning ("Scan saved - click Reload"), and the Reload button lights up. **Autopilot pauses** until you reload, so it never buys from an outdated list. It can be switched off in the FlipForever window.
+- **App builds the list by itself:** after importing a new scan it builds the selected character's shopping list, plays a sound and pops to the front with "click Reload in game". Switch: Settings → *Auto-build the shopping list after a new scan*.
+
 ## [2.3.0-beta.2] - 2026-11-20 (beta)
 ### Added
 - **Reload button** on the auction house panel and in the FlipForever window: one click loads the newest shopping list and saves your scans for the app. It's refused during combat, while a purchase is waiting, and during a scan.

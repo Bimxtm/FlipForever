@@ -80,6 +80,7 @@ class Settings:
     sell_farmed: bool = True      # also post items you didn't flip (farmed loot) at fair value
     autotune: bool = True
     auto_import: bool = True
+    auto_build: bool = True       # after importing a new scan: build the shopping list and notify
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True
     beta_updates: bool = False    # also offer beta versions (pre-releases) for testing

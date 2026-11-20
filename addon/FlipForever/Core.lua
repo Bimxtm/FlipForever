@@ -333,6 +333,19 @@ function FF:ReloadForSync()
   ReloadUI()
 end
 
+-- A full scan finished: tell the player (sound, raid warning, flashing Reload) and pause
+-- autopilot until the reload, so it doesn't keep buying from a list made with old prices.
+-- The reload saves the scan for the app, which builds the new shopping list.
+function FF:ScanFinished(items)
+  if FlipForeverDB.settings.reloadAfterScan == false then return end
+  self.needReload = true
+  if self.Alert then
+    self:Alert(("Scan saved (%d items) - click Reload so the app can build your new shopping list."):format(items or 0),
+      SOUNDKIT and SOUNDKIT.READY_CHECK)
+  end
+  if self.UI then self.UI:Refresh() end
+end
+
 function FF:ResetProgress()
   FF:DB().charProgress[UnitName("player") or "?"] = nil
   FF:Print("Shopping list progress reset - every item on the list will be checked again.")

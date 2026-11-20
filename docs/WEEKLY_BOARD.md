@@ -47,6 +47,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
+- 2.3.0 Beta 3 (Thu 11:00-11:40): one-key targeting + tank mode (P12 ✔), scan-done alert + autopilot pause (P11 ✔), app auto-builds the list after import (P11 ✔). Next: in-game planning (P10) as Beta 4.
 - 2.0.0 all-in-one · 2.1.0 tooltips/minimap/today · 2.2.0 profession planner · 2.3.0 Beta 1 (beta channel, crafted mats, gather hint, mailbox summary)
 - Repo, releases, self-updater, beta channel, tests in repo, cycle rules
 

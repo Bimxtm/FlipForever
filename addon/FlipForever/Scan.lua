@@ -126,6 +126,7 @@ function Scan:ProcessReplicate(w)
       FF:Print(("%s saved: %d auctions, %d items. /reload or log out so the app can import it."):format(who, total, n))
       FF:SetStatus(("%s done: %d items."):format(who, n))
       if FF.Auto then FF.Auto:ScanDone(true) end
+      FF:ScanFinished(n)
     end
   end
   step()
@@ -275,8 +276,9 @@ local function continueBrowse()
     local n = Scan:FlushBrowse("full-browse")
     Scan.busy = nil
     FF:Print(("Browse scan saved: %d items."):format(n))
-    FF:SetStatus(("Browse scan done: %d items. Type /reload so the app sees it."):format(n))
+    FF:SetStatus(("Browse scan done: %d items."):format(n))
     if FF.Auto then FF.Auto:ScanDone(true) end
+    FF:ScanFinished(n)
   else
     C_Timer.After(0.4, function()
       if Scan.busy == "browse" then FF:Own(AH.RequestMoreBrowseResults) end

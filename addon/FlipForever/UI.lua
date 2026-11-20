@@ -128,6 +128,7 @@ function UI:Build()
   local reload = button(f, "Reload", 60, 20)
   reload:SetPoint("TOPLEFT", 10, -10)
   reload:SetScript("OnClick", function() FF:ReloadForSync() end)
+  self.reloadButton = reload
   reload:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip:AddLine("Reload: load new list")
@@ -166,6 +167,14 @@ function UI:Refresh()
 
   local pendingMats = FF.Professions and FF.Professions.pendingMats
   self.matsButton:SetShown(pendingMats ~= nil)
+  -- after a scan: the Reload button lights up
+  if FF.needReload then
+    self.reloadButton:SetText("|cffffd200RELOAD|r")
+    self.reloadButton:LockHighlight()
+  else
+    self.reloadButton:SetText("Reload")
+    self.reloadButton:UnlockHighlight()
+  end
   if pendingMats then self.matsButton:SetText(("Buy profession mats (%d)"):format(#pendingMats)) end
 
   local auto = FF.Auto
@@ -173,7 +182,7 @@ function UI:Refresh()
   self.autoText:SetText(auto:StatusLine())
 
   -- flash while a deal waits for the key press
-  local waiting = T:WaitingForUser()
+  local waiting = T:WaitingForUser() or FF.needReload
   if waiting and not self.glow:IsShown() then
     self.glow:Show()
     self.glowAnim:Play()

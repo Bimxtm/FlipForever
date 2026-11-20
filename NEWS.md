@@ -1,10 +1,11 @@
-# FlipForever 2.3 Beta 2 - for testing
+# FlipForever 2.3 Beta 3 - for testing
 
 **This is a beta.** Only apps with *Get beta versions* ticked (About & updates) see it.
 
-- 🔄 **Reload button:** after building a new shopping list in the app, click **Reload** on the auction house panel (or in the FlipForever window) instead of typing /reload. It won't reload during combat, a waiting purchase or a running scan.
-- 📋 **Development tab** in the app: see what's being worked on this week, open problems, and what's coming next.
+- ⚔️ **One key does it all:** the combat helper's key now also picks a target, the nearest enemy when you have none. **Tank mode:** click an ally, press your key, and you hit whatever is attacking them, with a taunt early on. A red warning shows when your enemy is on someone else.
+- 📣 **Scan finished?** You hear it, see it, and the Reload button lights up. Autopilot waits for the reload so it never buys from an old list.
+- 🧾 **The app builds your list by itself** after each new scan, then beeps and pops up: just click Reload in game.
 
-Also in this beta (from Beta 1): beta channel, the profession planner knows your crafted materials, "you can gather this", mailbox summary.
+Settings for all three are in the FlipForever window (gold coin on the minimap) and in the app's Settings tab.
 
-Next up: shopping lists rebuilt in game after every scan, with no reload needed at all.
+Coming next (Beta 4): the shopping list rebuilt in game right after each scan, so you won't even need that reload.

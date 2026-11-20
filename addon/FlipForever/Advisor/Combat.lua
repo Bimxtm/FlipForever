@@ -213,7 +213,46 @@ function C:UpdateIcons()
     btn.label:SetText(stepSpell(0) or "no spells yet")
   end
   local t = self:Target()
-  hintText:SetText(t and self:TargetHint(t) or "")
+  local hint = t and self:TargetHint(t) or ""
+  local ally = self:AllyUnderAttack()
+  if ally then hint = ("|cffff5555Your target is attacking %s!|r  "):format(ally) .. hint end
+  hintText:SetText(hint)
+end
+
+-- One-key targeting -------------------------------------------------------------------------------
+-- Blizzard only lets macros choose targets in simple, allowed ways: the nearest enemy
+-- (/targetenemy) and "the target of my friendly target" (/assist). That's what we use; the
+-- addon itself never picks a target from game state during combat.
+local TANK_BUILDS = { WARRIOR = { prot = true }, PALADIN = { prot = true }, DRUID = { bear = true } }
+
+function C:IsTank()
+  local s = FlipForeverDB.settings
+  if s.combatTank ~= nil then return s.combatTank end -- you ticked/unticked it yourself
+  local AD = FF.Advisor
+  local p = AD:Player()
+  local build = AD:Build(p)
+  return (TANK_BUILDS[p.class] and build and TANK_BUILDS[p.class][build.id]) and true or false
+end
+
+function C:AutoTarget() return FlipForeverDB.settings.combatTarget ~= false end
+
+function C:TargetPrefix()
+  if not self:AutoTarget() then return "" end
+  local lines = ""
+  -- tank: clicked a party member? take whatever is attacking them
+  if self:IsTank() then lines = lines .. "/assist [help,nodead]\n" end
+  -- no target, a dead one or a friendly one: take the nearest enemy
+  return lines .. "/targetenemy [noharm][dead]\n"
+end
+
+-- shown above the icons when your enemy target is beating on someone else (tanks care)
+function C:AllyUnderAttack()
+  if not (UnitExists("target") and UnitCanAttack("player", "target")) then return nil end
+  if not UnitExists("targettarget") then return nil end
+  local ok, friendly = pcall(UnitIsFriend, "player", "targettarget")
+  local ok2, isMe = pcall(UnitIsUnit, "targettarget", "player")
+  if not (ok and ok2) or not plain(friendly) or plain(isMe) then return nil end
+  return plain(UnitName("targettarget"))
 end
 
 -- Blizzard's own one-button rotation, if this client has it (retail-style Assisted Combat)
@@ -242,6 +281,14 @@ function C:Rebuild()
   self.assist = nil
   btn:SetAttribute("spell", nil)
   local steps, prefix = self:BuildSteps()
+  prefix = self:TargetPrefix() .. prefix
+  -- tanks: a taunt early in every round (only if you know one)
+  if self:IsTank() then
+    local known = FF.Advisor:KnownSpells()
+    for _, taunt in ipairs({ "Taunt", "Growl", "Righteous Defense" }) do
+      if known[taunt] then table.insert(steps, math.min(2, #steps + 1), taunt) break end
+    end
+  end
   self.steps = steps
   for i = 1, 20 do btn:SetAttribute("step" .. i, nil) end
   for i, spell in ipairs(steps) do
@@ -375,6 +422,21 @@ FF:On("PLAYER_TARGET_CHANGED", function()
   end
 end)
 FF:On("SPELLS_CHANGED", rebuildSoon)
+pcall(FF.On, FF, "UNIT_TARGET", function(unit)
+  if unit == "target" and btn and bar:IsShown() then C:UpdateIcons() end
+end)
+
+function C:SetAutoTarget(on)
+  if InCombatLockdown() then FF:Print("Can't change this during a fight.") return end
+  FlipForeverDB.settings.combatTarget = on and true or false
+  self:Apply()
+end
+
+function C:SetTank(on)
+  if InCombatLockdown() then FF:Print("Can't change this during a fight.") return end
+  FlipForeverDB.settings.combatTank = on and true or false
+  self:Apply()
+end
 FF:On("PLAYER_LEVEL_UP", function() C_Timer.After(1, rebuildSoon) end)
 FF:On("PLAYER_REGEN_ENABLED", function()
   if btn and C:Enabled() then C:Rebuild() pendingRebuild = false end

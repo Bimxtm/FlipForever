@@ -472,6 +472,8 @@ FlipForever_Plan = { generated = 999, realm = "Testrealm - Horde", budget = 1000
 COMMODITY[4306] = { {unitPrice=300, quantity=5}, {unitPrice=1000, quantity=300} }
 FlipForever.Trader:Stop()
 ALERTS = {}
+FlipForever.needReload = nil
+FlipForeverDB.settings.reloadAfterScan = false   -- this block tests autopilot without the reload pause
 FlipForever.Auto:SetEnabled(true)
 FlipForever.Auto.nextScan = time() + 9999
 FlipForever.Auto.lastExternal = 0
@@ -602,6 +604,7 @@ PLEVEL = 30
 KNOWN = { "Frostbolt", "Fireball", "Fire Blast", "Ice Lance", "Frost Nova" }
 FlipForever.Advisor:CharStore().build = "frost"
 TARGET = { name = "Defias Bandit", ctype = "Humanoid", level = 30, power = 1 }
+FlipForeverDB.settings.combatTarget = false  -- this part tests the spell sequence only
 FlipForever.Combat:Toggle()       -- on
 CB = FlipForeverCombatButton
 SEQ1 = {}
@@ -870,6 +873,78 @@ FlipForever.Scan.busy = nil; FlipForever:ReloadForSync()    -- safe: reloads
 """)
 print("reload button: reloads only when safe ->", L("RELOADS"))
 assert L("RELOADS") == 1
+
+# --- Beta 3: scan finished -> alert, flashing Reload, autopilot paused until reload
+lua.execute("""
+FlipForeverDB.settings.reloadAfterScan = nil
+FlipForever.needReload = nil
+FlipForever.Trader:Stop()
+FlipForever.Auto:SetEnabled(true)
+FlipForever.Auto.lastExternal = 0
+FlipForever.Auto.scanBlocked = false
+FlipForever.Auto.nextScan = 0
+FlipForeverDB.lastReplicate = 0
+AucAdvancedData = nil
+REPL = { {name="Silk Cloth", id=4306, count=20, buyout=20*900} }
+ALERTS = {}
+RunTickers()                                  -- autopilot starts the scan
+Fire("REPLICATE_ITEM_LIST_UPDATE")
+for i = 1, 6 do RunTickers() end
+RunTimers(5)
+RunTickers()                                  -- after the scan
+PAUSED_PHASE = FlipForever.Auto.phase
+PAUSED_TRADER = FlipForever.Trader.state
+RELOAD_TEXT = FlipForever.UI.reloadButton and FlipForever.UI.reloadButton.text
+SCAN_ALERT = false
+for _, a in ipairs(ALERTS) do if a:find("Scan saved") then SCAN_ALERT = true end end
+FlipForever.Auto:SetEnabled(false)
+FlipForever.needReload = nil
+""")
+print("after scan: phase", L("PAUSED_PHASE"), "| trader", L("PAUSED_TRADER"), "| alert:", L("SCAN_ALERT"), "| reload button:", L("RELOAD_TEXT"))
+assert L("PAUSED_PHASE") == "needreload" and L("PAUSED_TRADER") == "idle" and L("SCAN_ALERT") is True
+assert "RELOAD" in (L("RELOAD_TEXT") or "")
+
+# --- Beta 3: one-key targeting + tank mode
+lua.execute("""
+COMBAT = false
+UnitName = function(u) if u == "targettarget" then return "Healbot" end if u == "target" then return TARGET and TARGET.name end return "Tester" end
+UnitClass = function() return "Warrior", "WARRIOR" end
+FlipForever.Advisor:CharStore().build = "prot"
+KNOWN = { "Battle Shout", "Thunder Clap", "Sunder Armor", "Heroic Strike", "Taunt" }
+TARGET = { name = "Kobold", ctype = "Humanoid", level = 22 }
+FlipForeverDB.settings.combatTank = nil
+FlipForeverDB.settings.combatTarget = nil
+if not FlipForever.Combat:Enabled() then FlipForever.Combat:Toggle() end
+FlipForever.Combat:Rebuild()
+CB = FlipForeverCombatButton
+TANK1 = CB:GetAttribute("step1")
+TANK2 = CB:GetAttribute("step2")
+IS_TANK = FlipForever.Combat:IsTank()
+-- damage build: no /assist, still auto-target
+UnitClass = function() return "Mage", "MAGE" end
+FlipForever.Advisor:CharStore().build = "frost"
+KNOWN = { "Frostbolt", "Fire Blast" }
+FlipForever.Combat:Rebuild()
+DPS1 = CB:GetAttribute("step1")
+-- auto-target off: plain casts
+FlipForever.Combat:SetAutoTarget(false)
+OFF1 = CB:GetAttribute("step1")
+FlipForever.Combat:SetAutoTarget(true)
+-- the enemy is hitting an ally -> warning line
+UnitExists = function(u) return u == "player" or u == "target" or u == "targettarget" end
+UnitIsFriend = function(a, b) return b == "targettarget" end
+UnitIsUnit = function(a, b) return false end
+FlipForever.Combat:UpdateIcons()
+HINT = FlipForeverCombatBar and true
+""")
+print("tank step1:", repr(L("TANK1")), "| step2:", L("TANK2"), "| tank detected:", L("IS_TANK"))
+assert L("TANK1").startswith("/assist [help,nodead]\n/targetenemy [noharm][dead]\n/startattack\n") and L("TANK2").endswith("/cast Taunt")
+assert L("IS_TANK") is True
+print("dps step1:", repr(L("DPS1")), "| auto-target off:", repr(L("OFF1")))
+assert L("DPS1") == "/targetenemy [noharm][dead]\n/cast Frostbolt" and L("OFF1") == "/cast Frostbolt"
+print("ally warning:", L("FlipForever.Combat:AllyUnderAttack()"))
+assert L("FlipForever.Combat:AllyUnderAttack()") == "Healbot"
+lua.execute("FlipForever.Combat:Toggle()")
 
 # --- per-character plans
 lua.execute("""

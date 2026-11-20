@@ -119,6 +119,12 @@ function A:Tick()
   end
   -- 2) an automatic scan failed: wait for the manual one
   if self.scanBlocked then self.phase = "needscan" return end
+  -- 2b) a new scan is saved: wait for the reload (new shopping list) before buying again
+  if FF.needReload and not T:WaitingForUser() then
+    if self.sweeping and T.state == "searching" then T:Stop("Paused - reload to load the new shopping list.") end
+    self.phase = "needreload"
+    return
+  end
   -- 3) a deal is waiting for your key press: never interrupt it
   if T:WaitingForUser() then self.phase = "deal" return end
   -- 4) you or another addon is using the auction house: step aside
@@ -174,6 +180,7 @@ function A:StatusLine()
   if p == "otherscan" then return "|cff66ccffAnother addon is scanning - reading its data too|r" end
   if p == "yield" then return "Auto: waiting - auction house in use (you / another addon)" end
   if p == "needscan" then return "|cffff5555Auto paused: click Full scan|r" end
+  if p == "needreload" then return "|cffffd200Auto paused: click Reload for the new shopping list|r" end
   if p == "deal" then return "|cffffd200DEAL FOUND - press the button!|r" end
   if p == "searching" then return "Auto: checking your list..." end
   if p == "noplan" then return "|cffff8800Auto: no shopping list for this character|r" end

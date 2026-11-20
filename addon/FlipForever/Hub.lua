@@ -80,7 +80,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 580)
+  f:SetSize(400, 600)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -126,6 +126,10 @@ local function build()
   f.combat:SetPoint("TOPLEFT", 14, -136)
   f.combatMode = check(f, "Let Blizzard's one-button assistant decide", function() FF.Combat:ToggleBlizzard() end)
   f.combatMode:SetPoint("TOPLEFT", 14, -160)
+  f.autoTarget = check(f, "Auto-target", function(self) FF.Combat:SetAutoTarget(self:GetChecked()) end)
+  f.autoTarget:SetPoint("TOPLEFT", 230, -136)
+  f.tank = check(f, "Tank mode", function(self) FF.Combat:SetTank(self:GetChecked()) end)
+  f.tank:SetPoint("TOPLEFT", 310, -136)
   f.combatKeyText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.combatKeyText:SetPoint("TOPLEFT", 20, -192)
   f.combatKeyButton = button(f, "Set key", 80, function()
@@ -137,7 +141,7 @@ local function build()
   cHint:SetPoint("TOPLEFT", 20, -214)
   cHint:SetPoint("RIGHT", -16, 0)
   cHint:SetJustifyH("LEFT")
-  cHint:SetText("Follows the build you pick in the Advisor. Shift + right-drag the icon to move it.")
+  cHint:SetText("Auto-target: nearest enemy when you have none. Tank: click an ally, then the key hits what's on them.")
 
   -- Auction house -------------------------------------------------------
   heading(f, "Auction house", -240)
@@ -164,6 +168,10 @@ local function build()
     FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false
   end)
   f.popup:SetPoint("TOPLEFT", 14, -392)
+  f.pauseScan = check(f, "After a scan: alert + pause autopilot until Reload", function(self)
+    FlipForeverDB.settings.reloadAfterScan = self:GetChecked() and true or false
+  end)
+  f.pauseScan:SetPoint("TOPLEFT", 14, -536)
   f.tips = check(f, "Prices in item tooltips", function(self)
     FlipForeverDB.settings.tooltips = self:GetChecked() and true or false
   end)
@@ -204,6 +212,8 @@ function H:Refresh()
   if not (frame and frame:IsShown()) then return end
   local s = FlipForeverDB.settings
   frame.combat:SetChecked(FF.Combat:Enabled())
+  frame.autoTarget:SetChecked(FF.Combat:AutoTarget())
+  frame.tank:SetChecked(FF.Combat:IsTank())
   frame.combatMode:SetChecked(s.combatBlizzard == true)
   frame.combatMode:SetEnabled(FF.Combat:BlizzardAssistSpell() ~= nil)
   frame.combatMode.text:SetText(FF.Combat:BlizzardAssistSpell() and "Let Blizzard's one-button assistant decide"
@@ -217,6 +227,7 @@ function H:Refresh()
   frame.popup:SetChecked(s.advisorPopup ~= false)
   frame.tips:SetChecked(s.tooltips ~= false)
   frame.profPanel:SetChecked(s.profPanel ~= false)
+  frame.pauseScan:SetChecked(s.reloadAfterScan ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

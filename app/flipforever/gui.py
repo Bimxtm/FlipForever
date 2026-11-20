@@ -752,6 +752,8 @@ class App(tk.Tk):
         add("Also post my farmed loot", "sell_farmed", "bool", hint="items you didn't flip get posted at fair value (floor 75%)")
         add("Let it tune the margin itself", "autotune", "bool", hint="the self-improving part: tightens after losses, loosens when winning")
         add("Auto-import when the game saves", "auto_import", "bool", hint="watches for /reload or logout")
+        add("Auto-build the shopping list after a new scan", "auto_build", "bool",
+            hint="then plays a sound and pops up: click Reload in game to load it")
         btns = ttk.Frame(f)
         btns.grid(row=row, column=0, columnspan=3, sticky="w", pady=(18, 0))
         ttk.Button(btns, text="Save settings", style="Accent.TButton", command=self.save_settings).pack(side="left")
@@ -866,6 +868,40 @@ class App(tk.Tk):
             self.settings.realm = res["realms"][0]
             self.settings.save()
         self.refresh(commit_tuning=True)
+        # a new scan arrived: build the shopping list straight away and tell the player
+        if res["scans"] > 0 and self.settings.auto_build:
+            self._auto_build()
+
+    def _auto_build(self):
+        key = self._char_key()
+        if not key or not self.realm or self.realm == demo.DEMO_REALM:
+            return
+        try:
+            budget = self.settings.budget_for(key)
+            plan, spent = engine.build_plan(self.settings, self.deals, self.model, self.learned, self.ledger,
+                                            engine.item_names(self.con, self.realm), self.realm, budget)
+            engine.write_plan(self.settings, key, plan)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+            return
+        self._notify(f"New shopping list for {self.char} ready: {len(plan['buy'])} items to check. "
+                     "Click Reload in game to load it.")
+
+    def _notify(self, text):
+        """Sound + bring the window to the front + status line."""
+        self.status(text)
+        try:
+            import winsound
+            winsound.MessageBeep(winsound.MB_ICONASTERISK)
+        except Exception:  # noqa: BLE001
+            self.bell()
+        try:
+            self.deiconify()
+            self.lift()
+            self.attributes("-topmost", True)
+            self.after(2500, lambda: self.attributes("-topmost", False))
+        except tk.TclError:
+            pass
 
     def _watch(self):
         try:
