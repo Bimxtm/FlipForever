@@ -25,7 +25,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [x] Gear finder: also check your bags for items that beat what you wear ("equip this")
 - [x] App Dashboard: profit per character (chart or table) when several characters trade
 - [x] Shopping list view in game: sort by status and show the expected profit per item
-- [ ] Quest locations branch: add warlock, rogue and the missing warrior/paladin quest starts (research), keep on the branch
+- [x] Quest locations branch: add warlock, rogue and the missing warrior/paladin quest starts (research), keep on the branch
 - [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language (last: can't be checked without a non-English client)
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
 
