@@ -1448,6 +1448,17 @@ print("bag upgrade:", L("BAGFIRST").name, "| bag:", L("BAGFIRST").bag, "| equipp
 assert L("BAGFIRST").name == "Scaled Chestguard" and L("BAGFIRST").bag is True and L("EQUIPPED_LINK") == "link:100"
 assert L("BAGSTEP").startswith("Equip Scaled Chestguard from your bags")
 
+# --- app: profit per character
+import hashlib as _hashlib  # noqa: E402
+for _ev in [(1000, "buy", 2589, "Linen Cloth", 10, 30, None, None, None, 40), (1100, "post", 2589, "Linen Cloth", 10, 45, 5, None, None, None),
+            (2000, "invoice", 2589, "Linen Cloth", 10, None, 5, 450, 22, None)]:
+    _t, _e, _iid, _nm, _q, _p, _dep, _gross, _cut, _exp = _ev
+    _con.execute("INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                 (_hashlib.sha1(repr(_ev).encode()).hexdigest(), _realm, _t, _e, _iid, _nm, _q, _p, _dep, _gross, _cut, _exp, "Altchar"))
+_pc = {r["char"]: r for r in _engine.profit_by_char(_con, _realm)}
+print("profit per character:", {k: v["realized"] for k, v in _pc.items()})
+assert _pc["Altchar"]["realized"] == 128 and _pc["Altchar"]["sold"] == 1 and "Demochar" in _pc
+
 # --- auction length by sell speed (deposit grows with the duration)
 lua.execute("""
 local T, P = FlipForever.Trader, FlipForever.Planner

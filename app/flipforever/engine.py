@@ -783,6 +783,24 @@ def install_addon(settings: Settings) -> Path:
     return target
 
 
+def profit_by_char(con, realm) -> list[dict]:
+    """Per character on this realm: realized profit, last 7 days, stock at cost, sales and buys."""
+    now = time.time()
+    out = []
+    for (char,) in con.execute("SELECT DISTINCT char FROM events WHERE realm=? AND char IS NOT NULL ORDER BY char", (realm,)):
+        led = build_ledger(con, realm, char)
+        out.append({
+            "char": char,
+            "realized": sum(l.profit for l in led.items.values()),
+            "week": sum(p for t, p, _ in led.timeline if now - t < 7 * DAY),
+            "held_cost": sum(l.held_cost for l in led.items.values()),
+            "sold": sum(l.sold_lots for l in led.items.values()),
+            "bought": sum(l.bought_units for l in led.items.values()),
+        })
+    out.sort(key=lambda r: -r["realized"])
+    return out
+
+
 # ============================================================== dashboard numbers
 def summary(con, realm, ledger: Ledger, model: dict) -> dict:
     now = time.time()

@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.13] - 2026-11-20 (beta)
+### Added
+- App Dashboard: **profit per character** (realized profit, last 7 days, stock at cost, sales and units bought), best first. It appears when more than one character on the realm trades.
+
 ## [2.5.0-beta.12] - 2026-11-20 (beta)
 ### Added
 - **Gear finder checks your bags too.** Gear you carry that beats what you wear is listed first in the Gear tab (marked *in bags*), with an **Equip** button. The Advisor tells you to put it on. It updates when your bags or gear change.

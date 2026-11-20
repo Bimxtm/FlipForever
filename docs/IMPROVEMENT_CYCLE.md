@@ -23,7 +23,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [x] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
 - [x] Auction duration by speed: post fast sellers for 12 h (smaller deposit) and slow ones for 24/48 h, using the learned sales per day
 - [x] Gear finder: also check your bags for items that beat what you wear ("equip this")
-- [ ] App Dashboard: profit per character (chart or table) when several characters trade
+- [x] App Dashboard: profit per character (chart or table) when several characters trade
 - [ ] Shopping list view in game: sort by status and show the expected profit per item
 - [ ] Quest locations branch: add warlock, rogue and the missing warrior/paladin quest starts (research), keep on the branch
 - [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language (last: can't be checked without a non-English client)

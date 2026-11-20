@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 12
+# FlipForever 2.5 Beta 13
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Which character earns the most?** With more than one trader, the app's Dashboard now shows profit per character.
 
 **Forgot to equip something?** The Gear tab now also shows better gear already in your bags, with an Equip button.
 
