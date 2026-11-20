@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.10] - 2026-11-20 (beta)
+### Changed
+- The Advisor's steps are translated into all 11 languages: talents, class quests, weak slots, dungeons, zones, professions, profitable crafts, farming zone, bags, gold milestones and power spikes. Item, quest and zone names stay as the guides write them.
+
 ## [2.5.0-beta.9] - 2026-11-20 (beta)
 ### Added
 - App, Advisor page: each character's top auction house gear upgrades and most profitable crafts, as found in game (shown after the next Reload or logout).

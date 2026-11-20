@@ -1379,6 +1379,24 @@ assert abs(L("ROT_N") + _m.pi / 2) < 1e-9 and abs(L("DIST") - 100) < 1e-9
 assert abs(L("ROT_E") % (2 * _m.pi)) < 1e-9 and L("OTHER") is None
 assert abs(L("MANUAL").x - 0.6) < 1e-9 and L("MANUAL").mapID == 77 and L("SHOWN") and L("CLEARED") is True
 
+# --- translations keep every placeholder (%d, %s) and colour code in the same order
+import re as _re  # noqa: E402
+from flipforever import i18n as _i18n  # noqa: E402
+_bad = []
+for _lang, _table in _i18n.TRANSLATIONS.items():
+    for _en, _tr in _table.items():
+        for _pat in (r"%[ds]", r"\|c[0-9a-f]{8}|\|r"):
+            if _re.findall(_pat, _en) != _re.findall(_pat, _tr):
+                _bad.append((_lang, _en))
+print("translations checked:", sum(len(t) for t in _i18n.TRANSLATIONS.values()), "| placeholder problems:", _bad[:5])
+assert not _bad
+lua.execute("""
+FlipForeverDB.settings.language = "deDE"
+DE_STEP = FlipForever:T("At level %d: %s"):format(20, "Mount")
+FlipForeverDB.settings.language = nil
+""")
+assert L("DE_STEP") == "Auf Stufe 20: Mount"
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

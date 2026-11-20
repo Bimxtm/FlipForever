@@ -224,6 +224,9 @@ local ICON = {
 
 local function factionOK(f, p) return f == nil or f == p.faction end
 
+-- English plural "s"; other languages use a neutral form in their translation
+local function S(n) if FF.TRANSLATIONS[FF:Language()] then return "" end return n > 1 and "s" or "" end
+
 function AD:Compute()
   local p = self:Player()
   local cd = self:ClassData(p)
@@ -258,12 +261,12 @@ function AD:Compute()
   local nextName, cur, target = self:NextTalent(build, ranks, L)
   if unspent and unspent > 0 then
     if nextName then
-      add(100, "talent", ("Spend %d talent point%s - next for %s: |cffffd200%s|r (%d/%d)"):format(unspent, unspent > 1 and "s" or "", build.name, nextName, cur, target))
+      add(100, "talent", FF:T("Spend %d talent point%s - next for %s: |cffffd200%s|r (%d/%d)"):format(unspent, S(unspent), build.name, nextName, cur, target))
     else
-      add(100, "talent", ("Spend %d talent point%s - follow %s (see Build details)"):format(unspent, unspent > 1 and "s" or "", build and build.name or "your build"))
+      add(100, "talent", FF:T("Spend %d talent point%s - follow %s (see Build details)"):format(unspent, S(unspent), build and build.name or "your build"))
     end
   elseif nextName then
-    add(20, "talent", ("Next talent for %s: %s (%d/%d)"):format(build.name, nextName, cur, target))
+    add(20, "talent", FF:T("Next talent for %s: %s (%d/%d)"):format(build.name, nextName, cur, target))
   end
 
   if cd then
@@ -273,10 +276,10 @@ function AD:Compute()
         local done = (q.done and known[q.done]) or false
         if q.items then for _, it in ipairs(q.items) do if owned[it] then done = true end end end
         if not done then
-          add(90, "quest", ("Class quest (level %d): %s%s"):format(q.level, q.text, inQuestLog(titles, q.text) and " |cff33ff99- in your quest log|r" or ""))
+          add(90, "quest", FF:T("Class quest (level %d): %s%s"):format(q.level, q.text, inQuestLog(titles, q.text) and " |cff33ff99- in your quest log|r" or ""))
         end
       elseif factionOK(q.faction, p) and q.level <= L + 2 then
-        add(30, "soon", ("At level %d: %s"):format(q.level, q.text))
+        add(30, "soon", FF:T("At level %d: %s"):format(q.level, q.text))
       end
     end
 
@@ -315,7 +318,7 @@ function AD:Compute()
       table.sort(weak, function(a, b) if a.order ~= b.order then return a.order < b.order end return a.text < b.text end)
       local parts = {}
       for i = 1, math.min(5, #weak) do parts[i] = weak[i].text end
-      add(60, "gear", "Weak slots: " .. table.concat(parts, ", ") .. (#weak > 5 and (" +" .. (#weak - 5) .. " more") or "") .. " - quest greens, or check the auction house")
+      add(60, "gear", FF:T("Weak slots: ") .. table.concat(parts, ", ") .. (#weak > 5 and (" +" .. (#weak - 5) .. " more") or "") .. " - quest greens, or check the auction house")
     end
   end
 
@@ -324,14 +327,14 @@ function AD:Compute()
   for _, d in ipairs(G.DUNGEONS) do
     if factionOK(d[4], p) and L >= d[1] and L <= d[2] then dungeons[#dungeons + 1] = d[3] end
   end
-  if #dungeons > 0 then add(50, "dungeon", "Dungeons for your level: " .. table.concat(dungeons, ", ", 1, math.min(3, #dungeons))) end
+  if #dungeons > 0 then add(50, "dungeon", FF:T("Dungeons for your level: ") .. table.concat(dungeons, ", ", 1, math.min(3, #dungeons))) end
   local zones = {}
   for _, list in ipairs({ G.ZONES[p.faction] or {}, G.ZONES.Both }) do
     for _, z in ipairs(list) do
       if L >= z[1] and L <= z[2] then zones[#zones + 1] = z[3] end
     end
   end
-  if #zones > 0 then add(45, "zone", "Level in: " .. zones[1] .. (zones[2] and (" (or " .. zones[2] .. ")") or "")) end
+  if #zones > 0 then add(45, "zone", FF:T("Level in: ") .. zones[1] .. (zones[2] and (" (or " .. zones[2] .. ")") or "")) end
 
   -- professions
   if #profs < 2 and cd then
@@ -342,7 +345,7 @@ function AD:Compute()
       if not have then missing[#missing + 1] = name end
     end
     if #missing > 0 then
-      add(55, "prof", ("Learn %s - suits your class (%s)"):format(table.concat(missing, " + "), cd.profNote))
+      add(55, "prof", FF:T("Learn %s - suits your class (%s)"):format(table.concat(missing, " + "), cd.profNote))
     end
   end
   -- the profession planner's cheapest next skill-up, for each profession it has read
@@ -362,7 +365,7 @@ function AD:Compute()
     local okP, profit = pcall(FF.Professions.ProfitList, FF.Professions)
     local best = okP and profit and profit[1]
     if best then
-      add(38, "prof", ("Craft for profit: %dx %s, about +%s each - Professions planner, profit view"):format(
+      add(38, "prof", FF:T("Craft for profit: %dx %s, about +%s each - Professions planner, profit view"):format(
         best.crafts, best.recipe.name, FF:Money(best.profit)),
         "Sells for more than its materials after the AH cut and deposit, and sells at least 3 a day.")
     end
@@ -379,10 +382,10 @@ function AD:Compute()
       end
       if bestMap then
         local zoneName = ns.MapName and ns.MapName(bestMap) or ("map " .. bestMap)
-        add(25, "gather", ("Best farming zone so far: |cffffd200%s|r, about %s/hour from your own runs - open Gathering to plan a loop"):format(
+        add(25, "gather", FF:T("Best farming zone so far: |cffffd200%s|r, about %s/hour from your own runs - open Gathering to plan a loop"):format(
           zoneName, FF:Money(math.floor(bestRate))))
       else
-        add(25, "gather", ("%s %d: open Gathering to plan a farming loop here (farm 10+ min in a zone to learn its gold/hour)"):format(pr.name, pr.rank))
+        add(25, "gather", FF:T("%s %d: open Gathering to plan a farming loop here (farm 10+ min in a zone to learn its gold/hour)"):format(pr.name, pr.rank))
       end
       break
     end
@@ -391,7 +394,7 @@ function AD:Compute()
   -- bags
   local emptyBags = self:EmptyBagSlots()
   if emptyBags > 0 then
-    add(70, "bag", ("%d empty bag slot%s - buy or craft bags (starting zones give a free 6-slot bag around level 7)"):format(emptyBags, emptyBags > 1 and "s" or ""))
+    add(70, "bag", FF:T("%d empty bag slot%s - buy or craft bags (starting zones give a free 6-slot bag around level 7)"):format(emptyBags, S(emptyBags)))
   end
 
   -- gold milestones
@@ -400,11 +403,11 @@ function AD:Compute()
     if not done and L >= m.level - 8 then
       local have = p.money / 10000
       if L >= m.level and have >= m.gold then
-        add(85, "gold", ("You can afford it now: %s - visit the trainer"):format(m.text))
+        add(85, "gold", FF:T("You can afford it now: %s - visit the trainer"):format(m.text))
       elseif L >= m.level then
-        add(65, "gold", ("Save up: %s - you have %dg of %dg"):format(m.text, math.floor(have), m.gold))
+        add(65, "gold", FF:T("Save up: %s - you have %dg of %dg"):format(m.text, math.floor(have), m.gold))
       else
-        add(35, "gold", ("Start saving for level %d: %s - you have %dg"):format(m.level, m.text, math.floor(have)))
+        add(35, "gold", FF:T("Start saving for level %d: %s - you have %dg"):format(m.level, m.text, math.floor(have)))
       end
     end
   end
@@ -413,7 +416,7 @@ function AD:Compute()
   if cd then
     for _, s in ipairs(cd.spikes) do
       if s[1] > L then
-        add(15, "soon", ("Next power spike at level %d: %s"):format(s[1], s[2]))
+        add(15, "soon", FF:T("Next power spike at level %d: %s"):format(s[1], s[2]))
         break
       end
     end

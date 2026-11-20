@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 9
+# FlipForever 2.5 Beta 10
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**The Advisor speaks your language.** Its next steps (talents, quests, gear, dungeons, gold to save and more) now appear in your chosen language.
 
 **Upgrades and crafts in the app.** The app's Advisor page now lists each character's best auction house gear upgrades and most profitable crafts. In game, new shopping lists are built faster after each scan.
 
