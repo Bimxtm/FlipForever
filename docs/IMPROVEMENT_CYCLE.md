@@ -19,12 +19,10 @@ What happens in each cycle, and the rules it follows.
 Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 14:00). Work sessions run every 10 minutes; keep going inside a session while there's work, ship each finished item as a beta.
 - [x] Performance: in-game market model parses all 60 scans on every rebuild; cache parsed points per scan so a new scan only adds its own rows
 - [x] App: show the addon's gear upgrades and profitable crafts in the desktop app (addon saves them; new app page or Advisor section)
-- [ ] Translate the remaining in-game texts: Advisor steps, common chat messages, auction panel status lines
-- [ ] Translate the app's pages (Dashboard cards, Deals/Inventory/History column headers, Settings labels, How to use)
 - [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language
 - [ ] Test harness: make mock timers keep delayed callbacks (board issue P9)
 - [ ] Quest locations (major, unapproved): research quest giver positions for class quests, build on branch feature/quest-locations, list as ready for approval
-- [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas)
+- [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
 
 ## Usage budget (internal)
 - Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.
@@ -38,6 +36,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
    - the app opens (GUI smoke test) and the engine runs on demo data
 4. Version (owner's rule, 20 Nov): the **last number** (x.y.Z) for every normal update: fixes, polish, small features (2.4.1, 2.4.2, ...). The **middle number** (x.Y.0) only for a **big update**: an approved major feature or overhaul (2.4.0 Better GUI, 2.5.0 crafting profit finder). Betas preview the version they lead to (`2.4.0-beta.N`, `2.4.1-beta.N`). Bump `app/flipforever/version.py` and `## Version` in `addon/FlipForever/FlipForever.toc`.
 5. Add a CHANGELOG.md section, and rewrite NEWS.md for the player.
+   Translations (owner's rule, 20 Nov): only right before a **stable** release, never in betas. At the stable cycle, translate the texts added since the last stable into all 11 languages (app/flipforever/i18n.py, then tools/gen_locale.py).
 6. `python tools/build_release.py`.
 7. Commit, push, and `gh release create vX.Y.Z dist/FlipForever-vX.Y.Z.zip dist/SHA256SUMS.txt --notes-file dist/release-notes.md`.
 8. Update WEEKLY_BOARD.md (done items, new issues found) and ROADMAP.md (move done items, add new small ideas, and add major ideas under "Waiting for your OK"). On Thursdays, write a short weekly review and a new board for the next week.
