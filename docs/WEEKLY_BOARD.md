@@ -41,6 +41,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P7 | Planner skill-up chances are colour averages | 🟡 low | Exact chances in Beta 2 |
 | P8 | Gathering stats show "map 1411" until the addon has run once | 🟡 low | Names saved at login (done); verify Fri |
 | P10 | **New shopping lists need /reload, and scans only reach the app after /reload or logout** (WoW only reads and writes addon data at load and logout) | 🟠 med | In-game planning after each scan + one-click sync (Beta 2) |
+| P11 | **After a scan you don't know when to reload, and autopilot keeps buying from the old list** | 🟠 med | Beta 3: scan-done alert (sound, raid warning, flashing Reload), autopilot pauses until the reload, app auto-builds the list and notifies |
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
