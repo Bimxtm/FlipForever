@@ -1334,6 +1334,34 @@ assert all(7 <= n <= 10 for n in counts.values()) and len(counts) == 9 and not l
 assert "Conflagrate" in L("DESTRO") and "Incinerate" in L("DESTRO") and L("FURY").startswith("Battle Shout,Bloodthirst")
 assert L("BEAR_TANK") is True
 
+# --- waypoint arrow (feature branch): direction, distance, targets
+lua.execute("""
+local A = FlipForever.Arrow
+local oldMap = C_Map
+C_Map = { GetBestMapForUnit = function() return 77 end,
+  GetPlayerMapPosition = function() return { GetXY = function() return 0.5, 0.5 end } end,
+  GetMapWorldSize = function() return 1000, 1000 end }
+local ns = FlipForever.gatherNS
+local oldPP, oldMS = ns and ns.PlayerPos, ns and ns.MapSize
+if ns then ns.PlayerPos, ns.MapSize = nil, nil end
+local t = { mapID = 77, x = 0.6, y = 0.5 }                 -- 100 yards east
+ROT_N, DIST = A:Compute(t, 77, 0.5, 0.5, 0)               -- facing north: point right (-90 degrees)
+ROT_E = A:Compute(t, 77, 0.5, 0.5, 3 * math.pi / 2)       -- facing east: straight ahead
+OTHER = A:Compute(t, 78, 0.5, 0.5, 0)                     -- target on another map: nothing
+SlashCmdList.FLIPFOREVERWAY("60 50")
+MANUAL = A:Target()
+SHOWN = FlipForeverArrow and FlipForeverArrow:IsShown()
+SlashCmdList.FLIPFOREVERWAY("")
+CLEARED = A.manual == nil
+if ns then ns.PlayerPos, ns.MapSize = oldPP, oldMS end
+C_Map = oldMap
+""")
+import math as _m
+print("arrow: rot north", round(L("ROT_N"), 3), "dist", L("DIST"), "| rot east", round(L("ROT_E") % (2 * _m.pi), 3), "| manual", dict(L("MANUAL")), "| shown", L("SHOWN"))
+assert abs(L("ROT_N") + _m.pi / 2) < 1e-9 and abs(L("DIST") - 100) < 1e-9
+assert abs(L("ROT_E") % (2 * _m.pi)) < 1e-9 and L("OTHER") is None
+assert abs(L("MANUAL").x - 0.6) < 1e-9 and L("MANUAL").mapID == 77 and L("SHOWN") and L("CLEARED") is True
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil
