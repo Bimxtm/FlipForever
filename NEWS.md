@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 7
+# FlipForever 2.5 Beta 8
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Waypoint arrow.** An arrow on screen shows the way and the distance: to the pin you place on your map, to a point you type with `/ffway 45 60`, or to the next stop on your gathering loop. It turns green when you're heading the right way. Drag it wherever you like, or switch it off in the FlipForever window.
 
 **More translated.** The FlipForever window's settings, the Advisor window and the profession planner now appear in your language too.
 

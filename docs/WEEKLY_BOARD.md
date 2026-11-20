@@ -16,7 +16,6 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- Waypoint arrow: built on branch feature/waypoint-arrow, ready to merge when approved
 - Quest locations for advisor steps (where class quests start, with map pins)
 
 ## Open issues
@@ -32,6 +31,7 @@
 | P9 | Test harness: mock timers can drop delayed callbacks | Dev | Improve when it gets in the way |
 
 ## Done this week
+- 2.5.0 beta 8: waypoint arrow (approved 20 Nov): map pin, /ffway, next gathering stop.
 - 2.5.0 beta 7: settings, Advisor window and profession planner translated into all 11 languages.
 - 2.5.0 beta 6: 9 builds per class from Method, Warcraft Tavern and RankedBoost, with roles, points, rotations, and combat rotations for every new build style.
 - 2.5.0 beta 5: combat helper level bands 1-10 / 11-39 / 40-60 for all classes and builds; exact skill-up chances learned from colour changes (P7).

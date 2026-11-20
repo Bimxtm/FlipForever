@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.8] - 2026-11-20 (beta)
+### Added
+- **Waypoint arrow.** A movable on-screen arrow with the distance in yards; it turns green when you face the right way. It points to, in this order:
+  - a point you set with `/ffway 45.2 60.8` (clear it with `/ffway`)
+  - the pin you place on the world map, if the client has map pins
+  - the next stop on your Gathering loop
+  - It hides when there's nothing to point at and fades when the target is on another map. Switch: FlipForever window, Settings tab.
+
 ## [2.5.0-beta.7] - 2026-11-20 (beta)
 ### Changed
 - More of the addon is translated into all 11 languages: every checkbox in the FlipForever window's Settings tab, the Advisor window (Do this next, Build details, Re-check, pop-up option) and the profession planner (headings, view switch and buy buttons).
