@@ -1420,6 +1420,49 @@ LATE = FIRED
 assert L("EARLY") == 0 and L("LATE") == 1, (L("EARLY"), L("LATE"))
 print("mock timers: a 10 s timer waits through a 5 s run and fires in the next one")
 
+# --- quest locations (feature branch): start NPCs, learned positions, arrow target
+lua.execute("""
+local QS, AD = FlipForever.QuestStarts, FlipForever.Advisor
+HUNTER_NE = QS:Find("HUNTER", "Taming the Beast - get your first pet", "Alliance", "Night Elf")
+DRUID_H = QS:Find("DRUID", "Cure Poison quest (Lessons Anew)", "Horde", "Tauren")
+NONE = QS:Find("MAGE", "anything", "Horde", "Orc")
+VW_UD = QS:Find("WARLOCK", "Voidwalker class quest", "Horde", "Undead").npc
+DS_TAUREN = QS:Find("WARRIOR", "Defensive Stance class quest", "Horde", "Tauren").npc
+SORAN = QS:Find("WARLOCK", "Staff or Orb of Soran'ruk quest", "Alliance", "Human").npc
+local m, x, y = QS:Locate(HUNTER_NE)
+SEED = m and (m .. ":" .. x .. ":" .. y)
+-- talk to Turak Runetotem: his position is remembered
+local oldMap, oldUN = C_Map, UnitName
+C_Map = { GetBestMapForUnit = function() return 1456 end,
+  GetPlayerMapPosition = function() return { GetXY = function() return 0.7, 0.3 end } end, GetMapWorldSize = function() return 1000, 1000 end }
+local ns = FlipForever.gatherNS
+local oldPP = ns and ns.PlayerPos
+if ns then ns.PlayerPos = nil end
+UnitName = function(u) if u == "npc" then return "Turak Runetotem" end return "Tester" end
+Fire("QUEST_DETAIL")
+local lm, lx, ly = QS:Locate(DRUID_H)
+LEARNED = lm and (lm .. ":" .. lx .. ":" .. ly)
+-- the Advisor step for a tauren druid at 14 gets the start NPC and an arrow target
+UnitName = oldUN
+UnitClass = function() return "Druid", "DRUID" end
+UnitRace = function() return "Tauren" end
+UnitFactionGroup = function() return "Horde" end
+UnitLevel = function() return 14 end
+KNOWN = { "Bear Form" }
+STEP, TARGET = nil, nil
+for _, r in ipairs(AD:Compute()) do
+  if r.text:find("Lessons Anew") then STEP = r.text TARGET = r.target and r.target.label WHY = r.why end
+end
+if ns then ns.PlayerPos = oldPP end
+C_Map = oldMap
+""")
+print("quest starts:", dict(L("HUNTER_NE")), "| seed", L("SEED"), "| learned", L("LEARNED"))
+print("advisor step:", L("STEP"), "| arrow target:", L("TARGET"))
+assert L("HUNTER_NE").npc == "Dazalar" and L("DRUID_H").npc == "Turak Runetotem" and L("NONE") is None
+assert L("VW_UD") == "Ageron Kargal" and L("DS_TAUREN").startswith("Sorek") and L("SORAN") == "Doan Karhan"
+_s = [float(v) for v in L("SEED").split(":")]
+assert _s[0] == 1438 and abs(_s[1] - 0.567) < 1e-9 and abs(_s[2] - 0.595) < 1e-9 and L("LEARNED") == "1456:0.7:0.3"
+assert "Turak Runetotem" in L("STEP") and L("TARGET") == "Turak Runetotem" and "Click to point" in L("WHY")
 # --- gear finder: upgrades already in your bags come first, with an Equip button
 lua.execute("""
 local FF = FlipForever

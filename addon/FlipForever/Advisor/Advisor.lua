@@ -246,8 +246,8 @@ function AD:Compute()
     bag = "Counted from your bags right now.",
     gather = "Measured from your own gathering, valued at FlipForever's auction prices.",
   }
-  local function add(prio, kind, text, why)
-    recs[#recs + 1] = { prio = prio, kind = kind, text = ICON[kind] .. " " .. text, why = why or WHY[kind] }
+  local function add(prio, kind, text, why, target)
+    recs[#recs + 1] = { prio = prio, kind = kind, text = ICON[kind] .. " " .. text, why = why or WHY[kind], target = target }
   end
   local L = p.level
 
@@ -276,7 +276,19 @@ function AD:Compute()
         local done = (q.done and known[q.done]) or false
         if q.items then for _, it in ipairs(q.items) do if owned[it] then done = true end end end
         if not done then
-          add(90, "quest", FF:T("Class quest (level %d): %s%s"):format(q.level, q.text, inQuestLog(titles, q.text) and " |cff33ff99- in your quest log|r" or ""))
+          -- where it starts, and the arrow if we know where that NPC stands
+          local start = FF.QuestStarts and FF.QuestStarts:Find(p.class, q.text, p.faction, p.race)
+          local why, target
+          if start then
+            why = ("Starts with %s (%s)%s."):format(start.npc, start.zone, start.after and (", " .. start.after) or "")
+            local m, x, y = FF.QuestStarts:Locate(start)
+            if m then
+              target = { mapID = m, x = x, y = y, label = start.npc }
+              why = why .. " Click to point the waypoint arrow there."
+            end
+          end
+          add(90, "quest", FF:T("Class quest (level %d): %s%s"):format(q.level, q.text, inQuestLog(titles, q.text) and " |cff33ff99- in your quest log|r" or "")
+            .. (start and (" |cff888888- " .. start.npc:match("^[^/]+"):gsub("%s+$", "") .. "|r") or ""), why, target)
         end
       elseif factionOK(q.faction, p) and q.level <= L + 2 then
         add(30, "soon", FF:T("At level %d: %s"):format(q.level, q.text))
@@ -531,6 +543,11 @@ local function makeFrame()
       GameTooltip:Show()
     end)
     hit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- click a step that has a place (a quest giver you've met): the waypoint arrow points there
+    hit:SetScript("OnMouseUp", function()
+      local r = f.recs and f.recs[i]
+      if r and r.target and FF.Arrow then FF.Arrow:SetTarget(r.target.mapID, r.target.x, r.target.y, r.target.label) end
+    end)
     fs.hit = hit
   end
 

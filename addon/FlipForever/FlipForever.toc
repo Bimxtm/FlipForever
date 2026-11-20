@@ -29,6 +29,7 @@ Gather\UI.lua
 
 Advisor\GuideData.lua
 Advisor\GuideBuilds.lua
+Advisor\QuestStarts.lua
 Advisor\Advisor.lua
 Advisor\Combat.lua
 Professions.lua
