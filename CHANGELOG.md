@@ -2,6 +2,15 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-11-20
+### Added
+- **Profession planner,** built in with no other addon needed. Open any profession window and FlipForever reads its recipes (difficulty colour, materials, result) and remembers them per character. It ranks crafts by cost per skill-up, (materials - what the result sells for) / chance, with orange 100%, yellow ~75% and green ~25%, using FlipForever's own auction prices (vendor goods ~4x sell price; things you craft yourself are priced by their own materials). It suggests how many to craft, flags an unlearned recipe when the trainer visit is worth it, and lists missing materials against your bags and bank.
+- **Buy missing mats:** one click queues the top craft's materials. At the auction house, **Buy profession mats** works through them, one key press per purchase and never above the price limit (+25% over the typical price).
+- The planner opens next to the profession window (can be switched off), from **Professions** in the FlipForever window, and its cheapest next skill-up appears in the Advisor.
+
+### Fixed
+- Money display no longer breaks on "no limit" values (it shows "-").
+
 ## [2.1.0] - 2026-11-20
 ### Added
 - **Prices in item tooltips:** FlipForever's typical price on every item it has scanned, plus "on your shopping list (max ...)" and "you post at ... (never below ...)" for items on your lists. It can be switched off in the FlipForever window.

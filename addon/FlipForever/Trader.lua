@@ -24,6 +24,7 @@ end
 function T:Stop(msg)
   if self.state == "quoting" or self.state == "confirm_commodity" then pcall(AH.CancelCommoditiesPurchase) end
   self.mode, self.state, self.target, self.pending = nil, "idle", nil, nil
+  self.custom = false
   FF:SetStatus(msg or "Stopped.")
   self:Refresh()
 end
@@ -120,21 +121,33 @@ end
 
 -- BUYING ------------------------------------------------------------------------------------
 function T:Remaining(entry)
+  if self.custom then return (entry.qty or 0) - (entry.got or 0) end
   return (entry.qty or 0) - (FF:Progress().bought[entry.id] or 0)
 end
 
-function T:StartBuying()
-  local ok, err = self:PlanOK()
-  if not ok then FF:Print(err) FF:SetStatus(err) return end
+-- list (optional): buy from this list instead of the shopping list, e.g. profession mats
+-- { {id=, qty=, max=}, ... }. Same rules: one key press per purchase, never above max.
+function T:StartBuying(list, label)
+  if list then
+    self.custom, self.list, self.customLabel = true, list, label or "list"
+  else
+    self.custom, self.list = false, nil
+    local ok, err = self:PlanOK()
+    if not ok then FF:Print(err) FF:SetStatus(err) return end
+  end
   self.mode, self.idx = "buy", 0
   self:NextBuyTarget()
 end
 
 function T:NextBuyTarget()
-  local list = plan().buy
+  local list = self.custom and self.list or plan().buy
   repeat self.idx = self.idx + 1 until self.idx > #list or self:Remaining(list[self.idx]) > 0
   if self.idx > #list then
-    self:Stop("Shopping list done. Switch to Sell, or rescan later for new deals.")
+    if self.custom then
+      self:Stop(("Done with the %s - everything affordable under the price limits is bought."):format(self.customLabel))
+    else
+      self:Stop("Shopping list done. Switch to Sell, or rescan later for new deals.")
+    end
     return
   end
   self.target = list[self.idx]
@@ -145,7 +158,8 @@ function T:NextBuyTarget()
 end
 
 function T:BudgetLeft()
-  local b = plan().budget
+  if self.custom then return math.huge end -- mats lists: limited by your gold and each item's max price
+  local b = plan() and plan().budget
   if not b then return math.huge end
   return math.max(0, b - (FF:Progress().spent or 0))
 end
@@ -231,6 +245,12 @@ end
 
 function T:RecordBuy(qty, unit)
   local t = self.target
+  if self.custom then
+    t.got = (t.got or 0) + qty
+    FF:Log({ e = "buy", id = t.id, name = FF:ItemName(t.id), q = qty, p = math.floor(unit), kind = "mats" })
+    FF:Print(("Bought %d x %s at %s each."):format(qty, FF:ItemName(t.id), FF:Money(unit)))
+    return
+  end
   local prog = FF:Progress()
   prog.bought[t.id] = (prog.bought[t.id] or 0) + qty
   prog.spent = (prog.spent or 0) + math.floor(qty * unit)

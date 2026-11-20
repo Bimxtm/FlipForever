@@ -18,7 +18,7 @@ end
 function UI:Build()
   if self.frame then return end
   local f = CreateFrame("Frame", "FlipForeverPanel", UIParent, "BackdropTemplate")
-  f:SetSize(WIDTH, 400)
+  f:SetSize(WIDTH, 430)
   f:SetFrameStrata("HIGH")
   f:SetClampedToScreen(true)
   f:SetBackdrop({
@@ -113,6 +113,12 @@ function UI:Build()
   autoText:SetJustifyH("LEFT")
   self.autoText = autoText
 
+  local mats = button(f, "Buy profession mats", WIDTH - 28, 24)
+  mats:SetPoint("TOP", 0, -352)
+  mats:SetScript("OnClick", function() FF.Professions:BuyPending() end)
+  mats:Hide()
+  self.matsButton = mats
+
   local settings = button(f, "Settings", 70, 20)
   settings:SetPoint("TOPRIGHT", -10, -10)
   settings:SetScript("OnClick", function() FF.Hub:Show() end)
@@ -133,7 +139,8 @@ function UI:Refresh()
   if p and p.buy then
     local age = math.floor((time() - (p.generated or time())) / 60)
     local ageText = age < 90 and (age .. " min") or (math.floor(age / 60) .. " h")
-    local budget = p.budget and ("  ·  budget left " .. FF:Money(T:BudgetLeft())) or ""
+    local budget = (T.custom and "  ·  |cffffd200buying profession mats|r")
+      or (p.budget and ("  ·  budget left " .. FF:Money(T:BudgetLeft()))) or ""
     self.planText:SetText(("%s: |cffffff00%d|r buys, |cffffff00%d|r sells%s\nmade %s ago%s\n|cffaaaaaa%s|r"):format(
       UnitName("player") or "?", #p.buy, #(p.sell or {}), budget, ageText, age > 360 and " |cffff8800(old - rebuild it)|r" or "",
       FF:TodayLine()))
@@ -143,6 +150,10 @@ function UI:Refresh()
   self.action:SetText(T:ButtonText())
   self.action:SetEnabled(T:ButtonEnabled())
   self.statusText:SetText(FF.status or "")
+
+  local pendingMats = FF.Professions and FF.Professions.pendingMats
+  self.matsButton:SetShown(pendingMats ~= nil)
+  if pendingMats then self.matsButton:SetText(("Buy profession mats (%d)"):format(#pendingMats)) end
 
   local auto = FF.Auto
   self.autoButton:SetText(auto:Enabled() and "|cff33ff99Autopilot: ON|r" or "Autopilot: OFF")

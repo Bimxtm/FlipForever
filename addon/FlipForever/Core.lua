@@ -33,7 +33,9 @@ end
 
 -- Gold formatting -----------------------------------------------------------
 function FF:Money(copper)
-  copper = math.floor(tonumber(copper) or 0)
+  copper = tonumber(copper) or 0
+  if copper ~= copper or copper == math.huge or copper == -math.huge then return "-" end -- no limit / not a number
+  copper = math.floor(copper)
   if GetCoinTextureString then return GetCoinTextureString(copper) end
   local g, s, c = math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100
   if g > 0 then return ("%dg %ds %dc"):format(g, s, c) end

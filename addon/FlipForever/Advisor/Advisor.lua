@@ -329,6 +329,13 @@ function AD:Compute()
       add(55, "prof", ("Learn %s - suits your class (%s)"):format(table.concat(missing, " + "), cd.profNote))
     end
   end
+  -- the profession planner's cheapest next skill-up, for each profession it has read
+  if FF.Professions then
+    for name in pairs(FF.Professions:Store()) do
+      local ok, step = pcall(FF.Professions.TopStep, FF.Professions, name)
+      if ok and step then add(40, "prof", step .. " - Professions planner") end
+    end
+  end
   for _, pr in ipairs(profs) do
     if (pr.name == "Mining" or pr.name == "Herbalism") and ns and ns.db and not ns.skipGather then
       add(25, "gather", ("%s %d: open /ore to plan a farming loop here (profit uses FlipForever prices)"):format(pr.name, pr.rank))

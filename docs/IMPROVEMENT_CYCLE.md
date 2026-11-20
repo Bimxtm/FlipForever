@@ -6,6 +6,7 @@ What happens in each cycle, and the rules it follows.
 - **Small improvements ship on their own:** fixes, polish, better defaults, more guide data, UI conveniences, and small features that fit an existing module.
 - **Major ideas wait for the owner's OK.** That covers new modules, anything that changes how the app or addon behaves by default, new dependencies, anything that touches other addons' files or the game folder beyond `Interface\AddOns\FlipForever`, and anything that makes the repository public. They go into [ROADMAP.md](ROADMAP.md) under "Waiting for your OK", and the cycle asks.
 - **Inspiration comes from the installed addons, lightly:** look at what they do and where their features live in the UI. Never copy their code.
+- **Self-contained:** every feature is built fully into FlipForever and works without any other addon, even when an installed addon already offers something similar. Other addons are inspiration only, never dependencies, and FlipForever's versions use their own frames and names so nothing conflicts.
 - **Blizzard's rules stay intact:** every buy, post and cast needs a key press or click. No automation from game state in combat.
 - **Hands off while WoW is running:** never edit SavedVariables or AddOns.txt then.
 - **Nothing ships without passing tests.**

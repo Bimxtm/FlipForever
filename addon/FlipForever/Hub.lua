@@ -80,7 +80,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 560)
+  f:SetSize(400, 580)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -110,13 +110,15 @@ local function build()
 
   -- Open --------------------------------------------------------------
   heading(f, "Open", -60)
-  button(f, "Advisor - what to do next", 178, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -82)
-  f.gather = button(f, "Gathering - farming loops", 178, function()
+  button(f, "Advisor", 118, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -82)
+  f.gather = button(f, "Gathering", 118, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
     else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
   end)
-  f.gather:SetPoint("TOPLEFT", 206, -82)
+  f.gather:SetPoint("TOPLEFT", 140, -82)
+  f.profs = button(f, "Professions", 118, function() FF.Professions:Toggle() end)
+  f.profs:SetPoint("TOPLEFT", 264, -82)
 
   -- Combat helper -------------------------------------------------------
   heading(f, "Combat helper", -116)
@@ -182,6 +184,10 @@ local function build()
     if ns and ns.SetTrackerShown and ns.db then ns.SetTrackerShown(self:GetChecked()) end
   end)
   f.tracker:SetPoint("TOPLEFT", 14, -492)
+  f.profPanel = check(f, "Planner next to profession windows", function(self)
+    FlipForeverDB.settings.profPanel = self:GetChecked() and true or false
+  end)
+  f.profPanel:SetPoint("TOPLEFT", 14, -516)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)
@@ -208,6 +214,7 @@ function H:Refresh()
     or "No shopping list for this character yet - build one in the FlipForever app.")
   frame.popup:SetChecked(s.advisorPopup ~= false)
   frame.tips:SetChecked(s.tooltips ~= false)
+  frame.profPanel:SetChecked(s.profPanel ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

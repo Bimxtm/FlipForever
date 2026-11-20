@@ -747,6 +747,83 @@ summary = list(L("SUMMARY").values())
 print("minimap summary:", summary)
 assert summary[0].startswith("Shopping list: 1 to check") and summary[1].startswith("Today: sold")
 
+# --- 2.2: profession planner (self-contained: reads the game's recipe data)
+lua.execute("""
+C_TradeSkillUI = {
+  IsTradeSkillLinked = function() return false end,
+  IsTradeSkillGuild = function() return false end,
+  GetBaseProfessionInfo = function() return { professionName = "Tailoring", skillLevel = 50, maxSkillLevel = 75 } end,
+  GetAllRecipeIDs = function() return { 1, 2, 3, 4 } end,
+  GetRecipeInfo = function(id)
+    return ({
+      { name = "Bolt of Linen Cloth", learned = true, relativeDifficulty = 1 },
+      { name = "Linen Cloak", learned = true, relativeDifficulty = 0 },
+      { name = "Heavy Linen Gloves", learned = false, relativeDifficulty = 0 },
+      { name = "Brown Linen Shirt", learned = true, relativeDifficulty = 3 },
+    })[id]
+  end,
+  GetRecipeSchematic = function(id)
+    return ({
+      { outputItemID = 2996, quantityMin = 1, reagentSlotSchematics = { { quantityRequired = 2, reagents = { { itemID = 2589 } } } } },
+      { outputItemID = 2570, quantityMin = 1, reagentSlotSchematics = { { quantityRequired = 1, reagents = { { itemID = 2996 } } }, { quantityRequired = 1, reagents = { { itemID = 2320 } } } } },
+      { outputItemID = 4307, quantityMin = 1, reagentSlotSchematics = { { quantityRequired = 2, reagents = { { itemID = 2996 } } }, { quantityRequired = 1, reagents = { { itemID = 2320 } } } } },
+      { outputItemID = 2576, quantityMin = 1, reagentSlotSchematics = { { quantityRequired = 1, reagents = { { itemID = 2996 } } } } },
+    })[id]
+  end,
+}
+C_Item.GetItemInfo = function(id) if id == 2320 then return "Coarse Thread", nil, 1, 1, 1, "", "", 20, "", "", 10 end end
+C_Item.GetItemCount = function(id) return BAGCOUNT[id] or 0 end
+BAGCOUNT[2589] = 4
+UnitClass = function() return "Mage", "MAGE" end
+Fire("TRADE_SKILL_SHOW")
+RunTimers(1)
+PLAN = FlipForever.Professions:Plan("Tailoring")
+TOP = PLAN[1]
+TOPSTEP = FlipForever.Professions:TopStep("Tailoring")
+SHOWN = FlipForeverProfPlanner and FlipForeverProfPlanner:IsShown()
+FlipForever.Professions.current = "Tailoring"
+BUYLIST = FlipForever.Professions:BuyList("Tailoring", 1)
+FlipForever.Advisor:Refresh()
+ADVPROF = nil
+for _, r in ipairs(FlipForever.Advisor.last) do if r.text:find("Tailoring") then ADVPROF = r.text end end
+""")
+top = L("TOP")
+print("planner top:", top.recipe.name, "| chance", top.chance, "| per point", top.perPoint, "| crafts", top.crafts, "| panel shown:", L("SHOWN"))
+print("top step:", L("TOPSTEP"))
+assert top.recipe.name == "Bolt of Linen Cloth" and top.chance == 0.75 and top.crafts == 7
+assert L("SHOWN")
+names = [r.recipe.name for r in L("PLAN").values()]
+print("ranked:", names)
+assert "Brown Linen Shirt" not in names  # grey: no skill-ups
+cloak = [r for r in L("PLAN").values() if r.recipe.name == "Linen Cloak"][0]
+print("Linen Cloak priced through its crafted Bolt:", not cloak.unknown, "| per point", cloak.perPoint)
+assert not cloak.unknown and cloak.perPoint == 100 + 40   # bolt = 2 linen (100c) + thread (4 x 10c)
+bl = list(L("BUYLIST").values())
+print("buy list:", [(b.id, b.qty, b.max) for b in bl])
+assert len(bl) == 1 and bl[0].id == 2589 and bl[0].qty == 10 and bl[0].max == 62
+print("advisor:", L("ADVPROF"))
+assert L("ADVPROF") and "craft 7x Bolt of Linen Cloth" in L("ADVPROF")
+
+# buy the mats at the AH: same one-key buyer, custom list, never above max
+lua.execute("""
+COMMODITY[2589] = { {unitPrice = 55, quantity = 6}, {unitPrice = 60, quantity = 10}, {unitPrice = 90, quantity = 50} }
+FlipForever.Professions.pendingMats = BUYLIST
+FlipForever.Professions:BuyPending()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+MATSTATE = FlipForever.Trader.state
+MATQTY = FlipForever.Trader.pending and FlipForever.Trader.pending.qty
+FlipForever.Trader:Primary()
+Fire("COMMODITY_PRICE_UPDATED", 58, 580)
+FlipForever.Trader:Primary()
+Fire("COMMODITY_PURCHASE_SUCCEEDED")
+RunTimers(1)
+MATDONE = FlipForever.Trader.state
+MATSTATUS = FlipForever.status
+""")
+print("mats buy:", L("MATSTATE"), L("MATQTY"), "->", L("MATDONE"), "|", L("MATSTATUS"))
+assert L("MATSTATE") == "ready_commodity" and L("MATQTY") == 10 and L("MATDONE") == "idle" and "profession mats" in L("MATSTATUS")
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil
