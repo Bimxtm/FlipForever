@@ -913,8 +913,8 @@ class App(tk.Tk):
                             f"{len(plan['buy'])} items to check "
                             f"({deals} known deals right now, about {money(spent, True)}).\n"
                             f"{len(plan['sell'])} items have sell prices (for posting your loot)."
-                            f"{why}\n\nIn game: type /reload, open the auction house, "
-                            "and press the big button (or your /ff key) to work through it.")
+                            f"{why}\n\nIn game: click 'Reload' on the FlipForever auction house panel (or in the "
+                            "FlipForever window), then press the big button to work through the list.")
 
     def _readiness(self) -> str:
         """Plain-language reason the buy list is empty."""

@@ -859,6 +859,18 @@ assert (2589, 10) in buy or any(b[0] == 2589 for b in buy)
 print("mail:", L("MAILMSG"))
 assert "2 auctions sold" in L("MAILMSG")
 
+# --- reload button: reloads only when it's safe
+lua.execute("""
+RELOADS = 0
+ReloadUI = function() RELOADS = RELOADS + 1 end
+FlipForever.Trader:Stop()
+COMBAT = true;  FlipForever:ReloadForSync()   -- in combat: refused
+COMBAT = false; FlipForever.Scan.busy = "replicate"; FlipForever:ReloadForSync()  -- scan running: refused
+FlipForever.Scan.busy = nil; FlipForever:ReloadForSync()    -- safe: reloads
+""")
+print("reload button: reloads only when safe ->", L("RELOADS"))
+assert L("RELOADS") == 1
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

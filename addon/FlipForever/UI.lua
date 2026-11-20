@@ -123,6 +123,19 @@ function UI:Build()
   settings:SetPoint("TOPRIGHT", -10, -10)
   settings:SetScript("OnClick", function() FF.Hub:Show() end)
 
+  -- one click instead of typing /reload: loads a new shopping list from the app and saves
+  -- your scans so the app can import them
+  local reload = button(f, "Reload", 60, 20)
+  reload:SetPoint("TOPLEFT", 10, -10)
+  reload:SetScript("OnClick", function() FF:ReloadForSync() end)
+  reload:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:AddLine("Reload: load new list")
+    GameTooltip:AddLine("Loads the shopping list the app just built, and saves your scans so the app can import them.", 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  reload:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
   local hint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   hint:SetPoint("BOTTOMLEFT", 14, 12)
   hint:SetPoint("BOTTOMRIGHT", -14, 12)

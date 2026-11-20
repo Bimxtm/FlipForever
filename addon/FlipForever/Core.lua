@@ -324,6 +324,15 @@ function FF:TodayLine()
   return ("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
 end
 
+-- Reload the UI from a button: the game saves FlipForever's data (scans, trades) for the app
+-- and loads the newest shopping list. Not during combat or while a purchase is waiting.
+function FF:ReloadForSync()
+  if InCombatLockdown() then FF:Print("Can't reload during a fight - try again after.") return end
+  if FF.Trader and FF.Trader.state ~= "idle" then FF:Print("Finish or stop the current buy/post first.") return end
+  if FF.Scan and FF.Scan.busy then FF:Print("A scan is still running - reload when it's done, or the scan is lost.") return end
+  ReloadUI()
+end
+
 function FF:ResetProgress()
   FF:DB().charProgress[UnitName("player") or "?"] = nil
   FF:Print("Shopping list progress reset - every item on the list will be checked again.")
