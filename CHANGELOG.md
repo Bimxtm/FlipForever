@@ -2,6 +2,16 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.3.0-beta.1] - 2026-11-20 (beta)
+### Added
+- **Beta channel:** a "Get beta versions (for testing)" checkbox in About & updates. Betas are GitHub pre-releases; without the box ticked you only get stable versions.
+- **Profession planner:** materials you craft yourself (like Bolt of Linen Cloth) now also list *their* materials, which are added to "Buy missing mats".
+- **Profession planner:** "you can gather this" next to ores and herbs you can collect yourself.
+- **Mailbox summary:** opening the mail prints one line: how many auctions sold since your last visit and what they made after the AH cut.
+
+### Changed
+- Releases: stable versions only at the 12-hour cycle; betas in between.
+
 ## [2.2.0] - 2026-11-20
 ### Added
 - **Profession planner,** built in with no other addon needed. Open any profession window and FlipForever reads its recipes (difficulty colour, materials, result) and remembers them per character. It ranks crafts by cost per skill-up, (materials - what the result sells for) / chance, with orange 100%, yellow ~75% and green ~25%, using FlipForever's own auction prices (vendor goods ~4x sell price; things you craft yourself are priced by their own materials). It suggests how many to craft, flags an unlearned recipe when the trainer visit is worth it, and lists missing materials against your bags and bank.

@@ -182,6 +182,9 @@ local function scanInvoices()
       local base = itemName .. "|" .. bid .. "|" .. (count or 1) .. "|"
       if not (seen[base .. hour] or seen[base .. (hour - 1)] or seen[base .. (hour + 1)]) then
         seen[base .. hour] = now
+        FF.mailNew = FF.mailNew or { n = 0, gold = 0 }
+        FF.mailNew.n = FF.mailNew.n + 1
+        FF.mailNew.gold = FF.mailNew.gold + bid - (consignment or 0)
         FF:Log({
           e = "invoice", name = itemName, id = FF:IdFromName(itemName), q = count or 1,
           gross = bid, cut = consignment or 0, dep = deposit or 0, t = received,
@@ -195,7 +198,26 @@ local function scanInvoices()
   end
 end
 
-FF:On("MAIL_INBOX_UPDATE", scanInvoices)
+-- one summary line per mailbox visit: what sold since you last looked
+local summaryQueued = false
+local function mailSummary()
+  summaryQueued = false
+  local m = FF.mailNew
+  if m and m.n > 0 then
+    FF:Print(("|cffffd200Mail:|r %d auction%s sold since your last visit, |cff33ff99+%s|r after the AH cut."):format(
+      m.n, m.n > 1 and "s" or "", FF:Money(m.gold)))
+  end
+  FF.mailNew = nil
+end
+
+FF:On("MAIL_INBOX_UPDATE", function()
+  scanInvoices()
+  if FF.mailNew and not summaryQueued then
+    summaryQueued = true
+    C_Timer.After(1.5, mailSummary) -- the inbox fills in a few updates; summarise once
+  end
+end)
+FF:On("MAIL_SHOW", function() FF.mailNew, summaryQueued = nil, false end)
 
 -- Startup ------------------------------------------------------------------------
 FF:On("ADDON_LOADED", function(name)

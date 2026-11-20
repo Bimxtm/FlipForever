@@ -1,10 +1,10 @@
-# FlipForever 2.2 - level your professions for less
+# FlipForever 2.3 Beta 1 - for testing
 
-- 🧵 **Profession planner:** open any profession window, and FlipForever shows the cheapest crafts to skill up next, how many to make, and the cost per skill point, priced from your own auction scans.
-- 🛒 **Buy missing mats:** one click queues the materials. At the auction house, press **Buy profession mats** and it buys them one key press at a time, never above the price limit.
-- 🎓 **Trainer tips:** if a recipe you haven't learned yet is much cheaper, it tells you to visit the trainer.
-- 🧭 Your next profession step also shows up in the Advisor.
+**This is a beta.** Only apps with *Get beta versions* ticked (About & updates) see it.
 
-Built right into FlipForever, so no other addon is needed. Find it under **Professions** in the FlipForever window (gold coin on the minimap).
+- 🧪 **Beta channel:** try new features early. Leave the box unticked to stay on stable versions.
+- 🧵 **Planner knows your crafted materials:** if the cheapest skill-up needs bolts, the bolts' linen is on the mats list too, and "Buy missing mats" buys it.
+- ⛏️ **"You can gather this"** next to ores and herbs you can collect yourself.
+- 📬 **Mailbox summary:** open your mail and see in one line what sold since your last visit.
 
-**After updating:** restart WoW once (a new addon file was added), then open each profession window once so FlipForever can read your recipes.
+Found a problem? Tell Claude what happened; the stable 2.3.0 comes at the next 12-hour cycle.

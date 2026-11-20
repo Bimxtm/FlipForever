@@ -824,6 +824,41 @@ MATSTATUS = FlipForever.status
 print("mats buy:", L("MATSTATE"), L("MATQTY"), "->", L("MATDONE"), "|", L("MATSTATUS"))
 assert L("MATSTATE") == "ready_commodity" and L("MATQTY") == 10 and L("MATDONE") == "idle" and "profession mats" in L("MATSTATUS")
 
+# --- 2.3: crafted mats list their own materials; gather hint; mailbox summary
+lua.execute("""
+-- top craft that needs bolts: make Bolt of Linen grey so Linen Cloak (needs a bolt) is top
+local orig = C_TradeSkillUI.GetRecipeInfo
+C_TradeSkillUI.GetRecipeInfo = function(id)
+  local r = orig(id)
+  if id == 1 then r = { name = r.name, learned = true, relativeDifficulty = 3 } end
+  return r
+end
+FlipForever.Professions:Capture()
+CPLAN = FlipForever.Professions:Plan("Tailoring")
+CMISS = FlipForever.Professions:Missing(CPLAN[1])
+CBUY = FlipForever.Professions:BuyList("Tailoring", 1)
+C_TradeSkillUI.GetRecipeInfo = orig
+-- mailbox: two new sale invoices -> one summary line
+printed = {}
+INBOX = { {name="Linen Cloth", bid=3000, dep=0, cut=150, count=30, daysLeft=29.99},
+          {name="Wool Cloth", bid=2000, dep=0, cut=100, count=10, daysLeft=29.98} }
+Fire("MAIL_SHOW")
+Fire("MAIL_INBOX_UPDATE")
+Fire("MAIL_INBOX_UPDATE")
+RunTimers(2)
+MAILMSG = printed[#printed]
+""")
+top = L("CPLAN")[1]
+miss = [(m.id, m.need, m.missing, m.source, m.via) for m in L("CMISS").values()]
+print("top craft:", top.recipe.name, "| materials:", miss)
+assert top.recipe.name == "Linen Cloak"
+assert any(m[0] == 2996 and m[3] == "crafted" for m in miss) and any(m[0] == 2589 and m[4] == "Bolt of Linen Cloth" for m in miss)
+buy = [(b.id, b.qty) for b in L("CBUY").values()]
+print("buy list now includes the bolt's linen:", buy)
+assert (2589, 10) in buy or any(b[0] == 2589 for b in buy)
+print("mail:", L("MAILMSG"))
+assert "2 auctions sold" in L("MAILMSG")
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

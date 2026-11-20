@@ -47,8 +47,19 @@ class Release:
 
 
 def parse_version(v: str) -> tuple:
-    nums = re.findall(r"\d+", v or "")
-    return tuple(int(n) for n in nums[:3]) + (0,) * (3 - len(nums[:3]))
+    """'2.3.0' -> (2, 3, 0, 1, 0); '2.3.0-beta.2' -> (2, 3, 0, 0, 2): a beta sorts before its stable release."""
+    v = (v or "").lstrip("v")
+    core, _, pre = v.partition("-")
+    nums = [int(n) for n in re.findall(r"\d+", core)[:3]]
+    nums += [0] * (3 - len(nums))
+    if pre:
+        n = re.findall(r"\d+", pre)
+        return tuple(nums) + (0, int(n[0]) if n else 0)
+    return tuple(nums) + (1, 0)
+
+
+def is_beta(v: str) -> bool:
+    return "-" in (v or "")
 
 
 def is_newer(remote: str, local: str = VERSION) -> bool:
@@ -74,9 +85,21 @@ def _request(url: str, token: str = "", accept: str = "application/vnd.github+js
         raise UpdateError(f"Can't reach GitHub: {e.reason}") from e
 
 
-def latest(token: str = "") -> Release:
-    with _request(f"{API}/repos/{GITHUB_REPO}/releases/latest", token) as r:
-        data = json.load(r)
+def latest(token: str = "", beta: bool = False) -> Release:
+    """Newest stable release; with beta=True the newest release including betas (pre-releases)."""
+    if beta:
+        with _request(f"{API}/repos/{GITHUB_REPO}/releases?per_page=20", token) as r:
+            items = [d for d in json.load(r) if not d.get("draft")]
+        if not items:
+            raise UpdateError("No releases found.")
+        data = max(items, key=lambda d: parse_version(d.get("tag_name") or ""))
+    else:
+        with _request(f"{API}/repos/{GITHUB_REPO}/releases/latest", token) as r:
+            data = json.load(r)
+    return _release(data)
+
+
+def _release(data: dict) -> Release:
     tag = data.get("tag_name") or ""
     assets = data.get("assets") or []
     zip_asset = next((a for a in assets if a["name"].startswith(RELEASE_ASSET_PREFIX) and a["name"].endswith(".zip")), None)

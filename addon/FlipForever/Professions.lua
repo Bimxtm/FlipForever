@@ -99,8 +99,9 @@ function P:Plan(profName)
   local data = self:Store()[profName]
   if not data then return {}, nil end
   -- cost of things this profession can make itself (one level deep is enough for 1-300)
-  self.craftCost = {}
+  self.craftCost, self.craftRecipe = {}, {}
   for _, r in ipairs(data.recipes) do
+    if r.learned and r.out and #r.mats > 0 then self.craftRecipe[r.out] = r end
     if r.learned and r.out and not FF:PriceOf(r.out) and #r.mats > 0 then
       local cost, ok = 0, true
       for _, m in ipairs(r.mats) do
@@ -145,14 +146,44 @@ function P:Plan(profName)
   return recs, data
 end
 
--- materials still needed for `crafts` crafts of a recommendation (bags + bank counted)
+-- can you gather this yourself? (ores/herbs the Gathering module knows, and you have the skill)
+function P:Gatherable(id)
+  local ns = FF.gatherNS
+  if not (ns and ns.ItemToOre and ns.OreByKey and ns.GetSkill and ns.db) then return false end
+  local key = ns.ItemToOre[id]
+  local def = key and ns.OreByKey[key]
+  if not def then return false end
+  local ok, skill, src = pcall(ns.GetSkill, def.cat)
+  if not ok or src == "none" then return false end
+  return skill == nil or (def.skill or 0) <= skill
+end
+
+local function have(id)
+  return (C_Item.GetItemCount and C_Item.GetItemCount(id, true)) or 0
+end
+
+-- materials still needed for `crafts` crafts of a recommendation (bags + bank counted).
+-- Things you craft yourself (bolts, bars...) also list *their* materials.
 function P:Missing(rec, crafts)
   local out = {}
   for _, m in ipairs(rec.recipe.mats) do
     local need = m[2] * (crafts or rec.crafts)
-    local have = (C_Item.GetItemCount and C_Item.GetItemCount(m[1], true)) or 0
+    local got = have(m[1])
     local unit, source = self:UnitCost(m[1])
-    out[#out + 1] = { id = m[1], need = need, have = have, missing = math.max(0, need - have), unit = unit, source = source }
+    local entry = { id = m[1], need = need, have = got, missing = math.max(0, need - got), unit = unit, source = source,
+      gather = self:Gatherable(m[1]) }
+    out[#out + 1] = entry
+    local sub = source == "crafted" and self.craftRecipe and self.craftRecipe[m[1]]
+    if sub and entry.missing > 0 then
+      local times = math.ceil(entry.missing / (sub.outQty or 1))
+      for _, s in ipairs(sub.mats) do
+        local sneed = s[2] * times
+        local sgot = have(s[1])
+        local sunit, ssource = self:UnitCost(s[1])
+        out[#out + 1] = { id = s[1], need = sneed, have = sgot, missing = math.max(0, sneed - sgot), unit = sunit,
+          source = ssource, via = sub.name, gather = self:Gatherable(s[1]) }
+      end
+    end
   end
   return out
 end
@@ -314,8 +345,9 @@ function P:Refresh()
     local m = missing[i]
     if m then
       local src = (m.source == "vendor" and " |cff888888(vendor)|r") or (m.source == "crafted" and " |cff888888(craft it)|r") or ""
+      if m.gather then src = src .. " |cff66ccff(you can gather this)|r" end
       local color = m.missing > 0 and "|cffff8080" or "|cff80ff80"
-      fs:SetText(("%s  %s%d / %d|r  %s%s"):format(FF:ItemName(m.id), color, m.have, m.need,
+      fs:SetText(("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
         m.unit and FF:Money(m.unit) or "?", src))
     else
       fs:SetText("")

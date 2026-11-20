@@ -82,6 +82,7 @@ class Settings:
     auto_import: bool = True
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True
+    beta_updates: bool = False    # also offer beta versions (pre-releases) for testing
     github_token: str = ""        # only needed while the GitHub repository is private (stays on this PC)
     character: str = ""           # selected character ("" = all characters)
     budgets: dict = field(default_factory=dict)   # "Name @ Realm - Faction" -> gold

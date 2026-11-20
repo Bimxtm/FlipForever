@@ -4,6 +4,7 @@ What happens in each cycle, and the rules it follows.
 
 ## Rules
 - **Releases happen only at the 12-hour cycle.** Work done in between (including features the owner asks for directly) is committed locally only. The next cycle pushes it and publishes one release with everything. The only exception: when close to the usage limit, push and release what's finished and tested early, so nothing is lost.
+- **Betas between cycles are fine,** for testing: version `X.Y.Z-beta.N`, title "FlipForever X.Y.Z Beta N", published as a GitHub **pre-release** (`gh release create --prerelease`). Only apps with "Get beta versions" ticked see them. The next cycle turns the betas into the stable release.
 - **Small improvements ship on their own:** fixes, polish, better defaults, more guide data, UI conveniences, and small features that fit an existing module.
 - **Major ideas wait for the owner's OK.** That covers new modules, anything that changes how the app or addon behaves by default, new dependencies, anything that touches other addons' files or the game folder beyond `Interface\AddOns\FlipForever`, and anything that makes the repository public. They go into [ROADMAP.md](ROADMAP.md) under "Waiting for your OK", and the cycle asks.
 - **Inspiration comes from the installed addons, lightly:** look at what they do and where their features live in the UI. Never copy their code.

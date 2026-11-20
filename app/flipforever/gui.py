@@ -186,6 +186,9 @@ class App(tk.Tk):
         self.auto_upd_var = tk.BooleanVar(value=self.settings.auto_check_updates)
         ttk.Checkbutton(opts, text="Check for updates when the app starts", variable=self.auto_upd_var,
                         command=self._save_update_opts).pack(side="left")
+        self.beta_var = tk.BooleanVar(value=self.settings.beta_updates)
+        ttk.Checkbutton(opts, text="Get beta versions (for testing)", variable=self.beta_var,
+                        command=self._save_update_opts).pack(side="left", padx=(12, 0))
         ttk.Label(opts, text="     GitHub token (only while the repository is private):", style="Muted.TLabel").pack(side="left")
         self.token_var = tk.StringVar(value=self.settings.github_token)
         e = ttk.Entry(opts, textvariable=self.token_var, width=34, show="•")
@@ -228,6 +231,7 @@ class App(tk.Tk):
 
     def _save_update_opts(self):
         self.settings.auto_check_updates = bool(self.auto_upd_var.get())
+        self.settings.beta_updates = bool(self.beta_var.get())
         self.settings.github_token = self.token_var.get().strip()
         self.settings.save()
 
@@ -235,10 +239,11 @@ class App(tk.Tk):
         self.upd_status.set("Checking GitHub...")
         self.upd_check_btn.configure(state="disabled")
         token = self.settings.github_token
+        beta = self.settings.beta_updates
 
         def work():
             try:
-                rel = updater.latest(token)
+                rel = updater.latest(token, beta=beta)
                 self.after(0, lambda: self._update_result(rel, None, quiet))
             except updater.UpdateError as e:
                 self.after(0, lambda: self._update_result(None, str(e), quiet))
@@ -251,7 +256,8 @@ class App(tk.Tk):
             return
         self._release = rel
         if updater.is_newer(rel.version):
-            self.upd_status.set(f"Version {rel.version} is available (released {rel.published}). You have {VERSION}.")
+            kind = "Beta version" if updater.is_beta(rel.version) else "Version"
+            self.upd_status.set(f"{kind} {rel.version} is available (released {rel.published}). You have {VERSION}.")
             self.upd_install_btn.configure(state="normal")
             self._show_markdown(self.news_text, rel.notes or "(no release notes)")
             if quiet and messagebox.askyesno("FlipForever update", f"FlipForever {rel.version} is available "
