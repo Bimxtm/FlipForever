@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 10
+# FlipForever 2.5 Beta 11
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Smaller deposits.** Fast sellers now go up for 12 hours, where the deposit is smallest, and slow sellers get 48 hours to find a buyer.
 
 **The Advisor speaks your language.** Its next steps (talents, quests, gear, dungeons, gold to save and more) now appear in your chosen language.
 

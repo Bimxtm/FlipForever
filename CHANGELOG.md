@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.11] - 2026-11-20 (beta)
+### Changed
+- **Auction length by sell speed.** The deposit grows with the auction length, so items that sell 12 or more a day are now posted for 12 hours (smallest deposit). Items selling 3-12 a day get 24 hours and slower ones 48 hours, to find a buyer. Items without sales data use your usual setting. It can be switched off in the FlipForever window (Settings).
+
 ## [2.5.0-beta.10] - 2026-11-20 (beta)
 ### Changed
 - The Advisor's steps are translated into all 11 languages: talents, class quests, weak slots, dungeons, zones, professions, profitable crafts, farming zone, bags, gold milestones and power spikes. Item, quest and zone names stay as the guides write them.

@@ -12,9 +12,21 @@ local SEARCH_TIMEOUT = 8
 local function plan() return FF:Plan() end
 local function owned(row) return row.containsOwnerItem or row.containsAccountItem end
 
-local function durationSetting()
+local function durationSetting(id)
   local p = plan()
-  return (p and p.duration) or 2 -- 1 = 12h, 2 = 24h, 3 = 48h
+  local base = (p and p.duration) or 2 -- 1 = 12h, 2 = 24h, 3 = 48h
+  if not id or FlipForeverDB.settings.autoDuration == false then return base end
+  -- by sell speed: the deposit grows with the duration, so fast sellers go up for 12 hours
+  -- (cheapest, and they sell before it ends) and slow ones get longer to find a buyer
+  return T:DurationFor(id, base)
+end
+
+function T:DurationFor(id, base)
+  local perDay = FF.Planner and FF.Planner:SellsPerDay(id)
+  if not perDay then return base or 2 end
+  if perDay >= 12 then return 1 end
+  if perDay >= 3 then return 2 end
+  return 3
 end
 
 function T:Refresh()
@@ -494,7 +506,7 @@ function T:EvaluateSell(rows)
 end
 
 function T:Deposit(p)
-  local d = durationSetting()
+  local d = durationSetting(p.id)
   local ok, dep
   if p.commodity then
     ok, dep = pcall(AH.CalculateCommodityDeposit, p.id, d, p.qty)
@@ -505,7 +517,8 @@ function T:Deposit(p)
 end
 
 function T:DoPost(confirm)
-  local p, d = self.pending, durationSetting()
+  local p = self.pending
+  local d = durationSetting(p.id)
   p.dep = p.dep or self:Deposit(p)
   local fn
   if p.commodity then
@@ -525,7 +538,7 @@ end
 FF:On("AUCTION_HOUSE_AUCTION_CREATED", function()
   if T.state ~= "posting" or not T.pending then return end
   local p = T.pending
-  FF:Log({ e = "post", id = p.id, name = FF:ItemName(p.id), q = p.qty, p = p.unit, dep = p.dep or 0, dur = durationSetting() })
+  FF:Log({ e = "post", id = p.id, name = FF:ItemName(p.id), q = p.qty, p = p.unit, dep = p.dep or 0, dur = durationSetting(p.id) })
   T.pending = nil
   -- non-commodity items post one stack at a time; keep going while more remain
   if not p.commodity and T:FindInBags(p.id) then

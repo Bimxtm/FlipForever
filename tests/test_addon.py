@@ -1417,6 +1417,26 @@ LATE = FIRED
 assert L("EARLY") == 0 and L("LATE") == 1, (L("EARLY"), L("LATE"))
 print("mock timers: a 10 s timer waits through a 5 s run and fires in the next one")
 
+# --- auction length by sell speed (deposit grows with the duration)
+lua.execute("""
+local T, P = FlipForever.Trader, FlipForever.Planner
+local oldSpeed, oldCalc = P.SellsPerDay, C_AuctionHouse.CalculateCommodityDeposit
+P.SellsPerDay = function(_, id) return ({ [1] = 30, [2] = 5, [3] = 0.5 })[id] end
+DUR = T:DurationFor(1, 2) .. T:DurationFor(2, 2) .. T:DurationFor(3, 2) .. T:DurationFor(4, 2)
+USED = nil
+C_AuctionHouse.CalculateCommodityDeposit = function(id, d, q) USED = d return 10 end
+FlipForeverDB.settings.autoDuration = nil
+T:Deposit({ id = 1, commodity = true, qty = 5 })
+AUTO = USED
+FlipForeverDB.settings.autoDuration = false
+T:Deposit({ id = 1, commodity = true, qty = 5 })
+OFF = USED
+FlipForeverDB.settings.autoDuration = nil
+P.SellsPerDay, C_AuctionHouse.CalculateCommodityDeposit = oldSpeed, oldCalc
+""")
+print("durations (30/day, 5/day, 0.5/day, unknown):", L("DUR"), "| deposit asked for duration", L("AUTO"), "| switched off:", L("OFF"))
+assert L("DUR") == "1232" and L("AUTO") == 1 and L("OFF") == 2
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil
