@@ -16,7 +16,7 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- Waypoint arrow (next gathering stop, dungeon or vendor)
+- Waypoint arrow: built on branch feature/waypoint-arrow, ready to merge when approved
 - Quest locations for advisor steps (where class quests start, with map pins)
 
 ## Open issues

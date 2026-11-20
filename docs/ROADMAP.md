@@ -1,8 +1,10 @@
 # Roadmap
 
+## Ready for approval (built, not released)
+- **Waypoint arrow** (branch `feature/waypoint-arrow`). A movable on-screen arrow with the distance in yards, turning green when you face the right way. It points to a point you set with `/ffway x y`, the pin you place on the world map, or the next stop on your Gathering loop. It can be switched off in the FlipForever window (Settings). Tested; merged and released once approved.
+
 ## Proposed (waiting for approval)
-1. **Waypoint arrow.** An on-screen arrow to the next gathering stop, an advisor target (a dungeon or quest hub) or a vendor.
-2. **Quest locations.** The advisor shows where class and gear quests start, with map pins, using built-in data.
+1. **Quest locations.** The advisor shows where class and gear quests start, with map pins, using built-in data.
 
 ## Planned
 - **GUI overhaul (2.4.0, in progress).** In game: a tabbed FlipForever window, a common look for every panel, and an editable shopping-list view. In the app: sidebar navigation and a cleaner layout.
