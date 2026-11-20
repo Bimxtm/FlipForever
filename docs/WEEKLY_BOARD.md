@@ -33,7 +33,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 ## 🐞 Problems / risks (fix as we go)
 | # | Problem | Severity | Plan |
 |---|---|---|---|
-| P1 | **Nothing has run in the real game yet** (auction house API, combat helper, profession API, tooltips) | 🔴 high | In-game test checklist Fri; fix reports first |
+| P1 | **Nothing has run in the real game yet** (auction house API, combat helper, profession API, tooltips) | 🔴 high | Checklist shipped in 2.3.0 (Development tab). Waiting for your results; fix reports first |
 | P2 | Unverified Forever API details: full-scan timing, commodity silver-only prices, talent API shape, secure step-button in combat | 🔴 high | Built with fallbacks; confirm in-game (P1) |
 | P3 | Private repo: the app can't see updates until you paste a read-only GitHub token (About & updates) | 🟠 med | Remind you; or make the repo public when you're ready |
 | P4 | Guide data gaps: druid talents "not final" (Method), warlock from a beta-era source, rogue/priest/shaman talents only as pictures | 🟠 med | Re-check sources Sat; add when post-launch text builds appear |
@@ -47,6 +47,7 @@ Read at the start of every cycle and updated at the end. Owner: Bimxtm · Builde
 | P9 | Test harness quirk: mock timers can drop delayed callbacks | 🟢 dev | Improve the mock when it next gets in the way |
 
 ## ✅ Done this week
+- **2.3.0 stable** (Thu ~18:15 cycle): Betas 1-4 + "sells ~N/day" tooltips + in-game test checklist (docs/IN_GAME_TEST.md, in the Development tab) + the app remembers its window. Usage: 5h 3%, week 34%.
 - 2.3.0 Beta 4 (Thu 12:20): in-game planning after every scan, no reload (P10 ✔). The Lua planner matches the app exactly on the demo data (test).
 - 2.3.0 Beta 3 (Thu 11:00-11:40): one-key targeting + tank mode (P12 ✔), scan-done alert + autopilot pause (P11 ✔), app auto-builds the list after import (P11 ✔). Next: in-game planning (P10) as Beta 4.
 - 2.0.0 all-in-one · 2.1.0 tooltips/minimap/today · 2.2.0 profession planner · 2.3.0 Beta 1 (beta channel, crafted mats, gather hint, mailbox summary)

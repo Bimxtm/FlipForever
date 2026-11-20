@@ -11,8 +11,6 @@
 ## Small improvements (queue)
 - Profession planner: exact skill-up chances learned from recipe colour changes, instead of averages per colour.
 - Advisor: a "why" tooltip on each step (which guide said so).
-- Item tooltips: "sells ~N/day" (the app passes its sales-speed data along with the shopping list).
-- App: remember window size and position.
 - Gathering: value per node on FlipForever's own map-pin tooltips; an Advisor step for the best farming zone at your skill.
 - Auction: smarter undercut (ignore single dumped units; never undercut yourself across characters).
 - Language-independent spells (spell IDs), so the advisor and combat helper work on any client language.
@@ -20,6 +18,7 @@
 - Advisor: more builds per class as Method/Warcraft Tavern publish post-launch level-60 builds.
 
 ## Done
+- 2.3.0: in-game planning (no reload), one-key combat targeting + tank mode, scan alerts, app auto-builds lists, "sells ~N/day" tooltips, window memory, in-game test checklist.
 - 2.3.0 Beta 1: beta channel, crafted materials list their own mats, "you can gather this", mailbox summary. In the app (next build): Development tab.
 - 2.2.0: profession planner (self-contained), buy missing mats at the AH.
 - 2.1.0: prices in item tooltips, minimap summary, today's results on the AH panel.

@@ -294,6 +294,23 @@ local function boughtSince(t)
 end
 
 -- Plan straight from data (also used by the tests) -----------------------------------------
+-- The market model for the saved scans, cached until a new scan arrives (tooltips use it)
+local modelKey, modelCache
+function P:Model()
+  local scans = FF:DB().scans
+  local key = #scans .. ":" .. ((scans[#scans] or {}).t or 0)
+  if key ~= modelKey then
+    modelKey, modelCache = key, self:MarketModel(scans, time())
+  end
+  return modelCache
+end
+
+-- Units sold per day on the AH (estimated from listings vanishing between full scans), or nil
+function P:SellsPerDay(id)
+  local m = id and self:Model()[id]
+  return m and m.vol_day
+end
+
 function P:Compute(scans, ctx, now, nameOf, heldSells, extraHeld)
   local model = self:MarketModel(scans, now)
   local c = self:Context(ctx, extraHeld)

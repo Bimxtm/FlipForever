@@ -87,6 +87,8 @@ class Settings:
     github_token: str = ""        # only needed while the GitHub repository is private (stays on this PC)
     character: str = ""           # selected character ("" = all characters)
     budgets: dict = field(default_factory=dict)   # "Name @ Realm - Faction" -> gold
+    window: str = ""              # last window size/position ("WxH+X+Y"), restored at start
+    window_zoomed: bool = False
 
     def budget_for(self, key: str) -> float:
         return float(self.budgets.get(key, self.budget_gold))

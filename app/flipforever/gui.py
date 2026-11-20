@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import os
+import re
 import threading
 import time
 import tkinter as tk
@@ -60,6 +61,8 @@ class App(tk.Tk):
         except (tk.TclError, OSError):
             pass
         self.settings = store.Settings.load()
+        self._restore_window()
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.con = store.connect()
         self.realm = None
         self.model, self.ledger, self.learned, self.deals = {}, None, None, []
@@ -70,6 +73,32 @@ class App(tk.Tk):
         self.refresh()
         self.after(3000, self._watch)
         self.after(1500, self._startup_updates)
+
+    # ------------------------------------------------------------- window size/position
+    def _restore_window(self):
+        """Open where you left it - unless that spot is off-screen now (monitor unplugged)."""
+        m = re.fullmatch(r"(\d+)x(\d+)([+-]-?\d+)([+-]-?\d+)", self.settings.window or "")
+        if m:
+            w, h, x, y = int(m[1]), int(m[2]), int(m[3]), int(m[4])
+            sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
+            if w >= 600 and h >= 400 and -w // 2 < x < sw - 100 and 0 <= y < sh - 100:
+                self.geometry(f"{w}x{h}+{x}+{y}")
+        if self.settings.window_zoomed:
+            try:
+                self.state("zoomed")
+            except tk.TclError:
+                pass
+
+    def _on_close(self):
+        try:
+            zoomed = self.state() == "zoomed"
+            self.settings.window_zoomed = zoomed
+            if not zoomed and self.state() == "normal":
+                self.settings.window = self.geometry()
+            self.settings.save()
+        except (tk.TclError, OSError):
+            pass
+        self.destroy()
 
     # ------------------------------------------------------------- styling
     def _style(self):
@@ -234,7 +263,7 @@ class App(tk.Tk):
         panes.columnconfigure(1, weight=2)
         panes.rowconfigure(1, weight=1)
         ttk.Label(panes, text="This week's board", style="H.TLabel").grid(row=0, column=0, sticky="w")
-        ttk.Label(panes, text="Roadmap", style="H.TLabel").grid(row=0, column=1, sticky="w", padx=(12, 0))
+        ttk.Label(panes, text="Test it in game  ·  Roadmap", style="H.TLabel").grid(row=0, column=1, sticky="w", padx=(12, 0))
         self.board_text = tk.Text(panes, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
         self.board_text.grid(row=1, column=0, sticky="nsew")
         self.road_text = tk.Text(panes, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
@@ -249,7 +278,7 @@ class App(tk.Tk):
 
     def _fill_dev(self):
         board = _read_doc("docs/WEEKLY_BOARD.md")
-        road = _read_doc("docs/ROADMAP.md")
+        road = _read_doc("docs/IN_GAME_TEST.md") + "\n\n" + _read_doc("docs/ROADMAP.md")
         self._show_markdown(self.board_text, board)
         self._show_markdown(self.road_text, road)
         problems = sum(1 for l in board.splitlines() if l.startswith("| P"))

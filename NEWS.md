@@ -1,11 +1,10 @@
-# FlipForever 2.3 Beta 4 - for testing
+# FlipForever 2.3
 
-**This is a beta.** Only apps with *Get beta versions* ticked (About & updates) see it.
+- 🔁 **New shopping lists without reloading.** When a scan finishes, the addon rebuilds your list in game using everything the app has learned, and autopilot just keeps going.
+- ⚔️ **One-key combat:** the combat helper's key also picks the nearest enemy. **Tank mode** hits whatever is attacking your ally and taunts early.
+- 📣 **Scan alerts,** and the app builds your list by itself after each import.
+- 📈 **"Sells ~N/day"** in item tooltips, so you see at a glance whether something moves fast.
+- 🧰 Profession planner: crafted materials list their own materials, and "you can gather this" marks ores and herbs you can collect. Mailbox: a one-line sales summary.
+- 🖥️ App: a **Development** tab (weekly plan, roadmap, and an in-game test checklist), a beta channel, and the window opens where you left it.
 
-- 🔁 **No reload needed for a new shopping list.** When a scan finishes, the addon builds your new list right there in game, using everything the app has learned. Autopilot just keeps going, and you get a sound plus "Shopping list updated from the new scan".
-- 🧠 The app passes its learning to the addon with every list it builds, so both plan the same way. In the tests, both picked exactly the same items at the same prices.
-- ⚙️ Switch: FlipForever window (gold coin on the minimap) → *After a scan: rebuild my shopping list in game*. Turn it off to get Beta 3's "click Reload" alert instead.
-
-Tip: build one list in the app first (then reload once), so the addon gets your budget and the app's learning. Without it, the addon plans with default settings and the gold you carry.
-
-Also in this 2.3 beta series: one-key combat targeting with tank mode, scan alerts, the app's auto-built lists, the Reload button, and the Development tab.
+**Please try the in-game test checklist** (app → Development tab). It's 13 quick checks; tell me what doesn't work, and those fixes come first.

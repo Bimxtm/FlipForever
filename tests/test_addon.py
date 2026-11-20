@@ -1009,6 +1009,17 @@ LIVE = FlipForever:Plan()
 print("after scan (live):", L("LIVE.live"), "| buys", L("#LIVE.buy"), "| needReload", L("FlipForever.needReload"), "| alert", L("LIVE_ALERT"))
 assert L("LIVE.live") is True and L("FlipForever.needReload") is None and L("LIVE_ALERT") is True
 assert L("#LIVE.buy") >= len(_py["buy"])  # the test DB also holds scans from earlier test steps
+# 2.3.0: tooltips show how fast an item sells
+_tid = _py["buy"][0]["id"]
+lua.execute(f"""
+FlipForeverDB.settings.tooltips = nil
+TIP = {{}}
+for _, l in ipairs(FlipForever.Tooltip:Lines({_tid})) do TIP[#TIP + 1] = l[1] .. " = " .. l[2] end
+TIP = table.concat(TIP, " | ")
+""")
+print("tooltip:", L("TIP"))
+assert "sells on the AH = ~" in L("TIP") and "/day" in L("TIP")
+assert abs(L(f"FlipForever.Planner:SellsPerDay({_tid})") - _model[_tid].vol_day) < 1e-6
 # a newer list from the app wins again
 lua.execute("FlipForever_Plans['Tester @ Testrealm - Horde'].generated = LIVE.generated + 1")
 assert L("FlipForever:Plan().live") is None

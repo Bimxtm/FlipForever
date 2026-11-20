@@ -2,6 +2,21 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] - 2026-11-20
+Everything from Betas 1-4, plus:
+
+### Added
+- **Item tooltips: "sells on the AH ~N/day"** (fast, ok, slow), estimated from your own scans.
+- **In-game test checklist** (`docs/IN_GAME_TEST.md`, also in the app's Development tab): 13 quick checks to confirm everything works in the real game.
+- App: remembers its window size and position (and maximised state).
+
+### Included from the betas
+- In-game planning after every scan: no reload needed for a new shopping list (Beta 4).
+- Combat helper: one key also picks targets, with tank mode (Beta 3).
+- Scan-finished alert, and the app builds the list by itself after importing (Beta 3).
+- Reload button and the app's Development tab (Beta 2).
+- Beta channel, crafted mats list their own mats, "you can gather this", mailbox summary (Beta 1).
+
 ## [2.3.0-beta.4] - 2026-11-20 (beta)
 ### Added
 - **No more reload for a new list:** when a scan finishes, the addon rebuilds your shopping list in game straight away, with the same rules and everything the app has learned (margin tuning, price calibration, sell chances, deposits, your own selling times, what you hold). Autopilot keeps going with the new list, and you see and hear "Shopping list updated from the new scan". At login, a scan newer than the app's list is planned the same way.
