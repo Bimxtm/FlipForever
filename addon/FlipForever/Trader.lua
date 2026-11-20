@@ -122,6 +122,7 @@ end
 -- BUYING ------------------------------------------------------------------------------------
 function T:Remaining(entry)
   if self.custom then return (entry.qty or 0) - (entry.got or 0) end
+  if FF.Hub and FF.Hub.Skipped and FF.Hub:Skipped()[entry.id] then return 0 end -- ticked "Skip" in the list
   return (entry.qty or 0) - (FF:Progress().bought[entry.id] or 0)
 end
 

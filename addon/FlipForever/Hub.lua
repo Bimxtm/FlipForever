@@ -77,6 +77,175 @@ local function startCapture(label, onKey)
   capture:Show()
 end
 
+-- Pages ------------------------------------------------------------------------------------------
+local TABS = { { "overview", "Overview" }, { "list", "Shopping list" }, { "settings", "Settings" } }
+local LIST_ROWS = 18
+
+local function text(parent, font, x, y, w)
+  local fs = parent:CreateFontString(nil, "OVERLAY", font or "GameFontHighlight")
+  fs:SetPoint("TOPLEFT", x, y)
+  if w then fs:SetWidth(w) end
+  fs:SetJustifyH("LEFT")
+  return fs
+end
+
+-- Overview: where you stand at a glance, and the things you open most
+local function buildOverview(f)
+  local pg = CreateFrame("Frame", nil, f)
+  pg:SetAllPoints(f)
+  heading(pg, "Auction house", -64)
+  pg.plan = text(pg, "GameFontHighlight", 20, -86, 360)
+  pg.today = text(pg, "GameFontHighlightSmall", 20, -142, 360)
+  pg.auto = text(pg, "GameFontHighlightSmall", 20, -162, 360)
+  button(pg, "See the shopping list", 178, function() H:SelectTab("list") end):SetPoint("TOPLEFT", 16, -186)
+  pg.reload = button(pg, "Reload UI (sync)", 178, function() FF:ReloadForSync() end)
+  pg.reload:SetPoint("TOPLEFT", 206, -186)
+  heading(pg, "Next step (Advisor)", -226)
+  pg.advice = text(pg, "GameFontHighlight", 20, -248, 360)
+  heading(pg, "Open", -330)
+  button(pg, "Advisor", 118, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -352)
+  button(pg, "Gathering", 118, function()
+    local ns = FF.gatherNS
+    if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
+    else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
+  end):SetPoint("TOPLEFT", 140, -352)
+  button(pg, "Professions", 118, function() FF.Professions:Toggle() end):SetPoint("TOPLEFT", 264, -352)
+  pg.combat = check(pg, "Combat helper on screen", function() FF.Combat:Toggle() end)
+  pg.combat:SetPoint("TOPLEFT", 14, -384)
+  pg.autopilot = check(pg, "Autopilot at the auction house", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
+  pg.autopilot:SetPoint("TOPLEFT", 14, -408)
+  return pg
+end
+
+-- Shopping list: every item with its price now, your max, what you bought, and a Skip box
+local function buildList(f)
+  local pg = CreateFrame("Frame", nil, f)
+  pg:SetAllPoints(f)
+  pg.summary = text(pg, "GameFontNormal", 16, -64, 368)
+  local cols = { { "Item", 20 }, { "Now", 170 }, { "Max", 232 }, { "Got", 294 }, { "Skip", 336 } }
+  for _, c in ipairs(cols) do text(pg, "GameFontDisableSmall", c[2], -86):SetText(c[1]) end
+  pg.rows = {}
+  for i = 1, LIST_ROWS do
+    local y = -102 - (i - 1) * 22
+    local r = {}
+    r.name = text(pg, "GameFontHighlightSmall", 20, y - 5, 146)
+    r.now = text(pg, "GameFontHighlightSmall", 170, y - 5, 60)
+    r.max = text(pg, "GameFontHighlightSmall", 232, y - 5, 60)
+    r.got = text(pg, "GameFontHighlightSmall", 294, y - 5, 40)
+    r.skip = check(pg, "", function(self) H:SetSkipped(r.id, self:GetChecked()) end)
+    r.skip:SetPoint("TOPLEFT", 334, y)
+    pg.rows[i] = r
+  end
+  pg.offset = 0
+  pg:EnableMouseWheel(true)
+  pg:SetScript("OnMouseWheel", function(self, delta)
+    self.offset = math.max(0, self.offset - delta * 3)
+    H:RefreshList()
+  end)
+  pg.hint = text(pg, "GameFontDisableSmall", 16, -506, 368)
+  pg.hint:SetText("Scroll with the mouse wheel. Skipped items are never bought on this character, on this list or later ones, until you untick them. Green 'Now' = cheaper than your max in the last scan.")
+  return pg
+end
+
+-- Items the playing character never wants to buy (ticked "Skip" in the list)
+function H:Skipped()
+  local db = FF:DB()
+  db.skip = db.skip or {}
+  local me = UnitName("player") or "?"
+  db.skip[me] = db.skip[me] or {}
+  return db.skip[me]
+end
+
+function H:SetSkipped(id, on)
+  if not id then return end
+  self:Skipped()[id] = on and true or nil
+  FF:Print((on and "%s won't be bought any more." or "%s is back on the shopping list."):format(FF:ItemName(id)))
+  self:RefreshList()
+end
+
+-- The rows of the shopping list (also used by the tests)
+function H:ListRows()
+  local plan = FF:Plan()
+  local rows = {}
+  if not (plan and plan.buy) then return rows end
+  local model = FF.Planner and FF.Planner:Model() or {}
+  local bought = FF:Progress().bought
+  local skipped = self:Skipped()
+  for _, b in ipairs(plan.buy) do
+    local m = model[b.id]
+    local now = m and m.cur_min
+    local got = bought[b.id] or 0
+    local status
+    if skipped[b.id] then status = "skipped"
+    elseif got >= (b.qty or 0) then status = "done"
+    elseif now and not b.gap and now <= (b.max or 0) then status = "deal"
+    else status = "watching" end
+    rows[#rows + 1] = { id = b.id, name = b.name or FF:ItemName(b.id), now = now, max = b.max, live = b.gap ~= nil,
+      got = got, qty = b.qty or 0, status = status }
+  end
+  return rows
+end
+
+local STATUS_COLOR = { deal = "|cff33ff99", done = "|cff888888", skipped = "|cff666666", watching = "|cffffffff" }
+
+function H:RefreshList()
+  local pg = frame and frame.pages and frame.pages.list
+  if not (pg and pg:IsShown()) then return end
+  local rows = self:ListRows()
+  local deals, done = 0, 0
+  for _, r in ipairs(rows) do
+    if r.status == "deal" then deals = deals + 1 elseif r.status == "done" then done = done + 1 end
+  end
+  local plan = FF:Plan()
+  pg.summary:SetText(#rows == 0 and "No shopping list for this character yet."
+    or ("%d items  ·  %d look like deals  ·  %d done%s"):format(#rows, deals, done,
+      plan and plan.live and "  ·  built in game" or ""))
+  pg.offset = math.min(pg.offset, math.max(0, #rows - LIST_ROWS))
+  for i, w in ipairs(pg.rows) do
+    local r = rows[i + pg.offset]
+    w.id = r and r.id
+    w.name:SetShown(r ~= nil); w.now:SetShown(r ~= nil); w.max:SetShown(r ~= nil); w.got:SetShown(r ~= nil); w.skip:SetShown(r ~= nil)
+    if r then
+      local c = STATUS_COLOR[r.status] or "|cffffffff"
+      w.name:SetText(c .. r.name .. "|r")
+      w.now:SetText(r.now and ((r.status == "deal" and "|cff33ff99" or "") .. FF:Money(r.now)) or "-")
+      w.max:SetText(r.live and "live" or FF:Money(r.max or 0))
+      w.got:SetText(("%d/%d"):format(r.got, r.qty))
+      w.skip:SetChecked(r.status == "skipped")
+    end
+  end
+end
+
+function H:RefreshOverview()
+  local pg = frame and frame.pages and frame.pages.overview
+  if not (pg and pg:IsShown()) then return end
+  local plan = FF:Plan()
+  if plan and plan.buy then
+    pg.plan:SetText(("Shopping list: |cffffff00%d|r to buy, |cffffff00%d|r sell prices%s\nBudget left: %s"):format(
+      #plan.buy, #(plan.sell or {}), plan.live and "  (built in game)" or "", FF:Money(FF.Trader:BudgetLeft())))
+  else
+    pg.plan:SetText("|cffff8800No shopping list yet.|r Scan at the auction house; the list builds itself.")
+  end
+  pg.today:SetText(FF:TodayLine())
+  pg.auto:SetText(FF.Auto:Enabled() and ("Autopilot: on" .. (FF.Auto.StatusLine and ("  ·  " .. (FF.Auto:StatusLine() or "")) or ""))
+    or "Autopilot: off")
+  pg.reload:SetText(FF.needReload and "|cffffd200RELOAD|r" or "Reload UI (sync)")
+  local adv = FF.Advisor and FF.Advisor.last
+  pg.advice:SetText(adv and adv[1] and adv[1].text or "Open the Advisor to see what to do next.")
+  pg.combat:SetChecked(FF.Combat:Enabled())
+  pg.autopilot:SetChecked(FF.Auto:Enabled())
+end
+
+function H:SelectTab(name)
+  if not frame then return end
+  H.tab = name
+  for key, page in pairs(frame.pages) do page:SetShown(key == name) end
+  for key, b in pairs(frame.tabs) do
+    if key == name then b:LockHighlight() else b:UnlockHighlight() end
+  end
+  H:Refresh()
+end
+
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
@@ -104,101 +273,112 @@ local function build()
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOPLEFT", 16, -14)
   title:SetText("|cff33ff99Flip|rForever")
-  local sub = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  sub:SetPoint("TOPLEFT", 16, -36)
-  sub:SetText("Auction house · Gathering · Advisor · Combat helper")
+
+  -- Tabs: Overview · Shopping list · Settings ------------------------------
+  f.pages = {}
+  local pg = CreateFrame("Frame", nil, f)
+  pg:SetAllPoints(f)
+  f.pages.settings = pg
+  f.pages.overview = buildOverview(f)
+  f.pages.list = buildList(f)
+  f.tabs = {}
+  for i, t in ipairs(TABS) do
+    local b = button(f, t[2], 112, function() H:SelectTab(t[1]) end)
+    b:SetPoint("TOPLEFT", 16 + (i - 1) * 118, -34)
+    f.tabs[t[1]] = b
+  end
 
   -- Open --------------------------------------------------------------
-  heading(f, "Open", -60)
-  button(f, "Advisor", 118, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -82)
-  f.gather = button(f, "Gathering", 118, function()
+  heading(pg, "Open", -60)
+  button(pg, "Advisor", 118, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -82)
+  f.gather = button(pg, "Gathering", 118, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
     else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
   end)
   f.gather:SetPoint("TOPLEFT", 140, -82)
-  f.profs = button(f, "Professions", 118, function() FF.Professions:Toggle() end)
+  f.profs = button(pg, "Professions", 118, function() FF.Professions:Toggle() end)
   f.profs:SetPoint("TOPLEFT", 264, -82)
 
   -- Combat helper -------------------------------------------------------
-  heading(f, "Combat helper", -116)
-  f.combat = check(f, "Show the combat helper", function() FF.Combat:Toggle() end)
+  heading(pg, "Combat helper", -116)
+  f.combat = check(pg, "Show the combat helper", function() FF.Combat:Toggle() end)
   f.combat:SetPoint("TOPLEFT", 14, -136)
-  f.combatMode = check(f, "Let Blizzard's one-button assistant decide", function() FF.Combat:ToggleBlizzard() end)
+  f.combatMode = check(pg, "Let Blizzard's one-button assistant decide", function() FF.Combat:ToggleBlizzard() end)
   f.combatMode:SetPoint("TOPLEFT", 14, -160)
-  f.autoTarget = check(f, "Auto-target", function(self) FF.Combat:SetAutoTarget(self:GetChecked()) end)
+  f.autoTarget = check(pg, "Auto-target", function(self) FF.Combat:SetAutoTarget(self:GetChecked()) end)
   f.autoTarget:SetPoint("TOPLEFT", 230, -136)
-  f.tank = check(f, "Tank mode", function(self) FF.Combat:SetTank(self:GetChecked()) end)
+  f.tank = check(pg, "Tank mode", function(self) FF.Combat:SetTank(self:GetChecked()) end)
   f.tank:SetPoint("TOPLEFT", 310, -136)
-  f.combatKeyText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.combatKeyText = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.combatKeyText:SetPoint("TOPLEFT", 20, -192)
-  f.combatKeyButton = button(f, "Set key", 80, function()
+  f.combatKeyButton = button(pg, "Set key", 80, function()
     startCapture("the combat helper", function(k) FF.Combat:SetKey(k) end)
   end)
   f.combatKeyButton:SetPoint("TOPLEFT", 206, -188)
-  button(f, "Clear", 70, function() FF.Combat:SetKey(nil) end):SetPoint("TOPLEFT", 290, -188)
-  local cHint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  button(pg, "Clear", 70, function() FF.Combat:SetKey(nil) end):SetPoint("TOPLEFT", 290, -188)
+  local cHint = pg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   cHint:SetPoint("TOPLEFT", 20, -214)
   cHint:SetPoint("RIGHT", -16, 0)
   cHint:SetJustifyH("LEFT")
   cHint:SetText("Auto-target: nearest enemy when you have none. Tank: click an ally, then the key hits what's on them.")
 
   -- Auction house -------------------------------------------------------
-  heading(f, "Auction house", -240)
-  f.auto = check(f, "Autopilot: check my list every minute, scan every 30 min", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
+  heading(pg, "Auction house", -240)
+  f.auto = check(pg, "Autopilot: check my list every minute, scan every 30 min", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
   f.auto:SetPoint("TOPLEFT", 14, -260)
-  f.ahKeyText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.ahKeyText = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.ahKeyText:SetPoint("TOPLEFT", 20, -292)
-  f.ahKeyButton = button(f, "Set key", 80, function()
+  f.ahKeyButton = button(pg, "Set key", 80, function()
     startCapture("the auction house button", function(k) FF:SetActionKey(k) end)
   end)
   f.ahKeyButton:SetPoint("TOPLEFT", 206, -288)
-  button(f, "Clear", 70, function() FF:SetActionKey(nil) end):SetPoint("TOPLEFT", 290, -288)
-  button(f, "Check the whole list again", 178, function() FF:ResetProgress() end):SetPoint("TOPLEFT", 16, -316)
-  f.reload = button(f, "Reload UI (new list / sync)", 178, function() FF:ReloadForSync() end)
+  button(pg, "Clear", 70, function() FF:SetActionKey(nil) end):SetPoint("TOPLEFT", 290, -288)
+  button(pg, "Check the whole list again", 178, function() FF:ResetProgress() end):SetPoint("TOPLEFT", 16, -316)
+  f.reload = button(pg, "Reload UI (new list / sync)", 178, function() FF:ReloadForSync() end)
   f.reload:SetPoint("TOPLEFT", 206, -316)
-  f.planText = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  f.planText = pg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   f.planText:SetPoint("TOPLEFT", 20, -344)
   f.planText:SetPoint("RIGHT", -16, 0)
   f.planText:SetJustifyH("LEFT")
 
   -- Advisor -------------------------------------------------------------
-  heading(f, "Advisor", -372)
-  f.popup = check(f, "Pop up my next steps on level-up", function(self)
+  heading(pg, "Advisor", -372)
+  f.popup = check(pg, "Pop up my next steps on level-up", function(self)
     FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false
   end)
   f.popup:SetPoint("TOPLEFT", 14, -392)
-  f.pauseScan = check(f, "Otherwise: alert + pause autopilot until Reload", function(self)
+  f.pauseScan = check(pg, "Otherwise: alert + pause autopilot until Reload", function(self)
     FlipForeverDB.settings.reloadAfterScan = self:GetChecked() and true or false
   end)
   f.pauseScan:SetPoint("TOPLEFT", 14, -560)
-  f.livePlan = check(f, "After a scan: rebuild my shopping list in game (no reload)", function(self)
+  f.livePlan = check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
     FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
   end)
   f.livePlan:SetPoint("TOPLEFT", 14, -536)
-  f.tips = check(f, "Prices in item tooltips", function(self)
+  f.tips = check(pg, "Prices in item tooltips", function(self)
     FlipForeverDB.settings.tooltips = self:GetChecked() and true or false
   end)
   f.tips:SetPoint("TOPLEFT", 206, -392)
 
   -- Buttons on screen ---------------------------------------------------
-  heading(f, "Buttons on screen", -424)
-  f.mm = check(f, "FlipForever minimap button", function(self)
+  heading(pg, "Buttons on screen", -424)
+  f.mm = check(pg, "FlipForever minimap button", function(self)
     FlipForeverDB.settings.hideMinimap = not self:GetChecked()
     H:ApplyMinimap()
   end)
   f.mm:SetPoint("TOPLEFT", 14, -444)
-  f.oreMM = check(f, "Gathering (ore) minimap button", function(self)
+  f.oreMM = check(pg, "Gathering (ore) minimap button", function(self)
     local ns = FF.gatherNS
     if ns and ns.SetMinimapButtonShown and ns.db then ns.SetMinimapButtonShown(self:GetChecked()) end
   end)
   f.oreMM:SetPoint("TOPLEFT", 14, -468)
-  f.tracker = check(f, "Gathering tracker (next stop, live gold)", function(self)
+  f.tracker = check(pg, "Gathering tracker (next stop, live gold)", function(self)
     local ns = FF.gatherNS
     if ns and ns.SetTrackerShown and ns.db then ns.SetTrackerShown(self:GetChecked()) end
   end)
   f.tracker:SetPoint("TOPLEFT", 14, -492)
-  f.profPanel = check(f, "Planner next to profession windows", function(self)
+  f.profPanel = check(pg, "Planner next to profession windows", function(self)
     FlipForeverDB.settings.profPanel = self:GetChecked() and true or false
   end)
   f.profPanel:SetPoint("TOPLEFT", 14, -516)
@@ -208,12 +388,20 @@ local function build()
   foot:SetPoint("RIGHT", -16, 0)
   foot:SetJustifyH("LEFT")
   foot:SetText("Buy / post / scan buttons appear next to the auction house when you open it.")
+  -- keep the open page current (purchases, autopilot, new lists) without spamming refreshes
+  local since = 0
+  f:SetScript("OnUpdate", function(_, elapsed)
+    since = since + (elapsed or 0)
+    if since >= 1 then since = 0 H:RefreshOverview() H:RefreshList() end
+  end)
   f:Hide()
   return f
 end
 
 function H:Refresh()
   if not (frame and frame:IsShown()) then return end
+  H:RefreshOverview()
+  H:RefreshList()
   local s = FlipForeverDB.settings
   frame.combat:SetChecked(FF.Combat:Enabled())
   frame.autoTarget:SetChecked(FF.Combat:AutoTarget())
@@ -246,13 +434,13 @@ end
 
 function H:Toggle()
   frame = frame or build()
-  if frame:IsShown() then frame:Hide() else frame:Show() H:Refresh() end
+  if frame:IsShown() then frame:Hide() else frame:Show() H:SelectTab(H.tab or "overview") end
 end
 
-function H:Show()
+function H:Show(tab)
   frame = frame or build()
   frame:Show()
-  H:Refresh()
+  H:SelectTab(tab or H.tab or "overview")
 end
 
 -- Quick summary for the minimap tooltip ------------------------------------------------------------

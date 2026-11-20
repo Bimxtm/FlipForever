@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.4.0-beta.1] - 2026-11-20 (beta)
+### Added
+- **Better GUI, part 1 (in game):** the FlipForever window now has tabs.
+  - **Overview:** your list and budget left, today's trades, autopilot status, the Advisor's next step, and the buttons you use most.
+  - **Shopping list:** every item with the lowest price in your last scan (green when it's below your max), your max, how many you bought, and a **Skip** box. Skipped items are never bought on that character until you untick them. Scroll with the mouse wheel.
+  - **Settings:** everything that was in the window before.
+- The Settings buttons on the auction house panel and in the Advisor open the Settings tab directly.
+
 ## [2.3.0] - 2026-11-20
 Everything from Betas 1-4, plus:
 

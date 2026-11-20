@@ -1025,6 +1025,33 @@ lua.execute("FlipForever_Plans['Tester @ Testrealm - Horde'].generated = LIVE.ge
 assert L("FlipForever:Plan().live") is None
 lua.execute("FlipForever.livePlan = nil; FlipForeverDB.settings.livePlanning = false; NOW = OLD_NOW")
 
+# --- 2.4.0: tabbed FlipForever window, shopping-list view with Skip
+lua.execute("""
+FlipForever_Plan = nil
+FlipForever_Plans = { ["Tester @ Testrealm - Horde"] = { generated = 77, budget = 100000,
+  buy = { {id=4306, name="Silk Cloth", max=999999, qty=5}, {id=2589, name="Linen Cloth", max=1, qty=3}, {id=2592, name="Wool Cloth", gap=0.25, max=500, qty=2} },
+  sell = {} } }
+FlipForever.Hub:Show()
+TAB1 = FlipForever.Hub.tab
+FlipForever.Hub:Show("list")
+TAB2 = FlipForever.Hub.tab
+ROWS = FlipForever.Hub:ListRows()
+FlipForever.Hub:SetSkipped(2589, true)
+ROWS2 = FlipForever.Hub:ListRows()
+REM_SKIPPED = FlipForever.Trader:Remaining({id=2589, qty=3})
+REM_OK = FlipForever.Trader:Remaining({id=4306, qty=5})
+FlipForever.Hub:SetSkipped(2589, false)
+REM_BACK = FlipForever.Trader:Remaining({id=2589, qty=3})
+FlipForever.Hub:SelectTab("settings")
+""")
+_rows = [dict(L("ROWS")[i]) for i in range(1, 4)]
+print("hub tabs:", L("TAB1"), "->", L("TAB2"), "| rows:", [(r["name"], r["status"], r.get("now")) for r in _rows])
+assert L("TAB1") == "overview" and L("TAB2") == "list"
+assert [r["name"] for r in _rows] == ["Silk Cloth", "Linen Cloth", "Wool Cloth"] and _rows[2]["live"] is True
+assert _rows[0]["status"] in ("deal", "watching") and _rows[1]["status"] == "watching"
+assert L("ROWS2")[2].status == "skipped" and L("REM_SKIPPED") == 0 and L("REM_OK") == 5 and L("REM_BACK") == 3
+print("skip: skipped item not bought, back after unticking")
+
 # --- per-character plans
 lua.execute("""
 FlipForever_Plan = nil

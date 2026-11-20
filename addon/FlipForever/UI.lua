@@ -121,7 +121,7 @@ function UI:Build()
 
   local settings = button(f, "Settings", 70, 20)
   settings:SetPoint("TOPRIGHT", -10, -10)
-  settings:SetScript("OnClick", function() FF.Hub:Show() end)
+  settings:SetScript("OnClick", function() FF.Hub:Show("settings") end)
 
   -- one click instead of typing /reload: loads a new shopping list from the app and saves
   -- your scans so the app can import them
