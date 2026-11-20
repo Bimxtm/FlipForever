@@ -1,0 +1,143 @@
+"""Local storage: SQLite database + settings + locating the WoW: Forever install."""
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import string
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+import sys
+
+if getattr(sys, "frozen", False):
+    # running as FlipForever.exe: everything lives next to the .exe
+    APP_DIR = Path(sys.executable).resolve().parent
+else:
+    APP_DIR = Path(__file__).resolve().parent.parent.parent  # .../FlipForever
+DATA_DIR = APP_DIR / "data"
+ADDON_SRC = APP_DIR / "addon" / "FlipForever"
+DB_PATH = DATA_DIR / "flipforever.db"
+SETTINGS_PATH = DATA_DIR / "settings.json"
+ADDON_NAME = "FlipForever"
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS items (
+    realm TEXT, id INTEGER, name TEXT, PRIMARY KEY (realm, id));
+CREATE TABLE IF NOT EXISTS scans (
+    realm TEXT, t INTEGER, src TEXT, nitems INTEGER, PRIMARY KEY (realm, t, src));
+CREATE TABLE IF NOT EXISTS prices (
+    realm TEXT, t INTEGER, id INTEGER, min INTEGER, p25 INTEGER, qty INTEGER, n INTEGER, full INTEGER);
+CREATE INDEX IF NOT EXISTS prices_item ON prices (realm, id, t);
+CREATE TABLE IF NOT EXISTS events (
+    uniq TEXT PRIMARY KEY, realm TEXT, t INTEGER, e TEXT, id INTEGER, name TEXT,
+    q INTEGER, p INTEGER, dep INTEGER, gross INTEGER, cut INTEGER, exp INTEGER, char TEXT);
+CREATE INDEX IF NOT EXISTS events_realm ON events (realm, t);
+CREATE TABLE IF NOT EXISTS params (
+    realm TEXT, key TEXT, value TEXT, PRIMARY KEY (realm, key));
+CREATE TABLE IF NOT EXISTS tuning (
+    realm TEXT, t INTEGER, margin REAL, loss_rate REAL, sell_through REAL, roi REAL, note TEXT);
+"""
+
+
+def connect() -> sqlite3.Connection:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(DB_PATH, check_same_thread=False)
+    con.row_factory = sqlite3.Row
+    con.executescript(SCHEMA)
+    return con
+
+
+def get_param(con, realm, key, default=None):
+    row = con.execute("SELECT value FROM params WHERE realm=? AND key=?", (realm, key)).fetchone()
+    return json.loads(row[0]) if row else default
+
+
+def set_param(con, realm, key, value):
+    con.execute("INSERT OR REPLACE INTO params VALUES (?,?,?)", (realm, key, json.dumps(value)))
+
+
+# ------------------------------------------------------------------ settings
+@dataclass
+class Settings:
+    wow_path: str = ""            # ...\World of Warcraft\_forever_
+    account: str = ""             # folder name under WTF\Account
+    realm: str = ""               # "Realm - Faction"
+    budget_gold: float = 500.0    # max gold to spend per shopping list
+    min_margin: float = 0.20      # required profit margin (the learner adjusts around this)
+    ah_cut: float = 0.05
+    deposit_pct: float = 0.015    # deposit guess (fraction of value) until real deposits are learned
+    hold_days: float = 2.0        # buy at most what you can sell in ~this many days
+    min_sales_per_day: float = 3.0  # skip items the market buys fewer of per day
+    min_sell_chance: float = 0.55   # skip items whose auctions sell less often than this
+    starter_mode: bool = True       # before there's history: deep markets, price checked live in game
+    starter_min_listed: int = 50    # "deep market" = at least this many units listed
+    max_units_per_item: int = 200
+    max_plan_items: int = 40
+    min_value_copper: int = 100   # ignore items worth less than this
+    min_scans: int = 3            # need at least this many price snapshots
+    duration: int = 2             # 1=12h 2=24h 3=48h
+    sell_farmed: bool = True      # also post items you didn't flip (farmed loot) at fair value
+    autotune: bool = True
+    auto_import: bool = True
+    blacklist: list = field(default_factory=list)
+    auto_check_updates: bool = True
+    github_token: str = ""        # only needed while the GitHub repository is private (stays on this PC)
+    character: str = ""           # selected character ("" = all characters)
+    budgets: dict = field(default_factory=dict)   # "Name @ Realm - Faction" -> gold
+
+    def budget_for(self, key: str) -> float:
+        return float(self.budgets.get(key, self.budget_gold))
+
+    @classmethod
+    def load(cls) -> "Settings":
+        try:
+            data = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
+            known = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
+            return cls(**known)
+        except (OSError, ValueError, TypeError):
+            return cls()
+
+    def save(self):
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        SETTINGS_PATH.write_text(json.dumps(asdict(self), indent=2), encoding="utf-8")
+
+    # derived paths
+    def savedvars_path(self) -> Path | None:
+        if not (self.wow_path and self.account):
+            return None
+        return Path(self.wow_path) / "WTF" / "Account" / self.account / "SavedVariables" / f"{ADDON_NAME}.lua"
+
+    def addon_path(self) -> Path | None:
+        return Path(self.wow_path) / "Interface" / "AddOns" / ADDON_NAME if self.wow_path else None
+
+
+def find_wow_installs() -> list[str]:
+    found = []
+    bases = []
+    for letter in string.ascii_uppercase:
+        drive = f"{letter}:\\"
+        if os.path.exists(drive):
+            bases += [Path(drive) / "Program Files (x86)" / "World of Warcraft",
+                      Path(drive) / "Program Files" / "World of Warcraft",
+                      Path(drive) / "World of Warcraft",
+                      Path(drive) / "Games" / "World of Warcraft"]
+    for base in bases:
+        try:
+            if base.is_dir():
+                for sub in base.iterdir():
+                    if sub.name.startswith("_") and ((sub / "Interface").exists() or (sub / "WTF").exists()):
+                        found.append(str(sub))
+        except OSError:
+            pass
+    # Forever first
+    found.sort(key=lambda p: (0 if "forever" in p.lower() else 1, p))
+    return found
+
+
+def find_accounts(wow_path: str) -> list[str]:
+    root = Path(wow_path) / "WTF" / "Account"
+    try:
+        return sorted(p.name for p in root.iterdir() if p.is_dir() and (p / "SavedVariables").is_dir())
+    except OSError:
+        return []

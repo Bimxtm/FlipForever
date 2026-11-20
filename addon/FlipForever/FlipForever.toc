@@ -1,0 +1,30 @@
+## Interface: 16001
+## Title: FlipForever
+## Notes: All-in-one for WoW Forever: auction house flipping, gathering routes with profit estimates (uses GatherLite's spots), and a class/build advisor that tells you what to do next.
+## Author: FlipForever
+## Version: 2.0.0
+## SavedVariables: FlipForeverDB, OreFarmerDB
+## OptionalDeps: Auctionator, Auc-Advanced, GatherLite, MapUtils
+## IconTexture: 133784
+
+Core.lua
+ShoppingList.lua
+Scan.lua
+Trader.lua
+Auto.lua
+UI.lua
+
+Gather\Guard.lua
+Gather\Data.lua
+Gather\Core.lua
+Gather\Main.lua
+Gather\GatherLite.lua
+Gather\Prices.lua
+Gather\Map.lua
+Gather\UI.lua
+
+Advisor\GuideData.lua
+Advisor\Advisor.lua
+Advisor\Combat.lua
+
+Hub.lua

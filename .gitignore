@@ -1,0 +1,19 @@
+# your own data: prices, trades, settings, plans (never uploaded)
+data/
+
+# builds (the .exe goes to GitHub Releases, not into the repository)
+FlipForever.exe
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
