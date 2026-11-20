@@ -11,7 +11,6 @@
 ## Small improvements (queue)
 - Profession planner: exact skill-up chances learned from recipe colour changes, instead of averages per colour.
 - Advisor: a "why" tooltip on each step (which guide said so).
-- Auction: smarter undercut (ignore single dumped units; never undercut yourself across characters).
 - Language-independent spells (spell IDs), so the advisor and combat helper work on any client language.
 - Combat helper: sequences for levels 1-10.
 - Advisor: more builds per class as Method/Warcraft Tavern publish post-launch level-60 builds.

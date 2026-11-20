@@ -1052,6 +1052,19 @@ if L("GZ"):
 else:
     print("advisor gather step: gathering module not active in this mock - skipped")
 
+# --- 2.4.0: smarter undercut - a tiny dumped lot isn't the market
+lua.execute("""
+local T = FlipForever.Trader
+A1, I1 = T:UndercutAnchor({ {unitPrice=40, quantity=1}, {unitPrice=100, quantity=50}, {unitPrice=105, quantity=80} })
+A2, I2 = T:UndercutAnchor({ {unitPrice=90, quantity=40}, {unitPrice=100, quantity=50} })        -- normal market
+A3, I3 = T:UndercutAnchor({ {unitPrice=40, quantity=30}, {unitPrice=100, quantity=50} })        -- big cheap lot = real
+A4, I4 = T:UndercutAnchor({ {unitPrice=50, quantity=1, containsOwnerItem=true}, {unitPrice=100, quantity=5} }) -- own lot
+A5 = T:UndercutAnchor({ {unitPrice=30, quantity=1} })                                            -- only one listing
+""")
+print("undercut anchors:", (L("A1"), L("I1")), (L("A2"), L("I2")), (L("A3"), L("I3")), (L("A4"), L("I4")), L("A5"))
+assert (L("A1"), L("I1")) == (100, 40) and (L("A2"), L("I2")) == (90, None) and (L("A3"), L("I3")) == (40, None)
+assert (L("A4"), L("I4")) == (100, None) and L("A5") == 30
+
 # --- 2.4.0: tabbed FlipForever window, shopping-list view with Skip
 lua.execute("""
 FlipForever_Plan = nil

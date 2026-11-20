@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.4.0-beta.4] - 2026-11-20 (beta)
+### Changed
+- **Smarter undercut when posting:** if the cheapest listing is a tiny lot (5% or less of what others have up) priced 30%+ below the next one, it's a dump that will sell in minutes. FlipForever now prices against the next real listing instead of chasing it down, and says so in chat. At most the two cheapest lots are ignored like this. Your own auctions, from any character on your account, are still never undercut.
+
 ## [2.4.0-beta.3] - 2026-11-20 (beta)
 ### Added
 - **Advisor: your best farming zone.** If you mine or pick herbs, the Advisor names the zone that has made you the most gold per hour so far (after 10+ minutes and 10+ nodes there, at FlipForever's prices). Until then it tells you how to measure one.

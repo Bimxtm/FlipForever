@@ -402,16 +402,36 @@ function T:NextSellTarget()
   end
 end
 
-function T:EvaluateSell(rows)
-  local s = self.target
-  local lowestOther, lowestOwn
+-- Which competitor price to undercut. A tiny lot (<= 5% of what others list) priced 30%+ below the
+-- next listing is a dump: it sells within minutes and isn't the market, so we price against the
+-- next real listing instead (at most the 2 cheapest lots are skipped). Returns anchor, ignoredPrice.
+function T:UndercutAnchor(rows)
+  local others, total = {}, 0
   for _, r in ipairs(rows) do
-    if owned(r) then
-      lowestOwn = lowestOwn or r.unitPrice
-    elseif not lowestOther then
-      lowestOther = r.unitPrice
+    if not owned(r) then
+      others[#others + 1] = r
+      total = total + (r.quantity or 1)
     end
   end
+  if #others == 0 then return nil end
+  local skip = 0
+  while skip < 2 and skip < #others - 1 do
+    local r, nxt = others[skip + 1], others[skip + 2]
+    local tiny = (r.quantity or 1) <= math.max(1, total * 0.05)
+    if tiny and r.unitPrice < nxt.unitPrice * 0.7 then skip = skip + 1 else break end
+  end
+  return others[skip + 1].unitPrice, skip > 0 and others[1].unitPrice or nil
+end
+
+function T:EvaluateSell(rows)
+  local s = self.target
+  local lowestOwn
+  for _, r in ipairs(rows) do
+    if owned(r) then lowestOwn = lowestOwn or r.unitPrice end
+  end
+  local lowestOther, ignored = self:UndercutAnchor(rows)
+  if ignored then FF:Print(("%s: ignoring a tiny dumped lot at %s - pricing against %s."):format(
+    FF:ItemName(s.id), FF:Money(ignored), FF:Money(lowestOther))) end
   local price
   if lowestOther then
     price = lowestOther - 1
