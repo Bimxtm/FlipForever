@@ -16,6 +16,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 9
+
+**What your bags are worth.** The Overview now shows what your bags would fetch at a merchant and selling each item the better way, plus how many items are worth posting at the auction house. Hover the line to see them, biggest gain first. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 8
 
 **Open all mail.** At the mailbox, a new button under *Collect auction gold* takes the gold and items from all your mail in one click. Mail with cash on delivery is left alone, and it stops when your bags are full. You can switch the button off under Settings, Features.

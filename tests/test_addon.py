@@ -2341,7 +2341,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,talentOverlay=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,talentOverlay=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2499,4 +2499,42 @@ GetInboxItem, TakeInboxItem = nil, nil
 print("mailbox:", L("MB_OPEN"), "| left:", L("MB_LEFT"), "|", L("MB_MSG"), "|", L("MB_FULL"))
 assert L("MB_OPEN") == "3:700:3" and L("MB_LEFT") == 1 and "7s 0c and 3 items" in L("MB_MSG")
 assert "bags are full" in L("MB_FULL") and L("MB_FULL").endswith("left 1") and L("MB_OFF") is False
+
+# --- bag value: merchant value, best-way value, items worth posting
+lua.execute("""
+local FF = FlipForever
+local BV = FF.BagValue
+local oldCont, oldVendor, oldPrice, oldName = C_Container, FF.VendorPrice, FF.PriceOf, FF.ItemName
+local BAGS = { [0] = {
+  { itemID = 1, stackCount = 20, quality = 1 },                 -- cloth: AH 50c each, vendor 10c -> post
+  { itemID = 2, stackCount = 1, quality = 2, isBound = true },  -- soulbound: vendor only
+  { itemID = 3, stackCount = 5, quality = 0 },                  -- grey: vendor only
+  { itemID = 4, stackCount = 1, quality = 1 },                  -- AH barely above vendor: not worth it
+} }
+C_Container = {
+  GetContainerNumSlots = function(bag) return bag == 0 and 4 or 0 end,
+  GetContainerItemInfo = function(bag, slot) return BAGS[bag] and BAGS[bag][slot] end,
+}
+local VENDOR = { [1] = 10, [2] = 500, [3] = 20, [4] = 100 }
+local AH = { [1] = 50, [2] = 9000, [3] = 999, [4] = 120 }
+FF.VendorPrice = function(self, id) return VENDOR[id] end
+FF.PriceOf = function(self, id) return AH[id] end
+FF.ItemName = function(self, id) return "Item" .. id end
+BV.cache = nil
+local v = BV:Get()
+BV_NUMS = v.vendor .. ":" .. v.ah .. ":" .. #v.post .. ":" .. (v.post[1] and v.post[1].id or 0)
+BV_LINE = BV:Line()
+TIPL = {}
+local tip = { AddLine = function(self, t) TIPL[#TIPL + 1] = t end, AddDoubleLine = function(self, a, b) TIPL[#TIPL + 1] = a .. " = " .. b end }
+BV:Tooltip(tip)
+BV_TIP = table.concat(TIPL, "|")
+FlipForeverDB.settings.bagValue = false
+BV_OFF = BV:Line()
+FlipForeverDB.settings.bagValue = nil
+BV.cache = nil
+C_Container, FF.VendorPrice, FF.PriceOf, FF.ItemName = oldCont, oldVendor, oldPrice, oldName
+""")
+print("bag value:", L("BV_NUMS"), "|", L("BV_LINE"), "|", L("BV_TIP"))
+# vendor 200+500+100+100 = 900; best way: cloth 20*47=940, bound 500, grey 100, item4 max(114,100)=114 -> 1654
+assert L("BV_NUMS") == "900:1654:1:1" and "1 worth posting" in L("BV_LINE") and "Item1 x20" in L("BV_TIP") and L("BV_OFF") == ""
 print("ALL ADDON TESTS PASSED")

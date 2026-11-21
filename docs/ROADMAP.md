@@ -19,7 +19,6 @@
 ### Ideas from popular addons (21 Nov, owner request; our own versions, nothing copied)
 Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. These fit FlipForever's own modules:
 - **App: price history per item** (Auctioneer histograms, TSM): a small chart of an item's lowest price over the last scans on the Deals and Shopping list pages.
-- **Bags: value of what you carry** (Bagnon and Auctionator bag totals): vendor and auction value of your bags on the Overview, and which items are worth posting.
 - **Gathering: node timers** (GatherMate/GatherLite): remember when you last saw a node and show which spots on your route should have respawned.
 
 ## Proposed

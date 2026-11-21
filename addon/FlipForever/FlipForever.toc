@@ -20,6 +20,7 @@ Planner.lua
 Merchant.lua
 Leveling.lua
 Mailbox.lua
+BagValue.lua
 
 Gather\Guard.lua
 Gather\Data.lua

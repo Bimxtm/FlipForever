@@ -130,6 +130,18 @@ local function buildOverview(f)
   if not FF.Auto.AVAILABLE then pg.autopilot:Hide() end
   -- leveling: XP per hour, time to the next level, rested XP (Settings: Features)
   pg.level = text(pg, "GameFontHighlightSmall", 20, -440, 360)
+  -- bag value: merchant and auction value of your bags; hover for what's worth posting
+  pg.bags = text(pg, "GameFontHighlightSmall", 20, -458, 360)
+  pg.bagsHover = CreateFrame("Button", nil, pg)
+  pg.bagsHover:SetPoint("TOPLEFT", 16, -454)
+  pg.bagsHover:SetSize(368, 18)
+  pg.bagsHover:SetScript("OnEnter", function(self)
+    if not (FF.BagValue and FF.BagValue:Enabled()) then return end
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    FF.BagValue:Tooltip(GameTooltip)
+    GameTooltip:Show()
+  end)
+  pg.bagsHover:SetScript("OnLeave", function() GameTooltip:Hide() end)
   return pg
 end
 
@@ -358,6 +370,7 @@ function H:RefreshOverview()
   pg.combat:SetChecked(FF.Combat:Enabled())
   pg.autopilot:SetChecked(FF.Auto:Enabled())
   pg.level:SetText(FF.Leveling and FF.Leveling:Line() or "")
+  pg.bags:SetText(FF.BagValue and FF.BagValue:Line() or "")
 end
 
 -- Language ---------------------------------------------------------------------------------------
@@ -433,7 +446,7 @@ local function build()
   scroll:SetPoint("TOPLEFT", 0, -58)
   scroll:SetPoint("BOTTOMRIGHT", -28, 30)
   local pg = CreateFrame("Frame", nil, scroll)
-  pg:SetSize(372, 960)
+  pg:SetSize(372, 1000)
   scroll:SetScrollChild(pg)
   f.pages.settings = scroll
   f.pages.overview = buildOverview(f)
@@ -592,7 +605,8 @@ local function build()
   feature("levelInfo", "Overview: XP per hour, time to level, rested XP", -852, true)
   feature("threatWarning", "Combat helper: warn me about high threat", -876, true)
   feature("mailOpenAll", "Open all mail button at the mailbox", -900, true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
-  feature("talentOverlay", "Show my build on the Talents window (next point marked)", -924, true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end)
+  feature("bagValue", "Overview: value of my bags, items worth posting", -924, true)
+  feature("talentOverlay", "Show my build on the Talents window (next point marked)", -948, true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)
