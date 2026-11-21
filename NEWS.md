@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 23
+# FlipForever 2.5 Beta 24
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Undercuts in the app.** The app's Advisor page now lists each character's auctions that were undercut, so you know what to repost before you log in.
 
 **The right "of the Bear".** The gear finder now looks at every version of random-stat gear on its own, so "of the Bear" and "of the Owl" are no longer mixed up, and it buys exactly the version it recommends.
 

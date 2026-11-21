@@ -41,7 +41,7 @@ function A:Check()
     end
   end
   table.sort(under, function(x, y) return (x.mine - x.now) * x.qty > (y.mine - y.now) * y.qty end)
-  self.owned, self.undercut = #owned, under
+  self.owned, self.undercut, self.checked = #owned, under, time()
   return under, #owned
 end
 
@@ -73,5 +73,7 @@ FF:On("OWNED_AUCTIONS_UPDATED", function()
   if not asked then return end
   asked = false -- one line per visit
   pcall(A.Report, A)
+  -- the Advisor saves the result for the app with its next check
+  if FF.Advisor and FF.Advisor.Refresh then pcall(FF.Advisor.Refresh, FF.Advisor) end
   if FF.Hub and FF.Hub.RefreshOverview then pcall(FF.Hub.RefreshOverview, FF.Hub) end
 end)

@@ -464,9 +464,19 @@ function AD:Save(recs, p, build)
     if i > 5 then break end
     crafts[i] = { name = e.recipe.name, prof = e.prof, crafts = e.crafts, profit = math.floor(e.profit), perDay = math.floor(e.perDay * 10 + 0.5) / 10 }
   end
+  -- your auctions as last checked at the auction house (Auctions.lua), kept until the next check
+  local A = FF.Auctions
+  if A and A.owned then
+    local under = {}
+    for i, u in ipairs(A.undercut or {}) do
+      if i > 5 then break end
+      under[i] = { name = u.name, mine = u.mine, now = u.now, qty = u.qty }
+    end
+    store.auctions = { t = A.checked or time(), up = A.owned, undercut = under, n = #(A.undercut or {}) }
+  end
   store.advisor = { t = time(), level = p.level, race = p.race, class = p.class, className = p.className,
     build = build and build.name or nil, source = build and G.SOURCES[build.source] or nil, steps = lines,
-    gear = gear, crafts = crafts }
+    gear = gear, crafts = crafts, auctions = store.auctions }
   store.level, store.race, store.class = p.level, p.race, p.class
 end
 

@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.24] - 2026-11-21 (beta)
+### Added
+- App, Advisor page: each character's auctions from the last auction house visit (how many are up, which are undercut, yours against the cheapest price).
+
 ## [2.5.0-beta.23] - 2026-11-21 (beta)
 ### Changed
 - **Random-stat gear is judged version by version.** A full scan now keeps the cheapest listing of every version of an item ("of the Bear", "of the Owl", ...), and the gear finder scores each on its own stats and price. Buying an upgrade searches for exactly that version and never buys a different one of the same item.
