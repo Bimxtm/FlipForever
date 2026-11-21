@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import os
 import re
+import subprocess
 import threading
 import time
 import tkinter as tk
@@ -323,6 +324,14 @@ class App(tk.Tk):
         self.page_sub.set(sub)
 
     # about & updates
+    def add_shortcuts(self, quiet=False):
+        try:
+            updater.make_shortcuts()
+            self.upd_status.set("FlipForever is on your desktop and in the Start menu.")
+        except (updater.UpdateError, OSError, subprocess.SubprocessError) as e:
+            if not quiet:
+                self.upd_status.set(str(e))
+
     def copy_bug_report(self):
         text = engine.bug_report_text(self.settings, VERSION)
         self.clipboard_clear()
@@ -344,6 +353,7 @@ class App(tk.Tk):
         self.upd_install_btn.pack(side="left", padx=8)
         ttk.Button(row, text="Open on GitHub", command=lambda: webbrowser.open(f"https://github.com/{GITHUB_REPO}/releases")).pack(side="left")
         ttk.Button(row, text="Copy bug report info", command=self.copy_bug_report).pack(side="left", padx=8)
+        ttk.Button(row, text="Add to desktop and Start menu", command=self.add_shortcuts).pack(side="left")
         self.upd_status = tk.StringVar(value="")
         ttk.Label(f, textvariable=self.upd_status, style="Muted.TLabel", wraplength=1100, justify="left").pack(anchor="w", pady=(8, 0))
         opts = ttk.Frame(f)
@@ -521,6 +531,13 @@ class App(tk.Tk):
                 self.status(f"WoW addon updated {installed} -> {bundled}. Restart WoW (or /reload) to load it.")
         except Exception:  # noqa: BLE001
             traceback.print_exc()
+        # first start of the program: offer a desktop and Start menu shortcut (once)
+        if getattr(sys, "frozen", False) and not self.settings.shortcut_asked:
+            self.settings.shortcut_asked = True
+            self.settings.save()
+            if messagebox.askyesno("FlipForever", "Add FlipForever to your desktop and Start menu?\n\n"
+                                   "Keep this FlipForever folder where it is: the app updates itself there."):
+                self.add_shortcuts(quiet=True)
         if "--updated" in sys.argv:
             self.nb.select(self.tab_about)
             messagebox.showinfo("FlipForever", f"Updated to FlipForever {VERSION}!\n\nSee 'About & updates' for what's new.")

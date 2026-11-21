@@ -53,12 +53,9 @@ def build_exe(skip: bool):
 
 
 def refresh_local_exe():
-    """Put the new exe in the project folder too - only if the app isn't running (file would be locked)."""
-    try:
-        shutil.copy2(EXE_OUT / "FlipForever.exe", ROOT / "FlipForever.exe")
-        print("local FlipForever.exe updated")
-    except PermissionError:
-        print("FlipForever.exe is open - your copy updates through About & updates (or rerun later)")
+    """The installed app (in its own program folder) updates itself from the GitHub release,
+    like every player's copy, so the build no longer copies an exe anywhere."""
+    print("installed apps update themselves from the release (About & updates)")
 
 
 def make_zip() -> Path:

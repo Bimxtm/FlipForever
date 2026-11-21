@@ -173,6 +173,22 @@ def apply_and_restart(new_dir: Path):
     subprocess.Popen(["cmd", "/c", str(bat)], creationflags=0x08000000)  # CREATE_NO_WINDOW
 
 
+def make_shortcuts() -> None:
+    """Desktop and Start menu shortcuts to this FlipForever.exe (Windows' own scripting, nothing to install)."""
+    if not getattr(sys, "frozen", False):
+        raise UpdateError("Shortcuts are made from FlipForever.exe.")
+    exe = Path(sys.executable)
+    script = ("$s = New-Object -ComObject WScript.Shell; "
+              "foreach ($d in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) { "
+              "$l = $s.CreateShortcut((Join-Path $d 'FlipForever.lnk')); $l.TargetPath = $env:FF_EXE; "
+              "$l.WorkingDirectory = $env:FF_DIR; $l.IconLocation = $env:FF_EXE + ',0'; $l.Save() }")
+    env = dict(os.environ, FF_EXE=str(exe), FF_DIR=str(exe.parent))
+    r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script], env=env,
+                       capture_output=True, text=True, creationflags=0x08000000, timeout=30)
+    if r.returncode != 0:
+        raise UpdateError("Couldn't create the shortcuts: " + (r.stderr or r.stdout).strip()[:200])
+
+
 def bundled_addon_version() -> str | None:
     return _toc_version(APP_DIR / "addon" / "FlipForever" / "FlipForever.toc")
 

@@ -27,6 +27,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.1: desktop and Start menu shortcut offer; updates from public GitHub releases without a token.
 - Repository is public (owner, 21 Nov): the app finds updates without a GitHub token (P3).
 - 2.5.0 stable: all betas, every text in 11 languages, Advisor data and realm fixes, druid forms, Gear tab hover compare, autopilot off for now.
 - 2.5.0 beta 29 (owner report): combat helper no longer gets stuck on one skill.

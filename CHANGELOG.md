@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.1] - 2026-11-21
+### Added
+- The app offers to put FlipForever on your desktop and in the Start menu the first time it starts, and About & updates has an *Add to desktop and Start menu* button.
+### Changed
+- Downloads and updates come straight from the public GitHub releases: no GitHub token needed. The app checks at start, asks, then updates itself and the WoW addon. Nothing else needs to be installed.
+
 ## [2.5.0] - 2026-11-21
 All 2.4 and 2.5 betas in one release (see the beta entries below), plus:
 ### Added

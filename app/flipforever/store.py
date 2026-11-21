@@ -135,6 +135,7 @@ class Settings:
     language: str = ""            # "" = English; otherwise a WoW language code (deDE, frFR, ...)
     window: str = ""              # last window size/position ("WxH+X+Y"), restored at start
     window_zoomed: bool = False
+    shortcut_asked: bool = False  # the program offered a desktop/Start menu shortcut once
 
     def budget_for(self, key: str) -> float:
         return float(self.budgets.get(key, self.budget_gold))

@@ -1,4 +1,8 @@
-# FlipForever 2.5.0
+# FlipForever 2.5.1
+
+**Updates in one click.** The app checks for a new version when it starts and asks you. Click Yes and it updates itself and the WoW addon. Nothing else to install. The first time it starts, it also offers to put FlipForever on your desktop and in the Start menu.
+
+## Also in 2.5
 
 **In your language.** The FlipForever window, the Advisor, the profession planner, chat messages and the whole app now come in all 11 game languages. Pick yours under Settings, or leave it on the game's language.
 
