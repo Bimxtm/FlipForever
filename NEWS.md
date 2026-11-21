@@ -1,3 +1,7 @@
+# FlipForever 2.7.0 Beta 1
+
+**Quest helper (first test version).** FlipForever now learns where your quests happen: where you took them, where you made progress, and where you handed them in, shared by all your characters. Type `/ff quest` and the waypoint arrow points to the next spot of a quest; type it again for the next quest. Known spots also show as quest pins on the world map, and a chat line tells you when a quest is ready to hand in. It gets better the more you play. You can switch it off under Settings, Features. This beta also has the talent overlay and everything from the 2.5.2 betas up to Beta 12.
+
 # FlipForever 2.6.0 Beta 6
 
 **Your points by level.** The panel beside the Talents window now shows where your points should stand at levels 20, 30, 40, 50 and 60 for builds with a full talent order, with the band you are in marked. If you are behind the order for your level, it tells you by how many points. This beta also has everything from the 2.5.2 betas up to Beta 12.

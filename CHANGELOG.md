@@ -2,6 +2,15 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.1] - 2026-11-21 (beta, branch feature/quest-helper)
+### Added
+- Quest helper. FlipForever learns quest spots from your play and keeps them for all your characters: where you took each quest, where its objectives moved forward, and where you handed it in. The next spot of a quest is the area of its first unfinished objective, or the place to hand it in once it is done (the quest giver until a hand-in has been seen). Where the game client knows the next waypoint itself, that is used too.
+- `/ff quest` points the waypoint arrow at the next quest spot, ready-to-hand-in quests first; type it again for the next quest.
+- World map: a quest pin on each known spot of the map you are looking at (yellow ? to hand in, ! for objectives), with the quest and what to do there on hover.
+- Chat: a line when a quest is ready to hand in and its hand-in spot is known.
+- Switch: *Quest helper: learn quest spots, map pins, /ff quest* in Settings, Features.
+- Includes the talent overlay (2.6.0 Beta 6) and 2.5.2 Beta 12.
+
 ## [2.6.0-beta.6] - 2026-11-21 (beta)
 ### Added
 - Talents panel: where your points should stand at levels 20, 30, 40, 50 and 60, as a point split per tree, for builds with a full talent order. The band you are in now is gold. When you have fewer points in the build's trees than the order asks for at your level (not counting points you still have to spend), an orange note says how many.

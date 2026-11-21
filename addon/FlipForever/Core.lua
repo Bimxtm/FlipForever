@@ -481,6 +481,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Trader:Stop()
   elseif cmd == "guide" or cmd == "advisor" or cmd == "next" then
     FF.Advisor:Toggle()
+  elseif cmd == "quest" or cmd == "quests" then
+    FF.QuestHelper:Next()
   elseif cmd == "talents" or cmd == "talent" then
     FF.TalentOverlay:Open()
   elseif cmd == "combat" then

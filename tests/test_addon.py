@@ -2450,7 +2450,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,questHelper=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2665,4 +2665,85 @@ FlipForeverDB.settings.nodeTimers = nil
 print("node timers:", L("NT_TIMERS"), L("NT_WAIT"), L("NT_OFF"))
 assert L("NT_TIMERS") == "2:1:840" and L("NT_WAIT") == 840 and L("NT_OFF") == 0
 assert L("BV_NUMS") == "900:1654:1:1" and "1 worth posting" in L("BV_LINE") and "Item1 x20" in L("BV_TIP") and L("BV_OFF") == ""
+
+# --- quest helper: learns the giver, objective spots and the hand-in; arrow and map pins
+lua.execute("""
+local QH, FF = FlipForever.QuestHelper, FlipForever
+local oldQL, oldPos, oldName, oldSet = C_QuestLog, FF.Arrow.PlayerPos, UnitName, FF.Arrow.SetTarget
+FlipForeverDB.quests = nil
+POS = { 1411, 0.50, 0.50 }
+FF.Arrow.PlayerPos = function() return POS[1], POS[2], POS[3] end
+NPC = "Gornek"
+UnitName = function(unit) if unit == "npc" then return NPC end return "Tester" end
+QLOG = {}
+C_QuestLog = {
+  GetNumQuestLogEntries = function() return #QLOG end,
+  GetInfo = function(i) local q = QLOG[i] return q and { title = q.title, questID = q.id } end,
+  IsComplete = function(id) for _, q in ipairs(QLOG) do if q.id == id then return q.complete end end return false end,
+  GetQuestObjectives = function(id) for _, q in ipairs(QLOG) do if q.id == id then return q.objs end end return {} end,
+}
+ARROWED = nil
+FF.Arrow.SetTarget = function(self, m, x, y, label) ARROWED = m .. ":" .. x .. ":" .. y .. ":" .. label end
+-- take the quest from Gornek at 50,50
+Fire("QUEST_DETAIL")
+QLOG[1] = { id = 788, title = "Cutting Teeth", objs = { { text = "Mottled Boar slain: 0/10", numFulfilled = 0, finished = false } } }
+Fire("QUEST_ACCEPTED", 788)
+Fire("QUEST_LOG_UPDATE")                    -- first look: no point
+QH_EMPTY = QH:Spot(QH:Log()[1]) == nil
+-- two kills, at 40,60 and 44,64
+POS = { 1411, 0.40, 0.60 }
+QLOG[1].objs[1].numFulfilled = 1
+Fire("QUEST_LOG_UPDATE")
+POS = { 1411, 0.44, 0.64 }
+QLOG[1].objs[1].numFulfilled = 2
+Fire("QUEST_LOG_UPDATE")
+local s = QH:Spot(QH:Log()[1])
+QH_OBJ = s.kind .. ":" .. string.format("%.2f,%.2f", s.x, s.y) .. ":" .. s.label
+-- done: the hand-in goes back to the giver (no hand-in seen yet), with a chat line
+QLOG[1].objs[1].numFulfilled, QLOG[1].objs[1].finished, QLOG[1].complete = 10, true, true
+PRINTED = {}
+local oldPrint = FF.Print
+FF.Print = function(self, msg) PRINTED[#PRINTED + 1] = msg end
+Fire("QUEST_LOG_UPDATE")
+FF.Print = oldPrint
+QH_READY_MSG = PRINTED[1] or ""
+s = QH:Spot(QH:Log()[1])
+QH_TURNIN_GUESS = s.kind .. ":" .. string.format("%.2f,%.2f", s.x, s.y) .. ":" .. s.label
+QH:Next()
+QH_ARROW = ARROWED
+-- a world map showing zone 1411: one pin at the giver
+local canvas = CreateFrame("Frame")
+canvas.GetWidth = function() return 1000 end
+canvas.GetHeight = function() return 600 end
+WorldMapFrame = CreateFrame("Frame")
+WorldMapFrame.GetMapID = function() return 1411 end
+WorldMapFrame.GetCanvas = function() return canvas end
+WorldMapFrame.shown = true
+QH_PINS = QH:RefreshMap()
+WorldMapFrame.GetMapID = function() return 1412 end
+QH_PINS_OTHER = QH:RefreshMap()
+-- handed in to Gornek, now standing at 52,48
+POS = { 1411, 0.52, 0.48 }
+Fire("QUEST_COMPLETE")
+Fire("QUEST_TURNED_IN", 788, 100, 0)
+QH_TURNIN = FlipForeverDB.quests[788].turnin.n .. ":" .. FlipForeverDB.quests[788].turnin.x
+-- the next character with the same quest done goes to the learned hand-in
+s = QH:Spot(QH:Log()[1])
+QH_TURNIN2 = s.label
+-- switched off: no arrow, no pins
+FlipForeverDB.settings.questHelper = false
+ARROWED = nil
+QH:Next()
+QH_OFF = (ARROWED == nil) and QH:RefreshMap() == 0
+FlipForeverDB.settings.questHelper = nil
+WorldMapFrame = nil
+C_QuestLog, FF.Arrow.PlayerPos, UnitName, FF.Arrow.SetTarget = oldQL, oldPos, oldName, oldSet
+""")
+print("quest helper:", L("QH_OBJ"), "|", L("QH_TURNIN_GUESS"), "|", L("QH_ARROW"), "| pins:", L("QH_PINS"), L("QH_PINS_OTHER"))
+print("quest ready line:", L("QH_READY_MSG"), "| hand-in:", L("QH_TURNIN"), "|", L("QH_TURNIN2"))
+assert L("QH_EMPTY") and L("QH_OBJ") == "objective:0.42,0.62:Mottled Boar slain: 0/10"
+assert L("QH_TURNIN_GUESS") == "turnin:0.50,0.50:Hand in (quest giver): Gornek"
+assert L("QH_ARROW") == "1411:0.5:0.5:Cutting Teeth - Hand in (quest giver): Gornek"
+assert "Cutting Teeth" in L("QH_READY_MSG") and L("QH_PINS") == 1 and L("QH_PINS_OTHER") == 0
+assert L("QH_TURNIN") == "Gornek:0.52" and L("QH_TURNIN2") == "Hand in: Gornek" and L("QH_OFF")
 print("ALL ADDON TESTS PASSED")
