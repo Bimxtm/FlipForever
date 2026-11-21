@@ -1816,11 +1816,15 @@ OWN_MSGS = #printed
 OWN_MSG = printed[1]
 OWN_LINE = FF.Auctions:Line()
 OWN_FIRST = FF.Auctions.undercut[1].id
+local saved = FF.Advisor:CharStore().auctions
+OWN_SAVED = saved and (saved.up .. "/" .. saved.n .. "/" .. saved.undercut[1].mine) or "none"
 FF.Planner.Model = oldModel
 """)
 print("own auctions:", L("OWN_MSG"), "|", L("OWN_LINE"))
 assert L("OWNED_QUERIED") >= 1 and L("OWN_MSGS") == 1 and "2 of your 3 auctions are undercut" in L("OWN_MSG")
 assert L("OWN_FIRST") == 503 and "3 up" in L("OWN_LINE") and "2 undercut" in L("OWN_LINE")
+print("saved for the app:", L("OWN_SAVED"))
+assert L("OWN_SAVED") == "3/2/80"
 
 # --- Overview: age of the newest scan
 lua.execute("""

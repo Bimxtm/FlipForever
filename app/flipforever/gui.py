@@ -559,6 +559,14 @@ class App(tk.Tk):
                 for g in gear:
                     better = f"+{g['pct']}%" if g.get("pct") is not None else "new slot"
                     t.insert("end", f"    {g.get('slot', '')}: {g.get('name', '?')}  {money(g.get('price'), True)}  ({better})\n")
+            auc = adv.get("auctions")
+            if isinstance(auc, dict):
+                n = auc.get("n") or 0
+                head = (f"{auc.get('up', 0)} up, {n} undercut" if n else f"{auc.get('up', 0)} up, all still the cheapest")
+                t.insert("end", f"\n  Your auctions ({head}, checked {ago(auc.get('t'))})\n", "sub")
+                for u in engine._as_list(auc.get("undercut")):
+                    t.insert("end", f"    {u.get('name', '?')} x{u.get('qty', 1)}: yours {money(u.get('mine'), True)}, "
+                                    f"now {money(u.get('now'), True)}\n")
             crafts = engine._as_list(adv.get("crafts"))
             if crafts:
                 t.insert("end", "\n  Profitable crafts (profession planner)\n", "sub")

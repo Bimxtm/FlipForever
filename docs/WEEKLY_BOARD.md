@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 24: undercut auctions per character in the app.
 - 2.5.0 beta 23: random-stat gear scored and bought version by version (P6).
 - 2.5.0 beta 22: undercut check for your own auctions when the auction house opens.
 - 2.5.0 beta 21: gear upgrade line in item tooltips, scan age on the Overview, clearer gathering price source.
