@@ -52,6 +52,39 @@ def ago(t):
     return f"{s // 86400} days ago"
 
 
+def tr_padded(text: str) -> str:
+    """tr() for labels with spacing around them ("   search:")."""
+    core = text.strip()
+    if not core:
+        return text
+    start = text.index(core)
+    return text[:start] + tr(core) + text[start + len(core):]
+
+
+def translate_widgets(widget) -> int:
+    """Translate the fixed texts of every widget below `widget`: labels, buttons, checkboxes and
+    table headings. Texts set later from code (status lines, numbers) are not touched."""
+    n = 0
+    try:
+        text = widget.cget("text")
+    except (tk.TclError, AttributeError):
+        text = None
+    if isinstance(text, str) and text:
+        new = tr_padded(text)
+        if new != text:
+            widget.configure(text=new)
+            n += 1
+    if isinstance(widget, ttk.Treeview):
+        for col in widget["columns"]:
+            head = widget.heading(col, "text")
+            if head and tr(head) != head:
+                widget.heading(col, text=tr(head))
+                n += 1
+    for child in widget.winfo_children():
+        n += translate_widgets(child)
+    return n
+
+
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -235,6 +268,8 @@ class App(tk.Tk):
         self._build_gather()
         self._build_settings()
         self._build_help()
+        if i18n.language() != "enUS":
+            translate_widgets(self)
 
     # sidebar: pages grouped by what you're doing, with a one-line explanation on top of each page
     NAV = (
@@ -888,7 +923,7 @@ class App(tk.Tk):
 
         def add(label, key, kind="entry", width=50, values=None, hint=""):
             nonlocal row
-            ttk.Label(f, text=label).grid(row=row, column=0, sticky="w", pady=5, padx=(0, 14))
+            ttk.Label(f, text=tr_padded(label)).grid(row=row, column=0, sticky="w", pady=5, padx=(0, 14))
             val = getattr(self.settings, key)
             if kind == "bool":
                 v = tk.BooleanVar(value=val)
@@ -901,7 +936,7 @@ class App(tk.Tk):
                 w = ttk.Entry(f, textvariable=v, width=width)
             w.grid(row=row, column=1, sticky="w")
             if hint:
-                ttk.Label(f, text=hint, style="Muted.TLabel").grid(row=row, column=2, sticky="w", padx=12)
+                ttk.Label(f, text=tr(hint), style="Muted.TLabel").grid(row=row, column=2, sticky="w", padx=12)
             self.vars[key] = (v, kind)
             row += 1
             return w
