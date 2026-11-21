@@ -24,6 +24,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.11] - 2026-11-21 (beta)
+### Added
+- Gathering: node timers. Spots you gathered in the last 15 minutes are skipped by the *Next* stop on your loop (nodes come back after roughly 5-30 minutes), and the tracker shows how many spots are ready and when the next one should be back. If every spot is still waiting, the loop runs in its normal order. Switch: *Gathering: skip spots I gathered in the last 15 min* in Settings, Features.
+
 ## [2.5.2-beta.10] - 2026-11-21 (beta)
 ### Added
 - App, Deals: a *7-day trend* column - the cheapest listing in your newest scan against the usual price of the last 7 days (+12% dearer, -8% cheaper, or steady). The price history window shows it too.

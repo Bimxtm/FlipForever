@@ -2341,7 +2341,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,talentOverlay=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2536,5 +2536,24 @@ C_Container, FF.VendorPrice, FF.PriceOf, FF.ItemName = oldCont, oldVendor, oldPr
 """)
 print("bag value:", L("BV_NUMS"), "|", L("BV_LINE"), "|", L("BV_TIP"))
 # vendor 200+500+100+100 = 900; best way: cloth 20*47=940, bound 500, grey 100, item4 max(114,100)=114 -> 1654
+
+# --- gathering node timers: spots gathered in the last 15 min are skipped by the next stop
+lua.execute("""
+local ns = FlipForever.gatherNS
+local T = 100000
+local route = { mapID = 1, W = 1000, H = 1000, pts = {
+  { x = 0.10, y = 0.10, node = { lastMined = T - 60 } },      -- gathered a minute ago: waiting
+  { x = 0.50, y = 0.50, node = { lastMined = T - 20 * 60 } }, -- back already
+  { x = 0.90, y = 0.90, node = {} },                           -- never gathered
+}, order = { 1, 2, 3 } }
+local r, w, s = ns.RouteTimers(route, T)
+NT_TIMERS = r .. ":" .. w .. ":" .. math.floor(s)
+NT_WAIT = math.floor(ns.NodeWait(route.pts[1].node, T))
+FlipForeverDB.settings.nodeTimers = false
+NT_OFF = ns.NodeWait(route.pts[1].node, T)
+FlipForeverDB.settings.nodeTimers = nil
+""")
+print("node timers:", L("NT_TIMERS"), L("NT_WAIT"), L("NT_OFF"))
+assert L("NT_TIMERS") == "2:1:840" and L("NT_WAIT") == 840 and L("NT_OFF") == 0
 assert L("BV_NUMS") == "900:1654:1:1" and "1 worth posting" in L("BV_LINE") and "Item1 x20" in L("BV_TIP") and L("BV_OFF") == ""
 print("ALL ADDON TESTS PASSED")

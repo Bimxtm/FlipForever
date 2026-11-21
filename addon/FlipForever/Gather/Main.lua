@@ -246,6 +246,33 @@ function ns.EstimateRoute(mapID)
   return est, r
 end
 
+-- Node timers: a spot you gathered recently isn't back yet. Classic nodes return after roughly
+-- 5-30 minutes; 15 is a fair middle. Setting: nodeTimers (Settings, Features; on by default).
+ns.RESPAWN_SECONDS = 15 * 60
+
+function ns.TimersOn()
+  return not (FlipForeverDB and FlipForeverDB.settings and FlipForeverDB.settings.nodeTimers == false)
+end
+
+-- seconds until this spot should be back (0 = ready)
+function ns.NodeWait(node, now)
+  if not (node and node.lastMined) or not ns.TimersOn() then return 0 end
+  return math.max(0, ns.RESPAWN_SECONDS - ((now or time()) - node.lastMined))
+end
+
+-- the loop's spots: how many are ready, how many still waiting, and the shortest wait
+function ns.RouteTimers(r, now)
+  local ready, waiting, soonest = 0, 0, nil
+  for _, p in ipairs(r and r.pts or {}) do
+    local w = ns.NodeWait(p.node, now)
+    if w <= 0 then ready = ready + 1 else
+      waiting = waiting + 1
+      if not soonest or w < soonest then soonest = w end
+    end
+  end
+  return ready, waiting, soonest
+end
+
 -- Next stop on the loop.
 ns.nextStop = { route = nil, pos = nil }
 
@@ -254,19 +281,23 @@ local function updateNextStop(mapID, px, py)
   local n = #r.order
   local st = ns.nextStop
   if n == 0 then st.route, st.pos = r, nil; return end
+  local now = time()
+  -- with every spot still waiting, fall back to the plain loop order
+  local anyReady = ns.RouteTimers(r, now) > 0
+  local function ready(k) return not anyReady or ns.NodeWait(r.pts[r.order[k]].node, now) <= 0 end
   if st.route ~= r or not st.pos or not r.order[st.pos] then
     local best, bd
     for k = 1, n do
       local p = r.pts[r.order[k]]
       local d = ns.Yards(p.x, p.y, px, py, r.W, r.H)
-      if not bd or d < bd then best, bd = k, d end
+      if ready(k) and (not bd or d < bd) then best, bd = k, d end
     end
-    st.route, st.pos = r, best
+    st.route, st.pos = r, best or 1
   end
-  -- Reached it (gathered, or passed by and it wasn't there): move on.
+  -- Reached it (gathered, or passed by and it wasn't there), or it was gathered recently: move on.
   for _ = 1, n do
     local p = r.pts[r.order[st.pos]]
-    if ns.Yards(p.x, p.y, px, py, r.W, r.H) > 12 then break end
+    if ns.Yards(p.x, p.y, px, py, r.W, r.H) > 12 and ready(st.pos) then break end
     st.pos = st.pos % n + 1
   end
 end
