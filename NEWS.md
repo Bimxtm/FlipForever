@@ -16,6 +16,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 10
+
+**Price trends in the app.** The Deals page has a new *7-day trend* column that shows whether an item is dearer or cheaper than usual right now. On the Inventory & selling page, double-click an item to see its price history with your cost and floor marked.
+
 # FlipForever 2.5.2 Beta 9
 
 **What your bags are worth.** The Overview now shows what your bags would fetch at a merchant and selling each item the better way, plus how many items are worth posting at the auction house. Hover the line to see them, biggest gain first. You can switch it off under Settings, Features.

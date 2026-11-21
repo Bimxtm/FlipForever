@@ -24,6 +24,11 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.10] - 2026-11-21 (beta)
+### Added
+- App, Deals: a *7-day trend* column - the cheapest listing in your newest scan against the usual price of the last 7 days (+12% dearer, -8% cheaper, or steady). The price history window shows it too.
+- App, Inventory & selling: double-click an item for its price history, with your cost, the floor and the fair value marked.
+
 ## [2.5.2-beta.9] - 2026-11-21 (beta)
 ### Added
 - Overview: bag value line. What your bags fetch at a merchant, what they fetch selling each item the better way (auction price after the 5% cut, or the merchant), and how many items are clearly worth posting. Hover it for the list, biggest gain first. Soulbound and grey items count at the merchant price. Switch: *Overview: value of my bags, items worth posting* in Settings, Features.

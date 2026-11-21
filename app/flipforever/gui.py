@@ -104,6 +104,7 @@ class App(tk.Tk):
         self.con = store.connect()
         self.realm = None
         self.model, self.ledger, self.learned, self.deals = {}, None, None, []
+        self.trends = {}
         self.last_mtime = 0
         self._style()
         self._build()
@@ -814,9 +815,9 @@ class App(tk.Tk):
         self.deal_info = tk.StringVar()
         ttk.Label(self.tab_deals, textvariable=self.deal_info, style="Muted.TLabel", wraplength=1100,
                   justify="left").pack(anchor="w", pady=(0, 6))
-        cols = ("Item", "Now", "Fair value", "Max buy", "Profit/unit", "ROI", "Sells/day", "Sells in", "Sell chance",
-                "Buy qty", "Confidence", "Note")
-        widths = (190, 85, 85, 85, 85, 55, 70, 70, 80, 60, 80, 220)
+        cols = ("Item", "Now", "7-day trend", "Fair value", "Max buy", "Profit/unit", "ROI", "Sells/day", "Sells in",
+                "Sell chance", "Buy qty", "Confidence", "Note")
+        widths = (190, 85, 80, 85, 85, 85, 55, 70, 70, 80, 60, 80, 200)
         frame, self.deal_tree = self._tree(self.tab_deals, cols, widths)
         frame.pack(fill="both", expand=True)
         self.deal_tree.bind("<Double-1>", lambda e: self._show_item(self.deal_tree))
@@ -831,10 +832,12 @@ class App(tk.Tk):
         shown = engine.filter_deals(self.deals, self.only_deals.get(), self.fast_only.get(), min_profit,
                                     self.deal_filter.get())
         for d in shown:
+            tr = self.trends.get(d.id)
+            trend = engine.trend_text(tr)
             if d.starter:
-                rows.append(((d.name, money(d.cur), money(d.market), "live", "live", "", "-", "?",
+                rows.append(((d.name, money(d.cur), trend, money(d.market), "live", "live", "", "-", "?",
                               f"{d.p_sell:.0%}", "auto", "new", d.reason),
-                             (d.name.lower(), d.cur, d.market, 0, 0, 0, 0, 999, d.p_sell, 0, 0, None), "starter"))
+                             (d.name.lower(), d.cur, tr or 0, d.market, 0, 0, 0, 0, 999, d.p_sell, 0, 0, None), "starter"))
                 continue
             vol = "-" if d.vol_day is None else f"{d.vol_day:.1f}"
             if d.est_days is None:
@@ -843,10 +846,10 @@ class App(tk.Tk):
                 speed = f"~{max(1, round(d.est_days * 24))} h"
             else:
                 speed = f"~{d.est_days:.1f} d"
-            rows.append(((d.name, money(d.cur), money(d.market), money(d.max_buy), money(d.profit_unit),
+            rows.append(((d.name, money(d.cur), trend, money(d.market), money(d.max_buy), money(d.profit_unit),
                           f"{d.roi:.0%}", vol, speed, f"{d.p_sell:.0%}", d.qty_cap if d.fast else "-",
                           f"{d.confidence:.0%}", d.reason),
-                         (d.name.lower(), d.cur, d.market, d.max_buy, d.profit_unit, d.roi, d.vol_day or 0,
+                         (d.name.lower(), d.cur, tr or 0, d.market, d.max_buy, d.profit_unit, d.roi, d.vol_day or 0,
                           d.est_days if d.est_days is not None else 999, d.p_sell, d.qty_cap, d.confidence, None),
                          "deal" if d.is_deal else ("bad" if not d.fast else "muted")))
         self._fill(self.deal_tree, rows)
@@ -879,12 +882,35 @@ class App(tk.Tk):
         d = self._deal_ids.get(sel[0])
         if not d:
             return
-        hist = engine.price_history(self.con, self.realm, d.id)
+        trend = engine.trend_text(self.trends.get(d.id))
+        self._show_chart(d.id, d.name,
+                         f"{d.name}  ·  fair value {money(d.market)}  ·  max buy {money(d.max_buy)}"
+                         + (f"  ·  7 days: {trend}" if trend else ""),
+                         ((d.max_buy, GOLD, "max buy"), (d.market, MUTED, "fair")))
+
+    def _show_held(self):
+        """Inventory & selling: double-click an item for its price history with your cost and floor."""
+        sel = self.sell_tree.selection()
+        if not sel:
+            return
+        e = getattr(self, "_sell_ids", {}).get(sel[0])
+        if not e:
+            return
+        iid, name, cost, floor, fair = e
+        trend = engine.trend_text(self.trends.get(iid))
+        self._show_chart(iid, name,
+                         f"{name}  ·  your cost {money(cost)}  ·  floor {money(floor)}"
+                         + (f"  ·  7 days: {trend}" if trend else ""),
+                         tuple(x for x in ((floor, GOLD, "floor"), (cost, "#ff8a65", "your cost"),
+                                           (fair, MUTED, "fair")) if x[0]))
+
+    def _show_chart(self, iid, title, header, marks):
+        """Price history window: cheapest listing and typical price per scan, with marker lines."""
+        hist = engine.price_history(self.con, self.realm, iid)
         win = tk.Toplevel(self, bg=BG)
-        win.title(d.name)
+        win.title(title)
         win.geometry("720x380")
-        ttk.Label(win, text=f"{d.name}  ·  fair value {money(d.market)}  ·  max buy {money(d.max_buy)}",
-                  style="H.TLabel", padding=10).pack(anchor="w")
+        ttk.Label(win, text=header, style="H.TLabel", padding=10).pack(anchor="w")
         c = tk.Canvas(win, bg=PANEL, highlightthickness=0)
         c.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
@@ -895,12 +921,14 @@ class App(tk.Tk):
                 c.create_text(w / 2, h / 2, text="Not enough history yet.", fill=MUTED)
                 return
             t0, t1 = hist[0][0], hist[-1][0]
-            vals = [p for row in hist for p in row[1:3]] + [d.max_buy, d.market]
+            vals = [p for row in hist for p in row[1:3] if p] + [m[0] for m in marks]
             lo, hi = min(vals) * 0.9, max(vals) * 1.05
+            if hi <= lo:
+                hi = lo + 1
 
             def xy(t, v):
                 return 60 + (t - t0) / max(1, t1 - t0) * (w - 80), 10 + (1 - (v - lo) / (hi - lo)) * (h - 40)
-            for v, col, label in ((d.max_buy, GOLD, "max buy"), (d.market, MUTED, "fair")):
+            for v, col, label in marks:
                 _, y = xy(t0, v)
                 c.create_line(60, y, w - 20, y, fill=col, dash=(4, 3))
                 c.create_text(w - 22, y - 8, text=label, fill=col, anchor="e", font=("Segoe UI", 8))
@@ -921,11 +949,14 @@ class App(tk.Tk):
     def _build_sell(self):
         ttk.Label(self.tab_sell, text="Items you bought with FlipForever and still hold. The addon never posts below "
                   "the floor; the floor slowly drops if an item keeps expiring.", style="Muted.TLabel",
-                  wraplength=1000).pack(anchor="w", pady=(0, 8))
+                  wraplength=1000).pack(anchor="w", pady=(0, 2))
+        ttk.Label(self.tab_sell, text="Double-click an item for its price history, with your cost and floor.",
+                  style="Muted.TLabel").pack(anchor="w", pady=(0, 8))
         cols = ("Item", "Holding", "Days held", "Avg cost", "Fair value", "Floor", "Target price", "Unrealized", "Expired in a row")
         widths = (230, 70, 80, 95, 95, 95, 100, 105, 115)
         frame, self.sell_tree = self._tree(self.tab_sell, cols, widths)
         frame.pack(fill="both", expand=True)
+        self.sell_tree.bind("<Double-1>", lambda e: self._show_held())
 
     # history
     def _build_hist(self):
@@ -1341,6 +1372,7 @@ class App(tk.Tk):
         self.ledger = engine.build_ledger(self.con, realm, char) if char else self.ledger_all
         self.learned = engine.learn(self.con, realm, self.settings, self.ledger_all, self.model, commit_tuning=commit_tuning)
         self.deals = engine.recommend(self.settings, self.model, self.learned, self.ledger_all, names, holder=self.ledger)
+        self.trends = engine.price_trends(self.con, realm)
         s = engine.summary(self.con, realm, self.ledger, self.model)
         self.cards["realized"].set(money(s["realized"], True))
         self.cards["week"].set(money(s["week"], True))
@@ -1397,7 +1429,7 @@ class App(tk.Tk):
         t.configure(state="disabled")
 
     def _fill_sell(self):
-        rows = []
+        rows, held = [], []
         for iid, led in self.ledger.items.items():
             if led.held <= 0:
                 continue
@@ -1415,7 +1447,9 @@ class App(tk.Tk):
                           money(floor), money(target), money(unreal, True), led.last_expired_streak),
                          (led.name.lower(), led.held, age, cost, fair, floor, target, unreal, led.last_expired_streak),
                          "bad" if unreal < 0 or slow else None))
+            held.append((iid, led.name, cost, floor, fair))
         self._fill(self.sell_tree, rows)
+        self._sell_ids = dict(zip(self.sell_tree.get_children(), held))
 
     def _fill_hist(self):
         rows = []
