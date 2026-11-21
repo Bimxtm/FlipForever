@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.2 beta 1 (owner report): paladin combat helper keeps the seal up; no blocked action when clicking the combat icon in a fight; blocked actions show in /ff errors.
 - 2.5.1: desktop and Start menu shortcut offer; updates from public GitHub releases without a token.
 - Repository is public (owner, 21 Nov): the app finds updates without a GitHub token (P3).
 - 2.5.0 stable: all betas, every text in 11 languages, Advisor data and realm fixes, druid forms, Gear tab hover compare, autopilot off for now.

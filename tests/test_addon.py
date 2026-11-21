@@ -1639,6 +1639,60 @@ assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Battle Shout" and L("NEXT3")
 print("cooldown texts:", L("CDTEXT"))
 assert L("CDTEXT") == "8,2m,,,"
 
+# --- combat helper smart mode, paladin: seal and Judgement in a cast sequence, cooldowns and filler after it
+lua.execute("""
+local C, AD = FlipForever.Combat, FlipForever.Advisor
+local oldLevel = UnitLevel
+FlipForeverDB.settings.combatSmart = nil
+FlipForeverDB.settings.combatTarget = false
+FlipForeverDB.settings.combatTank = false
+UnitClass = function() return "Paladin", "PALADIN" end
+UnitLevel = function() return 20 end
+AD:CharStore().build = nil
+KNOWN = { "Seal of Righteousness", "Judgement", "Consecration", "Holy Strike" }
+TARGET = nil
+CDS = {}
+QueryCastSequence = function(seq) return "Judgement" end
+if not C:Enabled() then C:Toggle() end
+C:Rebuild()
+CB = FlipForeverCombatButton
+PALA_MACRO = CB:GetAttribute("macrotext")
+PALA_COUNT = CB:GetAttribute("count")
+PALA_NEXT1 = C:SmartNext()
+CDS["Judgement"] = 6
+PALA_NEXT2 = C:SmartNext()
+CDS["Consecration"] = 5
+PALA_NEXT3 = C:SmartNext()
+ClickButton(CB, false)
+PALA_AFTER = CB:GetAttribute("macrotext")
+C:UpdateIcons()
+C:Toggle()
+FlipForeverDB.settings.combatTarget = nil
+FlipForeverDB.settings.combatTank = nil
+FlipForeverDB.settings.combatSmart = false
+UnitLevel = oldLevel
+""")
+print("paladin macro:", repr(L("PALA_MACRO")), "| next:", L("PALA_NEXT1"), L("PALA_NEXT2"), L("PALA_NEXT3"))
+_p = L("PALA_MACRO").split("\n")
+assert _p[0] == "/startattack" and _p[1] == "/castsequence reset=target/combat Seal of Righteousness, Judgement"
+assert "/cast Consecration" in _p and _p[-1] == "/cast Holy Strike" and _p.index("/cast Consecration") < _p.index("/cast Holy Strike")
+assert L("PALA_COUNT") == 0 and L("PALA_AFTER") == L("PALA_MACRO")   # one macro for every press
+assert L("PALA_NEXT1") == "Judgement" and L("PALA_NEXT2") == "Consecration" and L("PALA_NEXT3") == "Holy Strike"
+
+# --- a blocked action is kept in the error list with the function name
+lua.execute("""
+FlipForeverDB.errors = {}
+local oldLock = InCombatLockdown
+InCombatLockdown = function() return true end
+Fire("ADDON_ACTION_BLOCKED", "SomeOtherAddon", "CastSpellByName()")
+Fire("ADDON_ACTION_BLOCKED", "FlipForever", "StopMovingOrSizing()")
+InCombatLockdown = oldLock
+BLOCKED_N = #FlipForeverDB.errors
+BLOCKED_MSG = FlipForeverDB.errors[1] and FlipForeverDB.errors[1].msg or ""
+""")
+print("blocked actions kept:", L("BLOCKED_N"), L("BLOCKED_MSG"))
+assert L("BLOCKED_N") == 1 and L("BLOCKED_MSG") == "blocked: StopMovingOrSizing() (in combat)"
+
 # --- combat helper key: + by default (main keyboard and numpad), your own key replaces it, Clear removes it
 lua.execute("""
 local C = FlipForever.Combat

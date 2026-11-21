@@ -12,6 +12,12 @@
 - Combat helper and Advisor: names for the WoW Forever-only spells in every game language.
 - Advisor: refresh builds when Warcraft Tavern replaces its level 30 beta builds, and add Mobalytics/Icy Veins builds once they can be read.
 - App: the How to use page in every language.
+- App: switch to the character you are logged in with automatically.
+- Gear finder: compare the stat gains of an upgrade, not only armor and item level.
+- Advisor: pin a step to the map with the place and the person to talk to, like the game's quest tracker (extends the waypoint arrow).
+
+## Proposed
+- **UI and content pass:** rework the windows a little and refresh all content so the parts work better together (owner suggestion, 21 Nov). Needs a plan before work starts.
 
 ## Done
 - 2.5.0 (betas): crafting profit finder in the profession planner; gear finder for affordable auction house upgrades; encrypted token storage; setup for other players; all 11 game languages (menus and buttons so far); vendor flips; deposit-accurate profit math; vendor floor when posting; combat helper for levels 1-60; exact skill-up chances; 9 builds per class from Method, Warcraft Tavern and RankedBoost; waypoint arrow; quest locations; collect auction gold; gear upgrade alert; spells in every client language.

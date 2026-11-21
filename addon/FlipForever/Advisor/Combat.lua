@@ -525,6 +525,19 @@ end
 
 -- what the button will cast next: a ready cooldown, else the cast sequence's next spell
 function C:SmartNext()
+  if self.seqFirst then
+    -- paladins: the seal and Judgement come first whenever the next one can be cast
+    local nextSeq = self.seq and self.seq[1]
+    if QueryCastSequence and self.seqText then
+      local ok, a = pcall(QueryCastSequence, self.seqText)
+      if ok and type(a) == "string" and a ~= "" then nextSeq = a end
+    end
+    if nextSeq and cooldownLeft(nextSeq) <= 1.6 then return nextSeq end
+    for _, s in ipairs(self.cds or {}) do
+      if cooldownLeft(s) <= 1.6 then return s end
+    end
+    return (self.fill or {})[1] or nextSeq
+  end
   for _, s in ipairs(self.cds or {}) do
     if cooldownLeft(s) <= 1.6 then return s end      -- ready (or only the global cooldown left)
   end
@@ -602,6 +615,51 @@ function C:DruidSetup()
   return true
 end
 
+-- Paladins: Judgement uses up the active seal, so the seal and Judgement go into a cast sequence
+-- that only moves on after a successful cast (seal, then Judgement, then the seal again). While
+-- the sequence waits (Judgement recharging or out of range), the lines below it fire: cooldown
+-- abilities when ready, then the filler. Putting Judgement and Consecration in front of every
+-- press, as before, left the seal out and made Consecration the only spell cast.
+function C:PaladinSetup(steps, prefix)
+  if FF.Advisor:Player().class ~= "PALADIN" then return false end
+  local seal, judge
+  local cds, fill, seen = {}, {}, {}
+  for _, s in ipairs(steps) do
+    local e = FF.Spells:English(s) or s
+    if e:find("^Seal of") then
+      seal = seal or s
+    elseif e == "Judgement" then
+      judge = judge or s
+    elseif not seen[s] then
+      seen[s] = true
+      if self:HasCooldown(s) then cds[#cds + 1] = s else fill[#fill + 1] = s end
+    end
+  end
+  if not (seal and judge) then return false end
+  local seqText = "reset=target/combat " .. seal .. ", " .. judge
+  local text = prefix .. "/castsequence " .. seqText .. "\n"
+  local used = {}
+  for _, s in ipairs(cds) do
+    local line = "/cast " .. s .. "\n"
+    if #(text .. line) <= 240 then text = text .. line used[#used + 1] = s end
+  end
+  local fills = {}
+  for _, s in ipairs(fill) do
+    local line = "/cast " .. s .. "\n"
+    if #(text .. line) <= 255 then text = text .. line fills[#fills + 1] = s end
+  end
+  text = text:gsub("\n$", "")
+  btn:SetAttribute("count", 0)
+  btn:SetAttribute("step", 1)
+  btn:SetAttribute("type", "macro")
+  btn:SetAttribute("macrotext", text)
+  self.steps = { seal, judge }
+  for _, s in ipairs(used) do self.steps[#self.steps + 1] = s end
+  for _, s in ipairs(fills) do self.steps[#self.steps + 1] = s end
+  self.seq, self.seqText, self.cds, self.fill, self.seqFirst = { seal, judge }, seqText, used, fills, true
+  return true
+end
+
 function C:Rebuild()
   if not btn then return end
   if InCombatLockdown() then pendingRebuild = true return end
@@ -630,8 +688,9 @@ function C:Rebuild()
   for i, s in ipairs(steps) do steps[i] = FF.Spells:Local(s) end
   self.steps = steps
   for i = 1, 20 do btn:SetAttribute("step" .. i, nil) end
-  self.cds, self.seq, self.seqText, self.formSteps = nil, nil, nil, nil
+  self.cds, self.seq, self.seqText, self.formSteps, self.fill, self.seqFirst = nil, nil, nil, nil, nil, nil
   if self:DruidSetup() then self:UpdateIcons() return end
+  if self:Smart() and self:PaladinSetup(steps, prefix) then self:UpdateIcons() return end
   if self:Smart() and #steps > 0 then
     -- Cooldown abilities go in front of every press ("/cast" skips them silently while they
     -- recharge); the rest of the rotation moves on one step per press. A cast sequence was used
@@ -723,10 +782,14 @@ local function create()
   btn:HookScript("PostClick", function() C_Timer.After(0, function() C:UpdateIcons() end) end)
 
   -- drag the bar with Shift + right mouse (out of combat)
+  -- the bar holds a secure button, so moving it is blocked in combat: only stop a move we started
+  local moving = false
   btn:SetScript("OnMouseDown", function(_, mouse)
-    if mouse == "RightButton" and IsShiftKeyDown() and not InCombatLockdown() then bar:StartMoving() end
+    if mouse == "RightButton" and IsShiftKeyDown() and not InCombatLockdown() then moving = true bar:StartMoving() end
   end)
   btn:SetScript("OnMouseUp", function()
+    if not moving or InCombatLockdown() then return end
+    moving = false
     bar:StopMovingOrSizing()
     local point, _, relPoint, x, y = bar:GetPoint()
     FlipForeverDB.settings.combatPos = { point, relPoint, x, y }
