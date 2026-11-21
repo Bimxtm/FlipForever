@@ -1430,6 +1430,13 @@ FlipForeverDB.settings.language = nil
 """)
 print("french mail line:", L("FR_MAIL"))
 assert "2 enchère(s) vendue(s)" in L("FR_MAIL") and L("EN_PLURAL") == "s"
+# the How to use page: every section has all 10 translations and still matches its English text
+from flipforever import i18n_help as _help  # noqa: E402
+from flipforever.gui import HELP as _HELP  # noqa: E402
+assert len(_help.SECTIONS) == len(_HELP) and all(len(r) == 10 for _, r in _help.SECTIONS)
+_stale = [s for (s, _), (_, en) in zip(_help.SECTIONS, _HELP) if not en.startswith(s)]
+assert not _stale, _stale
+assert _help.translate(1, _HELP[1][1], "deDE").startswith("FlipForever findet") and _help.translate(1, "changed", "deDE") == "changed"
 # the desktop app: fixed texts of every widget follow the chosen language
 import tkinter as _tk  # noqa: E402
 from tkinter import ttk as _ttk  # noqa: E402

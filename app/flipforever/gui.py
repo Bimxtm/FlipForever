@@ -1045,7 +1045,9 @@ class App(tk.Tk):
         t = tk.Text(self.tab_help, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 11), padx=18, pady=14)
         t.pack(fill="both", expand=True)
         t.tag_configure("h", font=("Segoe UI Semibold", 13), foreground=ACCENT, spacing1=10, spacing3=4)
-        for kind, text in HELP:
+        from . import i18n_help
+        for i, (kind, text) in enumerate(HELP):
+            text = i18n_help.translate(i, text, i18n.language())
             t.insert("end", text + "\n", ("h",) if kind == "h" else ())
         t.configure(state="disabled")
 
