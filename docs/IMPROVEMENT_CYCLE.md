@@ -50,7 +50,9 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [ ] Talent overlay beta 5 (branch feature/talent-overlay): the build's planned split per level band (where the points should stand at 20/30/40/50/60) in the panel, and a warning when your spent points drift from the build (points in a tree the build leaves empty).
 - [x] Owner report (21 Nov, about 04:30): "/ff guide also doesnt work in the app". Find out what fails: the /ff guide command in game (Advisor window not opening, an error, slash command wiring) and the app's Advisor page (empty, or not showing what /ff guide shows). Fix, test, ship as the first beta after the 2.5.0 stable.
 
-Version note (21 Nov): 2.5.1 is the current stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
+- [x] Stable 2.5.2 at the 18:41 cycle (all 2.5.2 betas; texts translated in app/flipforever/i18n_252.py).
+
+Version note (21 Nov, evening): 2.5.2 is the current stable; small fixes now ship as 2.5.3-beta.N. Earlier: 2.5.1 was the stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
 
 ## Discord check after every usage reset (owner, 21 Nov)
 - The first session after each 5-hour window reset reads #bug-reports and #suggestions in the private Discord server (built-in browser, the owner is signed in; channel list under the FlipForever server).
