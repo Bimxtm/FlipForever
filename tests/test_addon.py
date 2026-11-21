@@ -979,6 +979,16 @@ _learned = _engine.learn(_con, _realm, _set, _all, _model, commit_tuning=False)
 _names = {iid: f"item {iid}" for iid in _model}
 _deals = _engine.recommend(_set, _model, _learned, _all, _names, now=NOW, holder=_mine)
 _py, _ = _engine.build_plan(_set, _deals, _model, _learned, _mine, _names, _realm)
+# Deals page filters
+_regular = [d for d in _deals if not d.starter]
+_fast = _engine.filter_deals(_deals, fast_only=True)
+_pos = sorted(d.profit_unit for d in _regular if d.profit_unit > 0)
+_minp = _pos[len(_pos) // 2] if _pos else 1
+_rich = _engine.filter_deals(_deals, min_profit=_minp)
+print("deal filters:", len(_deals), "all |", len(_fast), "fast |", len(_rich), f"profit >= {_minp}")
+assert all(d.fast or d.starter for d in _fast) and len(_fast) == sum(1 for d in _deals if d.fast or d.starter)
+assert all(d.profit_unit >= _minp or d.starter for d in _rich) and len(_rich) < len(_deals) or not _regular
+assert _engine.filter_deals(_deals, text=_deals[0].name.upper()) and not _engine.filter_deals(_deals, text="zzzz-nothing")
 # the context goes through plans.json like in the app (number keys become strings)
 _ctx = _json.loads(_json.dumps(_engine.planner_context(_set, _learned, _all, _mine)))
 _scans = []
@@ -1639,6 +1649,22 @@ print("mail button:", L("MAILBTN_BEFORE"), "->", L("MAILBTN_AFTER"), "| taken:",
 assert L("MAILN") == 2 and L("MAILG") == 4750
 assert list(L("TAKEN").values()) == ["Wool Cloth", "Linen Cloth"]
 assert L("MAILLEFT") == 3 and "2 sale mails" in L("COLLECTMSG") and "No auction gold" in L("MAILBTN_AFTER")
+
+# --- Overview: this week's profit (today and the 6 days before)
+lua.execute("""
+UnitName = function() return 'Weekly' end
+local log = FlipForever:DB().log
+table.insert(log, { e = "invoice", char = "Weekly", t = NOW - 3 * 86400, gross = 10000, cut = 500 })
+table.insert(log, { e = "buy", char = "Weekly", t = NOW - 2 * 86400, q = 2, p = 1500 })
+table.insert(log, { e = "invoice", char = "Weekly", t = NOW - 9 * 86400, gross = 99999, cut = 0 })
+WEEKLINE = FlipForever:WeekLine()
+WEEK_TODAY = FlipForever:Today().sales
+UnitName = function() return 'Nobody' end
+WEEKNONE = FlipForever:WeekLine()
+UnitName = function() return 'Tester' end
+""")
+print("week:", L("WEEKLINE"), "|", L("WEEKNONE"))
+assert "+65s" in L("WEEKLINE") and "sold 95s" in L("WEEKLINE") and L("WEEK_TODAY") == 0 and "no trades" in L("WEEKNONE")
 
 # --- gear finder: alert only for upgrades that are new since the last search
 lua.execute("""

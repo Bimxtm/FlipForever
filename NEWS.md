@@ -1,6 +1,10 @@
-# FlipForever 2.5 Beta 18
+# FlipForever 2.5 Beta 19
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Only the deals you want.** The app's Deals page can now show fast sellers only, and hide everything below a profit you choose.
+
+**How was your week?** The Overview in the FlipForever window now shows this week's result next to today's.
 
 **All your auction gold in one click.** Open your mailbox and press *Collect auction gold* next to it. It takes the gold from every sale and leaves everything else in your mail alone.
 

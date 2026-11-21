@@ -730,6 +730,13 @@ class App(tk.Tk):
         top.pack(fill="x", pady=(0, 8))
         self.only_deals = tk.BooleanVar(value=True)
         ttk.Checkbutton(top, text="Only show buy-now deals", variable=self.only_deals, command=self._fill_deals).pack(side="left")
+        self.fast_only = tk.BooleanVar(value=False)
+        ttk.Checkbutton(top, text="Fast sellers only", variable=self.fast_only,
+                        command=self._fill_deals).pack(side="left", padx=(12, 0))
+        ttk.Label(top, text="   min. profit/unit (silver):", style="Muted.TLabel").pack(side="left")
+        self.min_profit = tk.StringVar()
+        ttk.Entry(top, textvariable=self.min_profit, width=6).pack(side="left", padx=4)
+        self.min_profit.trace_add("write", lambda *a: self._fill_deals())
         ttk.Label(top, text="   search:", style="Muted.TLabel").pack(side="left")
         self.deal_filter = tk.StringVar()
         e = ttk.Entry(top, textvariable=self.deal_filter, width=24)
@@ -747,18 +754,15 @@ class App(tk.Tk):
         self.deal_tree.bind("<Double-1>", lambda e: self._show_item(self.deal_tree))
 
     def _fill_deals(self):
-        flt = self.deal_filter.get().lower().strip()
         rows = []
-        n_deals = 0
-        shown = []
-        for d in self.deals:
-            if d.is_deal:
-                n_deals += 1
-            if self.only_deals.get() and not (d.is_deal or d.starter):
-                continue
-            if flt and flt not in d.name.lower():
-                continue
-            shown.append(d)
+        n_deals = sum(1 for d in self.deals if d.is_deal)
+        try:
+            min_profit = max(0, round(float(self.min_profit.get().replace(",", ".") or 0) * 100))
+        except ValueError:
+            min_profit = 0
+        shown = engine.filter_deals(self.deals, self.only_deals.get(), self.fast_only.get(), min_profit,
+                                    self.deal_filter.get())
+        for d in shown:
             if d.starter:
                 rows.append(((d.name, money(d.cur), money(d.market), "live", "live", "", "-", "?",
                               f"{d.p_sell:.0%}", "auto", "new", d.reason),

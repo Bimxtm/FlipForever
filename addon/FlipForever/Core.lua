@@ -414,9 +414,9 @@ function FF:SetActionKey(key)
 end
 
 -- Today's trading for the character you're playing (since local midnight)
-function FF:Today()
+function FF:Today(days)
   local d = date("*t")
-  local start = time({ year = d.year, month = d.month, day = d.day, hour = 0 })
+  local start = time({ year = d.year, month = d.month, day = d.day, hour = 0 }) - ((days or 1) - 1) * 86400
   local me = UnitName("player")
   local r = { sold = 0, sales = 0, spent = 0, buys = 0 }
   for _, e in ipairs(self:DB().log) do
@@ -437,6 +437,15 @@ function FF:TodayLine()
   local t = self:Today()
   if t.sales == 0 and t.buys == 0 then return "Today: no trades yet" end
   return ("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
+end
+
+-- this week (today and the 6 days before): sales after the AH cut minus what was spent buying
+function FF:WeekLine()
+  local t = self:Today(7)
+  if t.sales == 0 and t.buys == 0 then return FF:T("This week: no trades yet") end
+  local net = t.sold - t.spent
+  local color = net >= 0 and "|cff33ff99+" or "|cffff5555-"
+  return FF:T("This week: %s%s|r  (sold %s, bought %s)"):format(color, self:Money(math.abs(net)), self:Money(t.sold), self:Money(t.spent))
 end
 
 -- Reload the UI from a button: the game saves FlipForever's data (scans, trades) for the app

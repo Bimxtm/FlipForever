@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.19] - 2026-11-21 (beta)
+### Added
+- App, Deals page: *Fast sellers only* and a minimum profit per unit (in silver) to narrow the list. First-scan picks stay visible, since the addon judges them live.
+- In-game Overview: this week's result (sales after the AH cut minus purchases, today and the six days before) under today's line.
+
 ## [2.5.0-beta.18] - 2026-11-21 (beta)
 ### Added
 - **Collect auction gold.** A button next to the mailbox takes the gold from every auction sale mail in one click and shows the total. Mail with items or COD, won auctions, expired items and letters from players are never touched.

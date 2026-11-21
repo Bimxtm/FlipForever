@@ -606,6 +606,24 @@ def recommend(settings: Settings, model: dict, learned: Learned, ledger: Ledger,
     return deals
 
 
+def filter_deals(deals: list[Deal], only_deals=False, fast_only=False, min_profit=0, text="") -> list[Deal]:
+    """The Deals page filters. First-scan picks are judged live in game, so only the text search hides them."""
+    text = (text or "").lower().strip()
+    out = []
+    for d in deals:
+        if text and text not in d.name.lower():
+            continue
+        if not d.starter:
+            if only_deals and not d.is_deal:
+                continue
+            if fast_only and not d.fast:
+                continue
+            if min_profit > 0 and d.profit_unit < min_profit:
+                continue
+        out.append(d)
+    return out
+
+
 PLANNER_SETTINGS = ("min_margin", "ah_cut", "deposit_pct", "hold_days", "min_sales_per_day", "min_sell_chance",
                     "starter_mode", "starter_min_listed", "max_units_per_item", "max_plan_items",
                     "min_value_copper", "min_scans", "duration", "sell_farmed")
