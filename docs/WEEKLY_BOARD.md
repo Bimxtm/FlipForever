@@ -27,6 +27,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.2 beta 5 (owner report): the app restarts cleanly after an update (no more "Failed to load Python DLL").
 - 2.5.2 beta 4: trainer reminder in the Advisor (learned from your class trainer's list).
 - 2.5.2 beta 3 (owner request): every feature has a switch in Settings; the Settings tab scrolls.
 - 2.5.2 beta 2: sell junk and repair at merchants (button, optional automatic mode).
