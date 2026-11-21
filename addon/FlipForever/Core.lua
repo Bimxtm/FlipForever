@@ -449,8 +449,8 @@ end
 
 function FF:TodayLine()
   local t = self:Today()
-  if t.sales == 0 and t.buys == 0 then return "Today: no trades yet" end
-  return ("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
+  if t.sales == 0 and t.buys == 0 then return FF:T("Today: no trades yet") end
+  return FF:T("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
 end
 
 -- this week (today and the 6 days before): sales after the AH cut minus what was spent buying
