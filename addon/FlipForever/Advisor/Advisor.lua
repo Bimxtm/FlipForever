@@ -228,6 +228,7 @@ local ICON = {
   zone = "|TInterface\\Icons\\INV_Misc_Map_01:14|t", prof = "|TInterface\\Icons\\Trade_BlackSmithing:14|t",
   gold = "|TInterface\\Icons\\INV_Misc_Coin_01:14|t", bag = "|TInterface\\Icons\\INV_Misc_Bag_08:14|t",
   soon = "|TInterface\\Icons\\Spell_Holy_BorrowedTime:14|t", gather = "|TInterface\\Icons\\INV_Ore_Copper_01:14|t",
+  trainer = "|TInterface\\Icons\\INV_Misc_Book_09:14|t",
 }
 
 local function factionOK(f, p) return f == nil or f == p.faction end
@@ -408,6 +409,14 @@ function AD:Compute()
         add(25, "gather", FF:T("%s %d: open Gathering to plan a farming loop here (farm 10+ min in a zone to learn its gold/hour)"):format(pr.name, pr.rank))
       end
       break
+    end
+  end
+
+  -- class trainer: spells you can learn now (known from your last visit to the trainer)
+  if FF.Trainer and FF.Trainer:Enabled() then
+    local due, cost = FF.Trainer:Due(L)
+    if #due > 0 then
+      add(80, "trainer", FF:T("New at your class trainer: %d spell%s for %s"):format(#due, S(#due), FF:Money(cost)), FF.Trainer:Why(due))
     end
   end
 

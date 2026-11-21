@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.2 beta 4: trainer reminder in the Advisor (learned from your class trainer's list).
 - 2.5.2 beta 3 (owner request): every feature has a switch in Settings; the Settings tab scrolls.
 - 2.5.2 beta 2: sell junk and repair at merchants (button, optional automatic mode).
 - 2.5.2 beta 1 (owner report): paladin combat helper keeps the seal up; no blocked action when clicking the combat icon in a fight; blocked actions show in /ff errors.

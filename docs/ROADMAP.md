@@ -18,7 +18,6 @@
 
 ### Ideas from popular addons (21 Nov, owner request; our own versions, nothing copied)
 Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. These fit FlipForever's own modules:
-- **Advisor: trainer reminder** (WhatsTraining): "New at your trainer: 3 spells, 1g 20s" as an Advisor step when you level, with the list in the tooltip.
 - **Overview: time to level** (leveling guides, Leatrix): XP per hour this session, time to the next level, and rested XP.
 - **Combat helper: threat warning** (threat meters, Details! TinyThreat): a red line under the icons when you are close to pulling aggro as a non-tank, or lose it as a tank.
 - **Mailbox: open all** (Postal-style): take gold and items from all mail in one click, skipping mail with cash on delivery. Builds on Collect auction gold.

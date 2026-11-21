@@ -16,6 +16,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 4
+
+**Trainer reminder.** Visit your class trainer once and FlipForever remembers what you can learn later. When you reach the level, the Advisor tells you how many new spells are waiting and what they cost. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 3
 
 **Switch any feature on or off.** The Settings tab now scrolls and ends with a *Features* section: the sell junk strip, always selling junk, always repairing, the undercut check, the mailbox gold button and the gear line in tooltips each have their own switch, next to the ones that were already there.

@@ -24,6 +24,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.4] - 2026-11-21 (beta)
+### Added
+- Advisor: trainer reminder. When you open your class trainer, FlipForever notes the spells you can't learn yet, with their level and cost. Once you reach that level, the Advisor shows "New at your class trainer: N spells" with the total cost, and the spell names in the step's reason. Profession trainers are left out. Switch: *Advisor: remind me of new spells at my class trainer* in Settings, Features.
+
 ## [2.5.2-beta.3] - 2026-11-21 (beta)
 ### Added
 - Settings: every feature can be switched on and off. A new *Features* section has switches for the sell junk strip at merchants, always selling grey items, always repairing, the undercut check at the auction house, the *Collect auction gold* button at the mailbox, and the gear upgrade line in item tooltips.

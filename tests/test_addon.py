@@ -2341,7 +2341,50 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,talentOverlay=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,talentOverlay=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
+
+# --- trainer reminder: the class trainer's list is kept; the Advisor shows what you can learn now
+lua.execute("""
+local FF = FlipForever
+local AD = FF.Advisor
+SERVICES = {
+  { "Frostbolt", "Rank 3", "available", 14, 1000 },
+  { "Arcane Intellect", "Rank 2", "unavailable", 28, 5000 },
+  { "Fireball", "Rank 2", "used", 12, 600 },
+  { "Blink", "", "unavailable", 20, 2000 },
+}
+GetNumTrainerServices = function() return #SERVICES end
+GetTrainerServiceInfo = function(i) local s = SERVICES[i] return s[1], s[2], s[3] end
+GetTrainerServiceLevelReq = function(i) return SERVICES[i][4] end
+GetTrainerServiceCost = function(i) return SERVICES[i][5] end
+IsTradeskillTrainer = function() return false end
+Fire("TRAINER_SHOW")
+TR_SAVED = #(AD:CharStore().trainer.services)
+local due, cost = FF.Trainer:Due(22)
+TR_DUE = #due .. ":" .. cost .. ":" .. due[1].name .. ":" .. due[2].name
+TR_WHY = FF.Trainer:Why(due)
+-- the Advisor step at level 22
+local oldLevel = UnitLevel
+UnitLevel = function() return 22 end
+local recs = AD:Compute()
+TR_STEP = ""
+for _, r in ipairs(recs) do if r.kind == "trainer" then TR_STEP = r.text end end
+-- switched off: no step
+FlipForeverDB.settings.trainerReminder = false
+TR_OFF = ""
+for _, r in ipairs((AD:Compute())) do if r.kind == "trainer" then TR_OFF = r.text end end
+FlipForeverDB.settings.trainerReminder = nil
+UnitLevel = oldLevel
+-- profession trainers are ignored
+IsTradeskillTrainer = function() return true end
+TR_PROF = FF.Trainer:Read() == nil
+AD:CharStore().trainer = nil
+GetNumTrainerServices, GetTrainerServiceInfo, GetTrainerServiceLevelReq, GetTrainerServiceCost, IsTradeskillTrainer = nil, nil, nil, nil, nil
+""")
+print("trainer:", L("TR_SAVED"), L("TR_DUE"), "|", L("TR_STEP"), "|", L("TR_WHY"))
+assert L("TR_SAVED") == 3 and L("TR_DUE") == "2:3000:Frostbolt:Blink"
+assert "New at your class trainer: 2 spells" in L("TR_STEP") and L("TR_OFF") == "" and L("TR_PROF")
+assert "Frostbolt (Rank 3), Blink" in L("TR_WHY")
 print("ALL ADDON TESTS PASSED")
