@@ -1793,6 +1793,37 @@ _ls = (L("FlipForever:LinkSuffix('item:105:0:0:0:0:0:-23:0')"), L("FlipForever:L
 print("link suffixes:", _ls)
 assert _ls == (-23, 0)
 
+# --- errors are kept for bug reports; the app copies them without user names or paths
+lua.execute("""
+FlipForeverDB.errors = nil
+FlipForever:On("FF_TEST_BOOM", function() error("boom at C:\\\\Users\\\\Somebody\\\\x.lua") end)
+Fire("FF_TEST_BOOM")
+for i = 1, 25 do FlipForever:RecordError("loop", "e" .. i) end
+ERR_N = #FlipForeverDB.errors
+ERR_LAST = FlipForeverDB.errors[ERR_N].msg
+""")
+assert L("ERR_N") == 20 and L("ERR_LAST") == "e25"
+import tempfile as _tf  # noqa: E402
+from pathlib import Path  # noqa: E402
+from flipforever import store as _store2  # noqa: E402
+with _tf.TemporaryDirectory() as _d:
+    _wow = Path(_d) / "_forever_"
+    _sv = _wow / "WTF" / "Account" / "ACC" / "SavedVariables"
+    _sv.mkdir(parents=True)
+    (_sv / "FlipForever.lua").write_text(
+        'FlipForeverDB = {\n["errors"] = {\n{ ["t"] = 1700000000, ["v"] = "2.5.0-beta.25", ["where"] = "AUCTION_HOUSE_SHOW", '
+        '["msg"] = "Interface\\\\AddOns\\\\FlipForever\\\\Trader.lua:12: boom in C:\\\\Users\\\\Somebody\\\\file" },\n},\n}\n',
+        encoding="utf-8")
+    _toc = _wow / "Interface" / "AddOns" / "FlipForever"
+    _toc.mkdir(parents=True)
+    (_toc / "FlipForever.toc").write_text("## Title: FlipForever\n## Version: 2.5.0-beta.25\n", encoding="utf-8")
+    _s = _store2.Settings()
+    _s.wow_path, _s.account = str(_wow), "ACC"
+    _rep = _engine.bug_report_text(_s, "2.5.0-beta.25", now=1700000100)
+print("bug report:\n" + _rep)
+assert "Addon version: 2.5.0-beta.25" in _rep and "AUCTION_HOUSE_SHOW" in _rep and "Trader.lua:12" in _rep
+assert "Somebody" not in _rep and "ACC" not in _rep and _d not in _rep
+
 # --- your auctions: which listings the newest scan undercuts
 lua.execute("""
 local FF = FlipForever

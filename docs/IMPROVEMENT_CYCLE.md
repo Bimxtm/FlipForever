@@ -35,6 +35,9 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
   - Prepared on branch release/2.5.0-translations (chat messages, status lines, newer window texts, shared plural helper): merge it into main first (app pages are translated there too: labels, buttons, table headings, settings); the How to use text stays English. After merging, translate texts added in betas after the branch (beta 21 texts are already on the branch; beta 22 is on the branch; beta 23 merged and re-keyed too; later betas: check for new FF:T texts); run scratchpad-style check: every FF:T literal must be in i18n
 
+## Sharing with friends (internal)
+- Friends download from the Google Drive folder FlipForever (link in the private Discord server, #downloads). After a stable release, remind the owner to drag the new zip into that folder (the Drive connector cannot upload 12 MB files); offer to post the release in #announcements.
+
 ## Usage budget (internal)
 - Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.
 - The owner asked (20 Nov) to use the weekly allowance fully until the reset on Sat 21 Nov 14:00; after that, about 10% of the weekly limit per day, with ~15% kept for real-game bug fixes.

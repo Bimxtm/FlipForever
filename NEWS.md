@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 24
+# FlipForever 2.5 Beta 25
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Reporting a bug is easier.** In the app, open About & updates and click *Copy bug report info*: it copies your versions, setup and the addon's last errors, ready to paste into your report.
 
 **Undercuts in the app.** The app's Advisor page now lists each character's auctions that were undercut, so you know what to repost before you log in.
 

@@ -323,6 +323,13 @@ class App(tk.Tk):
         self.page_sub.set(sub)
 
     # about & updates
+    def copy_bug_report(self):
+        text = engine.bug_report_text(self.settings, VERSION)
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.upd_status.set("Bug report info copied: versions, setup and the addon's last errors. "
+                            "Paste it into your report and add what you did and what happened.")
+
     def _build_about(self):
         f = self.tab_about
         top = ttk.Frame(f)
@@ -336,6 +343,7 @@ class App(tk.Tk):
         self.upd_install_btn = ttk.Button(row, text="Install update", command=self.install_update, state="disabled")
         self.upd_install_btn.pack(side="left", padx=8)
         ttk.Button(row, text="Open on GitHub", command=lambda: webbrowser.open(f"https://github.com/{GITHUB_REPO}/releases")).pack(side="left")
+        ttk.Button(row, text="Copy bug report info", command=self.copy_bug_report).pack(side="left", padx=8)
         self.upd_status = tk.StringVar(value="")
         ttk.Label(f, textvariable=self.upd_status, style="Muted.TLabel", wraplength=1100, justify="left").pack(anchor="w", pady=(8, 0))
         opts = ttk.Frame(f)

@@ -23,9 +23,23 @@ frame:SetScript("OnEvent", function(_, event, ...)
   if not list then return end
   for _, fn in ipairs(list) do
     local ok, err = pcall(fn, ...)
-    if not ok then FF:Print(FF:T("|cffff5555error in ") .. event .. ":|r " .. tostring(err)) end
+    if not ok then
+      FF:Print(FF:T("|cffff5555error in ") .. event .. ":|r " .. tostring(err))
+      FF:RecordError(event, err)
+    end
   end
 end)
+
+-- the last 20 errors, kept for bug reports (the app's "Copy bug report info" reads them)
+function FF:RecordError(where, err)
+  if type(FlipForeverDB) ~= "table" then return end
+  local list = FlipForeverDB.errors or {}
+  FlipForeverDB.errors = list
+  local meta = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+  local version = meta and meta("FlipForever", "Version") or "?"
+  table.insert(list, { t = time and time() or 0, v = version, where = tostring(where), msg = tostring(err):sub(1, 300) })
+  while #list > 20 do table.remove(list, 1) end
+end
 
 function FF:Print(...)
   print("|cff33ff99FlipForever|r:", ...)

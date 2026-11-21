@@ -673,6 +673,7 @@ function AD:Refresh()
   local ok, recs, p, cd, build = pcall(self.Compute, self)
   if not ok then
     FF:Print(FF:T("|cffff5555advisor error:|r ") .. tostring(recs))
+    FF:RecordError("advisor", recs)
     return
   end
   pcall(self.Save, self, recs, p, build)
