@@ -51,6 +51,12 @@ Version note (21 Nov): 2.5.1 is the current stable. Small fixes now ship as 2.5.
 - Once a report or suggestion is fixed and released, react to that message with a check mark (white_check_mark), so it's clear next time what is done (owner, 21 Nov). Don't reply in text unless the owner asks. Messages without a check mark are still open. Mention what was found in the session report.
 - After a release, post a short plain update in #announcements (owner, 21 Nov) (downloads come from GitHub releases, linked in #downloads; nothing to upload).
 
+## Where release notes go in Discord (owner, 21 Nov)
+- Stable releases: a short plain update in #announcements.
+- Betas (pre-releases): the update notes go in #beta-updates (private, Testers read only, the owner posts) - never in #announcements.
+- #beta-testing is where Testers give feedback on betas; read it in the Discord check like #bug-reports and react with a check mark once a reported item is fixed and released.
+- #what-is-flipforever at the top explains the project; update it when the big picture changes.
+
 ## Sharing with friends (internal)
 - Friends download from the Google Drive folder FlipForever (link in the private Discord server, #downloads). After a stable release, remind the owner to drag the new zip into that folder (the Drive connector cannot upload 12 MB files); offer to post the release in #announcements. For 2.5.0 the owner already said yes (21 Nov): after publishing, post a short plain announcement in #announcements (built-in browser, the owner is signed in) with what is new and that the zip is in #downloads once uploaded. Keep #planned-features in step with ROADMAP.md (offer to update it when the roadmap changes).
 
