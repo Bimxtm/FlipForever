@@ -36,7 +36,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
   - Prepared on branch release/2.5.0-translations (chat messages, status lines, newer window texts, shared plural helper): merge it into main first (app pages are translated there too: labels, buttons, table headings, settings); the How to use text stays English. After merging, translate texts added in betas after the branch (beta 21 texts are already on the branch; beta 22 is on the branch; beta 23 merged and re-keyed too; later betas: check for new FF:T texts); run scratchpad-style check: every FF:T literal must be in i18n
 
 ## Sharing with friends (internal)
-- Friends download from the Google Drive folder FlipForever (link in the private Discord server, #downloads). After a stable release, remind the owner to drag the new zip into that folder (the Drive connector cannot upload 12 MB files); offer to post the release in #announcements.
+- Friends download from the Google Drive folder FlipForever (link in the private Discord server, #downloads). After a stable release, remind the owner to drag the new zip into that folder (the Drive connector cannot upload 12 MB files); offer to post the release in #announcements. Keep #planned-features in step with ROADMAP.md (offer to update it when the roadmap changes).
 
 ## Usage budget (internal)
 - Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.
