@@ -847,6 +847,34 @@ ROWS = {
         "升级几率：橙色 100%；黄色和绿色在配方于 FlipForever 面前变色后为精确值（否则约 75% / 25%）。价格：你的扫描，商人货物约为出售价的 4 倍。",
         "升級機率：橘色 100%；黃色和綠色在配方於 FlipForever 面前變色後為精確值（否則約 75% / 25%）。價格：你的掃描，商人貨物約為出售價的 4 倍。"),
 
+    # --- your auctions (undercut check)
+    "Your auctions: none up": ("Deine Auktionen: keine aktiv", "Vos enchères : aucune en cours", "Tus subastas: ninguna activa",
+                               "Tus subastas: ninguna activa", "Le tue aste: nessuna attiva", "Seus leilões: nenhum ativo",
+                               "Ваши лоты: нет выставленных", "내 경매: 등록된 것 없음", "你的拍卖：没有在售", "你的拍賣：沒有在售"),
+    "Your auctions: %d up, all still the cheapest": (
+        "Deine Auktionen: %d aktiv, alle noch am günstigsten", "Vos enchères : %d en cours, toutes encore les moins chères",
+        "Tus subastas: %d activas, todas siguen siendo las más baratas", "Tus subastas: %d activas, todas siguen siendo las más baratas",
+        "Le tue aste: %d attive, tutte ancora le più economiche", "Seus leilões: %d ativos, todos ainda os mais baratos",
+        "Ваши лоты: выставлено %d, все ещё самые дешёвые", "내 경매: %d개 등록, 모두 아직 최저가",
+        "你的拍卖：%d 件在售，全部仍是最低价", "你的拍賣：%d 件在售，全部仍是最低價"),
+    "Your auctions: %d up, |cffff8800%d undercut|r": (
+        "Deine Auktionen: %d aktiv, |cffff8800%d unterboten|r", "Vos enchères : %d en cours, |cffff8800%d sous-cotées|r",
+        "Tus subastas: %d activas, |cffff8800%d superadas en precio|r", "Tus subastas: %d activas, |cffff8800%d superadas en precio|r",
+        "Le tue aste: %d attive, |cffff8800%d battute sul prezzo|r", "Seus leilões: %d ativos, |cffff8800%d com preço batido|r",
+        "Ваши лоты: выставлено %d, |cffff8800перебито %d|r", "내 경매: %d개 등록, |cffff8800%d개 더 싼 매물 있음|r",
+        "你的拍卖：%d 件在售，|cffff8800%d 件被压价|r", "你的拍賣：%d 件在售，|cffff8800%d 件被壓價|r"),
+    "%d of your %d auctions are undercut. Biggest: %s (yours %s, now %s).": (
+        "%d von deinen %d Auktionen sind unterboten. Am stärksten: %s (deine %s, jetzt %s).",
+        "%d de vos %d enchères sont sous-cotées. La plus forte : %s (la vôtre %s, maintenant %s).",
+        "%d de tus %d subastas tienen un precio más bajo. La mayor: %s (la tuya %s, ahora %s).",
+        "%d de tus %d subastas tienen un precio más bajo. La mayor: %s (la tuya %s, ahora %s).",
+        "%d delle tue %d aste sono battute sul prezzo. La maggiore: %s (tua %s, ora %s).",
+        "%d dos seus %d leilões tiveram o preço batido. O maior: %s (seu %s, agora %s).",
+        "Перебито %d из ваших %d лотов. Сильнее всего: %s (ваш %s, сейчас %s).",
+        "내 경매 %d/%d개에 더 싼 매물이 있습니다. 가장 큰 차이: %s (내 가격 %s, 현재 %s).",
+        "你的 %d/%d 件拍卖被压价。差价最大：%s（你的 %s，现在 %s）。",
+        "你的 %d/%d 件拍賣被壓價。差價最大：%s（你的 %s，現在 %s）。"),
+
     # --- scan age
     "Last scan: none yet": ("Letzter Scan: noch keiner", "Dernier scan : aucun", "Último escaneo: ninguno aún", "Último escaneo: ninguno aún",
                             "Ultima scansione: nessuna", "Último escaneamento: nenhum ainda", "Последнее сканирование: ещё не было",
