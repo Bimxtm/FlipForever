@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 21
+# FlipForever 2.5 Beta 22
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Were you undercut?** Open the auction house and FlipForever tells you which of your auctions are no longer the cheapest, starting with the one that costs you the most.
 
 **Is this an upgrade?** Hover any piece of gear: the tooltip tells you when it beats what you wear, and by how much.
 

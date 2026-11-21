@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.22] - 2026-11-21 (beta)
+### Added
+- **Undercut check.** When you open the auction house, FlipForever looks at your own listings and compares them with your newest scan. If someone listed cheaper, one chat line names the biggest undercut, and the Overview shows how many of your auctions are up and how many are undercut. Nothing is cancelled or reposted on its own.
+
 ## [2.5.0-beta.21] - 2026-11-21 (beta)
 ### Added
 - Item tooltips show **upgrade for you** with the gain and slot when a piece of gear beats what you wear (same stat weights as the Gear tab).
