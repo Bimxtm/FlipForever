@@ -13,15 +13,16 @@ Use this list to confirm everything works on a live client. For anything that fa
 ## Selling
 7. With something bought, press the button at the AH to post it: the price is above the "never below" floor in its tooltip.
 8. Open your mailbox after a sale: one summary line in chat, and a **Collect auction gold** button beside the mailbox that takes the gold from the sale mails only.
+9. With your own auctions up, open the auction house after a scan: if someone listed cheaper, one chat line names the biggest undercut, and the Overview shows "Your auctions: N up". (Tests the owned-auctions API and its unit prices.)
 
 ## Combat helper
-9. Show the combat helper (FlipForever window), set a key, and fight a mob: each press casts and the icon moves on. (Tests the secure step button in combat.)
-10. With no target, press the key: it picks the nearest enemy.
-11. Type `/ff spells`: it should say that all spell IDs match their names. Any line it lists is a spell the combat helper can't find on clients in other languages.
+10. Show the combat helper (FlipForever window), set a key, and fight a mob: each press casts and the icon moves on. (Tests the secure step button in combat.)
+11. With no target, press the key: it picks the nearest enemy.
+12. Type `/ff spells`: it should say that all spell IDs match their names. Any line it lists is a spell the combat helper can't find on clients in other languages.
 
 ## Advisor and professions
-12. Open the **Advisor**: your class and race are right, and talents show (not empty). (Tests the talent API shape.)
-13. Open a profession window: the planner appears beside it with colours and costs.
+13. Open the **Advisor**: your class and race are right, and talents show (not empty). (Tests the talent API shape.)
+14. Open a profession window: the planner appears beside it with colours and costs.
 
 ## Gathering
-14. Mine or pick something: the gathering tracker counts it, and the zone shows by name, not "map 1411".
+15. Mine or pick something: the gathering tracker counts it, and the zone shows by name, not "map 1411".

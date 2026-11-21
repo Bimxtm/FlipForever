@@ -1703,6 +1703,35 @@ _de = L("DE_STEPS")
 assert L("DE_KNOWN") is True and L("DE_CD") is True and _de
 assert ("Feuerball" in _de or "Frostblitz" in _de) and not any(e in _de for e in ("Fireball", "Frostbolt", "Fire Blast"))
 
+# --- your auctions: which listings the newest scan undercuts
+lua.execute("""
+local FF = FlipForever
+local oldModel = FF.Planner.Model
+FF.Planner.Model = function() return { [501] = { cur_min = 900 }, [502] = { cur_min = 2000 }, [503] = { cur_min = 50 } } end
+OWNED = {
+  { itemKey = { itemID = 501 }, buyoutAmount = 1000, quantity = 5, status = 0 },   -- undercut by 1s, x5
+  { itemKey = { itemID = 502 }, buyoutAmount = 2000, quantity = 1, status = 0 },   -- still cheapest
+  { itemKey = { itemID = 503 }, buyoutAmount = 80, quantity = 20, status = 0 },    -- undercut by 30c, x20
+  { itemKey = { itemID = 504 }, buyoutAmount = 500, quantity = 1, status = 1 },    -- sold, ignored
+}
+OWNED_QUERIED = 0
+C_AuctionHouse.QueryOwnedAuctions = function() OWNED_QUERIED = OWNED_QUERIED + 1 end
+C_AuctionHouse.GetNumOwnedAuctions = function() return #OWNED end
+C_AuctionHouse.GetOwnedAuctionInfo = function(i) return OWNED[i] end
+printed = {}
+Fire("AUCTION_HOUSE_SHOW")
+Fire("OWNED_AUCTIONS_UPDATED")
+Fire("OWNED_AUCTIONS_UPDATED")   -- a second update in the same visit stays quiet
+OWN_MSGS = #printed
+OWN_MSG = printed[1]
+OWN_LINE = FF.Auctions:Line()
+OWN_FIRST = FF.Auctions.undercut[1].id
+FF.Planner.Model = oldModel
+""")
+print("own auctions:", L("OWN_MSG"), "|", L("OWN_LINE"))
+assert L("OWNED_QUERIED") >= 1 and L("OWN_MSGS") == 1 and "2 of your 3 auctions are undercut" in L("OWN_MSG")
+assert L("OWN_FIRST") == 503 and "3 up" in L("OWN_LINE") and "2 undercut" in L("OWN_LINE")
+
 # --- Overview: age of the newest scan
 lua.execute("""
 local scans = FlipForever:DB().scans
