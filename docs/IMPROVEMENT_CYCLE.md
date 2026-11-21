@@ -39,7 +39,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - Friends download from the Google Drive folder FlipForever (link in the private Discord server, #downloads). After a stable release, remind the owner to drag the new zip into that folder (the Drive connector cannot upload 12 MB files); offer to post the release in #announcements. Keep #planned-features in step with ROADMAP.md (offer to update it when the roadmap changes).
 
 ## Usage budget (internal)
-- Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.
+- Pro plan, extra usage off. Check usage at the start of each cycle; above 95% of the 5-hour window (owner, 21 Nov: use it fully), pause and resume after the reset.
 - The owner asked (20 Nov) to use the weekly allowance fully until the reset on Sat 21 Nov 14:00; after that, about 10% of the weekly limit per day, with ~15% kept for real-game bug fixes.
 
 ## Steps
