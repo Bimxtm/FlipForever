@@ -414,9 +414,9 @@ SlashCmdList.FLIPFOREVER = function(msg)
   elseif cmd == "errors" then
     local list = FlipForeverDB.errors or {}
     if #list == 0 then
-      FF:Print("No errors recorded.")
+      FF:Print(FF:T("No errors recorded."))
     else
-      FF:Print(("Last %d errors (newest first):"):format(math.min(5, #list)))
+      FF:Print(FF:T("Last %d errors (newest first):"):format(math.min(5, #list)))
       for i = #list, math.max(1, #list - 4), -1 do
         local e = list[i]
         FF:Print(("  %s  v%s  %s: %s"):format(date("%H:%M", e.t or 0), e.v or "?", e.where or "?", e.msg or ""))
