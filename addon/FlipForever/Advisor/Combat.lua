@@ -522,7 +522,11 @@ function C:SmartNext()
     if cooldownLeft(s) <= 1.6 then return s end      -- ready (or only the global cooldown left)
   end
   local seq = self.seq or {}
-  if #seq == 0 then return nil end
+  if #seq == 0 then
+    -- one step per press: the spell of the current step
+    local s = btn and btn:GetAttribute("step") or 1
+    return (self.steps or {})[s]
+  end
   if QueryCastSequence and self.seqText then
     local ok, a, b, c = pcall(QueryCastSequence, self.seqText)
     for _, v in ipairs({ a, b, c }) do
@@ -560,17 +564,30 @@ function C:Rebuild()
   for i, s in ipairs(steps) do steps[i] = FF.Spells:Local(s) end
   self.steps = steps
   for i = 1, 20 do btn:SetAttribute("step" .. i, nil) end
-  if self:Smart() and #steps > 0 then
-    local text, cds, seq = self:SmartMacro(prefix, steps)
-    self.cds, self.seq = cds, seq
-    self.seqText = #seq > 0 and ("reset=target/combat " .. table.concat(seq, ", ")) or nil
-    btn:SetAttribute("count", 0)            -- the game moves the sequence on, not the click
-    btn:SetAttribute("type", "macro")
-    btn:SetAttribute("macrotext", text)
-    self:UpdateIcons()
-    return
-  end
   self.cds, self.seq, self.seqText = nil, nil, nil
+  if self:Smart() and #steps > 0 then
+    -- Cooldown abilities go in front of every press ("/cast" skips them silently while they
+    -- recharge); the rest of the rotation moves on one step per press. A cast sequence was used
+    -- here before, but it stops for good on a spell that can't be cast (a finisher without combo
+    -- points, a buff that's already up, not enough rage), so the button never moved on.
+    local cds, rest, seen = {}, {}, {}
+    for _, s in ipairs(steps) do
+      if self:HasCooldown(s) then
+        if not seen[s] then seen[s] = true cds[#cds + 1] = s end
+      else
+        rest[#rest + 1] = s
+      end
+    end
+    if #rest == 0 then rest = { cds[1] } end
+    local lines = ""
+    for _, s in ipairs(cds) do
+      local line = "/cast " .. s .. "\n"
+      if #(prefix .. lines .. line) <= 200 then lines = lines .. line end  -- macros stop at 255 characters
+    end
+    self.cds = cds
+    steps, prefix = rest, prefix .. lines
+    self.steps = steps
+  end
   for i, spell in ipairs(steps) do
     btn:SetAttribute("step" .. i, prefix .. "/cast " .. spell)
   end

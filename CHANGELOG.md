@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.29] - 2026-11-21 (beta)
+### Fixed
+- Combat helper: with *Wait for cooldowns* on, the button could stop on one skill for the rest of the fight (a finisher without combo points, a shout or shield that was already up, not enough rage). It now moves on to the next skill with every press again, and your cooldown abilities still fire first whenever they're ready.
+
 ## [2.5.0-beta.28] - 2026-11-21 (beta)
 ### Added
 - The Advisor is easier to reach: an **Advisor** button in the FlipForever window's title bar (on every tab), the next step on the Overview opens it when clicked, and Key Bindings now has a FlipForever section with keys for the Advisor and the FlipForever window. `/ff guide` and right-clicking the minimap coin still work.

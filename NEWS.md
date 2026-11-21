@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 28
+# FlipForever 2.5 Beta 29
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Combat helper fixed.** It no longer gets stuck on one skill: every press moves on to the next, and your big cooldowns still go first when they're ready.
 
 **The Advisor, one click away.** Open it from the new button at the top of the FlipForever window, by clicking the next step on the Overview, or with a key of your choice (Key Bindings, FlipForever section).
 

@@ -1569,6 +1569,12 @@ NEXT1 = C:SmartNext()
 CDS["Whirlwind"] = 8; CDS["Sweeping Strikes"] = 20
 QueryCastSequence = function(seq) return "Rend" end
 NEXT2 = C:SmartNext()
+-- every press moves on to the next skill, even when the last one couldn't be cast
+ClickButton(CB, false)
+SMART_AFTER1 = CB:GetAttribute("macrotext")
+NEXT3 = C:SmartNext()
+ClickButton(CB, false)
+SMART_AFTER2 = CB:GetAttribute("macrotext")
 CDS["Recklessness"] = 90; CDS["Bloodrage"] = 1.2
 CDTEXT = table.concat({ C.CooldownText("Whirlwind"), C.CooldownText("Recklessness"), C.CooldownText("Bloodrage"), C.CooldownText("Rend"), C.CooldownText(nil) }, ",")
 C:UpdateIcons()
@@ -1583,9 +1589,11 @@ print("smart macro:", repr(L("SMART_MACRO")))
 print("next with MS on cooldown:", L("NEXT1"), "| with all cooldowns busy:", L("NEXT2"))
 _m = L("SMART_MACRO")
 assert "/cast Mortal Strike\n" in _m and "/cast Whirlwind\n" in _m and "/cast Sweeping Strikes\n" in _m
-assert _m.split("\n")[-1].startswith("/castsequence reset=target/combat Battle Shout, Rend, Heroic Strike")
-assert "Mortal Strike" not in _m.split("\n")[-1] and len(_m) <= 255 and L("SMART_COUNT") == 0
-assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Rend"
+assert _m.split("\n")[-1] == "/cast Battle Shout" and len(_m) <= 255 and L("SMART_COUNT") >= 3
+print("after presses:", repr(L("SMART_AFTER1").split("\n")[-1]), repr(L("SMART_AFTER2").split("\n")[-1]))
+assert L("SMART_AFTER1").split("\n")[-1] == "/cast Rend" and L("SMART_AFTER2").split("\n")[-1] == "/cast Heroic Strike"
+assert "/cast Mortal Strike\n" in L("SMART_AFTER1")   # cooldowns stay in front of every press
+assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Battle Shout" and L("NEXT3") == "Rend"
 print("cooldown texts:", L("CDTEXT"))
 assert L("CDTEXT") == "8,2m,,,"
 
