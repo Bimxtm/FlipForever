@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.2-beta.9] - 2026-11-21 (beta)
+### Added
+- Overview: bag value line. What your bags fetch at a merchant, what they fetch selling each item the better way (auction price after the 5% cut, or the merchant), and how many items are clearly worth posting. Hover it for the list, biggest gain first. Soulbound and grey items count at the merchant price. Switch: *Overview: value of my bags, items worth posting* in Settings, Features.
+
 ## [2.5.2-beta.8] - 2026-11-21 (beta)
 ### Added
 - Mailbox: *Open all mail* under *Collect auction gold* takes the gold and items from every mail, one at a time. Mail with cash on delivery is left alone, and it stops with a message when your bags are full. A chat line shows what was taken. Switch: *Open all mail button at the mailbox* in Settings, Features.

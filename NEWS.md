@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 9
+
+**What your bags are worth.** The Overview now shows what your bags would fetch at a merchant and selling each item the better way, plus how many items are worth posting at the auction house. Hover the line to see them, biggest gain first. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 8
 
 **Open all mail.** At the mailbox, a new button under *Collect auction gold* takes the gold and items from all your mail in one click. Mail with cash on delivery is left alone, and it stops when your bags are full. You can switch the button off under Settings, Features.

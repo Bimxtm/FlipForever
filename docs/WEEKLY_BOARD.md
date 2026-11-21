@@ -27,6 +27,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.2 beta 9: bag value and items worth posting on the Overview.
 - 2.5.2 beta 8: Open all mail at the mailbox.
 - 2.5.2 beta 7: threat warning in the combat helper.
 - 2.5.2 beta 6: XP per hour, time to level and rested XP on the Overview.
