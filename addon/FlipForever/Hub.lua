@@ -585,6 +585,7 @@ local function build()
   feature("undercutCheck", "Check my auctions for undercuts at the auction house", -756, true)
   feature("mailButton", "Collect auction gold button at the mailbox", -780, true)
   feature("gearTooltip", "Gear upgrade line in item tooltips", -804, true)
+  feature("trainerReminder", "Advisor: remind me of new spells at my class trainer", -828, true)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)
