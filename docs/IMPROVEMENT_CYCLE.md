@@ -38,6 +38,8 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [ ] Discord #suggestions (21 Nov): LDH Gear tab - hover the item name for its stats, show the full item name without overlapping others. Alix: disable the AH autopilot for now (needs more work). Alix: talent builds as an overlay on the Talents window, builds more fleshed out (bigger: feature branch, 2.6.0).
 - [x] Owner report (21 Nov, about 04:30): "/ff guide also doesnt work in the app". Find out what fails: the /ff guide command in game (Advisor window not opening, an error, slash command wiring) and the app's Advisor page (empty, or not showing what /ff guide shows). Fix, test, ship as the first beta after the 2.5.0 stable.
 
+Version note (21 Nov): 2.5.1 is the current stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
+
 ## Discord check after every usage reset (owner, 21 Nov)
 - The first session after each 5-hour window reset reads #bug-reports and #suggestions in the private Discord server (built-in browser, the owner is signed in; channel list under the FlipForever server).
 - New bug reports go to the top of the Night queue (quote the report, note who sent it by Discord name only in this file, never in shipped text). New suggestions go to ROADMAP.md: small ones under Smaller improvements, big ones under Proposed for the owner's OK.
