@@ -49,7 +49,21 @@ function TT:Lines(itemID)
   if entry and entry.sell then
     out[#out + 1] = { "  you post at", FF:Money(entry.sell.normal) .. " (never below " .. FF:Money(entry.sell.floor) .. ")" }
   end
+  -- gear: is this better than what you wear? (same stat weights as the Gear tab)
+  local up = TT:Upgrade(itemID)
+  if up then out[#out + 1] = up end
   return out
+end
+
+function TT:Upgrade(itemID)
+  local G = FF.Gear
+  if not (G and G.Check) then return nil end
+  local level = UnitLevel and UnitLevel("player") or 1
+  local ok, r = pcall(G.Check, G, itemID, 0, level, G:Weights(), math.huge, 1)
+  if not (ok and type(r) == "table") then return nil end
+  local slot = G.SLOT_NAMES and G.SLOT_NAMES[r.slot] or ""
+  local gain = r.pct and ("+%d%%"):format(math.floor(r.pct * 100 + 0.5)) or ("+%.1f"):format(r.gain)
+  return { FF:T("  upgrade for you"), ("|cff33ff99%s|r %s"):format(gain, FF:T(slot)) }
 end
 
 local function addTo(tooltip, itemID)

@@ -188,6 +188,22 @@ function FF:HasPrices()
   return FlipForeverDB ~= nil and #FF:DB().scans > 0
 end
 
+-- how old the newest scan is; prices older than 6 hours are flagged
+function FF:ScanAgeLine()
+  local scans = FF:DB().scans
+  local last = scans[#scans]
+  if not (last and last.t) then return FF:T("Last scan: none yet") end
+  local mins = math.max(0, math.floor((time() - last.t) / 60))
+  local age
+  if mins < 60 then age = FF:T("%d min ago"):format(mins)
+  elseif mins < 48 * 60 then age = FF:T("%d h ago"):format(math.floor(mins / 60))
+  else age = FF:T("%d days ago"):format(math.floor(mins / 1440)) end
+  if mins >= 6 * 60 then
+    return FF:T("Last scan: |cffff8800%s|r - prices may have moved, scan again"):format(age)
+  end
+  return FF:T("Last scan: %s"):format(age)
+end
+
 -- Names: the client only knows an item's name once its data is loaded. After each scan,
 -- ask for the missing ones a few at a time and store them as they arrive.
 Scan.nameQueue = {}

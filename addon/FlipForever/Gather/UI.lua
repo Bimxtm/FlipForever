@@ -452,7 +452,7 @@ local function buildPrices(page)
   page.Refresh = function(self)
     local src = ns.PriceSourceName()
     self.source:SetText(src and ("Prices come from |cffffffff" .. src .. "|r.")
-      or "|cffff8040No Auctionator, Auctioneer or TSM found: using vendor prices.|r")
+      or "|cffff8040No price scan yet: vendor prices are used until you scan at the auction house.|r")
     local out, done = {}, {}
     for _, def in ipairs(ns.ORES) do
       if def.cat == "mining" and def.ore and not done[def.ore] and not def.custom then

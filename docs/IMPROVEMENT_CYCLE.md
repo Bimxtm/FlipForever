@@ -33,7 +33,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [x] Overview tab in game: this week's profit next to today's
 - [x] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language (last: can't be checked without a non-English client)
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
-  - Prepared on branch release/2.5.0-translations (chat messages, status lines, newer window texts, shared plural helper): merge it into main first (app pages are translated there too: labels, buttons, table headings, settings); the How to use text stays English
+  - Prepared on branch release/2.5.0-translations (chat messages, status lines, newer window texts, shared plural helper): merge it into main first (app pages are translated there too: labels, buttons, table headings, settings); the How to use text stays English. After merging, translate texts added in betas after the branch (beta 21: tooltip upgrade lines, scan age lines); run scratchpad-style check: every FF:T literal must be in i18n
 
 ## Usage budget (internal)
 - Pro plan, extra usage off. Check usage at the start of each cycle; above 80% of the 5-hour window, pause and resume after the reset.

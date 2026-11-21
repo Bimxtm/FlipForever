@@ -294,10 +294,10 @@ function H:RefreshOverview()
   if not (pg and pg:IsShown()) then return end
   local plan = FF:Plan()
   if plan and plan.buy then
-    pg.plan:SetText(("Shopping list: |cffffff00%d|r to buy, |cffffff00%d|r sell prices%s\nBudget left: %s"):format(
-      #plan.buy, #(plan.sell or {}), plan.live and "  (built in game)" or "", FF:Money(FF.Trader:BudgetLeft())))
+    pg.plan:SetText(("Shopping list: |cffffff00%d|r to buy, |cffffff00%d|r sell prices%s\nBudget left: %s\n%s"):format(
+      #plan.buy, #(plan.sell or {}), plan.live and "  (built in game)" or "", FF:Money(FF.Trader:BudgetLeft()), FF:ScanAgeLine()))
   else
-    pg.plan:SetText("|cffff8800No shopping list yet.|r Scan at the auction house; the list builds itself.")
+    pg.plan:SetText("|cffff8800No shopping list yet.|r Scan at the auction house; the list builds itself.\n" .. FF:ScanAgeLine())
   end
   pg.today:SetText(FF:TodayLine())
   pg.week:SetText(FF:WeekLine())
