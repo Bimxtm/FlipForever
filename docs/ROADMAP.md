@@ -16,7 +16,21 @@
 - Gear finder: compare the stat gains of an upgrade, not only armor and item level.
 - Advisor: pin a step to the map with the place and the person to talk to, like the game's quest tracker (extends the waypoint arrow).
 
+### Ideas from popular addons (21 Nov, owner request; our own versions, nothing copied)
+Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. These fit FlipForever's own modules:
+- **Merchant: sell junk and repair** (loved in Leatrix Plus): at a merchant, sell grey items and repair in one go, with a chat line showing gold earned and spent. Settings toggle each. Fits the vendor flip code.
+- **Advisor: trainer reminder** (WhatsTraining): "New at your trainer: 3 spells, 1g 20s" as an Advisor step when you level, with the list in the tooltip.
+- **Overview: time to level** (leveling guides, Leatrix): XP per hour this session, time to the next level, and rested XP.
+- **Combat helper: threat warning** (threat meters, Details! TinyThreat): a red line under the icons when you are close to pulling aggro as a non-tank, or lose it as a tank.
+- **Mailbox: open all** (Postal-style): take gold and items from all mail in one click, skipping mail with cash on delivery. Builds on Collect auction gold.
+- **App: price history per item** (Auctioneer histograms, TSM): a small chart of an item's lowest price over the last scans on the Deals and Shopping list pages.
+- **Bags: value of what you carry** (Bagnon and Auctionator bag totals): vendor and auction value of your bags on the Overview, and which items are worth posting.
+- **Gathering: node timers** (GatherMate/GatherLite): remember when you last saw a node and show which spots on your route should have respawned.
+
 ## Proposed
+- **Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations. Big: needs our own quest data. Branch feature/quest-helper.
+- **Leveling route guide** (RestedXP-style guides): a step-by-step route per race and level range inside the Advisor, with the waypoint arrow. Big: route data written from scratch. Branch feature/leveling-route.
+- **Disenchant and enchanting profits** (Enchantrix): what an item is worth disenchanted against its auction price, and a "buy to disenchant" list. Needs our own disenchant tables. Branch feature/disenchant.
 - **UI and content pass:** rework the windows a little and refresh all content so the parts work better together (owner suggestion, 21 Nov). Needs a plan before work starts.
 
 ## Done
