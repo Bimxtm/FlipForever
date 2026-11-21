@@ -1666,6 +1666,36 @@ UnitName = function() return 'Tester' end
 print("week:", L("WEEKLINE"), "|", L("WEEKNONE"))
 assert "+65s" in L("WEEKLINE") and "sold 95s" in L("WEEKLINE") and L("WEEK_TODAY") == 0 and "no trades" in L("WEEKNONE")
 
+# --- spell names on a non-English client (looked up by spell ID)
+lua.execute("""
+local S, C, AD = FlipForever.Spells, FlipForever.Combat, FlipForever.Advisor
+local DE = { [116] = "Frostblitz", [133] = "Feuerball", [2136] = "Feuerschlag", [122] = "Frostnova" }
+local oldKnown, oldName, oldLocale = KNOWN, C_Spell.GetSpellName, GetLocale
+EN_LOCAL = S:Local("Frostbolt")
+GetLocale = function() return "deDE" end
+C_Spell.GetSpellName = function(id) return DE[id] end
+S:Reset()
+KNOWN = { "Frostblitz", "Feuerball", "Feuerschlag" }
+DE_LOCAL = S:Local("Frostbolt") .. "|" .. S:Local("Holy Strike") .. "|" .. S:English("Feuerschlag") .. "|" .. S:English("Unbekannt")
+local known = AD:KnownSpells()
+DE_KNOWN = (known["Frostbolt"] and known["Frostblitz"] and known["Fire Blast"]) and true or false
+local oldTarget = TARGET
+TARGET = nil
+local steps = C:BuildSteps()
+TARGET = oldTarget
+local out = {}
+for i, s in ipairs(steps) do out[i] = S:Local(s) end
+DE_STEPS = table.concat(out, ",")
+DE_CD = C:HasCooldown("Feuerschlag")
+KNOWN, C_Spell.GetSpellName, GetLocale = oldKnown, oldName, oldLocale
+S:Reset()
+""")
+print("spells: en", L("EN_LOCAL"), "| de", L("DE_LOCAL"), "| steps", L("DE_STEPS"))
+assert L("EN_LOCAL") == "Frostbolt" and L("DE_LOCAL") == "Frostblitz|Holy Strike|Fire Blast|Unbekannt"
+_de = L("DE_STEPS")
+assert L("DE_KNOWN") is True and L("DE_CD") is True and _de
+assert ("Feuerball" in _de or "Frostblitz" in _de) and not any(e in _de for e in ("Fireball", "Frostbolt", "Fire Blast"))
+
 # --- gear finder: alert only for upgrades that are new since the last search
 lua.execute("""
 local G = FlipForever.Gear

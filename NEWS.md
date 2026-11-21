@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 19
+# FlipForever 2.5 Beta 20
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Your game language, your spells.** The combat helper and the Advisor now find your spells on every game language, not only English.
 
 **Only the deals you want.** The app's Deals page can now show fast sellers only, and hide everything below a profit you choose.
 

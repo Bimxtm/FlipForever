@@ -466,7 +466,7 @@ function C:HasCooldown(spell)
     local ok, ms = pcall(GetSpellBaseCooldown, id)
     if ok and type(ms) == "number" then return ms > 1500 end
   end
-  return KNOWN_CD[spell] or false
+  return KNOWN_CD[spell] or KNOWN_CD[FF.Spells:English(spell)] or false
 end
 
 -- the macro text for the steps; also returns the cooldown spells and the sequence spells
@@ -556,6 +556,8 @@ function C:Rebuild()
       if known[taunt] then table.insert(steps, math.min(2, #steps + 1), taunt) break end
     end
   end
+  -- from here on the names go to the game: use the client's language
+  for i, s in ipairs(steps) do steps[i] = FF.Spells:Local(s) end
   self.steps = steps
   for i = 1, 20 do btn:SetAttribute("step" .. i, nil) end
   if self:Smart() and #steps > 0 then

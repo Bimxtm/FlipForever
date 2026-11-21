@@ -390,6 +390,14 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF:SetActionKey(rest ~= "" and rest:upper() or nil)
   elseif cmd == "reset" then
     FF:ResetProgress()
+  elseif cmd == "spells" and FF.Spells then
+    local bad, n = FF.Spells:Check()
+    if #bad == 0 then
+      FF:Print(("All %d spell IDs match their names."):format(n))
+    else
+      FF:Print(("%d of %d spell IDs name a different spell:"):format(#bad, n))
+      for _, line in ipairs(bad) do FF:Print("  " .. line) end
+    end
   elseif cmd == "" or cmd == "show" or cmd == "options" or cmd == "settings" then
     if FF.Hub then FF.Hub:Toggle() end
   else

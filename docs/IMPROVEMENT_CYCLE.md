@@ -31,7 +31,7 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 - [x] Gear finder: alert (sound + chat line) when a new affordable upgrade appears after a scan
 - [x] App Deals page: filters for "fast sellers only" and a minimum profit
 - [x] Overview tab in game: this week's profit next to today's
-- [ ] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language (last: can't be checked without a non-English client)
+- [x] Language-independent spells: rank-1 spell IDs for the combat helper and advisor, names looked up in the client's language (last: can't be checked without a non-English client)
 - [ ] Stable 2.5.0 at the 07:11 cycle (all 2.4 and 2.5 betas); translate new texts first (chat messages, auction panel status lines, app pages)
 
 ## Usage budget (internal)

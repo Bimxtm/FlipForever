@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.20] - 2026-11-21 (beta)
+### Added
+- **Spells in every client language.** The combat helper and the Advisor look spells up by their spell ID, so rotations, class quests and the cooldown check work on German, French, Spanish, Russian and the other game languages, not only English. A few WoW: Forever-only spells keep their English name for now.
+- `/ff spells` checks the spell list against the game and names any spell whose ID doesn't match (in-game test checklist, step 11).
+
 ## [2.5.0-beta.19] - 2026-11-21 (beta)
 ### Added
 - App, Deals page: *Fast sellers only* and a minimum profit per unit (in silver) to narrow the list. First-scan picks stay visible, since the addon judges them live.

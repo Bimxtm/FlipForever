@@ -64,7 +64,15 @@ end
 -- Spellbook (to tell whether a class quest is done: you know its reward spell) -------------------
 function AD:KnownSpells()
   local known = {}
-  local function add(name) name = plain(name) if name then known[name] = true end end
+  -- keyed by the client's name and by the English one the guide data uses (Spells.lua)
+  local S = FF.Spells
+  local function add(name)
+    name = plain(name)
+    if name then
+      known[name] = true
+      if S then known[S:English(name)] = true end
+    end
+  end
   if C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines and Enum and Enum.SpellBookSpellBank then
     for i = 1, C_SpellBook.GetNumSpellBookSkillLines() do
       local info = C_SpellBook.GetSpellBookSkillLineInfo(i)
