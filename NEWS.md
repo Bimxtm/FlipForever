@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 27
+# FlipForever 2.5 Beta 28
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**The Advisor, one click away.** Open it from the new button at the top of the FlipForever window, by clicking the next step on the Overview, or with a key of your choice (Key Bindings, FlipForever section).
 
 **Budget changes stick.** A new gold budget in Settings now applies to the character you have selected, and the app reminds you to build the list and reload so the game uses it.
 

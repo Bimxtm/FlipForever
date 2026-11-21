@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="FLIPFOREVER_ADVISOR" header="FLIPFOREVER" category="ADDONS">
+    FlipForever.Advisor:Toggle()
+  </Binding>
+  <Binding name="FLIPFOREVER_HUB" category="ADDONS">
+    FlipForever.Hub:Toggle()
+  </Binding>
+</Bindings>

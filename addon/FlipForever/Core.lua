@@ -45,6 +45,11 @@ function FF:Print(...)
   print("|cff33ff99FlipForever|r:", ...)
 end
 
+-- names shown in the game's Key Bindings menu (Bindings.xml)
+BINDING_HEADER_FLIPFOREVER = "FlipForever"
+BINDING_NAME_FLIPFOREVER_ADVISOR = "Open or close the Advisor"
+BINDING_NAME_FLIPFOREVER_HUB = "Open or close the FlipForever window"
+
 -- the random-stat suffix of an item link ("of the Bear"), 0 when it has none
 function FF:LinkSuffix(link)
   if type(link) ~= "string" then return 0 end

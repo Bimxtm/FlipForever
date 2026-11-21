@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.28] - 2026-11-21 (beta)
+### Added
+- The Advisor is easier to reach: an **Advisor** button in the FlipForever window's title bar (on every tab), the next step on the Overview opens it when clicked, and Key Bindings now has a FlipForever section with keys for the Advisor and the FlipForever window. `/ff guide` and right-clicking the minimap coin still work.
+
 ## [2.5.0-beta.27] - 2026-11-21 (beta)
 ### Fixed
 - Changing the gold budget in Settings now also changes it for the selected character and in the budget box at the top. Before, a character that already had its own budget kept the old one.

@@ -1795,6 +1795,24 @@ print("bug report:\n" + _rep)
 assert "Addon version: 2.5.0-beta.25" in _rep and "AUCTION_HOUSE_SHOW" in _rep and "Trader.lua:12" in _rep
 assert "Somebody" not in _rep and "ACC" not in _rep and _d not in _rep
 
+# --- the Advisor is one click away: title-bar button, clickable next step, key binding names
+lua.execute("""
+local FF = FlipForever
+FF.Hub:Toggle()
+local f = _G.FlipForeverHub
+local shown = 0
+local oldShow, oldToggle = FF.Advisor.Show, FF.Advisor.Toggle
+FF.Advisor.Show = function() shown = shown + 1 end
+FF.Advisor.Toggle = function() shown = shown + 1 end
+f.advisorBtn.OnClick()
+f.pages.overview.adviceClick.OnClick()
+ADV_OPENED = shown
+FF.Advisor.Show, FF.Advisor.Toggle = oldShow, oldToggle
+BIND_NAME = BINDING_NAME_FLIPFOREVER_ADVISOR
+""")
+assert L("ADV_OPENED") == 2 and "Advisor" in L("BIND_NAME")
+assert (ADDON / "Bindings.xml").read_text(encoding="utf-8").count("FlipForever.Advisor:Toggle()") == 1
+
 # --- your auctions: which listings the newest scan undercuts
 lua.execute("""
 local FF = FlipForever
