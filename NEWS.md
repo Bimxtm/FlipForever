@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 8
+
+**Open all mail.** At the mailbox, a new button under *Collect auction gold* takes the gold and items from all your mail in one click. Mail with cash on delivery is left alone, and it stops when your bags are full. You can switch the button off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 7
 
 **Threat warning.** The combat helper now warns you under its icons when you are close to pulling aggro, when your target turns on you, or, as a tank, when you lose aggro. You can switch it off under Settings, Features.

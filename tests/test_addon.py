@@ -2159,7 +2159,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2270,4 +2270,51 @@ UnitExists, UnitCanAttack, UnitDetailedThreatSituation = oldExists, oldAttack, n
 print("threat:", L("TH_HIGH"), "|", L("TH_TANKED"), "|", L("TH_TANK_LOST"))
 assert "Threat 92%" in L("TH_HIGH") and L("TH_LOW") == "" and "attacking you" in L("TH_TANKED")
 assert "lost aggro" in L("TH_TANK_LOST") and L("TH_TANK_OK") == "" and L("TH_OFF") == ""
+
+# --- mailbox: open all mail (gold and items, one at a time; cash on delivery skipped; stops on full bags)
+lua.execute("""
+local MB = FlipForever.Mailbox
+local oldHeader, oldMoney, oldCont = GetInboxHeaderInfo, TakeInboxMoney, C_Container
+MAILS = {
+  { money = 500, items = {} },                         -- gold only
+  { money = 0, items = { "Linen Cloth", "Copper Ore" } }, -- two items
+  { money = 0, cod = 900, items = { "Sword" } },       -- cash on delivery: skipped
+  { money = 200, items = { "Silk" } },                 -- gold and an item
+}
+INBOX = MAILS
+GetInboxHeaderInfo = function(i) local m = MAILS[i] local n = 0 for _ in pairs(m.items) do n = n + 1 end return nil, nil, "x", "y", m.money, m.cod or 0, 30, n end
+GetInboxItem = function(i, a) return MAILS[i].items[a] end
+local function landed(i) local m = MAILS[i] if m.money == 0 and #m.items == 0 then table.remove(MAILS, i) end end
+TakeInboxMoney = function(i) local m = MAILS[i] C_Timer.After(0.1, function() m.money = 0 for k, x in ipairs(MAILS) do if x == m then landed(k) break end end end) end
+TakeInboxItem = function(i, a) local m = MAILS[i] C_Timer.After(0.1, function() table.remove(m.items, a) for k, x in ipairs(MAILS) do if x == m then landed(k) break end end end) end
+FREE = 10
+C_Container = { GetContainerNumFreeSlots = function(bag) return bag == 0 and FREE or 0 end }
+MailFrame = MailFrame or CreateFrame("Frame", "MailFrame")
+Fire("MAIL_SHOW")
+local mails, gold, items = MB:Open()
+MB_OPEN = mails .. ":" .. gold .. ":" .. items
+printed = {}
+MB:OpenAll()
+RunTimers(30)
+MB_LEFT = #MAILS
+MB_MSG = printed[#printed] or ""
+-- bags full: stops with a message, gold still taken
+MAILS = { { money = 0, items = { "Ore" } } }
+FREE = 0
+printed = {}
+MB:OpenAll()
+RunTimers(30)
+MB_FULL = (printed[#printed] or "") .. " | left " .. #MAILS
+-- switched off: the button hides
+FlipForeverDB.settings.mailOpenAll = false
+MB:Refresh()
+MB_OFF = FlipForeverOpenAllButton:IsShown()
+FlipForeverDB.settings.mailOpenAll = nil
+INBOX = {}
+GetInboxHeaderInfo, TakeInboxMoney, C_Container = oldHeader, oldMoney, oldCont
+GetInboxItem, TakeInboxItem = nil, nil
+""")
+print("mailbox:", L("MB_OPEN"), "| left:", L("MB_LEFT"), "|", L("MB_MSG"), "|", L("MB_FULL"))
+assert L("MB_OPEN") == "3:700:3" and L("MB_LEFT") == 1 and "7s 0c and 3 items" in L("MB_MSG")
+assert "bags are full" in L("MB_FULL") and L("MB_FULL").endswith("left 1") and L("MB_OFF") is False
 print("ALL ADDON TESTS PASSED")

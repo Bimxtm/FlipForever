@@ -591,6 +591,7 @@ local function build()
   feature("trainerReminder", "Advisor: remind me of new spells at my class trainer", -828, true)
   feature("levelInfo", "Overview: XP per hour, time to level, rested XP", -852, true)
   feature("threatWarning", "Combat helper: warn me about high threat", -876, true)
+  feature("mailOpenAll", "Open all mail button at the mailbox", -900, true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)
