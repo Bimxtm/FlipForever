@@ -53,8 +53,9 @@ function T:PlanOK()
 end
 
 -- Searching ---------------------------------------------------------------------------
-function T:Search(id)
-  self.searchID, self.isCommodity = id, nil
+-- suffix: only this random-stat version of the item ("of the Bear"), from the gear finder
+function T:Search(id, suffix)
+  self.searchID, self.isCommodity, self.searchSuffix = id, nil, suffix
   self.state = "searching"
   self:Refresh()
   local function send()
@@ -66,7 +67,8 @@ function T:Search(id)
     if Enum and Enum.AuctionHouseSortOrder then
       sorts = { { sortOrder = Enum.AuctionHouseSortOrder.Price, reverseSort = false } }
     end
-    local ok, err = FF:Own(AH.SendSearchQuery, AH.MakeItemKey(id), sorts, true)
+    local key = suffix and AH.MakeItemKey(id, 0, suffix) or AH.MakeItemKey(id)
+    local ok, err = FF:Own(AH.SendSearchQuery, key, sorts, true)
     if not ok then FF:SetStatus(FF:T("Search failed: ") .. tostring(err)) end
     local token = {}
     self.searchToken = token
@@ -95,7 +97,9 @@ function T:ItemRows(key)
   local n = AH.GetNumItemSearchResults(key) or 0
   for i = 1, n do
     local r = AH.GetItemSearchResultInfo(key, i)
-    if r and r.buyoutAmount and r.buyoutAmount > 0 then
+    -- a random-stat version was asked for: never buy another version of the same item
+    local wrongSuffix = self.searchSuffix and FF:LinkSuffix(r and r.itemLink) ~= self.searchSuffix
+    if r and r.buyoutAmount and r.buyoutAmount > 0 and not wrongSuffix then
       r.unitPrice = math.floor(r.buyoutAmount / math.max(1, r.quantity or 1))
       rows[#rows + 1] = r
     end
@@ -167,7 +171,7 @@ function T:NextBuyTarget()
   self.target.liveMax, self.target.liveExp = nil, nil
   FF:SetStatus(FF:T("Checking %d/%d: %s (%s)"):format(self.idx, #list, FF:ItemName(self.target.id),
     self.target.gap and "price checked live" or ("max " .. FF:Money(self.target.max))))
-  self:Search(self.target.id)
+  self:Search(self.target.id, self.target.suffix)
 end
 
 function T:BudgetLeft()

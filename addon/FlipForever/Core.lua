@@ -37,6 +37,13 @@ function FF:Plural(n)
   return (n or 0) > 1 and "s" or ""
 end
 
+-- the random-stat suffix of an item link ("of the Bear"), 0 when it has none
+function FF:LinkSuffix(link)
+  if type(link) ~= "string" then return 0 end
+  local s = select(7, link:match("item:(%-?%d*):(%-?%d*):(%-?%d*):(%-?%d*):(%-?%d*):(%-?%d*):(%-?%d*)"))
+  return tonumber(s) or 0
+end
+
 -- Gold formatting -----------------------------------------------------------
 function FF:Money(copper)
   copper = tonumber(copper) or 0
