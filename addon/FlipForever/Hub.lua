@@ -608,6 +608,7 @@ local function build()
   feature("bagValue", "Overview: value of my bags, items worth posting", -924, true)
   feature("nodeTimers", "Gathering: skip spots I gathered in the last 15 min", -948, true, function() local ns = FF.gatherNS if ns and ns.MarkDirty then ns.MarkDirty() end end)
   feature("talentOverlay", "Show my build on the Talents window (next point marked)", -972, true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end)
+  feature("combatBuffs", "Combat helper: cast my missing buffs before a fight", -996, true, function() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)

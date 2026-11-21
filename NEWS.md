@@ -20,6 +20,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 12
+
+**Combat helper: buffs and a paladin fix.** Before a fight, the combat helper now casts your missing buffs first, such as your blessing and aura, Power Word: Fortitude, Arcane Intellect or Mark of the Wild. For paladins, the big icon now moves on after each cast and shows whether the seal or Judgement comes next. You can switch the buffs off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 11
 
 **Node timers for gathering.** Your farming loop now skips spots you gathered in the last 15 minutes, and the gathering tracker shows how many spots are ready and when the next one should be back. You can switch it off under Settings, Features.
