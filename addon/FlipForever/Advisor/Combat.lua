@@ -360,6 +360,13 @@ function C:UpdateIcons()
     if small1.cd then small1.cd:SetText("") small2.cd:SetText("") end
     local name = nextId and C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(nextId)
     btn.label:SetText((name or "Blizzard assistant") .. "  |cff888888(Blizzard mode)|r")
+  elseif self.buffs and self.buffs[1] and not InCombatLockdown() then
+    -- out of combat with a buff missing: the next press casts it
+    btn.icon:SetTexture(iconOf(self.buffs[1]) or "Interface\\Icons\\INV_Misc_QuestionMark")
+    small1:SetTexture(iconOf(self.buffs[2]))
+    small2:SetTexture(nil)
+    if small1.cd then small1.cd:SetText("") small2.cd:SetText("") end
+    btn.label:SetText(FF:T("%s (before the fight)"):format(self.buffs[1]))
   elseif self.cds or self.seq then
     -- smart mode: the big icon is what the next press will cast; the small ones are your
     -- cooldown abilities, dimmed while they aren't ready
@@ -546,15 +553,29 @@ function C.CooldownText(spell)
   return tostring(math.ceil(left))
 end
 
+-- the cast sequence's next spell: followed from your own successful casts (the game resets the
+-- sequence on a new target and after the fight, and so do we); the game's answer only fills in
+-- before the first cast. QueryCastSequence returns the position first and the names after it.
+function C:SeqNext()
+  local seq = self.seq
+  if not seq or #seq == 0 then return nil end
+  if self.seqPos then return seq[self.seqPos] end
+  if QueryCastSequence and self.seqText then
+    local r = { pcall(QueryCastSequence, self.seqText) }
+    if r[1] then
+      for i = 2, #r do
+        if type(r[i]) == "string" and r[i] ~= "" then return r[i] end
+      end
+    end
+  end
+  return seq[1]
+end
+
 -- what the button will cast next: a ready cooldown, else the cast sequence's next spell
 function C:SmartNext()
   if self.seqFirst then
     -- paladins: the seal and Judgement come first whenever the next one can be cast
-    local nextSeq = self.seq and self.seq[1]
-    if QueryCastSequence and self.seqText then
-      local ok, a = pcall(QueryCastSequence, self.seqText)
-      if ok and type(a) == "string" and a ~= "" then nextSeq = a end
-    end
+    local nextSeq = self:SeqNext()
     if nextSeq and cooldownLeft(nextSeq) <= 1.6 then return nextSeq end
     for _, s in ipairs(self.cds or {}) do
       if cooldownLeft(s) <= 1.6 then return s end
@@ -570,13 +591,102 @@ function C:SmartNext()
     local s = btn and btn:GetAttribute("step") or 1
     return (self.steps or {})[s]
   end
-  if QueryCastSequence and self.seqText then
-    local ok, a, b, c = pcall(QueryCastSequence, self.seqText)
-    for _, v in ipairs({ a, b, c }) do
-      if ok and type(v) == "string" and v ~= "" then return v end
+  return self:SeqNext()
+end
+
+-- a successful cast of the sequence's current spell moves it on (display only; the game casts)
+function C:OnCastSucceeded(spellID)
+  local seq = self.seq
+  if not (seq and #seq > 0) then return end
+  spellID = plain(spellID)
+  local name = spellID and ((C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID))
+    or (GetSpellInfo and GetSpellInfo(spellID)))
+  if not name then return end
+  local pos = self.seqPos or 1
+  if name == seq[pos] then self.seqPos = pos % #seq + 1 end
+end
+
+-- Buffs before a fight (setting combatBuffs, on by default) -------------------------------------
+-- Out of combat the addon may look at your buffs: a missing one is put in front of the button as
+-- "/cast [nocombat] ...", so the first presses before a pull cast it. In combat the line never
+-- fires, and the button is rebuilt without it once the buff is up.
+-- Each entry: spells to try in order (the first you know is cast); any of them counts as present.
+C.BUFFS = {
+  PALADIN = { { "Blessing of Might", "Blessing of Wisdom" }, { "Devotion Aura", "Retribution Aura" } },
+  PRIEST = { { "Power Word: Fortitude" }, { "Inner Fire" } },
+  MAGE = { { "Arcane Intellect" }, { "Molten Armor", "Mage Armor", "Ice Armor", "Frost Armor" } },
+  DRUID = { { "Mark of the Wild" }, { "Thorns" } },
+  WARLOCK = { { "Fel Armor", "Demon Armor", "Demon Skin" } },
+  HUNTER = { { "Aspect of the Hawk", "Aspect of the Monkey" } },
+}
+-- per build: a holy paladin wants Wisdom, a tank paladin Righteous Fury
+C.BUILD_BUFFS = {
+  PALADIN = {
+    holy = { { "Blessing of Wisdom", "Blessing of Might" }, { "Devotion Aura" } },
+    prot = { { "Righteous Fury" }, { "Blessing of Might", "Blessing of Wisdom" }, { "Devotion Aura", "Retribution Aura" } },
+  },
+}
+-- any buff whose name starts like this also counts (you picked another aspect yourself)
+local BUFF_FAMILY = { ["Aspect of the Hawk"] = "Aspect of", ["Aspect of the Monkey"] = "Aspect of" }
+
+function C:BuffsOn() return FlipForeverDB.settings.combatBuffs ~= false end
+
+local function playerBuffNames()
+  local names = {}
+  for i = 1, 40 do
+    local name
+    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+      local a = C_UnitAuras.GetAuraDataByIndex("player", i, "HELPFUL")
+      name = a and plain(a.name)
+    elseif UnitBuff then
+      name = plain((UnitBuff("player", i)))
+    end
+    if not name then break end
+    names[#names + 1] = name
+  end
+  return names
+end
+
+-- the buffs to cast before the next fight, in the client's language
+function C:MissingBuffs()
+  if not self:BuffsOn() then return {} end
+  local AD = FF.Advisor
+  local p = AD:Player()
+  local build = AD:Build(p)
+  local key = build and (build.combat or build.id)
+  local list = (C.BUILD_BUFFS[p.class] and key and C.BUILD_BUFFS[p.class][key]) or C.BUFFS[p.class]
+  if not list then return {} end
+  local known = AD:KnownSpells()
+  local have = playerBuffNames()
+  local S = FF.Spells
+  local function present(spell)
+    local loc = S:Local(spell)
+    local family = BUFF_FAMILY[spell] and S:Local(BUFF_FAMILY[spell])
+    for _, n in ipairs(have) do
+      -- "Greater Blessing of Might" also counts as Blessing of Might
+      if n == loc or n:find(loc, 1, true) or (family and n:find(family, 1, true) == 1) then return true end
+    end
+    return false
+  end
+  local out = {}
+  for _, entry in ipairs(list) do
+    local any = false
+    for _, s in ipairs(entry) do if present(s) then any = true break end end
+    if not any then
+      for _, s in ipairs(entry) do
+        if known[s] then out[#out + 1] = S:Local(s) break end
+      end
     end
   end
-  return seq[1]
+  return out
+end
+
+-- the macro lines for the missing buffs (druids: only in caster form)
+function C:BuffLines()
+  local lines = ""
+  local cond = FF.Advisor:Player().class == "DRUID" and "[nocombat,noform]" or "[nocombat]"
+  for _, s in ipairs(self.buffs or {}) do lines = lines .. "/cast " .. cond .. " " .. s .. "\n" end
+  return lines
 end
 
 -- Druids: which shapeshift bar slot holds Bear Form and Cat Form (the order depends on what you've learned)
@@ -618,7 +728,7 @@ function C:DruidSetup()
   local melee = {}
   if #bear > 0 then melee[#melee + 1] = forms.bear end
   if #cat > 0 then melee[#melee + 1] = forms.cat end
-  local prefix = self:TargetPrefix() .. (#melee > 0 and ("/startattack [form:" .. table.concat(melee, "/") .. "]\n") or "")
+  local prefix = self:BuffLines() .. self:TargetPrefix() .. (#melee > 0 and ("/startattack [form:" .. table.concat(melee, "/") .. "]\n") or "")
   local function pick(l, i) return #l > 0 and l[(i - 1) % #l + 1] or nil end
   for i = 1, n do
     local parts = {}
@@ -698,8 +808,11 @@ function C:Rebuild()
   end
   self.assist = nil
   btn:SetAttribute("spell", nil)
+  self.seqPos = nil
+  self.buffs = self:MissingBuffs()
+  self.buffSig = table.concat(self.buffs, ",")
   local steps, prefix = self:BuildSteps()
-  prefix = self:TargetPrefix() .. prefix
+  prefix = self:BuffLines() .. self:TargetPrefix() .. prefix
   -- tanks: a taunt early in every round (only if you know one)
   if self:IsTank() then
     local known = FF.Advisor:KnownSpells()
@@ -887,8 +1000,21 @@ end
 FF:On("UPDATE_SHAPESHIFT_FORM", function() if btn and C.formSteps then C:UpdateIcons() end end)
 FF:On("UPDATE_SHAPESHIFT_FORMS", function() if btn and C:Enabled() then C:Rebuild() end end)
 
+-- the cast sequence moves on after each successful cast (followed for the big icon)
+pcall(FF.On, FF, "UNIT_SPELLCAST_SUCCEEDED", function(unit, _, spellID)
+  if unit ~= "player" or not btn or not C.seq then return end
+  C:OnCastSucceeded(spellID)
+  C:UpdateIcons()
+end)
+-- your buffs changed out of combat: rebuild when the list of missing buffs is different
+pcall(FF.On, FF, "UNIT_AURA", function(unit)
+  if unit ~= "player" or not btn or not C:Enabled() or InCombatLockdown() or C.assist then return end
+  if table.concat(C:MissingBuffs(), ",") ~= (C.buffSig or "") then C:Rebuild() end
+end)
+
 FF:On("PLAYER_TARGET_CHANGED", function()
   if not btn then return end
+  C.seqPos = nil   -- reset=target: the sequence starts over on a new target
   if InCombatLockdown() then
     C:UpdateIcons() -- the warning line still updates; the sequence waits for the fight to end
   else

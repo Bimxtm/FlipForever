@@ -27,6 +27,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.2 beta 12 (owner report): paladin combat helper icon moves on after each cast; missing self-buffs are cast before a fight.
 - 2.5.2 beta 11: gathering node timers (skip recently gathered spots).
 - 2.5.2 beta 10: 7-day price trend on the app's Deals page; price history for held items.
 - 2.5.2 beta 9: bag value and items worth posting on the Overview.

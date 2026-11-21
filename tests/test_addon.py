@@ -1679,6 +1679,76 @@ assert "/cast Consecration" in _p and _p[-1] == "/cast Holy Strike" and _p.index
 assert L("PALA_COUNT") == 0 and L("PALA_AFTER") == L("PALA_MACRO")   # one macro for every press
 assert L("PALA_NEXT1") == "Judgement" and L("PALA_NEXT2") == "Consecration" and L("PALA_NEXT3") == "Holy Strike"
 
+# --- paladin: the big icon follows the seal/Judgement sequence after each cast; missing buffs go first out of combat
+lua.execute("""
+local C, AD = FlipForever.Combat, FlipForever.Advisor
+local oldLevel, oldName, oldQuery = UnitLevel, C_Spell.GetSpellName, QueryCastSequence
+FlipForeverDB.settings.combatSmart = nil
+FlipForeverDB.settings.combatTarget = false
+FlipForeverDB.settings.combatTank = false
+UnitClass = function() return "Paladin", "PALADIN" end
+UnitLevel = function() return 20 end
+AD:CharStore().build = nil
+KNOWN = { "Seal of Righteousness", "Judgement", "Consecration", "Holy Strike", "Blessing of Might", "Devotion Aura" }
+TARGET = nil
+CDS = {}
+PBUFFS = {}
+UnitBuff = function(unit, i) return PBUFFS[i] end
+-- the game's answer: position first, then item, then spell
+QueryCastSequence = function(seq) return 1, nil, "Seal of Righteousness" end
+local IDS = { [1] = "Seal of Righteousness", [2] = "Judgement", [3] = "Consecration" }
+C_Spell.GetSpellName = function(id) return IDS[id] end
+if not C:Enabled() then C:Toggle() end
+FlipForeverCombatButton.label = { SetText = function(s, t) s.text = t end }   -- keeps the label text
+C:Rebuild()
+CB = FlipForeverCombatButton
+BUFF_MACRO =CB:GetAttribute("macrotext")
+BUFF_LABEL = CB.label.text
+PBUFFS = { "Greater Blessing of Might" }
+Fire("UNIT_AURA", "player")
+BUFF_MACRO2 = CB:GetAttribute("macrotext")
+PBUFFS = { "Greater Blessing of Might", "Devotion Aura" }
+Fire("UNIT_AURA", "player")
+BUFF_MACRO3 = CB:GetAttribute("macrotext")
+SEQ0 = C:SmartNext()
+Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "g1", 1)
+SEQ1 = C:SmartNext()
+SEQ1_LABEL = CB.label.text
+Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "g2", 3)   -- Consecration: not in the sequence
+SEQ2 = C:SmartNext()
+Fire("UNIT_SPELLCAST_SUCCEEDED", "party1", "g3", 2)   -- someone else
+SEQ3 = C:SmartNext()
+Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "g4", 2)
+SEQ4 = C:SmartNext()
+Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "g5", 1)
+local oldLock = InCombatLockdown
+InCombatLockdown = function() return true end
+Fire("PLAYER_TARGET_CHANGED")
+SEQ5 = C:SmartNext()
+InCombatLockdown = oldLock
+FlipForeverDB.settings.combatBuffs = false
+PBUFFS = {}
+C:Rebuild()
+BUFF_OFF = CB:GetAttribute("macrotext")
+FlipForeverDB.settings.combatBuffs = nil
+C:Toggle()
+UnitBuff, PBUFFS = nil, nil
+C_Spell.GetSpellName, QueryCastSequence, UnitLevel = oldName, oldQuery, oldLevel
+FlipForeverDB.settings.combatTarget = nil
+FlipForeverDB.settings.combatTank = nil
+FlipForeverDB.settings.combatSmart = false
+""")
+print("buffs first:", repr(L("BUFF_MACRO").split("\n")[:3]), "|", L("BUFF_LABEL"))
+assert L("BUFF_MACRO").startswith("/cast [nocombat] Blessing of Might\n/cast [nocombat] Devotion Aura\n/startattack\n/castsequence")
+assert L("BUFF_LABEL") == "Blessing of Might (before the fight)"
+assert L("BUFF_MACRO2").startswith("/cast [nocombat] Devotion Aura\n/startattack")   # Greater Blessing counts
+assert L("BUFF_MACRO3").startswith("/startattack") and len(L("BUFF_MACRO")) <= 255
+print("sequence icon:", L("SEQ0"), L("SEQ1"), L("SEQ2"), L("SEQ3"), L("SEQ4"), "| new target in combat:", L("SEQ5"))
+assert L("SEQ0") == "Seal of Righteousness" and L("SEQ1") == "Judgement" and L("SEQ1_LABEL") == "Judgement"
+assert L("SEQ2") == "Judgement" and L("SEQ3") == "Judgement" and L("SEQ4") == "Seal of Righteousness"
+assert L("SEQ5") == "Seal of Righteousness"
+assert L("BUFF_OFF").startswith("/startattack")   # switched off in Settings: no buff lines
+
 # --- a blocked action is kept in the error list with the function name
 lua.execute("""
 FlipForeverDB.errors = {}
@@ -2159,7 +2229,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,combatBuffs=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.2-beta.12] - 2026-11-21 (beta)
+### Fixed
+- Combat helper, paladins: the big icon now moves on after each cast. It follows the seal and Judgement in the order the game casts them (seal, Judgement, seal again) and starts over on a new target, as the game does. Before, it could keep showing the seal.
+### Added
+- Combat helper: buffs before a fight. Out of combat, a missing self-buff is cast with the first press: paladin blessing and aura (Righteous Fury for tank builds, Blessing of Wisdom for holy), priest Power Word: Fortitude and Inner Fire, mage Arcane Intellect and armor, druid Mark of the Wild and Thorns, warlock armor, hunter aspect. The big icon shows it with "(before the fight)". Greater blessings count, and a hunter's own choice of aspect is kept. These lines never fire in combat. Switch: *Combat helper: cast my missing buffs before a fight* in Settings, Features.
+
 ## [2.5.2-beta.11] - 2026-11-21 (beta)
 ### Added
 - Gathering: node timers. Spots you gathered in the last 15 minutes are skipped by the *Next* stop on your loop (nodes come back after roughly 5-30 minutes), and the tracker shows how many spots are ready and when the next one should be back. If every spot is still waiting, the loop runs in its normal order. Switch: *Gathering: skip spots I gathered in the last 15 min* in Settings, Features.
