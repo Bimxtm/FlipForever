@@ -1768,8 +1768,12 @@ Fire("FF_TEST_BOOM")
 for i = 1, 25 do FlipForever:RecordError("loop", "e" .. i) end
 ERR_N = #FlipForeverDB.errors
 ERR_LAST = FlipForeverDB.errors[ERR_N].msg
+printed = {}
+SlashCmdList.FLIPFOREVER("errors")
+ERR_CMD = table.concat(printed, "\\n")
 """)
 assert L("ERR_N") == 20 and L("ERR_LAST") == "e25"
+assert "Last 5 errors" in L("ERR_CMD") and "loop: e25" in L("ERR_CMD") and "e20" not in L("ERR_CMD")
 import tempfile as _tf  # noqa: E402
 from pathlib import Path  # noqa: E402
 from flipforever import store as _store2  # noqa: E402

@@ -411,6 +411,17 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF:SetActionKey(rest ~= "" and rest:upper() or nil)
   elseif cmd == "reset" then
     FF:ResetProgress()
+  elseif cmd == "errors" then
+    local list = FlipForeverDB.errors or {}
+    if #list == 0 then
+      FF:Print("No errors recorded.")
+    else
+      FF:Print(("Last %d errors (newest first):"):format(math.min(5, #list)))
+      for i = #list, math.max(1, #list - 4), -1 do
+        local e = list[i]
+        FF:Print(("  %s  v%s  %s: %s"):format(date("%H:%M", e.t or 0), e.v or "?", e.where or "?", e.msg or ""))
+      end
+    end
   elseif cmd == "spells" and FF.Spells then
     local bad, n = FF.Spells:Check()
     if #bad == 0 then

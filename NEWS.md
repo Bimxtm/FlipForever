@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 25
+# FlipForever 2.5 Beta 26
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Errors at a glance.** Type `/ff errors` in game to see the addon's last five errors, handy for a quick screenshot in a bug report.
 
 **Reporting a bug is easier.** In the app, open About & updates and click *Copy bug report info*: it copies your versions, setup and the addon's last errors, ready to paste into your report.
 

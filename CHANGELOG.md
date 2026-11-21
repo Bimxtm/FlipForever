@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.26] - 2026-11-21 (beta)
+### Added
+- `/ff errors` lists the addon's last five errors in chat (time, version, where it happened), so you can check or screenshot them for a bug report without leaving the game.
+
 ## [2.5.0-beta.25] - 2026-11-21 (beta)
 ### Added
 - **Copy bug report info** (app, About & updates): copies the app and addon versions, your Windows version, language and setup, and the addon's last errors, ready to paste into a bug report. Windows user names in paths are replaced, and no character or account names are included.
