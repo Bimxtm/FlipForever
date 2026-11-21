@@ -2071,4 +2071,61 @@ FlipForeverDB.settings.gearAlert = nil
 print("gear alert:", L("GA_MSG"))
 assert L("GA1") == 0 and L("GA_PRINT1") == 0 and L("GA2") == 1 and "Keen Dagger" in L("GA_MSG") and L("GA_SOUND") == 1
 assert L("GA3") == 0 and L("GA4") == 1 and L("GA_PRINT4") == 0
+
+# --- merchant: sell grey items and repair (button always there, automatic only when switched on)
+lua.execute("""
+local FF = FlipForever
+local M = FF.Merchant
+local oldCont, oldVendor, oldMoney = C_Container, FF.VendorPrice, GetMoney
+MerchantFrame = CreateFrame("Frame", "MerchantFrame")
+MerchantFrame.shown = true
+local BAGS = { [0] = {
+  [1] = { itemID = 1, stackCount = 3, quality = 0 },                    -- grey, 5c each
+  [2] = { itemID = 2, stackCount = 1, quality = 1 },                    -- white: kept
+  [3] = { itemID = 3, stackCount = 1, quality = 0, hasNoValue = true }, -- grey without value: kept
+  [4] = { itemID = 4, stackCount = 1, quality = 0, isLocked = true },   -- locked: kept
+} }
+SOLD = {}
+C_Container = {
+  GetContainerNumSlots = function(bag) return bag == 0 and 4 or 0 end,
+  GetContainerItemInfo = function(bag, slot) return BAGS[bag] and BAGS[bag][slot] end,
+  UseContainerItem = function(bag, slot) SOLD[#SOLD + 1] = BAGS[bag][slot].itemID end,
+}
+FF.VendorPrice = function(self, id) return 5 end
+REPAIRED = 0
+CanMerchantRepair = function() return true end
+GetRepairAllCost = function() return 250, true end
+RepairAllItems = function(guild) REPAIRED = REPAIRED + 1 end
+GetMoney = function() return 10000 end
+FlipForeverDB.settings.autoJunk, FlipForeverDB.settings.autoRepair = nil, nil
+-- off at first: a visit sells and repairs nothing, the strip shows up
+Fire("MERCHANT_SHOW")
+M_OFF = #SOLD .. ":" .. REPAIRED
+M_STRIP = FlipForeverMerchantStrip and FlipForeverMerchantStrip:IsShown()
+-- the button sells only the grey item with a value
+printed = {}
+local n, gold = M:SellJunk()
+M_SELL = n .. ":" .. gold .. ":" .. table.concat(SOLD, ",")
+M_MSG = printed[#printed] or ""
+-- switched on: both happen on the next visit
+SOLD = {}
+FlipForeverDB.settings.autoJunk, FlipForeverDB.settings.autoRepair = true, true
+Fire("MERCHANT_SHOW")
+M_ON = #SOLD .. ":" .. REPAIRED
+-- not enough gold: no repair
+GetMoney = function() return 100 end
+M_POOR = M:Repair(true)
+-- merchant window closed: nothing sold
+MerchantFrame.shown = false
+SOLD = {}
+M:SellJunk(true)
+M_CLOSED = #SOLD
+FlipForeverDB.settings.autoJunk, FlipForeverDB.settings.autoRepair = nil, nil
+C_Container, FF.VendorPrice, GetMoney = oldCont, oldVendor, oldMoney
+CanMerchantRepair, GetRepairAllCost, RepairAllItems = nil, nil, nil
+""")
+print("merchant:", L("M_OFF"), L("M_SELL"), repr(L("M_MSG")), L("M_ON"), L("M_POOR"), L("M_CLOSED"))
+assert L("M_OFF") == "0:0" and L("M_STRIP")
+assert L("M_SELL") == "1:15:1" and "15" in L("M_MSG")
+assert L("M_ON") == "1:1" and L("M_POOR") == 0 and L("M_CLOSED") == 0
 print("ALL ADDON TESTS PASSED")
