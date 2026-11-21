@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.6.0-beta.3] - 2026-11-21 (beta)
+### Added
+- Talents panel: click a talent to open its tree on the Talents window.
+- Builds whose guide names only the key talents now get an order: lower tiers first, and the next point is always one you can already take. When a key talent needs more points in its tree first, the panel says how many.
+
 ## [2.6.0-beta.2] - 2026-11-21 (beta)
 ### Added
 - Talents panel: the tree of every talent after its name, the build's role, how to play the build (its rotation), and how many points you have left to spend.

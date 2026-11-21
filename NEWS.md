@@ -1,3 +1,7 @@
+# FlipForever 2.6.0 Beta 3
+
+**Click a talent to open its tree.** Each line in the panel beside the Talents window now takes you to that talent's tree. Builds whose guide names only the key talents get an order too: lower tiers first, so the next point is always one you can take. If a key talent needs more points in its tree first, the panel tells you how many.
+
 # FlipForever 2.6.0 Beta 2
 
 **More of your build beside the Talents window.** The panel now shows which tree each talent is in, the build's role, how to play it, and how many talent points you have left to spend. Type `/ff talents` to open the Talents window.

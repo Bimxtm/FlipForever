@@ -45,29 +45,49 @@ function TO:Plan(build, level)
   if not (build and build.talents) then return plan end
   local where, spent, names = self:Trees()
   plan.spent, plan.treeNames = spent, names
-  local nextFound = false
-  for order, t in ipairs(build.talents) do
+  -- Builds that only name their key talents get an order of our own: lower tiers first (the
+  -- guide's order within a tier), and the next point is one you can already take.
+  local list = {}
+  for i, t in ipairs(build.talents) do list[i] = { t = t, i = i } end
+  if build.keyOnly then
+    table.sort(list, function(a, b)
+      local wa, wb = where[a.t[1]], where[b.t[1]]
+      local ta, tb = wa and wa.tier or 99, wb and wb.tier or 99
+      if ta ~= tb then return ta < tb end
+      return a.i < b.i
+    end)
+  end
+  local function unlocked(w) return (spent[w.tab] or 0) >= ((w.tier or 1) - 1) * 5 end
+  local nextFound, firstLocked = false, nil
+  for order, e in ipairs(list) do
+    local t = e.t
     local name, want, minLevel = t[1], t[2], t[3]
     local w = where[name]
     local s = { order = order, name = name, minLevel = minLevel }
     if not w then
       s.state = "missing"
     else
-      s.tab, s.index, s.cur = w.tab, w.index, w.rank
+      s.tab, s.index, s.cur, s.tier = w.tab, w.index, w.rank, w.tier
       s.treeName = names[w.tab]
       s.target = math.min(want or w.max, w.max)
       if s.cur >= s.target then
         s.state = "done"
       elseif (minLevel or 0) > (level or 60) then
         s.state = "level"
-      elseif not nextFound then
+      elseif not nextFound and (not build.keyOnly or unlocked(w)) then
         s.state, nextFound = "next", true
       else
         s.state = "todo"
+        if build.keyOnly and not firstLocked and not unlocked(w) then firstLocked = s end
       end
     end
     plan.steps[#plan.steps + 1] = s
     plan.byName[name] = s
+  end
+  -- nothing reachable yet: the first locked talent is next, with the points its tier still needs
+  if not nextFound and firstLocked then
+    firstLocked.state = "next"
+    firstLocked.needPoints = (firstLocked.tier - 1) * 5 - (spent[firstLocked.tab] or 0)
   end
   plan.done = 0
   for _, s in ipairs(plan.steps) do if s.state == "done" then plan.done = plan.done + 1 end end
@@ -241,12 +261,19 @@ function TO:Panel(parent)
   panel.role:SetPoint("RIGHT", -12, 0)
   panel.role:SetJustifyH("LEFT")
   panel.lines = {}
+  panel.rows = {}
   for i = 1, MAX_LINES do
-    local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    fs:SetPoint("TOPLEFT", 12, -80 - (i - 1) * 13)
-    fs:SetPoint("RIGHT", -12, 0)
+    -- each line is a button: click it to open that talent's tree
+    local row = CreateFrame("Button", nil, panel)
+    row:SetPoint("TOPLEFT", 12, -80 - (i - 1) * 13)
+    row:SetPoint("RIGHT", -12, 0)
+    row:SetHeight(13)
+    row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+    row:SetScript("OnClick", function(self) if self.tab then TO:ShowTree(self.tab) end end)
+    local fs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    fs:SetAllPoints(row)
     fs:SetJustifyH("LEFT")
-    panel.lines[i] = fs
+    panel.lines[i], panel.rows[i] = fs, row
   end
   panel.note = panel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   panel.note:SetPoint("BOTTOMLEFT", 12, 10)
@@ -272,13 +299,20 @@ function TO:PanelText(p)
   out.points = self:PointsLine(build, plan)
   out.role = self:RoleLine(build)
   out.rotation = build.rotation and (GOLD .. FF:T("How to play:") .. "|r " .. build.rotation) or ""
-  local header = build.keyOnly and FF:T("Key talents (the guide gives no pick order)") or FF:T("Talent order")
+  local header = build.keyOnly and FF:T("Key talents, lower tiers first") or FF:T("Talent order")
   out.lines[1] = GOLD .. header .. "|r"
-  for _, s in ipairs(plan.steps) do out.lines[#out.lines + 1] = self:StepLine(s) end
+  out.tabs = {}
+  for _, s in ipairs(plan.steps) do
+    out.lines[#out.lines + 1] = self:StepLine(s)
+    out.tabs[#out.lines] = s.tab
+  end
   if #plan.steps == 0 then out.lines[#out.lines + 1] = FF:T("This guide shows its talents only as a picture - follow it on the guide's page.") end
   local nextStep
   for _, s in ipairs(plan.steps) do if s.state == "next" then nextStep = s break end end
-  if nextStep and nextStep.tab and plan.treeNames and plan.treeNames[nextStep.tab] then
+  if nextStep and nextStep.needPoints and nextStep.needPoints > 0 then
+    out.note = FF:T("Spend %d more points in %s to reach %s."):format(nextStep.needPoints,
+      (plan.treeNames and plan.treeNames[nextStep.tab]) or FF:T("this tree"), nextStep.name)
+  elseif nextStep and nextStep.tab and plan.treeNames and plan.treeNames[nextStep.tab] then
     out.note = FF:T("Next point: %s in %s."):format(nextStep.name, plan.treeNames[nextStep.tab])
   elseif #plan.steps > 0 and plan.done == #plan.steps then
     out.note = FF:T("Build complete.")
@@ -310,9 +344,23 @@ function TO:Refresh()
     local l = text.lines[i]
     if i == MAX_LINES and #text.lines > MAX_LINES then l = GREY .. FF:T("(+%d more)"):format(#text.lines - MAX_LINES + 1) .. "|r" end
     pn.lines[i]:SetText(l or "")
+    pn.rows[i].tab = (i < MAX_LINES or #text.lines <= MAX_LINES) and text.tabs and text.tabs[i] or nil
   end
   pn.note:SetText(text.note or "")
   pn:Show()
+end
+
+-- switch the Talents window to a tree, the same as clicking its tab (outside fights only)
+function TO:ShowTree(tab)
+  if InCombatLockdown and InCombatLockdown() then return false end
+  local f, fname = self:GameFrame()
+  if not f then return false end
+  if self:SelectedTab(f) == tab then return true end
+  local tb = _G[fname .. "Tab" .. tab]
+  if not (tb and tb.Click) then return false end
+  tb:Click()
+  self:Refresh()
+  return true
 end
 
 -- /ff talents: open (or close) the game's Talents window

@@ -2175,5 +2175,48 @@ if L("TO2_ROLEKEY"):
     assert L("TO2_ROLE").startswith("Role: ")
 if L("TO2_HASROT"):
     assert "How to play:" in L("TO2_ROT")
+
+# --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local savedInfo = GetTalentInfo
+TIERS = { 1, 1, 2, 3, 5 }   -- Improved Frostbolt, Precision, Frostbite, Ice Shards, Ice Lance
+GetTalentInfo = function(tab, i) local t = TALENTS[i] return t[1], nil, TIERS[i], 1, t[2], t[3] end
+TALENTS = { {"Improved Frostbolt", 5, 5}, {"Precision", 0, 3}, {"Frostbite", 0, 3}, {"Ice Shards", 0, 3}, {"Ice Lance", 0, 1} }
+local key = { keyOnly = true, talents = { {"Ice Lance"}, {"Ice Shards"}, {"Precision"}, {"Frostbite"} } }
+local plan = TO:Plan(key, 60)
+local o = {}
+for _, s in ipairs(plan.steps) do o[#o + 1] = s.name .. "=" .. s.state end
+TO3_ORDER = table.concat(o, ",")
+-- only key talents above tier 1 and 5 points spent: Frostbite (tier 2) is next, the rest wait
+key = { keyOnly = true, talents = { {"Ice Lance"}, {"Ice Shards"}, {"Frostbite"} } }
+plan = TO:Plan(key, 60)
+o = {}
+for _, s in ipairs(plan.steps) do o[#o + 1] = s.name .. "=" .. s.state end
+TO3_ORDER2 = table.concat(o, ",")
+-- no point spent yet: the first key talent is next, with the points its tier needs
+TALENTS[1][2] = 0
+key = { keyOnly = true, talents = { {"Ice Shards"}, {"Ice Lance"} } }
+plan = TO:Plan(key, 60)
+TO3_NEED = plan.steps[1].name .. ":" .. plan.steps[1].state .. ":" .. tostring(plan.steps[1].needPoints)
+TALENTS[1][2] = 5
+GetTalentInfo = savedInfo
+-- clicking a line opens that tree's tab
+TF.shown = true
+TF.selectedTab = 1
+CLICKED = nil
+TalentFrameTab2 = CreateFrame("Button")
+TalentFrameTab2.Click = function() CLICKED = 2 TF.selectedTab = 2 end
+TO3_SAME = TO:ShowTree(1)
+TO3_CLICK = TO:ShowTree(2) and CLICKED
+TF.selectedTab = 1
+TF.shown = false
+""")
+print("key-talent order:", L("TO3_ORDER"), "|", L("TO3_ORDER2"), "| need:", L("TO3_NEED"))
+assert L("TO3_ORDER") == "Precision=next,Frostbite=todo,Ice Shards=todo,Ice Lance=todo"
+assert L("TO3_ORDER2") == "Frostbite=next,Ice Shards=todo,Ice Lance=todo"
+assert L("TO3_NEED") == "Ice Shards:next:10"
+assert L("TO3_SAME") is True and L("TO3_CLICK") == 2
+
 assert L("TO2_TOGGLED") == 1 and L("TO2_LOW") == 1 and "level 10" in L("TO2_LOWMSG") and L("TO2_SLASH") == 2
 print("ALL ADDON TESTS PASSED")
