@@ -157,6 +157,19 @@ def install(rel: Release, token: str = "", progress=None) -> Path:
     return inner
 
 
+def _fresh_env() -> dict:
+    """Environment for starting FlipForever.exe again from inside the running app.
+
+    The one-file exe unpacks Python into a temporary _MEI folder and marks its own environment
+    with variables pointing there. A copy started with those variables would look for Python in
+    the old folder, which is gone once this process exits ("Failed to load Python DLL").
+    Leave them out and ask the new copy to unpack its own."""
+    env = {k: v for k, v in os.environ.items()
+           if not (k.upper().startswith("_PYI_") or k.upper().startswith("_MEIPASS"))}
+    env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    return env
+
+
 def apply_and_restart(new_dir: Path):
     """Swap the files in once this process has exited, keep data\\, then start the new version."""
     if not getattr(sys, "frozen", False):
@@ -170,7 +183,7 @@ def apply_and_restart(new_dir: Path):
         f'robocopy "{new_dir}" "{APP_DIR}" /E /XD data /R:3 /W:1 /NFL /NDL /NJH /NJS /NP >nul\r\n'
         f'start "" "{APP_DIR / "FlipForever.exe"}" --updated\r\n',
         encoding="ascii")
-    subprocess.Popen(["cmd", "/c", str(bat)], creationflags=0x08000000)  # CREATE_NO_WINDOW
+    subprocess.Popen(["cmd", "/c", str(bat)], env=_fresh_env(), creationflags=0x08000000)  # CREATE_NO_WINDOW
 
 
 def make_shortcuts() -> None:

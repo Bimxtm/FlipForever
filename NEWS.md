@@ -16,6 +16,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 5
+
+**No more "Failed to load Python DLL" after updating.** The app sometimes showed this error when it restarted itself after an update. The update was installed fine; only the restart failed. From this version on, it restarts cleanly. If you see the message one more time while updating to this version, click OK and start FlipForever again.
+
 # FlipForever 2.5.2 Beta 4
 
 **Trainer reminder.** Visit your class trainer once and FlipForever remembers what you can learn later. When you reach the level, the Advisor tells you how many new spells are waiting and what they cost. You can switch it off under Settings, Features.

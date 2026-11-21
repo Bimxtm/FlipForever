@@ -24,6 +24,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.5] - 2026-11-21 (beta)
+### Fixed
+- App: after an update, the new version sometimes failed to start with "Failed to load Python DLL" (it looked for the old version's temporary files, which were already gone). The new version now always starts cleanly. Updates from this version onward restart without the error; if you saw it once, just start FlipForever again: the update itself was installed.
+
 ## [2.5.2-beta.4] - 2026-11-21 (beta)
 ### Added
 - Advisor: trainer reminder. When you open your class trainer, FlipForever notes the spells you can't learn yet, with their level and cost. Once you reach that level, the Advisor shows "New at your class trainer: N spells" with the total cost, and the spell names in the step's reason. Profession trainers are left out. Switch: *Advisor: remind me of new spells at my class trainer* in Settings, Features.
