@@ -24,7 +24,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
   for _, fn in ipairs(list) do
     local ok, err = pcall(fn, ...)
     if not ok then
-      FF:Print("|cffff5555error in " .. event .. ":|r " .. tostring(err))
+      FF:Print(FF:T("|cffff5555error in ") .. event .. ":|r " .. tostring(err))
       FF:RecordError(event, err)
     end
   end
@@ -49,6 +49,12 @@ end
 BINDING_HEADER_FLIPFOREVER = "FlipForever"
 BINDING_NAME_FLIPFOREVER_ADVISOR = "Open or close the Advisor"
 BINDING_NAME_FLIPFOREVER_HUB = "Open or close the FlipForever window"
+
+-- English plural "s"; translations use a neutral form, so other languages get ""
+function FF:Plural(n)
+  if FF.TRANSLATIONS and FF.Language and FF.TRANSLATIONS[FF:Language()] then return "" end
+  return (n or 0) > 1 and "s" or ""
+end
 
 -- the random-stat suffix of an item link ("of the Bear"), 0 when it has none
 function FF:LinkSuffix(link)
@@ -307,8 +313,8 @@ local function mailSummary()
   summaryQueued = false
   local m = FF.mailNew
   if m and m.n > 0 then
-    FF:Print(("|cffffd200Mail:|r %d auction%s sold since your last visit, |cff33ff99+%s|r after the AH cut."):format(
-      m.n, m.n > 1 and "s" or "", FF:Money(m.gold)))
+    FF:Print(FF:T("|cffffd200Mail:|r %d auction%s sold since your last visit, |cff33ff99+%s|r after the AH cut."):format(
+      m.n, FF:Plural(m.n), FF:Money(m.gold)))
   end
   FF.mailNew = nil
 end
@@ -432,10 +438,10 @@ FF:On("PLAYER_LOGIN", function()
   FF:UpdateChar()
   local plan = FF:Plan()
   if plan and plan.buy then
-    FF:Print(("Shopping list for %s loaded: %d to buy, %d to sell, budget %s. Open the auction house to start."):format(
+    FF:Print(FF:T("Shopping list for %s loaded: %d to buy, %d to sell, budget %s. Open the auction house to start."):format(
       UnitName("player"), #plan.buy, #(plan.sell or {}), FF:Money(plan.budget or 0)))
   else
-    FF:Print(("Loaded. No shopping list for %s yet - scan at the auction house, then pick this character in the app and build one."):format(UnitName("player") or "?"))
+    FF:Print(FF:T("Loaded. No shopping list for %s yet - scan at the auction house, then pick this character in the app and build one."):format(UnitName("player") or "?"))
   end
 end)
 
@@ -466,7 +472,7 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Combat:ToggleBlizzard()
   elseif cmd == "gather" or cmd == "ore" then
     local ns = FF.gatherNS
-    if ns and ns.ToggleMain and not ns.skipGather then ns.ToggleMain() else FF:Print("Gathering is off (the old Ore Farmer addon is still enabled).") end
+    if ns and ns.ToggleMain and not ns.skipGather then ns.ToggleMain() else FF:Print(FF:T("Gathering is off (the old Ore Farmer addon is still enabled).")) end
   elseif cmd == "auto" then
     FF.Auto:SetEnabled(not FF.Auto:Enabled())
   elseif cmd == "key" then
@@ -487,15 +493,15 @@ SlashCmdList.FLIPFOREVER = function(msg)
   elseif cmd == "spells" and FF.Spells then
     local bad, n = FF.Spells:Check()
     if #bad == 0 then
-      FF:Print(("All %d spell IDs match their names."):format(n))
+      FF:Print(FF:T("All %d spell IDs match their names."):format(n))
     else
-      FF:Print(("%d of %d spell IDs name a different spell:"):format(#bad, n))
+      FF:Print(FF:T("%d of %d spell IDs name a different spell:"):format(#bad, n))
       for _, line in ipairs(bad) do FF:Print("  " .. line) end
     end
   elseif cmd == "" or cmd == "show" or cmd == "options" or cmd == "settings" then
     if FF.Hub then FF.Hub:Toggle() end
   else
-    FF:Print("/ff opens the FlipForever window (or click the gold coin on the minimap). Commands: guide | combat | combatkey <KEY> | combatmode | gather | scan | buy | sell | stop | auto | key <KEY> | reset")
+    FF:Print(FF:T("/ff opens the FlipForever window (or click the gold coin on the minimap). Commands: guide | combat | combatkey <KEY> | combatmode | gather | scan | buy | sell | stop | auto | key <KEY> | reset"))
   end
 end
 
@@ -504,7 +510,7 @@ end
 function FF:SetActionKey(key)
   local clash = key and (FF:KeyConflict(key) or (key == FlipForeverDB.settings.combatKey and "FlipForever's combat helper key"))
   if clash then
-    FF:Print(("|cffff5555%s is already used by %s|r - pick another key, e.g. CTRL-SPACE"):format(key, clash))
+    FF:Print(FF:T("|cffff5555%s is already used by %s|r - pick another key, e.g. CTRL-SPACE"):format(key, clash))
     return false
   end
   FlipForeverDB.settings.key = key
@@ -537,8 +543,8 @@ end
 
 function FF:TodayLine()
   local t = self:Today()
-  if t.sales == 0 and t.buys == 0 then return "Today: no trades yet" end
-  return ("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
+  if t.sales == 0 and t.buys == 0 then return FF:T("Today: no trades yet") end
+  return FF:T("Today: sold %s (%d)  ·  bought %s (%d)"):format(self:Money(t.sold), t.sales, self:Money(t.spent), t.buys)
 end
 
 -- this week (today and the 6 days before): sales after the AH cut minus what was spent buying
@@ -553,9 +559,9 @@ end
 -- Reload the UI from a button: the game saves FlipForever's data (scans, trades) for the app
 -- and loads the newest shopping list. Not during combat or while a purchase is waiting.
 function FF:ReloadForSync()
-  if InCombatLockdown() then FF:Print("Can't reload during a fight - try again after.") return end
-  if FF.Trader and FF.Trader.state ~= "idle" then FF:Print("Finish or stop the current buy/post first.") return end
-  if FF.Scan and FF.Scan.busy then FF:Print("A scan is still running - reload when it's done, or the scan is lost.") return end
+  if InCombatLockdown() then FF:Print(FF:T("Can't reload during a fight - try again after.")) return end
+  if FF.Trader and FF.Trader.state ~= "idle" then FF:Print(FF:T("Finish or stop the current buy/post first.")) return end
+  if FF.Scan and FF.Scan.busy then FF:Print(FF:T("A scan is still running - reload when it's done, or the scan is lost.")) return end
   ReloadUI()
 end
 
@@ -586,7 +592,7 @@ end
 
 function FF:ResetProgress()
   FF:DB().charProgress[UnitName("player") or "?"] = nil
-  FF:Print("Shopping list progress reset - every item on the list will be checked again.")
+  FF:Print(FF:T("Shopping list progress reset - every item on the list will be checked again."))
 end
 
 -- Is this key already used at the auction house by another addon (or a normal binding)?
@@ -610,7 +616,7 @@ function FF:KeyConflict(key)
   local action = GetBindingAction and GetBindingAction(key)
   if action and action ~= "" then
     -- normal game bindings are only overridden while the AH is open; allow, but say so
-    FF:Print(("Note: %s normally does '%s'; while the auction house is open it will press the FlipForever button instead."):format(key, action))
+    FF:Print(FF:T("Note: %s normally does '%s'; while the auction house is open it will press the FlipForever button instead."):format(key, action))
   end
   return nil
 end
@@ -619,7 +625,7 @@ end
 FF:On("PLAYER_LOGIN", function()
   local key = FlipForeverDB.settings.key
   if key and FF:KeyConflict(key) then
-    FF:Print(("Your action key %s clashes with %s - cleared. Pick another: /ff key CTRL-SPACE"):format(key, FF:KeyConflict(key)))
+    FF:Print(FF:T("Your action key %s clashes with %s - cleared. Pick another: /ff key CTRL-SPACE"):format(key, FF:KeyConflict(key)))
     FlipForeverDB.settings.key = nil
   end
 end)

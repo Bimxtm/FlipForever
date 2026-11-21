@@ -759,7 +759,7 @@ function C:Apply()
 end
 
 function C:Toggle()
-  if InCombatLockdown() then FF:Print("Can't change the combat helper during a fight - try again after.") return end
+  if InCombatLockdown() then FF:Print(FF:T("Can't change the combat helper during a fight - try again after.")) return end
   FlipForeverDB.settings.combat = not self:Enabled()
   FF:Print(self:Enabled() and "Combat helper ON (near the top of the screen). Click the big icon, or set a key in the FlipForever window."
     or "Combat helper OFF.")
@@ -777,10 +777,10 @@ function C:Keys()
 end
 
 function C:SetKey(key)
-  if InCombatLockdown() then FF:Print("Can't change keys during a fight.") return false end
+  if InCombatLockdown() then FF:Print(FF:T("Can't change keys during a fight.")) return false end
   local clash = key and (FF:KeyConflict(key) or (key == FlipForeverDB.settings.key and "FlipForever's auction house key"))
   if clash then
-    FF:Print(("|cffff5555%s is already used by %s|r - pick another."):format(key, clash))
+    FF:Print(FF:T("|cffff5555%s is already used by %s|r - pick another."):format(key, clash))
     return false
   end
   FlipForeverDB.settings.combatKey = key or false   -- false: you cleared it (no default key either)
@@ -815,13 +815,13 @@ pcall(FF.On, FF, "UNIT_TARGET", function(unit)
 end)
 
 function C:SetAutoTarget(on)
-  if InCombatLockdown() then FF:Print("Can't change this during a fight.") return end
+  if InCombatLockdown() then FF:Print(FF:T("Can't change this during a fight.")) return end
   FlipForeverDB.settings.combatTarget = on and true or false
   self:Apply()
 end
 
 function C:SetTank(on)
-  if InCombatLockdown() then FF:Print("Can't change this during a fight.") return end
+  if InCombatLockdown() then FF:Print(FF:T("Can't change this during a fight.")) return end
   FlipForeverDB.settings.combatTank = on and true or false
   self:Apply()
 end
@@ -838,12 +838,12 @@ end)
 
 function C:ToggleBlizzard()
   if not self:BlizzardAssistSpell() then
-    FF:Print("This game client has no Blizzard one-button assistant - using your build's sequence.")
+    FF:Print(FF:T("This game client has no Blizzard one-button assistant - using your build's sequence."))
     FlipForeverDB.settings.combatBlizzard = false
     return
   end
   FlipForeverDB.settings.combatBlizzard = not FlipForeverDB.settings.combatBlizzard
-  FF:Print(FlipForeverDB.settings.combatBlizzard and "Combat helper: Blizzard's assistant decides." or "Combat helper: follows your build's sequence.")
+  FF:Print(FlipForeverDB.settings.combatBlizzard and FF:T("Combat helper: Blizzard's assistant decides.") or FF:T("Combat helper: follows your build's sequence."))
   self:Apply()
   if FF.Hub then FF.Hub:Refresh() end
 end

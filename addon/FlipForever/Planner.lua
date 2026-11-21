@@ -384,7 +384,7 @@ function P:SellVendorFlips()
     end
   end
   if sold > 0 then
-    FF:Print(("Sold %d vendor-flip item%s to the merchant for %s."):format(sold, sold > 1 and "s" or "", FF:Money(gold)))
+    FF:Print(FF:T("Sold %d vendor-flip item%s to the merchant for %s."):format(sold, FF:Plural(sold), FF:Money(gold)))
   end
   return sold
 end
@@ -445,7 +445,7 @@ FF:On("PLAYER_LOGIN", function()
     if newestScan() > (file and file.generated or 0) then
       local plan = P:Rebuild()
       if plan then
-        FF:Print(("Shopping list rebuilt in game from your newest scan: %d to buy, %d to sell."):format(#plan.buy, #plan.sell))
+        FF:Print(FF:T("Shopping list rebuilt in game from your newest scan: %d to buy, %d to sell."):format(#plan.buy, #plan.sell))
         if FF.UI and FF.UI.Refresh then FF.UI:Refresh() end
       end
     end

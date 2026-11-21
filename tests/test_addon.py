@@ -1422,6 +1422,46 @@ DE_STEP = FlipForever:T("At level %d: %s"):format(20, "Mount")
 FlipForeverDB.settings.language = nil
 """)
 assert L("DE_STEP") == "Auf Stufe 20: Mount"
+# chat messages translate, and the plural "s" disappears in other languages
+lua.execute("""
+FlipForeverDB.settings.language = "frFR"
+FR_MAIL = FlipForever:T("|cffffd200Mail:|r %d auction%s sold since your last visit, |cff33ff99+%s|r after the AH cut."):format(2, FlipForever:Plural(2), "1g")
+FlipForeverDB.settings.language = "enUS"
+EN_PLURAL = FlipForever:Plural(2) .. FlipForever:Plural(1)
+FlipForeverDB.settings.language = nil
+""")
+print("french mail line:", L("FR_MAIL"))
+assert "2 enchère(s) vendue(s)" in L("FR_MAIL") and L("EN_PLURAL") == "s"
+# the How to use page: every section has all 10 translations and still matches its English text
+from flipforever import i18n_help as _help  # noqa: E402
+from flipforever.gui import HELP as _HELP  # noqa: E402
+assert len(_help.SECTIONS) == len(_HELP) and all(len(r) == 10 for _, r in _help.SECTIONS)
+_stale = [s for (s, _), (_, en) in zip(_help.SECTIONS, _HELP) if not en.startswith(s)]
+assert not _stale, _stale
+assert _help.translate(1, _HELP[1][1], "deDE").startswith("FlipForever findet") and _help.translate(1, "changed", "deDE") == "changed"
+# the desktop app: fixed texts of every widget follow the chosen language
+import tkinter as _tk  # noqa: E402
+from tkinter import ttk as _ttk  # noqa: E402
+from flipforever import gui as _gui  # noqa: E402
+try:
+    _root = _tk.Tk()
+    _root.withdraw()
+except _tk.TclError:
+    _root = None
+if _root is not None:
+    _i18n.set_language("deDE")
+    _lbl = _ttk.Label(_root, text="   search:")
+    _btn = _ttk.Button(_root, text="Save settings")
+    _free = _ttk.Label(_root, text="Item Name 123")
+    _tv = _ttk.Treeview(_root, columns=("a", "b"))
+    _tv.heading("a", text="Profit")
+    _tv.heading("b", text="Qty")
+    _n = _gui.translate_widgets(_root)
+    print("app widgets translated:", _n, "|", _lbl.cget("text"), "|", _btn.cget("text"), "|", _tv.heading("a", "text"))
+    assert _lbl.cget("text") == "   Suche:" and _btn.cget("text") == "Einstellungen speichern"
+    assert _tv.heading("a", "text") == "Gewinn" and _tv.heading("b", "text") == "Menge" and _free.cget("text") == "Item Name 123"
+    _i18n.set_language("enUS")
+    _root.destroy()
 
 # --- test harness: delayed timers wait for their time instead of being dropped (issue P9)
 lua.execute("""

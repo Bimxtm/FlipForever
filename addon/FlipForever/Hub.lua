@@ -42,7 +42,7 @@ end
 local MODIFIERS = { LSHIFT = true, RSHIFT = true, LCTRL = true, RCTRL = true, LALT = true, RALT = true, UNKNOWN = true }
 
 local function startCapture(label, onKey)
-  if InCombatLockdown() then FF:Print("Can't change keys during a fight.") return end
+  if InCombatLockdown() then FF:Print(FF:T("Can't change keys during a fight.")) return end
   if not capture then
     capture = CreateFrame("Frame", "FlipForeverKeyCapture", UIParent, "BackdropTemplate")
     capture:SetSize(320, 90)
@@ -73,7 +73,7 @@ local function startCapture(label, onKey)
     end)
   end
   capture.onKey = onKey
-  capture.text:SetText("Press the key you want for\n|cffffd200" .. label .. "|r\n\n|cff888888(Escape cancels)|r")
+  capture.text:SetText(FF:T("Press the key you want for\n|cffffd200") .. label .. "|r\n\n|cff888888(Escape cancels)|r")
   capture:Show()
 end
 
@@ -120,7 +120,7 @@ local function buildOverview(f)
   button(pg, "Gathering", 118, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
-    else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
+    else FF:Print(FF:T("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.")) end
   end):SetPoint("TOPLEFT", 140, -352)
   button(pg, "Professions", 118, function() FF.Professions:Toggle() end):SetPoint("TOPLEFT", 264, -352)
   pg.combat = check(pg, "Combat helper on screen", function() FF.Combat:Toggle() end)
@@ -158,7 +158,7 @@ local function buildList(f)
     H:RefreshList()
   end)
   pg.hint = text(pg, "GameFontDisableSmall", 16, -506, 368)
-  pg.hint:SetText("Scroll with the mouse wheel. Skipped items are never bought on this character, on this list or later ones, until you untick them. Green 'Now' = cheaper than your max in the last scan.")
+  pg.hint:SetText(FF:T("Scroll with the mouse wheel. Skipped items are never bought on this character, on this list or later ones, until you untick them. Green 'Now' = cheaper than your max in the last scan."))
   return pg
 end
 
@@ -170,7 +170,7 @@ local function buildGear(f)
   pg.summary = text(pg, "GameFontNormal", 16, -64, 260)
   pg.search = button(pg, "Search my scan", 110, function()
     if FF.Gear.running then return end
-    pg.summary:SetText("Searching your latest scan...")
+    pg.summary:SetText(FF:T("Searching your latest scan..."))
     FF.Gear:Search()
   end)
   pg.search:SetPoint("TOPRIGHT", -16, -60)
@@ -205,7 +205,7 @@ local function buildGear(f)
     pg.rows[i] = r
   end
   pg.hint = text(pg, "GameFontDisableSmall", 16, -452, 368)
-  pg.hint:SetText("Upgrades over what you're wearing, scored with your class's stat weights. Only gear you can use at your level, at most a quarter of your gold. Random-stat items (\"of the Bear\") are scored version by version. Buy works at the auction house, one key press per purchase.")
+  pg.hint:SetText(FF:T("Upgrades over what you're wearing, scored with your class's stat weights. Only gear you can use at your level, at most a quarter of your gold. Random-stat items (\"of the Bear\") are scored version by version. Buy works at the auction house, one key press per purchase."))
   return pg
 end
 
@@ -217,12 +217,12 @@ function H:RefreshGear()
   local G = FF.Gear
   local list = G.results or {}
   if G.running then
-    pg.summary:SetText("Searching your latest scan...")
+    pg.summary:SetText(FF:T("Searching your latest scan..."))
   elseif G.searched then
-    pg.summary:SetText(#list > 0 and ("%d upgrade%s you can afford (budget %s)"):format(#list, #list > 1 and "s" or "", FF:Money(G:Budget()))
+    pg.summary:SetText(#list > 0 and FF:T("%d upgrade%s you can afford (budget %s)"):format(#list, FF:Plural(#list), FF:Money(G:Budget()))
       or "No affordable upgrades in your latest scan.")
   else
-    pg.summary:SetText("Find upgrades for your character in your latest scan.")
+    pg.summary:SetText(FF:T("Find upgrades for your character in your latest scan."))
   end
   for i, w in ipairs(pg.rows) do
     local r = list[i]
@@ -323,10 +323,10 @@ function H:RefreshOverview()
   if not (pg and pg:IsShown()) then return end
   local plan = FF:Plan()
   if plan and plan.buy then
-    pg.plan:SetText(("Shopping list: |cffffff00%d|r to buy, |cffffff00%d|r sell prices%s\nBudget left: %s\n%s"):format(
+    pg.plan:SetText(FF:T("Shopping list: |cffffff00%d|r to buy, |cffffff00%d|r sell prices%s\nBudget left: %s\n%s"):format(
       #plan.buy, #(plan.sell or {}), plan.live and "  (built in game)" or "", FF:Money(FF.Trader:BudgetLeft()), FF:ScanAgeLine()))
   else
-    pg.plan:SetText("|cffff8800No shopping list yet.|r Scan at the auction house; the list builds itself.\n" .. FF:ScanAgeLine())
+    pg.plan:SetText(FF:T("|cffff8800No shopping list yet.|r Scan at the auction house; the list builds itself.\n") .. FF:ScanAgeLine())
   end
   pg.today:SetText(FF:TodayLine())
   pg.week:SetText(FF:WeekLine())
@@ -427,7 +427,7 @@ local function build()
   f.gather = button(pg, "Gathering", 118, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
-    else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
+    else FF:Print(FF:T("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.")) end
   end)
   f.gather:SetPoint("TOPLEFT", 140, -82)
   f.profs = button(pg, "Professions", 118, function() FF.Professions:Toggle() end)
@@ -459,7 +459,7 @@ local function build()
   cHint:SetPoint("TOPLEFT", 20, -214)
   cHint:SetPoint("RIGHT", -16, 0)
   cHint:SetJustifyH("LEFT")
-  cHint:SetText("Auto-target: nearest enemy when you have none. Tank: click an ally, then the key hits what's on them.")
+  cHint:SetText(FF:T("Auto-target: nearest enemy when you have none. Tank: click an ally, then the key hits what's on them."))
 
   -- Auction house -------------------------------------------------------
   heading(pg, "Auction house", -240)
@@ -548,7 +548,7 @@ local function build()
   foot:SetPoint("BOTTOMLEFT", 16, 14)
   foot:SetPoint("RIGHT", -16, 0)
   foot:SetJustifyH("LEFT")
-  foot:SetText("Buy / post / scan buttons appear next to the auction house when you open it.")
+  foot:SetText(FF:T("Buy / post / scan buttons appear next to the auction house when you open it."))
   -- keep the open page current (purchases, autopilot, new lists) without spamming refreshes
   local since = 0
   f:SetScript("OnUpdate", function(_, elapsed)
@@ -574,9 +574,9 @@ function H:Refresh()
   frame.combatMode.text:SetText(FF.Combat:BlizzardAssistSpell() and "Blizzard's assistant decides"
     or "|cff888888Blizzard's assistant (not in this client)|r")
   local ckeys = FF.Combat:Keys()
-  frame.combatKeyText:SetText("Key: " .. (#ckeys > 0 and ("|cffffff00" .. table.concat(ckeys, ", ") .. "|r") or "|cff888888none - click the icon|r"))
+  frame.combatKeyText:SetText(FF:T("Key: ") .. (#ckeys > 0 and ("|cffffff00" .. table.concat(ckeys, ", ") .. "|r") or "|cff888888none - click the icon|r"))
   frame.auto:SetChecked(FF.Auto:Enabled())
-  frame.ahKeyText:SetText("Big-button key: " .. (s.key and ("|cffffff00" .. s.key .. "|r") or "|cff888888none - click it|r"))
+  frame.ahKeyText:SetText(FF:T("Big-button key: ") .. (s.key and ("|cffffff00" .. s.key .. "|r") or "|cff888888none - click it|r"))
   local plan = FF:Plan()
   frame.planText:SetText(plan and plan.buy and ("Shopping list for " .. (UnitName("player") or "?") .. ": " .. #plan.buy .. " buys, " .. #(plan.sell or {}) .. " sell prices" .. (plan.live and " (built in game from your newest scan)." or "."))
     or "No shopping list for this character yet - build one in the FlipForever app.")

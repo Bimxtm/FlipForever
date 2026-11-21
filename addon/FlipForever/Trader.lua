@@ -37,7 +37,7 @@ function T:Stop(msg)
   if self.state == "quoting" or self.state == "confirm_commodity" then pcall(AH.CancelCommoditiesPurchase) end
   self.mode, self.state, self.target, self.pending = nil, "idle", nil, nil
   self.custom = false
-  FF:SetStatus(msg or "Stopped.")
+  FF:SetStatus(msg or FF:T("Stopped."))
   self:Refresh()
 end
 
@@ -69,12 +69,12 @@ function T:Search(id, suffix)
     end
     local key = suffix and AH.MakeItemKey(id, 0, suffix) or AH.MakeItemKey(id)
     local ok, err = FF:Own(AH.SendSearchQuery, key, sorts, true)
-    if not ok then FF:SetStatus("Search failed: " .. tostring(err)) end
+    if not ok then FF:SetStatus(FF:T("Search failed: ") .. tostring(err)) end
     local token = {}
     self.searchToken = token
     C_Timer.After(SEARCH_TIMEOUT, function()
       if self.searchToken == token and self.state == "searching" then
-        FF:SetStatus("No answer from the auction house, skipping " .. FF:ItemName(id) .. ".")
+        FF:SetStatus(FF:T("No answer from the auction house, skipping ") .. FF:ItemName(id) .. ".")
         self:Advance()
       end
     end)
@@ -169,7 +169,7 @@ function T:NextBuyTarget()
   end
   self.target = list[self.idx]
   self.target.liveMax, self.target.liveExp = nil, nil
-  FF:SetStatus(("Checking %d/%d: %s (%s)"):format(self.idx, #list, FF:ItemName(self.target.id),
+  FF:SetStatus(FF:T("Checking %d/%d: %s (%s)"):format(self.idx, #list, FF:ItemName(self.target.id),
     self.target.gap and "price checked live" or ("max " .. FF:Money(self.target.max))))
   self:Search(self.target.id, self.target.suffix)
 end
@@ -238,7 +238,7 @@ function T:EvaluateBuy(rows)
     if qty > 0 then
       self.pending = { id = t.id, qty = qty, cost = cost }
       self.state = "ready_commodity"
-      FF:SetStatus(("Deal: %d x %s, avg %s each (max %s%s)."):format(qty, FF:ItemName(t.id), FF:Money(cost / qty),
+      FF:SetStatus(FF:T("Deal: %d x %s, avg %s each (max %s%s)."):format(qty, FF:ItemName(t.id), FF:Money(cost / qty),
         FF:Money(limit), t.gap and (", normal " .. FF:Money(expected)) or ""))
       self:DealAlert()
       self:Refresh()
@@ -250,7 +250,7 @@ function T:EvaluateBuy(rows)
       if not owned(r) and r.buyoutAmount <= money and (r.quantity or 1) <= want then
         self.pending = { id = t.id, auctionID = r.auctionID, buyout = r.buyoutAmount, qty = r.quantity or 1, unit = r.unitPrice }
         self.state = "ready_item"
-        FF:SetStatus(("Deal: %s for %s (max %s)."):format(FF:ItemName(t.id), FF:Money(r.buyoutAmount), FF:Money(limit * (r.quantity or 1))))
+        FF:SetStatus(FF:T("Deal: %s for %s (max %s)."):format(FF:ItemName(t.id), FF:Money(r.buyoutAmount), FF:Money(limit * (r.quantity or 1))))
         self:DealAlert()
         self:Refresh()
         return
@@ -265,7 +265,7 @@ function T:RecordBuy(qty, unit)
   if self.custom then
     t.got = (t.got or 0) + qty
     FF:Log({ e = "buy", id = t.id, name = FF:ItemName(t.id), q = qty, p = math.floor(unit), kind = "mats" })
-    FF:Print(("Bought %d x %s at %s each."):format(qty, FF:ItemName(t.id), FF:Money(unit)))
+    FF:Print(FF:T("Bought %d x %s at %s each."):format(qty, FF:ItemName(t.id), FF:Money(unit)))
     return
   end
   local prog = FF:Progress()
@@ -278,11 +278,11 @@ function T:RecordBuy(qty, unit)
     local db = FF:DB()
     db.vendorFlips = db.vendorFlips or {}
     db.vendorFlips[t.id] = true
-    FF:Print(("Bought %d x %s at %s each - sell it to any merchant for %s each."):format(qty, FF:ItemName(t.id),
+    FF:Print(FF:T("Bought %d x %s at %s each - sell it to any merchant for %s each."):format(qty, FF:ItemName(t.id),
       FF:Money(unit), FF:Money(FF:VendorPrice(t.id) or 0)))
     return
   end
-  FF:Print(("Bought %d x %s at %s each."):format(qty, FF:ItemName(t.id), FF:Money(unit)))
+  FF:Print(FF:T("Bought %d x %s at %s each."):format(qty, FF:ItemName(t.id), FF:Money(unit)))
 end
 
 FF:On("COMMODITY_PRICE_UPDATED", function(unitPrice, totalPrice)
@@ -291,10 +291,10 @@ FF:On("COMMODITY_PRICE_UPDATED", function(unitPrice, totalPrice)
   if unitPrice <= (T.target.liveMax or T.target.max) and totalPrice <= T:BudgetLeft() then
     p.quoteUnit, p.quoteTotal = unitPrice, totalPrice
     T.state = "confirm_commodity"
-    FF:SetStatus(("Confirm %d x %s for %s total (avg %s)."):format(p.qty, FF:ItemName(p.id), FF:Money(totalPrice), FF:Money(unitPrice)))
+    FF:SetStatus(FF:T("Confirm %d x %s for %s total (avg %s)."):format(p.qty, FF:ItemName(p.id), FF:Money(totalPrice), FF:Money(unitPrice)))
   else
     pcall(AH.CancelCommoditiesPurchase)
-    FF:SetStatus("Price moved above your max, re-checking.")
+    FF:SetStatus(FF:T("Price moved above your max, re-checking."))
     T:Search(T.target.id)
   end
   T:Refresh()
@@ -302,7 +302,7 @@ end)
 
 FF:On("COMMODITY_PRICE_UNAVAILABLE", function()
   if T.state == "quoting" then
-    FF:SetStatus("Listings changed, re-checking.")
+    FF:SetStatus(FF:T("Listings changed, re-checking."))
     T:Search(T.target.id)
   end
 end)
@@ -316,7 +316,7 @@ end)
 
 FF:On("COMMODITY_PURCHASE_FAILED", function()
   if T.state ~= "purchasing" then return end
-  FF:SetStatus("Purchase failed (someone was faster?), re-checking.")
+  FF:SetStatus(FF:T("Purchase failed (someone was faster?), re-checking."))
   T.pending = nil
   T:Search(T.target.id)
 end)
@@ -421,7 +421,7 @@ function T:NextSellTarget()
     end
     if inBags[s.id] and self:FindInBags(s.id) then
       self.target = s
-      FF:SetStatus(("Pricing %s..."):format(FF:ItemName(s.id)))
+      FF:SetStatus(FF:T("Pricing %s..."):format(FF:ItemName(s.id)))
       self:Search(s.id)
       return
     end
@@ -456,7 +456,7 @@ function T:EvaluateSell(rows)
     if owned(r) then lowestOwn = lowestOwn or r.unitPrice end
   end
   local lowestOther, ignored = self:UndercutAnchor(rows)
-  if ignored then FF:Print(("%s: ignoring a tiny dumped lot at %s - pricing against %s."):format(
+  if ignored then FF:Print(FF:T("%s: ignoring a tiny dumped lot at %s - pricing against %s."):format(
     FF:ItemName(s.id), FF:Money(ignored), FF:Money(lowestOther))) end
   local price
   if lowestOther then
@@ -480,7 +480,7 @@ function T:EvaluateSell(rows)
   if vendor then
     floor = math.max(floor, math.ceil(vendor / (1 - cut)))
     if not cost and price * (1 - cut) < vendor * 1.5 then
-      FF:Print(("%s: the auction house pays barely more than a vendor (%s) - sell it to a merchant instead."):format(
+      FF:Print(FF:T("%s: the auction house pays barely more than a vendor (%s) - sell it to a merchant instead."):format(
         FF:ItemName(s.id), FF:Money(vendor)))
       FF:Log({ e = "hold", id = s.id, name = FF:ItemName(s.id), p = price })
       self:NextSellTarget()
@@ -488,7 +488,7 @@ function T:EvaluateSell(rows)
     end
   end
   if price < floor then
-    FF:Print(("Holding %s: market %s is below your floor %s."):format(FF:ItemName(s.id), FF:Money(lowestOther or 0), FF:Money(floor)))
+    FF:Print(FF:T("Holding %s: market %s is below your floor %s."):format(FF:ItemName(s.id), FF:Money(lowestOther or 0), FF:Money(floor)))
     FF:Log({ e = "hold", id = s.id, name = FF:ItemName(s.id), p = lowestOther or 0 })
     self:NextSellTarget()
     return
@@ -504,7 +504,7 @@ function T:EvaluateSell(rows)
   end
   self.pending = { id = s.id, loc = loc, qty = qty, unit = price, commodity = self.isCommodity }
   self.state = "ready_post"
-  FF:SetStatus(("Post %d x %s at %s each%s."):format(qty, FF:ItemName(s.id), FF:Money(price),
+  FF:SetStatus(FF:T("Post %d x %s at %s each%s."):format(qty, FF:ItemName(s.id), FF:Money(price),
     lowestOther and (" (lowest other " .. FF:Money(lowestOther) .. ")") or " (no competition)"))
   self:Refresh()
 end
@@ -529,12 +529,12 @@ function T:DoPost(confirm)
     fn = confirm and AH.ConfirmPostCommodity or AH.PostCommodity
     self.state = "posting"
     local ok, err = pcall(fn, p.loc, d, p.qty, p.unit)
-    if not ok then FF:SetStatus("Post failed: " .. tostring(err)) self.state = "ready_post" end
+    if not ok then FF:SetStatus(FF:T("Post failed: ") .. tostring(err)) self.state = "ready_post" end
   else
     fn = confirm and AH.ConfirmPostItem or AH.PostItem
     self.state = "posting"
     local ok, err = pcall(fn, p.loc, d, p.qty, nil, p.unit * p.qty)
-    if not ok then FF:SetStatus("Post failed: " .. tostring(err)) self.state = "ready_post" end
+    if not ok then FF:SetStatus(FF:T("Post failed: ") .. tostring(err)) self.state = "ready_post" end
   end
   self:Refresh()
 end
@@ -555,7 +555,7 @@ end)
 FF:On("AUCTION_HOUSE_POST_WARNING", function()
   if T.state == "posting" then
     T.state = "confirm_post"
-    FF:SetStatus("The auction house wants a confirmation for this post. Press again to confirm.")
+    FF:SetStatus(FF:T("The auction house wants a confirmation for this post. Press again to confirm."))
     T:Refresh()
   end
 end)
@@ -564,10 +564,10 @@ FF:On("AUCTION_HOUSE_POST_ERROR", function()
   if T.state == "posting" then
     if T.pending and T.pending.commodity and not FlipForeverDB.settings.silverOnly then
       FlipForeverDB.settings.silverOnly = true
-      FF:Print("Post rejected - switching commodity prices to whole silver.")
+      FF:Print(FF:T("Post rejected - switching commodity prices to whole silver."))
       T:Search(T.target.id)
     else
-      FF:SetStatus("Post rejected by the auction house, skipping.")
+      FF:SetStatus(FF:T("Post rejected by the auction house, skipping."))
       T:NextSellTarget()
     end
   end
@@ -575,7 +575,7 @@ end)
 
 FF:On("UI_ERROR_MESSAGE", function(_, msg)
   if T.state == "purchasing" or T.state == "posting" then
-    FF:SetStatus("Auction house error: " .. tostring(msg))
+    FF:SetStatus(FF:T("Auction house error: ") .. tostring(msg))
     local id = T.target and T.target.id
     T.pending = nil
     if id then T:Search(id) end
@@ -596,17 +596,17 @@ function T:Primary()
     local p = self.pending
     self.state = "quoting"
     AH.StartCommoditiesPurchase(p.id, p.qty)
-    FF:SetStatus("Getting the final price...")
+    FF:SetStatus(FF:T("Getting the final price..."))
   elseif s == "confirm_commodity" then
     local p = self.pending
     self.state = "purchasing"
     AH.ConfirmCommoditiesPurchase(p.id, p.qty)
-    FF:SetStatus("Buying...")
+    FF:SetStatus(FF:T("Buying..."))
   elseif s == "ready_item" then
     local p = self.pending
     self.state = "purchasing"
     AH.PlaceBid(p.auctionID, p.buyout)
-    FF:SetStatus("Buying...")
+    FF:SetStatus(FF:T("Buying..."))
   elseif s == "ready_post" then
     self:DoPost(false)
   elseif s == "confirm_post" then

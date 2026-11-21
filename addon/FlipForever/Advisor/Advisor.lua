@@ -233,7 +233,7 @@ local ICON = {
 local function factionOK(f, p) return f == nil or f == p.faction end
 
 -- English plural "s"; other languages use a neutral form in their translation
-local function S(n) if FF.TRANSLATIONS[FF:Language()] then return "" end return n > 1 and "s" or "" end
+local function S(n) if FF.TRANSLATIONS[FF:Language()] then return "" end return FF:Plural(n) end
 
 function AD:Compute()
   local p = self:Player()
@@ -519,12 +519,12 @@ local function makeFrame()
   local prev = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   prev:SetSize(26, 22)
   prev:SetPoint("TOPLEFT", 14, -58)
-  prev:SetText("<")
+  prev:SetText(FF:T("<"))
   prev:SetScript("OnClick", function() AD:CycleBuild(-1) end)
   local nxt = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   nxt:SetSize(26, 22)
   nxt:SetPoint("LEFT", prev, "RIGHT", 4, 0)
-  nxt:SetText(">")
+  nxt:SetText(FF:T(">"))
   nxt:SetScript("OnClick", function() AD:CycleBuild(1) end)
   f.build = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   f.build:SetPoint("LEFT", nxt, "RIGHT", 8, 0)
@@ -672,26 +672,26 @@ end
 function AD:Refresh()
   local ok, recs, p, cd, build = pcall(self.Compute, self)
   if not ok then
-    FF:Print("|cffff5555advisor error:|r " .. tostring(recs))
+    FF:Print(FF:T("|cffff5555advisor error:|r ") .. tostring(recs))
     FF:RecordError("advisor", recs)
     return
   end
   pcall(self.Save, self, recs, p, build)
   self.last = recs
   if not (frame and frame:IsShown()) then return end
-  frame.title:SetText("|cff33ff99Flip|rForever Advisor")
+  frame.title:SetText(FF:T("|cff33ff99Flip|rForever Advisor"))
   local raceTip = ""
   for key, tip in pairs(G.RACES) do
     if p.race:find(key, 1, true) then raceTip = "  |cffaaaaaa" .. tip .. "|r" end
   end
-  frame.who:SetText(("%s - level %d %s %s (%s)%s"):format(p.name or "?", p.level, p.race, p.className, p.faction, raceTip))
+  frame.who:SetText(FF:T("%s - level %d %s %s (%s)%s"):format(p.name or "?", p.level, p.race, p.className, p.faction, raceTip))
   if build then
     local cdBuilds = cd and #cd.builds or 1
-    frame.build:SetText(("Following: |cffffd200%s|r  (%d option%s)"):format(build.name, cdBuilds, cdBuilds > 1 and "s" or ""))
-    frame.source:SetText("Source: " .. (G.SOURCES[build.source] or "?"))
+    frame.build:SetText(FF:T("Following: |cffffd200%s|r  (%d option%s)"):format(build.name, cdBuilds, FF:Plural(cdBuilds)))
+    frame.source:SetText(FF:T("Source: ") .. (G.SOURCES[build.source] or "?"))
   else
-    frame.build:SetText("No guide data for this class")
-    frame.source:SetText("")
+    frame.build:SetText(FF:T("No guide data for this class"))
+    frame.source:SetText(FF:T(""))
   end
   frame.auto:SetChecked(FlipForeverDB.settings.advisorPopup ~= false)
   if FF.Combat then frame.combat:SetChecked(FF.Combat:Enabled()) end
@@ -751,7 +751,7 @@ FF:On("PLAYER_LEVEL_UP", function(level)
   C_Timer.After(2, function()
     AD:Refresh()
     local recs = AD.last or {}
-    FF:Print(("|cffffd200Level %s!|r Next steps:"):format(tostring(level)))
+    FF:Print(FF:T("|cffffd200Level %s!|r Next steps:"):format(tostring(level)))
     for i = 1, math.min(3, #recs) do print("   " .. recs[i].text) end
     if FlipForeverDB.settings.advisorPopup ~= false and not InCombatLockdown() then AD:Show() end
   end)

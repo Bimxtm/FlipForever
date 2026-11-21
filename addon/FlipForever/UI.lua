@@ -153,14 +153,14 @@ function UI:Refresh()
   local p = FF:Plan()
   if p and p.buy then
     local age = math.floor((time() - (p.generated or time())) / 60)
-    local ageText = age < 90 and (age .. " min") or (math.floor(age / 60) .. " h")
-    local budget = (T.custom and "  ·  |cffffd200buying profession mats|r")
-      or (p.budget and ("  ·  budget left " .. FF:Money(T:BudgetLeft()))) or ""
-    self.planText:SetText(("%s: |cffffff00%d|r buys, |cffffff00%d|r sells%s\n%s %s ago%s\n|cffaaaaaa%s|r"):format(
-      UnitName("player") or "?", #p.buy, #(p.sell or {}), budget, p.live and "built in game from a scan" or "made", ageText, age > 360 and " |cffff8800(old - rebuild it)|r" or "",
+    local ageText = age < 90 and FF:T("%d min"):format(age) or FF:T("%d h"):format(math.floor(age / 60))
+    local budget = (T.custom and FF:T("  ·  |cffffd200buying profession mats|r"))
+      or (p.budget and FF:T("  ·  budget left %s"):format(FF:Money(T:BudgetLeft()))) or ""
+    self.planText:SetText(FF:T("%s: |cffffff00%d|r buys, |cffffff00%d|r sells%s\n%s %s ago%s\n|cffaaaaaa%s|r"):format(
+      UnitName("player") or "?", #p.buy, #(p.sell or {}), budget, p.live and FF:T("built in game from a scan") or FF:T("made"), ageText, age > 360 and FF:T(" |cffff8800(old - rebuild it)|r") or "",
       FF:TodayLine()))
   else
-    self.planText:SetText(("|cffff8800No shopping list for %s yet.|r\nScan, pick this character in the app, build, /reload."):format(UnitName("player") or "?"))
+    self.planText:SetText(FF:T("|cffff8800No shopping list for %s yet.|r\nScan, pick this character in the app, build, /reload."):format(UnitName("player") or "?"))
   end
   self.action:SetText(T:ButtonText())
   self.action:SetEnabled(T:ButtonEnabled())
@@ -170,13 +170,13 @@ function UI:Refresh()
   self.matsButton:SetShown(pendingMats ~= nil)
   -- after a scan: the Reload button lights up
   if FF.needReload then
-    self.reloadButton:SetText("|cffffd200" .. FF:T("Reload"):upper() .. "|r")
+    self.reloadButton:SetText(FF:T("|cffffd200") .. FF:T("Reload"):upper() .. "|r")
     self.reloadButton:LockHighlight()
   else
     self.reloadButton:SetText(FF:T("Reload"))
     self.reloadButton:UnlockHighlight()
   end
-  if pendingMats then self.matsButton:SetText(("Buy profession mats (%d)"):format(#pendingMats)) end
+  if pendingMats then self.matsButton:SetText(FF:T("Buy profession mats (%d)"):format(#pendingMats)) end
 
   local auto = FF.Auto
   self.autoButton:SetText(auto:Enabled() and "|cff33ff99Autopilot: ON|r" or "Autopilot: OFF")

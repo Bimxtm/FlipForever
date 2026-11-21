@@ -369,12 +369,12 @@ local function build()
   f.prev = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   f.prev:SetSize(24, 20)
   f.prev:SetPoint("TOPLEFT", 14, -38)
-  f.prev:SetText("<")
+  f.prev:SetText(FF:T("<"))
   f.prev:SetScript("OnClick", function() P:Cycle(-1) end)
   f.next = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   f.next:SetSize(24, 20)
   f.next:SetPoint("LEFT", f.prev, "RIGHT", 4, 0)
-  f.next:SetText(">")
+  f.next:SetText(FF:T(">"))
   f.next:SetScript("OnClick", function() P:Cycle(1) end)
   f.prof = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   f.prof:SetPoint("LEFT", f.next, "RIGHT", 8, 0)
@@ -445,12 +445,12 @@ function P:RefreshProfit()
   frame.mode:SetText(FF:T("Show skill-ups"))
   frame.buy:SetText(FF:T("Buy mats for the top craft"))
   local list = self:ProfitList()
-  frame.prof:SetText(#list > 0 and ("%d profitable craft%s across your professions"):format(#list, #list > 1 and "s" or "")
+  frame.prof:SetText(#list > 0 and FF:T("%d profitable craft%s across your professions"):format(#list, FF:Plural(#list))
     or "No profitable fast-selling crafts right now.")
   for i, fs in ipairs(frame.rows) do
     local e = list[i]
     if e then
-      fs:SetText(("%dx %s  |cff33ff99+%s|r each (%d%%)  ·  ~%s/day"):format(e.crafts, e.recipe.name, FF:Money(e.profit),
+      fs:SetText(FF:T("%dx %s  |cff33ff99+%s|r each (%d%%)  ·  ~%s/day"):format(e.crafts, e.recipe.name, FF:Money(e.profit),
         math.floor(e.margin * 100 + 0.5), e.perDay >= 10 and ("%d"):format(math.floor(e.perDay + 0.5)) or ("%.1f"):format(e.perDay)))
     else
       fs:SetText(i == 1 and "Open each profession window once so FlipForever knows your recipes; prices come from your scans." or "")
@@ -463,30 +463,30 @@ function P:RefreshProfit()
     local m = missing[i]
     if m then
       local color = m.missing > 0 and "|cffff8080" or "|cff80ff80"
-      fs:SetText(("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
+      fs:SetText(FF:T("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
         m.unit and FF:Money(m.unit) or "?", m.source == "vendor" and " |cff888888(vendor)|r" or ""))
     else
-      fs:SetText("")
+      fs:SetText(FF:T(""))
     end
   end
-  frame.hint:SetText("Profit after the 5% AH cut and deposit. Only results that sell at least 3 a day; amounts sized to sell within about two days.")
+  frame.hint:SetText(FF:T("Profit after the 5% AH cut and deposit. Only results that sell at least 3 a day; amounts sized to sell within about two days."))
 end
 
 function P:QueueProfitMats()
   local list = self:ProfitBuyList(nil, 1)
   if #list == 0 then
-    FF:Print("Nothing to buy for the top craft (you have the materials, or they come from a vendor).")
+    FF:Print(FF:T("Nothing to buy for the top craft (you have the materials, or they come from a vendor)."))
     return
   end
   self.pendingMats = list
-  FF:Print(("%d material%s queued for crafting. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, #list > 1 and "s" or ""))
+  FF:Print(FF:T("%d material%s queued for crafting. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, FF:Plural(#list)))
   if AuctionHouseFrame and AuctionHouseFrame:IsShown() then self:BuyPending() end
   if FF.UI then FF.UI:Refresh() end
 end
 
 function P:Refresh()
   if not (frame and frame:IsShown()) then return end
-  frame.title:SetText("|cff33ff99Flip|rForever Profession planner")
+  frame.title:SetText(FF:T("|cff33ff99Flip|rForever Profession planner"))
   self.mode = self.mode or FlipForeverDB.settings.profMode or "skill"
   if self.mode == "profit" then return self:RefreshProfit() end
   frame.h1:SetText(FF:T("Cheapest skill-ups"))
@@ -497,20 +497,20 @@ function P:Refresh()
   end
   local recs, data = self:Plan(self.current or "")
   if not data then
-    frame.prof:SetText("Open a profession window once - FlipForever reads its recipes.")
-    for _, fs in ipairs(frame.rows) do fs:SetText("") end
-    for _, fs in ipairs(frame.mats) do fs:SetText("") end
-    frame.hint:SetText("")
+    frame.prof:SetText(FF:T("Open a profession window once - FlipForever reads its recipes."))
+    for _, fs in ipairs(frame.rows) do fs:SetText(FF:T("")) end
+    for _, fs in ipairs(frame.mats) do fs:SetText(FF:T("")) end
+    frame.hint:SetText(FF:T(""))
     return
   end
-  frame.prof:SetText(("%s  %d / %d  |cff888888(read %s)|r"):format(self.current, data.skill, data.max,
+  frame.prof:SetText(FF:T("%s  %d / %d  |cff888888(read %s)|r"):format(self.current, data.skill, data.max,
     date("%H:%M", data.t)))
   for i, fs in ipairs(frame.rows) do
     local r = recs[i]
     if r then
       local cost = r.unknown and "|cff888888price unknown|r"
         or (r.perPoint <= 0 and ("|cff33ff99+" .. FF:Money(-r.perPoint) .. " profit|r") or (FF:Money(r.perPoint) .. " / point"))
-      fs:SetText(("%s%dx %s  %s  ·  %s"):format(r.learnable and "|cffffd200[trainer]|r " or "", r.crafts, r.recipe.name,
+      fs:SetText(FF:T("%s%dx %s  %s  ·  %s"):format(r.learnable and "|cffffd200[trainer]|r " or "", r.crafts, r.recipe.name,
         P.COLOR[r.recipe.diff or 3], cost))
     else
       fs:SetText(i == 1 and "Nothing left that can skill up - visit your trainer for new recipes." or "")
@@ -524,23 +524,23 @@ function P:Refresh()
       local src = (m.source == "vendor" and " |cff888888(vendor)|r") or (m.source == "crafted" and " |cff888888(craft it)|r") or ""
       if m.gather then src = src .. " |cff66ccff(you can gather this)|r" end
       local color = m.missing > 0 and "|cffff8080" or "|cff80ff80"
-      fs:SetText(("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
+      fs:SetText(FF:T("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
         m.unit and FF:Money(m.unit) or "?", src))
     else
-      fs:SetText("")
+      fs:SetText(FF:T(""))
     end
   end
-  frame.hint:SetText("Chance to skill up: orange 100%; yellow and green exact once a recipe has changed colour in front of FlipForever (else ~75% / ~25%). Prices: your scans, vendor goods ~4x sell price.")
+  frame.hint:SetText(FF:T("Chance to skill up: orange 100%; yellow and green exact once a recipe has changed colour in front of FlipForever (else ~75% / ~25%). Prices: your scans, vendor goods ~4x sell price."))
 end
 
 function P:QueueMats()
   local list = self:BuyList(self.current, 1)
   if #list == 0 then
-    FF:Print("Nothing to buy at the auction house for the top craft (you have it all, or it's vendor goods).")
+    FF:Print(FF:T("Nothing to buy at the auction house for the top craft (you have it all, or it's vendor goods)."))
     return
   end
   self.pendingMats = list
-  FF:Print(("%d material%s queued. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, #list > 1 and "s" or ""))
+  FF:Print(FF:T("%d material%s queued. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, FF:Plural(#list)))
   if AuctionHouseFrame and AuctionHouseFrame:IsShown() then self:BuyPending() end
   if FF.UI then FF.UI:Refresh() end
 end
