@@ -14,8 +14,7 @@
 - Advisor: pin a step to the map with the place and the person to talk to, like the game's quest tracker (extends the waypoint arrow).
 
 ### Ideas from popular addons (21 Nov, owner request; our own versions, nothing copied)
-Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. These fit FlipForever's own modules:
-- **Gathering: node timers** (GatherMate/GatherLite): remember when you last saw a node and show which spots on your route should have respawned.
+Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. All eight small ideas from that list are built (2.5.2 betas 2-11): sell junk and repair, trainer reminder, time to level, threat warning, open all mail, bag value, price trend in the app, node timers. The big ones are below under Proposed.
 
 ## Proposed
 - **Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations. Big: needs our own quest data. Branch feature/quest-helper.

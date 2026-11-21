@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 11
+
+**Node timers for gathering.** Your farming loop now skips spots you gathered in the last 15 minutes, and the gathering tracker shows how many spots are ready and when the next one should be back. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 10
 
 **Price trends in the app.** The Deals page has a new *7-day trend* column that shows whether an item is dearer or cheaper than usual right now. On the Inventory & selling page, double-click an item to see its price history with your cost and floor marked.

@@ -718,6 +718,11 @@ function ns.RefreshTracker()
     else
       local est, r = ns.EstimateRoute(mapID)
       t[2] = string.format("%d spots  ·  loop %s", #nodes, #r.pts >= 2 and ns.FormatTime(est.seconds) or "-")
+      -- node timers: what's back already, and when the next gathered spot returns
+      local ready, waiting, soonest = ns.RouteTimers(r)
+      if waiting > 0 then
+        t[2] = t[2] .. string.format("  ·  |cff33ff99%d ready|r, next back in %s", ready, ns.FormatTime(soonest))
+      end
       if #r.pts >= 2 then
         t[3] = string.format("Est. |cffffd040%s/h|r%s", ns.FormatMoney(est.perHour), est.guess and " |cff888888(rough)|r" or "")
       end
