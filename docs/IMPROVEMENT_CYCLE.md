@@ -13,6 +13,7 @@ What happens in each cycle, and the rules it follows.
 - **Self-contained:** every feature is built fully into FlipForever and works without any other addon, even when an installed addon already offers something similar. Other addons are inspiration only, never dependencies, and FlipForever's versions use their own frames and names so nothing conflicts.
 - **Blizzard's rules stay intact:** every buy, post and cast needs a key press or click. No automation from game state in combat.
 - **Hands off while WoW is running:** never edit SavedVariables or AddOns.txt then.
+- **Installing the addon (internal):** copy `addon\FlipForever` over `C:\Program Files (x86)\World of Warcraft\_forever_\Interface\AddOns\FlipForever` the way the app does (plain copy, no mirror), and keep the game copy of `ShoppingList.lua`: the app writes every character's shopping list there (also stored in `%LOCALAPPDATA%\Programs\FlipForever\data\plans.json`). Robocopy: `robocopy addon\FlipForever <target> /E /XF ShoppingList.lua *.pyc`.
 - **Nothing ships without passing tests.**
 - **House style for everything users see** (app, addon, NEWS, CHANGELOG, README, release notes, WEEKLY_BOARD, ROADMAP, IN_GAME_TEST, commit messages): plain, professional wording; no emoji or decorative symbols; no mention of how the project is built or of usage limits. Process notes stay in this file, which is not shipped or shown in the app.
 
