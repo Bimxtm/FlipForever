@@ -1,3 +1,9 @@
+# FlipForever 2.6.0 Beta 2
+
+**More of your build beside the Talents window.** The panel now shows which tree each talent is in, the build's role, how to play it, and how many talent points you have left to spend. Type `/ff talents` to open the Talents window.
+
+Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts your seal again after every Judgement and no longer causes "Interface action failed because of an AddOn" when you click its icon in a fight.
+
 # FlipForever 2.6.0 Beta 1
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.

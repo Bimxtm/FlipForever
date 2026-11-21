@@ -54,6 +54,7 @@ function TO:Plan(build, level)
       s.state = "missing"
     else
       s.tab, s.index, s.cur = w.tab, w.index, w.rank
+      s.treeName = names[w.tab]
       s.target = math.min(want or w.max, w.max)
       if s.cur >= s.target then
         s.state = "done"
@@ -80,10 +81,27 @@ function TO:PointsLine(build, plan)
   local parts = {}
   if build.points then parts[#parts + 1] = FF:T("Build %s"):format(build.points) end
   if #mine > 0 then parts[#parts + 1] = FF:T("yours %s"):format(table.concat(mine, "/")) end
+  local ok, unspent = pcall(UnitCharacterPoints or function() return 0 end, "player")
+  unspent = ok and tonumber(unspent) or 0
+  if unspent > 0 then parts[#parts + 1] = GOLD .. FF:T("%d to spend"):format(unspent) .. "|r" end
   return table.concat(parts, " - ")
 end
 
+-- the build's role in plain words
+local ROLES = { dps = "Damage", tank = "Tank", healer = "Healer", pvp = "PvP", leveling = "Leveling" }
+function TO:RoleLine(build)
+  if not (build.role and ROLES[build.role]) then return "" end
+  return FF:T("Role: %s"):format(FF:T(ROLES[build.role]))
+end
+
+-- one line of the order, with the tree after it so you know which tab to open
 function TO:StepLine(s)
+  local line = self:StepText(s)
+  if s.treeName and s.state ~= "missing" then line = line .. " " .. GREY .. s.treeName .. "|r" end
+  return line
+end
+
+function TO:StepText(s)
   local label = s.name
   if s.state == "done" then
     return ("%s%d. %s|r %s(%d/%d)|r"):format(GREEN, s.order, label, GREEN, s.cur, s.target)
@@ -185,12 +203,12 @@ end
 
 -- Panel beside the Talents window -----------------------------------------------------------------
 local panel
-local MAX_LINES = 26
+local MAX_LINES = 22
 
 function TO:Panel(parent)
   if panel then return panel end
   panel = CreateFrame("Frame", "FlipForeverTalentPanel", parent or UIParent, "BackdropTemplate")
-  panel:SetSize(240, 470)
+  panel:SetSize(240, 490)
   panel:SetPoint("TOPLEFT", parent or UIParent, "TOPRIGHT", -30, -12)
   if panel.SetBackdrop then
     panel:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -218,10 +236,14 @@ function TO:Panel(parent)
   panel.points:SetPoint("TOPLEFT", 12, -48)
   panel.points:SetPoint("RIGHT", -12, 0)
   panel.points:SetJustifyH("LEFT")
+  panel.role = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  panel.role:SetPoint("TOPLEFT", 12, -62)
+  panel.role:SetPoint("RIGHT", -12, 0)
+  panel.role:SetJustifyH("LEFT")
   panel.lines = {}
   for i = 1, MAX_LINES do
     local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    fs:SetPoint("TOPLEFT", 12, -66 - (i - 1) * 13)
+    fs:SetPoint("TOPLEFT", 12, -80 - (i - 1) * 13)
     fs:SetPoint("RIGHT", -12, 0)
     fs:SetJustifyH("LEFT")
     panel.lines[i] = fs
@@ -230,6 +252,12 @@ function TO:Panel(parent)
   panel.note:SetPoint("BOTTOMLEFT", 12, 10)
   panel.note:SetPoint("RIGHT", -12, 0)
   panel.note:SetJustifyH("LEFT")
+  -- how to play the build, a few lines above the note
+  panel.rotation = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  panel.rotation:SetPoint("BOTTOMLEFT", panel.note, "TOPLEFT", 0, 6)
+  panel.rotation:SetPoint("RIGHT", -12, 0)
+  panel.rotation:SetJustifyH("LEFT")
+  if panel.rotation.SetWordWrap then panel.rotation:SetWordWrap(true) end
   return panel
 end
 
@@ -242,6 +270,8 @@ function TO:PanelText(p)
   local out = { plan = plan, lines = {} }
   out.build = build.name
   out.points = self:PointsLine(build, plan)
+  out.role = self:RoleLine(build)
+  out.rotation = build.rotation and (GOLD .. FF:T("How to play:") .. "|r " .. build.rotation) or ""
   local header = build.keyOnly and FF:T("Key talents (the guide gives no pick order)") or FF:T("Talent order")
   out.lines[1] = GOLD .. header .. "|r"
   for _, s in ipairs(plan.steps) do out.lines[#out.lines + 1] = self:StepLine(s) end
@@ -274,6 +304,8 @@ function TO:Refresh()
   local pn = self:Panel(f)
   pn.build:SetText(text.build or "")
   pn.points:SetText(text.points or "")
+  pn.role:SetText(text.role or "")
+  pn.rotation:SetText(text.rotation or "")
   for i = 1, MAX_LINES do
     local l = text.lines[i]
     if i == MAX_LINES and #text.lines > MAX_LINES then l = GREY .. FF:T("(+%d more)"):format(#text.lines - MAX_LINES + 1) .. "|r" end
@@ -281,6 +313,23 @@ function TO:Refresh()
   end
   pn.note:SetText(text.note or "")
   pn:Show()
+end
+
+-- /ff talents: open (or close) the game's Talents window
+function TO:Open()
+  local ok, level = pcall(UnitLevel, "player")
+  if ok and tonumber(level) and tonumber(level) < 10 then FF:Print(FF:T("Talents start at level 10.")) return false end
+  local load = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
+  if not self:GameFrame() and load then pcall(load, "Blizzard_TalentUI") end
+  self:Hook()
+  if type(ToggleTalentFrame) == "function" then
+    ToggleTalentFrame()
+  else
+    local f = self:GameFrame()
+    if not f then FF:Print(FF:T("The Talents window could not be opened.")) return false end
+    if f:IsShown() then HideUIPanel(f) else ShowUIPanel(f) end
+  end
+  return true
 end
 
 -- Hooks: the Talents window is load-on-demand -----------------------------------------------------

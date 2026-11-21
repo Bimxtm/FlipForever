@@ -2129,4 +2129,51 @@ PLEVEL = 22
 UnitClass = SAVED_CLASS
 """)
 assert L("TO_LVL") == "level" and "from level 20" in L("TO_LINE")
+
+# --- talent overlay beta 2: tree names, role, how to play, points to spend, /ff talents
+lua.execute("""
+local TO, AD = FlipForever.TalentOverlay, FlipForever.Advisor
+UnitClass = function() return "Mage", "MAGE" end
+SAVED_TABINFO = GetTalentTabInfo
+GetTalentTabInfo = function(tab) return "Frost" end
+UNSPENT = 2
+local txt = TO:PanelText()
+TO2_LINE = txt.lines[2]
+TO2_POINTS = txt.points
+TO2_ROLE = txt.role
+TO2_ROT = txt.rotation
+TO2_BUILD = AD:Build(AD:Player())
+TO2_HASROT = TO2_BUILD and TO2_BUILD.rotation ~= nil
+TO2_ROLEKEY = TO2_BUILD and TO2_BUILD.role
+-- /ff talents: loads the Talents window and toggles it
+TOGGLED = 0
+LoadAddOn = function(name) LOADED = name end
+ToggleTalentFrame = function() TOGGLED = TOGGLED + 1 end
+PLEVEL = 22
+TO2_OPEN = TO:Open()
+TO2_TOGGLED = TOGGLED
+PLEVEL = 5
+local savedLevel = UnitLevel
+UnitLevel = function() return PLEVEL end
+printed = {}
+TO2_OPENLOW = TO:Open()
+UnitLevel = savedLevel
+TO2_LOW = TOGGLED
+TO2_LOWMSG = printed[#printed] or ""
+PLEVEL = 22
+SlashCmdList.FLIPFOREVER("talents")
+TO2_SLASH = TOGGLED
+ToggleTalentFrame, LoadAddOn = nil, nil
+GetTalentTabInfo = SAVED_TABINFO
+UnitClass = SAVED_CLASS
+""")
+print("talent panel line:", repr(L("TO2_LINE")), "| points:", repr(L("TO2_POINTS")), "| role:", L("TO2_ROLE"))
+print("talents command:", L("TO2_OPEN"), L("TO2_TOGGLED"), L("TO2_OPENLOW"), L("TO2_LOW"), repr(L("TO2_LOWMSG")), L("TO2_SLASH"))
+assert L("TO2_LINE").endswith(" |cff888888Frost|r")
+assert "2 to spend" in L("TO2_POINTS")
+if L("TO2_ROLEKEY"):
+    assert L("TO2_ROLE").startswith("Role: ")
+if L("TO2_HASROT"):
+    assert "How to play:" in L("TO2_ROT")
+assert L("TO2_TOGGLED") == 1 and L("TO2_LOW") == 1 and "level 10" in L("TO2_LOWMSG") and L("TO2_SLASH") == 2
 print("ALL ADDON TESTS PASSED")

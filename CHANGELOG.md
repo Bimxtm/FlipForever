@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.6.0-beta.2] - 2026-11-21 (beta)
+### Added
+- Talents panel: the tree of every talent after its name, the build's role, how to play the build (its rotation), and how many points you have left to spend.
+- `/ff talents` opens or closes the game's Talents window (from level 10).
+- Includes the 2.5.2 Beta 1 fixes: paladin seal and Judgement in the combat helper, no blocked action when clicking the combat icon in a fight, blocked actions in `/ff errors`.
+
 ## [2.6.0-beta.1] - 2026-11-21 (beta)
 ### Added
 - Talents window: your chosen Advisor build is shown right on the game's Talents window. Every talent of the build carries its place in the order, talents you have finished are marked green and the next point is marked gold.

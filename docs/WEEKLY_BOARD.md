@@ -16,7 +16,7 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- 2.6.0 beta 1 (branch feature/talent-overlay, owner request): the chosen build on the Talents window, next point marked, order panel beside it. Kept off main until the owner has seen it.
+- 2.6.0 beta 2 (branch feature/talent-overlay, owner request): the chosen build on the Talents window, next point marked, order panel beside it with each talent's tree, role, how to play and points to spend; /ff talents. Kept off main until the owner has seen it.
 
 ## Open issues
 | # | Issue | Severity | Plan |

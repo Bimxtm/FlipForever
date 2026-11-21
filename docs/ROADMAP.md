@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Ready for approval
-- **Talent builds on the Talents window (2.6.0 beta 1, branch feature/talent-overlay):** build talents marked in order on the game's Talents window, finished ones green, the next point gold; a panel beside it with the whole order, your ranks, the point split and the tree of the next point. Next: builds fleshed out further.
+- **Talent builds on the Talents window (2.6.0 beta 2, branch feature/talent-overlay):** build talents marked in order on the game's Talents window, finished ones green, the next point gold; a panel beside it with the whole order, your ranks, the tree of each talent, the point split, points left to spend, the build's role and how to play it; `/ff talents` opens the window. Next: a pick order for key-talent-only builds and clicking a line to open its tree.
 
 ## Planned
 - **Talent builds on the Talents window (2.6.0, owner request):** the chosen build shown right on the game's Talents window, next point highlighted, and the builds fleshed out further.
