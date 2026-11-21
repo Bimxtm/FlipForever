@@ -1,6 +1,12 @@
-# FlipForever 2.5 Beta 17
+# FlipForever 2.5 Beta 18
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**All your auction gold in one click.** Open your mailbox and press *Collect auction gold* next to it. It takes the gold from every sale and leaves everything else in your mail alone.
+
+**Never miss a gear upgrade.** When a scan finds a new affordable upgrade for your character, you hear a sound and see it in chat.
+
+**Cooldowns at a glance.** The combat helper's small icons now count down the seconds until each ability is ready.
 
 **Where does my class quest start?** The Advisor now names the quest giver and where to find them. Once you've talked to them, clicking the step points the waypoint arrow there.
 

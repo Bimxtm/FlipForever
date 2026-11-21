@@ -226,8 +226,11 @@ C_Container = {
 ItemLocation = { CreateFromBagAndSlot = function(self, b, s) return { bag = b, slot = s } end }
 function GetInboxNumItems() return #INBOX end
 INBOX = {}
-function GetInboxInvoiceInfo(i) local m = INBOX[i] return "seller", m.name, "Buyer", m.bid, m.bid, m.dep, m.cut, 0, 0, 0, m.count end
-function GetInboxHeaderInfo(i) return nil, nil, "AH", "Sold", INBOX[i].bid, 0, INBOX[i].daysLeft end
+function GetInboxInvoiceInfo(i) local m = INBOX[i] if m.kind == "none" then return nil end return m.kind or "seller", m.name, "Buyer", m.bid, m.bid, m.dep, m.cut, 0, 0, 0, m.count end
+function GetInboxHeaderInfo(i) local m = INBOX[i] return nil, nil, "AH", "Sold", m.money or (m.bid - (m.cut or 0)), m.cod or 0, m.daysLeft, m.items end
+TAKEN = {}
+-- the server hands the money over a moment later; the sale mail then disappears
+function TakeInboxMoney(i) local m = INBOX[i] table.insert(TAKEN, m.name) C_Timer.After(0.3, function() for k, x in ipairs(INBOX) do if x == m then table.remove(INBOX, k) break end end end) end
 """
 lua.execute(MOCK)
 toc = (ADDON / "FlipForever.toc").read_text(encoding="utf-8").splitlines()
@@ -1549,6 +1552,9 @@ NEXT1 = C:SmartNext()
 CDS["Whirlwind"] = 8; CDS["Sweeping Strikes"] = 20
 QueryCastSequence = function(seq) return "Rend" end
 NEXT2 = C:SmartNext()
+CDS["Recklessness"] = 90; CDS["Bloodrage"] = 1.2
+CDTEXT = table.concat({ C.CooldownText("Whirlwind"), C.CooldownText("Recklessness"), C.CooldownText("Bloodrage"), C.CooldownText("Rend"), C.CooldownText(nil) }, ",")
+C:UpdateIcons()
 C:Toggle()
 FlipForeverDB.settings.combatTarget = nil
 FlipForeverDB.settings.combatTank = nil
@@ -1563,6 +1569,8 @@ assert "/cast Mortal Strike\n" in _m and "/cast Whirlwind\n" in _m and "/cast Sw
 assert _m.split("\n")[-1].startswith("/castsequence reset=target/combat Battle Shout, Rend, Heroic Strike")
 assert "Mortal Strike" not in _m.split("\n")[-1] and len(_m) <= 255 and L("SMART_COUNT") == 0
 assert L("NEXT1") == "Whirlwind" and L("NEXT2") == "Rend"
+print("cooldown texts:", L("CDTEXT"))
+assert L("CDTEXT") == "8,2m,,,"
 
 # --- combat helper key: + by default (main keyboard and numpad), your own key replaces it, Clear removes it
 lua.execute("""
@@ -1605,4 +1613,56 @@ assert L("FlipForever:Plan()") is None
 lua.execute("FlipForever.Trader:StartBuying()")
 print("status:", L("FlipForever.status"))
 assert "No shopping list for Other" in L("FlipForever.status")
+
+# --- mailbox: collect auction gold (sale invoices only)
+lua.execute("""
+DropTimers()
+printed = {}
+TAKEN = {}
+INBOX = {
+  {name="Linen Cloth", bid=3000, cut=150, dep=0, count=30, daysLeft=29},
+  {name="Won item", kind="buyer", bid=500, money=0, items=1, daysLeft=29},
+  {name="Letter", kind="none", money=1000, daysLeft=29},
+  {name="Wool Cloth", bid=2000, cut=100, dep=0, count=10, daysLeft=29},
+  {name="Expired", kind="seller", bid=0, money=0, items=1, daysLeft=29},
+}
+Fire("MAIL_SHOW")
+MAILBTN_BEFORE = FlipForeverMailButton.text
+MAILN, MAILG = FlipForever:SaleMail()
+FlipForeverMailButton.OnClick()
+RunTimers(10)
+MAILBTN_AFTER = FlipForeverMailButton.text
+MAILLEFT = #INBOX
+COLLECTMSG = printed[#printed]
+""")
+print("mail button:", L("MAILBTN_BEFORE"), "->", L("MAILBTN_AFTER"), "| taken:", list(L("TAKEN").values()), "|", L("COLLECTMSG"))
+assert L("MAILN") == 2 and L("MAILG") == 4750
+assert list(L("TAKEN").values()) == ["Wool Cloth", "Linen Cloth"]
+assert L("MAILLEFT") == 3 and "2 sale mails" in L("COLLECTMSG") and "No auction gold" in L("MAILBTN_AFTER")
+
+# --- gear finder: alert only for upgrades that are new since the last search
+lua.execute("""
+local G = FlipForever.Gear
+G.known = nil
+ALERTS = {}
+printed = {}
+local a = { id = 501, name = "Sturdy Belt", slot = 6, price = 900 }
+local b = { id = 502, name = "Keen Dagger", slot = 16, price = 4000 }
+local bag = { id = 503, name = "Old Boots", slot = 8, bag = true, price = 0 }
+GA1 = #G:Announce({ a }, true)              -- first search learns, no alert
+GA_PRINT1 = #printed
+GA2 = #G:Announce({ a, b, bag }, true)      -- the dagger is new
+GA_MSG = printed[#printed]
+GA_SOUND = #ALERTS
+GA3 = #G:Announce({ a, b }, true)           -- nothing new
+FlipForeverDB.settings.gearAlert = false
+G.known[502] = nil
+printed = {}
+GA4 = #G:Announce({ b }, true)
+GA_PRINT4 = #printed
+FlipForeverDB.settings.gearAlert = nil
+""")
+print("gear alert:", L("GA_MSG"))
+assert L("GA1") == 0 and L("GA_PRINT1") == 0 and L("GA2") == 1 and "Keen Dagger" in L("GA_MSG") and L("GA_SOUND") == 1
+assert L("GA3") == 0 and L("GA4") == 1 and L("GA_PRINT4") == 0
 print("ALL ADDON TESTS PASSED")

@@ -160,7 +160,27 @@ function G:Check(id, price, level, weights, budget, minLevelFloor)
 end
 
 -- start a search over the latest scan (runs in the background, a batch per frame)
-function G:Search(onDone)
+-- after a scan: a sound and a chat line for upgrades that weren't on the list before
+-- (the first search of a session only learns what's there)
+function G:Announce(list, alert)
+  local known = self.known
+  self.known = known or {}
+  local new = {}
+  for _, r in ipairs(list) do
+    if not r.bag then
+      if known and not known[r.id] then new[#new + 1] = r end
+      self.known[r.id] = true
+    end
+  end
+  if not alert or #new == 0 or FlipForeverDB.settings.gearAlert == false then return new end
+  local r = new[1]
+  local more = #new > 1 and (" " .. FF:T("(+%d more)"):format(#new - 1)) or ""
+  FF:Print(FF:T("New gear upgrade: %s (%s) for %s."):format(r.link or r.name, FF:T(G.SLOT_NAMES[r.slot] or ""), FF:Money(r.price)) .. more)
+  if PlaySound and SOUNDKIT then PlaySound(SOUNDKIT.READY_CHECK or 8960, "Master") end
+  return new
+end
+
+function G:Search(onDone, alert)
   local model = FF.Planner and FF.Planner:Model() or {}
   local queue = {}
   for id, m in pairs(model) do queue[#queue + 1] = { id = id, price = m.cur_min } end
@@ -207,6 +227,7 @@ function G:Search(onDone)
       if perSlot[r.slot] <= 3 then list[#list + 1] = r end
     end
     self.results, self.running, self.searched = list, false, time()
+    pcall(self.Announce, self, list, alert)
     if onDone then onDone(list) end
     if FF.Hub and FF.Hub.RefreshGear then FF.Hub:RefreshGear() end
     if #list > 0 and FF.Advisor and FF.Advisor.Refresh then pcall(FF.Advisor.Refresh, FF.Advisor) end

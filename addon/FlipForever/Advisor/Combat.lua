@@ -354,6 +354,7 @@ function C:UpdateIcons()
     btn.icon:SetTexture(iconOf(nextId or self.assist) or "Interface\\Icons\\INV_Misc_QuestionMark")
     small1:SetTexture(nil)
     small2:SetTexture(nil)
+    if small1.cd then small1.cd:SetText("") small2.cd:SetText("") end
     local name = nextId and C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(nextId)
     btn.label:SetText((name or "Blizzard assistant") .. "  |cff888888(Blizzard mode)|r")
   elseif self.cds or self.seq then
@@ -367,6 +368,7 @@ function C:UpdateIcons()
       local s = others[k]
       tex:SetTexture(iconOf(s))
       if tex.SetDesaturated then tex:SetDesaturated(s ~= nil and C.CooldownLeft(s) > 1.6) end
+      if tex.cd then tex.cd:SetText(C.CooldownText(s)) end
     end
     btn.label:SetText(nextSpell or "no spells yet")
   else
@@ -377,6 +379,7 @@ function C:UpdateIcons()
     btn.icon:SetTexture(iconOf(stepSpell(0)) or "Interface\\Icons\\INV_Misc_QuestionMark")
     small1:SetTexture(iconOf(stepSpell(1)))
     small2:SetTexture(iconOf(stepSpell(2)))
+    if small1.cd then small1.cd:SetText("") small2.cd:SetText("") end
     btn.label:SetText(stepSpell(0) or "no spells yet")
   end
   local t = self:Target()
@@ -504,6 +507,15 @@ local function cooldownLeft(spell)
 end
 C.CooldownLeft = cooldownLeft
 
+-- seconds left as shown on the small icons: "" when ready (or only the global cooldown)
+function C.CooldownText(spell)
+  if not spell then return "" end
+  local left = cooldownLeft(spell)
+  if left <= 1.6 then return "" end
+  if left >= 60 then return ("%dm"):format(math.ceil(left / 60)) end
+  return tostring(math.ceil(left))
+end
+
 -- what the button will cast next: a ready cooldown, else the cast sequence's next spell
 function C:SmartNext()
   for _, s in ipairs(self.cds or {}) do
@@ -595,6 +607,10 @@ local function create()
   small2:SetSize(24, 24)
   small2:SetPoint("LEFT", small1, "RIGHT", 6, 0)
   small2:SetAlpha(0.55)
+  for _, tex in ipairs({ small1, small2 }) do
+    tex.cd = bar:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+    tex.cd:SetPoint("CENTER", tex, "CENTER", 0, 0)
+  end
 
   hintText = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   hintText:SetPoint("TOP", btn.label, "BOTTOM", 0, -4)

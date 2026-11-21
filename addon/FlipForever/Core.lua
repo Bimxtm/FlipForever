@@ -240,6 +240,100 @@ FF:On("MAIL_INBOX_UPDATE", function()
 end)
 FF:On("MAIL_SHOW", function() FF.mailNew, summaryQueued = nil, false end)
 
+-- Collect auction gold: takes the money from sale invoices, one mail at a time.
+-- Mail with items or COD (won auctions, expired items, letters) is never touched.
+local collecting, mailButton
+
+local function isSaleMail(i)
+  if GetInboxInvoiceInfo(i) ~= "seller" then return false end
+  local _, _, _, _, money, cod, _, itemCount = GetInboxHeaderInfo(i)
+  return (money or 0) > 0 and (cod or 0) == 0 and (itemCount or 0) == 0, money or 0
+end
+
+function FF:SaleMail()
+  local n, gold = 0, 0
+  if not GetInboxNumItems then return n, gold end
+  for i = 1, GetInboxNumItems() do
+    local ok, money = isSaleMail(i)
+    if ok then n, gold = n + 1, gold + money end
+  end
+  return n, gold
+end
+
+function FF:UpdateMailButton()
+  if not mailButton then return end
+  local n, gold = FF:SaleMail()
+  if collecting then
+    mailButton:SetText(FF:T("Collecting..."))
+    mailButton:SetEnabled(false)
+  elseif n > 0 then
+    mailButton:SetText(FF:T("Collect auction gold") .. " (" .. FF:Money(gold) .. ")")
+    mailButton:SetEnabled(true)
+  else
+    mailButton:SetText(FF:T("No auction gold"))
+    mailButton:SetEnabled(false)
+  end
+end
+
+local function collectDone()
+  local c = collecting
+  collecting = nil
+  if c and c.n > 0 then
+    FF:Print(FF:T("Collected %s from %d sale mails."):format(FF:Money(c.gold), c.n))
+  end
+  FF:UpdateMailButton()
+end
+
+local function collectNext()
+  local c = collecting
+  if not c then return end
+  local w = c.wait
+  if w then
+    -- wait until the server has handed over the money before taking the next one
+    local still = GetInboxNumItems() == w.num and isSaleMail(w.i)
+    if still and w.tries < 15 then
+      w.tries = w.tries + 1
+      C_Timer.After(0.2, collectNext)
+      return
+    end
+    c.wait = nil
+    if not still then c.n, c.gold = c.n + 1, c.gold + w.money end
+  end
+  for i = GetInboxNumItems(), 1, -1 do
+    local ok, money = isSaleMail(i)
+    if ok and not c.tried[i .. ":" .. money] then
+      c.tried[i .. ":" .. money] = true
+      c.wait = { i = i, money = money, num = GetInboxNumItems(), tries = 0 }
+      TakeInboxMoney(i)
+      C_Timer.After(0.2, collectNext)
+      return
+    end
+  end
+  collectDone()
+end
+
+function FF:CollectAuctionGold()
+  if collecting then return end
+  collecting = { n = 0, gold = 0, tried = {} }
+  FF:UpdateMailButton()
+  collectNext()
+end
+
+FF:On("MAIL_SHOW", function()
+  if not mailButton then
+    mailButton = CreateFrame("Button", "FlipForeverMailButton", MailFrame or UIParent, "UIPanelButtonTemplate")
+    mailButton:SetSize(190, 24)
+    mailButton:SetPoint("TOPLEFT", MailFrame or UIParent, "TOPRIGHT", 4, -30)
+    mailButton:SetScript("OnClick", function() FF:CollectAuctionGold() end)
+  end
+  mailButton:Show()
+  FF:UpdateMailButton()
+end)
+FF:On("MAIL_INBOX_UPDATE", function() FF:UpdateMailButton() end)
+FF:On("MAIL_CLOSED", function()
+  if collecting then collectDone() end
+end)
+
 -- Startup ------------------------------------------------------------------------
 FF:On("ADDON_LOADED", function(name)
   if name ~= ADDON then return end
@@ -358,7 +452,7 @@ end
 -- autopilot until the reload, so it doesn't keep buying from a list made with old prices.
 -- The reload saves the scan for the app, which builds the new shopping list.
 function FF:ScanFinished(items)
-  if self.Gear and not self.Gear.running then C_Timer.After(2, function() pcall(self.Gear.Search, self.Gear) end) end
+  if self.Gear and not self.Gear.running then C_Timer.After(2, function() pcall(self.Gear.Search, self.Gear, nil, true) end) end
   -- Beta 4: rebuild the list in game from the new scan - no reload needed
   local live = self.Planner and self.Planner:Rebuild()
   if live then

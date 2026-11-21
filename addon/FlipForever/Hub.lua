@@ -346,7 +346,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 728)
+  f:SetSize(400, 752)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -474,6 +474,10 @@ local function build()
     FlipForeverDB.settings.autoDuration = self:GetChecked() and true or false
   end)
   f.autoDuration:SetPoint("TOPLEFT", 14, -662)
+  f.gearAlert = check(pg, "Alert me when a scan finds a new gear upgrade", function(self)
+    FlipForeverDB.settings.gearAlert = self:GetChecked() and true or false
+  end)
+  f.gearAlert:SetPoint("TOPLEFT", 14, -686)
   f.livePlan = check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
     FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
   end)
@@ -551,6 +555,7 @@ function H:Refresh()
   frame.vendorFlips:SetChecked(s.vendorFlips ~= false)
   frame.arrow:SetChecked(s.arrow ~= false)
   frame.autoDuration:SetChecked(s.autoDuration ~= false)
+  frame.gearAlert:SetChecked(s.gearAlert ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

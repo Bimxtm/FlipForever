@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.18] - 2026-11-21 (beta)
+### Added
+- **Collect auction gold.** A button next to the mailbox takes the gold from every auction sale mail in one click and shows the total. Mail with items or COD, won auctions, expired items and letters from players are never touched.
+- **Gear upgrade alert.** When a scan finds an affordable gear upgrade that wasn't on the list before, you hear a sound and get a chat line with the item, slot and price. It can be turned off in the FlipForever window.
+### Changed
+- Combat helper: the small cooldown icons show the seconds left (minutes above one minute).
+
 ## [2.5.0-beta.17] - 2026-11-20 (beta)
 ### Added
 - **Quest locations.** Class quest steps in the Advisor now say who starts the quest and where, for your race and faction: warrior, paladin, hunter, rogue, shaman, warlock and druid quests, from Warcraft Wiki. Hover a step to see the full chain.
