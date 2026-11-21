@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.6.0-beta.6] - 2026-11-21 (beta)
+### Added
+- Talents panel: where your points should stand at levels 20, 30, 40, 50 and 60, as a point split per tree, for builds with a full talent order. The band you are in now is gold. When you have fewer points in the build's trees than the order asks for at your level (not counting points you still have to spend), an orange note says how many.
+- Includes 2.5.2 Beta 12 from the main line: combat helper buffs before a fight, paladin icon follows the seal and Judgement.
+
 ## [2.6.0-beta.5] - 2026-11-21 (beta)
 ### Added
 - Talents panel: an orange warning when you have points in a tree your build leaves empty, with how many and in which tree.

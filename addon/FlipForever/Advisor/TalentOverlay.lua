@@ -125,6 +125,70 @@ function TO:DriftLine(build, plan)
     off, FF:Plural(off), table.concat(trees, ", ")) .. "|r"
 end
 
+-- Where your points should stand per level band, for builds with a full pick order: the order
+-- is followed point by point (one point per level from 10), so at level 20 the first 11 points
+-- are spent, at 30 the first 21, and so on. Returns { level, split = { per tree }, total } per band.
+TO.BANDS = { 20, 30, 40, 50, 60 }
+function TO:Bands(build, plan)
+  if not (build and not build.keyOnly and plan and plan.steps and #plan.steps > 0) then return nil end
+  local trees = math.max(#(plan.spent or {}), 3)
+  local order = {}   -- one entry per point: the tree it goes into
+  for _, s in ipairs(plan.steps) do
+    if s.tab and s.target then
+      for _ = 1, s.target do order[#order + 1] = s.tab end
+    end
+  end
+  if #order == 0 then return nil end
+  local out = {}
+  for _, lvl in ipairs(self.BANDS) do
+    local points = math.min(lvl - 9, #order)
+    local split = {}
+    for t = 1, trees do split[t] = 0 end
+    for i = 1, points do split[order[i]] = (split[order[i]] or 0) + 1 end
+    out[#out + 1] = { level = lvl, split = split, total = points }
+    if points >= #order then break end   -- the build is complete by this band
+  end
+  return out
+end
+
+-- Two short lines for the panel: "By level 20: 0/11/0  30: 0/21/0  40: 5/26/0" and the rest.
+-- The band you are in now is gold; when you have fewer points in a tree than the order puts
+-- there by your level, a short note says so.
+function TO:BandLines(build, plan, level)
+  local bands = self:Bands(build, plan)
+  if not bands then return nil end
+  level = tonumber(level) or 60
+  local parts = {}
+  local current
+  for _, b in ipairs(bands) do
+    local text = ("%d: %s"):format(b.level, table.concat(b.split, "/"))
+    if not current and level <= b.level then current = b text = GOLD .. text .. "|r" end
+    parts[#parts + 1] = text
+  end
+  local first = FF:T("By level") .. " " .. table.concat(parts, "  ", 1, math.min(3, #parts))
+  local second = #parts > 3 and table.concat(parts, "  ", 4) or nil
+  -- behind the order: compare against the points you can have spent at your level
+  local behind
+  if plan.spent and level >= 10 then
+    local points = level - 9
+    local want = {}
+    for _, s in ipairs(plan.steps) do
+      if s.tab and s.target and points > 0 then
+        local n = math.min(s.target, points)
+        want[s.tab] = (want[s.tab] or 0) + n
+        points = points - n
+      end
+    end
+    for tab, n in pairs(want) do
+      local have = plan.spent[tab] or 0
+      if have < n then
+        behind = (behind or 0) + (n - have)
+      end
+    end
+  end
+  return first, second, behind
+end
+
 -- the build's role in plain words
 local ROLES = { dps = "Damage", tank = "Tank", healer = "Healer", pvp = "PvP", leveling = "Leveling" }
 function TO:RoleLine(build)
@@ -268,7 +332,7 @@ local MAX_LINES = 22
 function TO:Panel(parent)
   if panel then return panel end
   panel = CreateFrame("Frame", "FlipForeverTalentPanel", parent or UIParent, "BackdropTemplate")
-  panel:SetSize(240, 490)
+  panel:SetSize(240, 518)
   panel:SetPoint("TOPLEFT", parent or UIParent, "TOPRIGHT", -30, -12)
   if panel.SetBackdrop then
     panel:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -300,12 +364,21 @@ function TO:Panel(parent)
   panel.role:SetPoint("TOPLEFT", 12, -62)
   panel.role:SetPoint("RIGHT", -12, 0)
   panel.role:SetJustifyH("LEFT")
+  -- where your points should stand per level band (builds with a full pick order)
+  panel.bands1 = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  panel.bands1:SetPoint("TOPLEFT", 12, -76)
+  panel.bands1:SetPoint("RIGHT", -12, 0)
+  panel.bands1:SetJustifyH("LEFT")
+  panel.bands2 = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  panel.bands2:SetPoint("TOPLEFT", 12, -90)
+  panel.bands2:SetPoint("RIGHT", -12, 0)
+  panel.bands2:SetJustifyH("LEFT")
   panel.lines = {}
   panel.rows = {}
   for i = 1, MAX_LINES do
     -- each line is a button: click it to open that talent's tree
     local row = CreateFrame("Button", nil, panel)
-    row:SetPoint("TOPLEFT", 12, -80 - (i - 1) * 13)
+    row:SetPoint("TOPLEFT", 12, -108 - (i - 1) * 13)
     row:SetPoint("RIGHT", -12, 0)
     row:SetHeight(13)
     row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
@@ -341,6 +414,14 @@ function TO:PanelText(p)
   out.build = build.name
   out.points = self:PointsLine(build, plan)
   out.role = self:RoleLine(build)
+  local b1, b2, behind = self:BandLines(build, plan, p.level)
+  out.bands1, out.bands2 = b1 or "", b2 or ""
+  -- more points short than you have left to spend: some went elsewhere
+  local ok, unspent = pcall(UnitCharacterPoints or function() return 0 end, "player")
+  unspent = ok and tonumber(unspent) or 0
+  if behind and behind > unspent then
+    out.behind = "|cffff8800" .. FF:T("%d point%s behind the order for your level."):format(behind - unspent, FF:Plural(behind - unspent)) .. "|r"
+  end
   out.rotation = build.rotation and (GOLD .. FF:T("How to play:") .. "|r " .. build.rotation) or ""
   local header = build.keyOnly and FF:T("Key talents, lower tiers first") or FF:T("Talent order")
   out.lines[1] = GOLD .. header .. "|r"
@@ -366,6 +447,7 @@ function TO:PanelText(p)
   -- points that drifted off the build go first, so they're seen
   out.drift = self:DriftLine(build, plan)
   if out.drift then out.note = out.drift .. (out.note ~= "" and ("\n" .. out.note) or "") end
+  if out.behind and not out.drift then out.note = out.behind .. (out.note ~= "" and ("\n" .. out.note) or "") end
   return out
 end
 
@@ -386,6 +468,8 @@ function TO:Refresh()
   pn.build:SetText(text.build or "")
   pn.points:SetText(text.points or "")
   pn.role:SetText(text.role or "")
+  pn.bands1:SetText(text.bands1 or "")
+  pn.bands2:SetText(text.bands2 or "")
   pn.rotation:SetText(text.rotation or "")
   for i = 1, MAX_LINES do
     local l = text.lines[i]

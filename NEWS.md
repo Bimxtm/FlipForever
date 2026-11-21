@@ -1,3 +1,7 @@
+# FlipForever 2.6.0 Beta 6
+
+**Your points by level.** The panel beside the Talents window now shows where your points should stand at levels 20, 30, 40, 50 and 60 for builds with a full talent order, with the band you are in marked. If you are behind the order for your level, it tells you by how many points. This beta also has everything from the 2.5.2 betas up to Beta 12.
+
 # FlipForever 2.6.0 Beta 5
 
 **Off-build points flagged.** If you have talent points in a tree your build leaves empty, the panel beside the Talents window now says so, with how many and where. This beta also has everything from the 2.5.2 betas up to Beta 11.

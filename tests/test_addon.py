@@ -2256,6 +2256,35 @@ DRIFT3 = TO:DriftLine({}, { spent = { 3, 0, 0 } }) or ""
 print("talent drift:", L("DRIFT1"))
 assert "3 points in Arms" in L("DRIFT1") and L("DRIFT2") == "" and L("DRIFT3") == ""
 
+# --- talent overlay beta 6: where your points should stand per level band
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+-- order: 5 in tree 2, 5 in tree 2, 3 in tree 1, 5 in tree 2, then 33 more in tree 3 (51 points)
+local plan = { spent = { 0, 4, 0 }, steps = {
+  { tab = 2, target = 5 }, { tab = 2, target = 5 }, { tab = 1, target = 3 }, { tab = 2, target = 5 },
+  { tab = 3, target = 30 }, { tab = 3, target = 3 }, { name = "Missing", state = "missing" } } }
+local bands = TO:Bands({ talents = {} }, plan)
+BANDS = {}
+for _, b in ipairs(bands) do BANDS[#BANDS + 1] = b.level .. "=" .. table.concat(b.split, "/") end
+BANDS = table.concat(BANDS, " ")
+BAND1, BAND2, BEHIND = TO:BandLines({ talents = {} }, plan, 25)
+BAND_KEYONLY = TO:Bands({ keyOnly = true }, plan) == nil
+-- a short build: complete by level 30, no later bands
+local short = TO:Bands({}, { spent = { 0, 0, 0 }, steps = { { tab = 1, target = 15 } } })
+SHORT_N, SHORT_LAST = #short, short[#short].level .. "=" .. table.concat(short[#short].split, "/")
+-- the panel: points spent elsewhere show a note, unspent points don't
+local oldUCP = UnitCharacterPoints
+UnitCharacterPoints = function() return 2 end
+_, _, BEHIND_OK = TO:BandLines({}, { spent = { 0, 9, 0 }, steps = { { tab = 2, target = 20 } } }, 20)
+UnitCharacterPoints = oldUCP
+""")
+print("level bands:", L("BANDS"), "|", L("BAND1"), "|", L("BAND2"), "| behind at 25:", L("BEHIND"))
+assert L("BANDS") == "20=1/10/0 30=3/15/3 40=3/15/13 50=3/15/23 60=3/15/33"
+assert L("BAND1") == "By level 20: 1/10/0  |cffffd20030: 3/15/3|r  40: 3/15/13" and L("BAND2") == "50: 3/15/23  60: 3/15/33"
+assert L("BEHIND") == 12   # level 25: 16 points due (3 in tree 1, 13 in tree 2), 4 spent
+assert L("BAND_KEYONLY") and L("SHORT_N") == 2 and L("SHORT_LAST") == "30=15/0/0"
+assert L("BEHIND_OK") == 2
+
 # --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
 lua.execute("""
 local TO = FlipForever.TalentOverlay
