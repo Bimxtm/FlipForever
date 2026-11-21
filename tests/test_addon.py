@@ -2218,5 +2218,40 @@ assert L("TO3_ORDER2") == "Frostbite=next,Ice Shards=todo,Ice Lance=todo"
 assert L("TO3_NEED") == "Ice Shards:next:10"
 assert L("TO3_SAME") is True and L("TO3_CLICK") == 2
 
+# --- talent overlay beta 4: tooltips on panel lines (game description + build pick) and on marked talents
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local savedTip = GameTooltip
+TIP4 = {}
+GameTooltip = {
+  SetOwner = function(self, o) self.owner = o TIP4 = {} end,
+  SetTalent = function(self, tab, i) TIP4[#TIP4 + 1] = "talent " .. tab .. ":" .. i end,
+  AddLine = function(self, t) TIP4[#TIP4 + 1] = t end,
+  Show = function() end, Hide = function() end,
+  IsOwned = function(self, o) return self.owner == o end,
+}
+UnitClass = function() return "Mage", "MAGE" end
+TF.shown = true
+TF.selectedTab = 1
+TO:Refresh()
+local row = FlipForeverTalentPanel.rows[2]
+TO4_ROW = TO:RowTooltip(row) and table.concat(TIP4, "|")
+-- a marked talent button adds the build's line to the game's tooltip
+local b = TalentFrameTalent3
+GameTooltip.owner = b
+TIP4 = {}
+for _, fn in ipairs(b.hooks.OnEnter or {}) do fn(b) end
+TO4_BTN = table.concat(TIP4, "|")
+TO4_HOOKS = #(b.hooks.OnEnter or {})
+TO:Refresh()
+TO4_HOOKS2 = #(b.hooks.OnEnter or {})
+TF.shown = false
+GameTooltip = savedTip
+UnitClass = SAVED_CLASS
+""")
+print("row tooltip:", L("TO4_ROW"), "| button tooltip:", L("TO4_BTN"))
+assert L("TO4_ROW").startswith("talent 1:1|") and "FlipForever build: pick 1 - 5/5 - done" in L("TO4_ROW") and "Click to open this tree." in L("TO4_ROW")
+assert L("TO4_BTN").startswith("FlipForever build: pick 3") and L("TO4_HOOKS") == 1 and L("TO4_HOOKS2") == 1
+
 assert L("TO2_TOGGLED") == 1 and L("TO2_LOW") == 1 and "level 10" in L("TO2_LOWMSG") and L("TO2_SLASH") == 2
 print("ALL ADDON TESTS PASSED")

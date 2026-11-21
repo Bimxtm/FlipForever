@@ -1,3 +1,7 @@
+# FlipForever 2.6.0 Beta 4
+
+**Talent details on hover.** Hover a talent in the panel beside the Talents window to read what it does, which tree it is in and where it comes in the build. Talents marked on the Talents window show their pick number and target rank in their tooltip too.
+
 # FlipForever 2.6.0 Beta 3
 
 **Click a talent to open its tree.** Each line in the panel beside the Talents window now takes you to that talent's tree. Builds whose guide names only the key talents get an order too: lower tiers first, so the next point is always one you can take. If a key talent needs more points in its tree first, the panel tells you how many.

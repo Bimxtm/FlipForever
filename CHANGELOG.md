@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.6.0-beta.4] - 2026-11-21 (beta)
+### Added
+- Talents panel: hover a talent for the game's description of it, its tree, the build's pick number, the target rank and whether it is done or next.
+- Talents window: the tooltip of a marked talent shows its pick number in the build and your rank against the target.
+
 ## [2.6.0-beta.3] - 2026-11-21 (beta)
 ### Added
 - Talents panel: click a talent to open its tree on the Talents window.

@@ -170,6 +170,27 @@ end
 local marks = setmetatable({}, { __mode = "k" })
 function TO:Mark(button) return marks[button] end
 
+-- the build's line for a talent tooltip: "FlipForever build: 3rd pick, 2/3 - next"
+function TO:TooltipLine(s)
+  if not s then return nil end
+  local state = ({ done = FF:T("done"), next = FF:T("next"), level = s.minLevel and FF:T("from level %d"):format(s.minLevel) or nil })[s.state]
+  local line = FF:T("FlipForever build: pick %d"):format(s.order)
+  if s.target then line = line .. (" - %d/%d"):format(s.cur or 0, s.target) end
+  if state then line = line .. " - " .. state end
+  return line
+end
+
+-- adds the build's line under the game's tooltip of a marked talent button
+local function addToTooltip(button)
+  local m = marks[button]
+  if not (m and m.step and m:IsShown() and GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(button)) then return end
+  local s = m.step
+  local r, g, b = 1, 1, 1
+  if s.state == "next" then r, g, b = 1, 0.82, 0 elseif s.state == "done" then r, g, b = 0.25, 1, 0.25 end
+  GameTooltip:AddLine(TO:TooltipLine(s), r, g, b)
+  GameTooltip:Show()
+end
+
 local function marker(button)
   if marks[button] then return marks[button] end
   local m = CreateFrame("Frame", nil, button)
@@ -183,6 +204,7 @@ local function marker(button)
   m.num = m:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   m.num:SetPoint("TOPLEFT", m, "TOPLEFT", -4, 4)
   marks[button] = m
+  if button.HookScript then button:HookScript("OnEnter", addToTooltip) end
   return m
 end
 
@@ -210,12 +232,12 @@ function TO:Decorate(plan)
         m.glow:Hide()
       end
       m.num:SetText((s.state == "next" and GOLD or WHITE) .. s.order .. "|r")
-      m.state = s.state
+      m.state, m.step = s.state, s
       m:Show()
       marked = marked + 1
     elseif marks[e.button] then
       marks[e.button]:Hide()
-      marks[e.button].state = nil
+      marks[e.button].state, marks[e.button].step = nil, nil
     end
   end
   return marked
@@ -270,6 +292,9 @@ function TO:Panel(parent)
     row:SetHeight(13)
     row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     row:SetScript("OnClick", function(self) if self.tab then TO:ShowTree(self.tab) end end)
+    -- hover: the game's own description of the talent, with the build's pick and target rank
+    row:SetScript("OnEnter", function(self) TO:RowTooltip(self) end)
+    row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     local fs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     fs:SetAllPoints(row)
     fs:SetJustifyH("LEFT")
@@ -301,10 +326,11 @@ function TO:PanelText(p)
   out.rotation = build.rotation and (GOLD .. FF:T("How to play:") .. "|r " .. build.rotation) or ""
   local header = build.keyOnly and FF:T("Key talents, lower tiers first") or FF:T("Talent order")
   out.lines[1] = GOLD .. header .. "|r"
-  out.tabs = {}
+  out.tabs, out.steps = {}, {}
   for _, s in ipairs(plan.steps) do
     out.lines[#out.lines + 1] = self:StepLine(s)
     out.tabs[#out.lines] = s.tab
+    out.steps[#out.lines] = s
   end
   if #plan.steps == 0 then out.lines[#out.lines + 1] = FF:T("This guide shows its talents only as a picture - follow it on the guide's page.") end
   local nextStep
@@ -344,10 +370,36 @@ function TO:Refresh()
     local l = text.lines[i]
     if i == MAX_LINES and #text.lines > MAX_LINES then l = GREY .. FF:T("(+%d more)"):format(#text.lines - MAX_LINES + 1) .. "|r" end
     pn.lines[i]:SetText(l or "")
-    pn.rows[i].tab = (i < MAX_LINES or #text.lines <= MAX_LINES) and text.tabs and text.tabs[i] or nil
+    local shown = i < MAX_LINES or #text.lines <= MAX_LINES
+    pn.rows[i].tab = shown and text.tabs and text.tabs[i] or nil
+    pn.rows[i].step = shown and text.steps and text.steps[i] or nil
   end
   pn.note:SetText(text.note or "")
   pn:Show()
+end
+
+-- tooltip of a panel line: the talent's description from the game, then the build's details
+function TO:RowTooltip(row)
+  local s = row and row.step
+  if not (s and GameTooltip) then return false end
+  GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+  local described = false
+  if s.tab and s.index and GameTooltip.SetTalent then
+    described = pcall(GameTooltip.SetTalent, GameTooltip, s.tab, s.index)
+  end
+  if not described then GameTooltip:AddLine(s.name, 1, 1, 1) end
+  if s.treeName then GameTooltip:AddLine(s.treeName, 0.6, 0.6, 0.6) end
+  if s.state == "missing" then
+    GameTooltip:AddLine(FF:T("Not in this game version's talent trees."), 0.6, 0.6, 0.6, true)
+  else
+    GameTooltip:AddLine(self:TooltipLine(s), 1, 0.82, 0)
+    if s.needPoints and s.needPoints > 0 then
+      GameTooltip:AddLine(FF:T("Spend %d more points in this tree first."):format(s.needPoints), 1, 1, 1, true)
+    end
+    GameTooltip:AddLine(FF:T("Click to open this tree."), 0.6, 0.6, 0.6)
+  end
+  GameTooltip:Show()
+  return true
 end
 
 -- switch the Talents window to a tree, the same as clicking its tab (outside fights only)
