@@ -24,6 +24,19 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2
+
+Everything from the 2.5.2 test versions, now in every game language:
+
+- **Merchants:** sell all grey items with one click and repair, or let it happen on its own.
+- **Mailbox:** *Open all mail* takes the gold and items from every mail.
+- **Overview:** XP per hour, time to your next level and rested XP; what your bags are worth and which items are worth posting.
+- **Advisor:** a reminder when new spells wait at your class trainer.
+- **Combat helper:** casts your missing buffs before a fight, warns you about high threat, and for paladins follows the seal and Judgement. The seal is cast again after every Judgement, and clicking the icon in a fight no longer causes "Interface action failed because of an AddOn".
+- **Gathering:** your loop skips spots you gathered in the last 15 minutes.
+- **App:** a 7-day price trend on the Deals page, and a price history for the items you hold. The app also restarts cleanly after an update.
+- **Settings:** every feature has its own switch under Settings, Features.
+
 # FlipForever 2.5.2 Beta 12
 
 **Combat helper: buffs and a paladin fix.** Before a fight, the combat helper now casts your missing buffs first, such as your blessing and aura, Power Word: Fortitude, Arcane Intellect or Mark of the Wild. For paladins, the big icon now moves on after each cast and shows whether the seal or Judgement comes next. You can switch the buffs off under Settings, Features.

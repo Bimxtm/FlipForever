@@ -26,6 +26,7 @@ Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, We
 - **UI and content pass:** rework the windows a little and refresh all content so the parts work better together (owner suggestion, 21 Nov). Needs a plan before work starts.
 
 ## Done
+- 2.5.2 (betas): sell junk and repair, open all mail, time to level, bag value, trainer reminder, threat warning, combat helper buffs and paladin fixes, gathering node timers, 7-day price trend in the app, a switch for every feature; all in every game language.
 - 2.5.0 (betas): crafting profit finder in the profession planner; gear finder for affordable auction house upgrades; encrypted token storage; setup for other players; all 11 game languages (menus and buttons so far); vendor flips; deposit-accurate profit math; vendor floor when posting; combat helper for levels 1-60; exact skill-up chances; 9 builds per class from Method, Warcraft Tavern and RankedBoost; waypoint arrow; quest locations; collect auction gold; gear upgrade alert; spells in every client language.
 - 2.4.0 (betas): tabbed in-game window with a shopping-list view, app sidebar and layout, Gathering in the common look, best farming zone in the Advisor, smarter undercut, a reason on every Advisor step.
 - 2.3.0: in-game planning after each scan, one-key combat targeting with tank mode, scan alerts, lists built automatically after import, sell speed in tooltips, window position remembered, in-game test checklist, beta channel, Development tab.
