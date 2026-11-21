@@ -31,6 +31,7 @@
 - 2.7.0 beta 2 (quest helper branch): quest spots on the minimap.
 - 2.7.0 beta 1 (quest helper branch): quest spots learned from play, /ff quest arrow, world map quest pins.
 - 2.6.0 beta 6 (talent branch): points per level band on the Talents panel.
+- 2.5.2 stable: all 2.5.2 betas, translated into every game language.
 - 2.5.2 beta 12 (owner report): paladin combat helper icon moves on after each cast; missing self-buffs are cast before a fight.
 - 2.5.2 beta 11: gathering node timers (skip recently gathered spots).
 - 2.5.2 beta 10: 7-day price trend on the app's Deals page; price history for held items.

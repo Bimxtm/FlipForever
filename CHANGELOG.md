@@ -47,6 +47,11 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2] - 2026-11-21
+All 2.5.2 betas in one release (see the beta entries below), plus:
+### Added
+- Translations of every text added in the 2.5.2 betas into all game languages: merchant and mailbox buttons, the Overview lines, the trainer reminder, the threat warning, the combat helper's buffs, the new Settings switches and the app's 7-day trend.
+
 ## [2.5.2-beta.12] - 2026-11-21 (beta)
 ### Fixed
 - Combat helper, paladins: the big icon now moves on after each cast. It follows the seal and Judgement in the order the game casts them (seal, Judgement, seal again) and starts over on a new target, as the game does. Before, it could keep showing the seal.
