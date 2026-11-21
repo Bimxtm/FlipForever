@@ -2176,6 +2176,16 @@ if L("TO2_ROLEKEY"):
 if L("TO2_HASROT"):
     assert "How to play:" in L("TO2_ROT")
 
+# --- talent overlay beta 5: warn about points in a tree the build leaves empty
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+DRIFT1 = TO:DriftLine({ points = "0/26/0" }, { spent = { 3, 10, 0 }, treeNames = { "Arms", "Fury", "Protection" } }) or ""
+DRIFT2 = TO:DriftLine({ points = "0/26/0" }, { spent = { 0, 10, 0 } }) or ""
+DRIFT3 = TO:DriftLine({}, { spent = { 3, 0, 0 } }) or ""
+""")
+print("talent drift:", L("DRIFT1"))
+assert "3 points in Arms" in L("DRIFT1") and L("DRIFT2") == "" and L("DRIFT3") == ""
+
 # --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
 lua.execute("""
 local TO = FlipForever.TalentOverlay

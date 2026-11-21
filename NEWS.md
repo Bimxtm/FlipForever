@@ -1,3 +1,7 @@
+# FlipForever 2.6.0 Beta 5
+
+**Off-build points flagged.** If you have talent points in a tree your build leaves empty, the panel beside the Talents window now says so, with how many and where. This beta also has everything from the 2.5.2 betas up to Beta 11.
+
 # FlipForever 2.6.0 Beta 4
 
 **Talent details on hover.** Hover a talent in the panel beside the Talents window to read what it does, which tree it is in and where it comes in the build. Talents marked on the Talents window show their pick number and target rank in their tooltip too.

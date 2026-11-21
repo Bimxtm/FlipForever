@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.6.0-beta.5] - 2026-11-21 (beta)
+### Added
+- Talents panel: an orange warning when you have points in a tree your build leaves empty, with how many and in which tree.
+- Includes 2.5.2 betas 2-11 from the main line: sell junk and repair, a switch for every feature, trainer reminder, clean restart after updates, time to level, threat warning, open all mail, bag value, price trend in the app, node timers.
+
 ## [2.6.0-beta.4] - 2026-11-21 (beta)
 ### Added
 - Talents panel: hover a talent for the game's description of it, its tree, the build's pick number, the target rank and whether it is done or next.

@@ -107,6 +107,24 @@ function TO:PointsLine(build, plan)
   return table.concat(parts, " - ")
 end
 
+-- Drift: points you spent in a tree the build leaves empty ("0" in its split). Returns the
+-- warning line, or nil. Example split "0/26/0", yours "3/10/0": 3 points off the build in tree 1.
+function TO:DriftLine(build, plan)
+  if not (build and build.points and plan and plan.spent) then return nil end
+  local want = {}
+  for n in tostring(build.points):gmatch("%d+") do want[#want + 1] = tonumber(n) end
+  local off, trees = 0, {}
+  for tab, spent in ipairs(plan.spent) do
+    if want[tab] == 0 and (spent or 0) > 0 then
+      off = off + spent
+      trees[#trees + 1] = (plan.treeNames and plan.treeNames[tab]) or ("tree " .. tab)
+    end
+  end
+  if off == 0 then return nil end
+  return "|cffff8800" .. FF:T("%d point%s in %s, which this build leaves empty - a respec at your trainer puts them back."):format(
+    off, FF:Plural(off), table.concat(trees, ", ")) .. "|r"
+end
+
 -- the build's role in plain words
 local ROLES = { dps = "Damage", tank = "Tank", healer = "Healer", pvp = "PvP", leveling = "Leveling" }
 function TO:RoleLine(build)
@@ -345,6 +363,9 @@ function TO:PanelText(p)
   else
     out.note = build.note or ""
   end
+  -- points that drifted off the build go first, so they're seen
+  out.drift = self:DriftLine(build, plan)
+  if out.drift then out.note = out.drift .. (out.note ~= "" and ("\n" .. out.note) or "") end
   return out
 end
 
