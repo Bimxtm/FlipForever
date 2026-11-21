@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 10
+
+**Price trends in the app.** The Deals page has a new *7-day trend* column that shows whether an item is dearer or cheaper than usual right now. On the Inventory & selling page, double-click an item to see its price history with your cost and floor marked.
+
 # FlipForever 2.5.2 Beta 9
 
 **What your bags are worth.** The Overview now shows what your bags would fetch at a merchant and selling each item the better way, plus how many items are worth posting at the auction house. Hover the line to see them, biggest gain first. You can switch it off under Settings, Features.

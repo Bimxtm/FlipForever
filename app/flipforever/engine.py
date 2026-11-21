@@ -249,6 +249,47 @@ def price_history(con, realm, iid, days=HISTORY_DAYS):
         "SELECT t, min, p25, qty FROM prices WHERE realm=? AND id=? AND t>=? ORDER BY t", (realm, iid, since))]
 
 
+def price_trend(hist, now=None, days=7):
+    """How the cheapest listing moved: the newest scan against the median of the last `days` days.
+
+    hist: rows (t, min, p25, qty) as price_history returns them. Returns a fraction (+0.12 = 12% dearer
+    than usual), or None with fewer than 3 scans in that window."""
+    if not hist:
+        return None
+    now = now or hist[-1][0]
+    window = [r[1] for r in hist if r[0] >= now - days * DAY and r[1]]
+    if len(window) < 3:
+        return None
+    base = statistics.median(window[:-1])
+    if not base:
+        return None
+    return window[-1] / base - 1
+
+
+def price_trends(con, realm, days=7):
+    """price_trend for every item scanned in the last `days` days, in one query: {id: fraction}."""
+    since = int(time.time()) - days * DAY
+    rows = defaultdict(list)
+    for iid, t, mn, p25, qty in con.execute(
+            "SELECT id, t, min, p25, qty FROM prices WHERE realm=? AND t>=? ORDER BY id, t", (realm, since)):
+        rows[iid].append((t, mn, p25, qty))
+    out = {}
+    for iid, hist in rows.items():
+        tr = price_trend(hist, days=days)
+        if tr is not None:
+            out[iid] = tr
+    return out
+
+
+def trend_text(tr):
+    """+12% / -8% / steady; "" when unknown."""
+    if tr is None:
+        return ""
+    if abs(tr) < 0.03:
+        return "steady"
+    return f"{tr:+.0%}"
+
+
 # ============================================================== ledger (what actually happened)
 @dataclass
 class ItemLedger:
