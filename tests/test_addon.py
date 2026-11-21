@@ -1863,6 +1863,28 @@ BIND_NAME = BINDING_NAME_FLIPFOREVER_ADVISOR
 assert L("ADV_OPENED") == 2 and "Advisor" in L("BIND_NAME")
 assert (ADDON / "Bindings.xml").read_text(encoding="utf-8").count("FlipForever.Advisor:Toggle()") == 1
 
+# --- Gear tab: hovering an item shows it with all stats, next to what you wear
+lua.execute("""
+local FF = FlipForever
+TIPS = {}
+local function tip(name)
+  local t = {}
+  for _, m in ipairs({ "SetOwner", "SetHyperlink", "AddLine", "Show", "Hide", "ClearAllPoints", "SetPoint" }) do
+    t[m] = function(self, a) table.insert(TIPS, name .. ":" .. m .. ":" .. tostring(a)) end
+  end
+  return t
+end
+GameTooltip = tip("GT")
+GameTooltip_ShowCompareItem = function(t) table.insert(TIPS, "compare") end
+FF.Hub:SelectTab("gear")
+local pg = FlipForeverHub.pages.gear
+pg.rows[1].data = { link = "item:105:0:0:0:0:0:1200:0", pct = 0.25, slot = 9 }
+pg.rows[1].hover.OnEnter(pg.rows[1].hover)
+GEAR_TIPS = table.concat(TIPS, " | ")
+""")
+print("gear hover:", L("GEAR_TIPS"))
+assert "GT:SetHyperlink:item:105" in L("GEAR_TIPS") and "compare" in L("GEAR_TIPS") and "25%" in L("GEAR_TIPS")
+
 # --- the autopilot is turned off for players: it can't be switched on
 lua.execute("""
 local A = FlipForever.Auto

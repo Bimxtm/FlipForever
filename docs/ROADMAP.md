@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Planned
-- **2.5.0 stable:** all 2.4 and 2.5 betas in one release, with windows, chat messages and app pages in all 11 game languages.
+- **Talent builds on the Talents window (2.6.0, owner request):** the chosen build shown right on the game's Talents window, next point highlighted, and the builds fleshed out further.
+- **Autopilot rework:** the auction house autopilot is off until it is reworked.
 
 ## Smaller improvements
 - Fixes from real play come first (bug reports from players).

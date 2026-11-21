@@ -196,8 +196,25 @@ local function buildGear(f)
       GameTooltip:SetHyperlink(d.link)
       if d.pct then GameTooltip:AddLine(FF:T("Better than what you wear by %d%%"):format(math.floor(d.pct * 100 + 0.5)), 0.2, 1, 0.6) end
       GameTooltip:Show()
+      -- what you wear in that slot, side by side (the game's own compare tooltips)
+      if GameTooltip_ShowCompareItem then
+        pcall(GameTooltip_ShowCompareItem, GameTooltip)
+      elseif ShoppingTooltip1 and d.slot and GetInventoryItemLink then
+        local worn = GetInventoryItemLink("player", d.slot)
+        if worn then
+          ShoppingTooltip1:SetOwner(GameTooltip, "ANCHOR_NONE")
+          ShoppingTooltip1:ClearAllPoints()
+          ShoppingTooltip1:SetPoint("TOPLEFT", GameTooltip, "TOPRIGHT", 4, 0)
+          ShoppingTooltip1:SetHyperlink(worn)
+          ShoppingTooltip1:Show()
+        end
+      end
     end)
-    r.hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    r.hover:SetScript("OnLeave", function()
+      GameTooltip:Hide()
+      if ShoppingTooltip1 then ShoppingTooltip1:Hide() end
+      if ShoppingTooltip2 then ShoppingTooltip2:Hide() end
+    end)
     r.price = text(pg, "GameFontHighlightSmall", 236, y - 5, 58)
     r.gain = text(pg, "GameFontHighlightSmall", 296, y - 5, 40)
     r.buy = button(pg, "Buy", 44, function() FF.Gear:Buy(r.data) end)

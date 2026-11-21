@@ -2,6 +2,19 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0] - 2026-11-21
+All 2.4 and 2.5 betas in one release (see the beta entries below), plus:
+### Added
+- All 11 game languages for the FlipForever window, the Advisor, the profession planner, chat messages, the auction house panel, item tooltips and every app page, including How to use.
+- Gear tab: hover an item for its full name and stats, shown next to what you wear in that slot. Names no longer run into the next row.
+### Changed
+- The auction house autopilot is turned off for now while it gets more work.
+### Fixed
+- The Advisor's data (your chosen build, next steps, upgrades) was wiped at every login, so the build choice didn't stick and the app's Advisor page stayed empty.
+- When the game reported an empty realm name, data was saved under " - Horde" instead of your realm; it is moved back on the next login.
+- Combat helper: druids get the bear skills in Bear Form, the cat skills in Cat Form and caster spells otherwise, in every press.
+- Opening the Advisor window can no longer fail silently: an error is shown and kept for bug reports.
+
 ## [2.5.0-beta.29] - 2026-11-21 (beta)
 ### Fixed
 - Combat helper: with *Wait for cooldowns* on, the button could stop on one skill for the rest of the fight (a finisher without combo points, a shout or shield that was already up, not enough rage). It now moves on to the next skill with every press again, and your cooldown abilities still fire first whenever they're ready.

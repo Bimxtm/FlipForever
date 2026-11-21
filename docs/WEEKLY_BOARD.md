@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 stable: all betas, every text in 11 languages, Advisor data and realm fixes, druid forms, Gear tab hover compare, autopilot off for now.
 - 2.5.0 beta 29 (owner report): combat helper no longer gets stuck on one skill.
 - 2.5.0 beta 28 (owner request): Advisor button in the window title bar, clickable next step, key bindings.
 - 2.5.0 beta 27 (reported by the owner): budget changes in Settings apply to the selected character.
