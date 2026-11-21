@@ -445,7 +445,7 @@ function P:RefreshProfit()
   frame.mode:SetText(FF:T("Show skill-ups"))
   frame.buy:SetText(FF:T("Buy mats for the top craft"))
   local list = self:ProfitList()
-  frame.prof:SetText(#list > 0 and ("%d profitable craft%s across your professions"):format(#list, #list > 1 and "s" or "")
+  frame.prof:SetText(#list > 0 and FF:T("%d profitable craft%s across your professions"):format(#list, FF:Plural(#list))
     or "No profitable fast-selling crafts right now.")
   for i, fs in ipairs(frame.rows) do
     local e = list[i]
@@ -475,11 +475,11 @@ end
 function P:QueueProfitMats()
   local list = self:ProfitBuyList(nil, 1)
   if #list == 0 then
-    FF:Print("Nothing to buy for the top craft (you have the materials, or they come from a vendor).")
+    FF:Print(FF:T("Nothing to buy for the top craft (you have the materials, or they come from a vendor)."))
     return
   end
   self.pendingMats = list
-  FF:Print(("%d material%s queued for crafting. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, #list > 1 and "s" or ""))
+  FF:Print(FF:T("%d material%s queued for crafting. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, FF:Plural(#list)))
   if AuctionHouseFrame and AuctionHouseFrame:IsShown() then self:BuyPending() end
   if FF.UI then FF.UI:Refresh() end
 end
@@ -536,11 +536,11 @@ end
 function P:QueueMats()
   local list = self:BuyList(self.current, 1)
   if #list == 0 then
-    FF:Print("Nothing to buy at the auction house for the top craft (you have it all, or it's vendor goods).")
+    FF:Print(FF:T("Nothing to buy at the auction house for the top craft (you have it all, or it's vendor goods)."))
     return
   end
   self.pendingMats = list
-  FF:Print(("%d material%s queued. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, #list > 1 and "s" or ""))
+  FF:Print(FF:T("%d material%s queued. At the auction house, click |cffffd200Buy profession mats|r on the FlipForever panel."):format(#list, FF:Plural(#list)))
   if AuctionHouseFrame and AuctionHouseFrame:IsShown() then self:BuyPending() end
   if FF.UI then FF.UI:Refresh() end
 end

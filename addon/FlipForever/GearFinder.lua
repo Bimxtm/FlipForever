@@ -264,9 +264,9 @@ end
 function G:Buy(r)
   if not r then return end
   if r.bag then
-    if InCombatLockdown() then FF:Print("Can't change gear during a fight.") return end
+    if InCombatLockdown() then FF:Print(FF:T("Can't change gear during a fight.")) return end
     if EquipItemByName and r.link then EquipItemByName(r.link) end
-    FF:Print(("Equipped %s."):format(r.name))
+    FF:Print(FF:T("Equipped %s."):format(r.name))
     return
   end
   FF.Trader:StartBuying({ { id = r.id, qty = 1, max = math.floor(r.price * 1.15) } }, "gear upgrade")

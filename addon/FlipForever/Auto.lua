@@ -54,10 +54,10 @@ function A:SetEnabled(on)
     self.nextSearch = 0
     self.nextScan = self:LastScanTime() + self.SCAN_EVERY
     self.scanBlocked = false
-    FF:Print("Autopilot ON: checks your list every minute, full scan every 30 min (only while the auction house is open).")
+    FF:Print(FF:T("Autopilot ON: checks your list every minute, full scan every 30 min (only while the auction house is open)."))
   else
     self.phase = "off"
-    FF:Print("Autopilot OFF.")
+    FF:Print(FF:T("Autopilot OFF."))
   end
   if FF.UI then FF.UI:Refresh() end
 end
@@ -92,7 +92,7 @@ function A:ScanFailed(reason)
   if FF.Scan.poller then FF.Scan.poller:Cancel() end
   FF.Scan.busy, FF.Scan.watch = nil, nil
   FF:Alert("FlipForever: auto-scan needs you - click Full scan. (" .. reason .. ")", SOUNDKIT and SOUNDKIT.READY_CHECK)
-  FF:SetStatus("Autopilot paused: click Full scan. Searching resumes after the scan finishes.")
+  FF:SetStatus(FF:T("Autopilot paused: click Full scan. Searching resumes after the scan finishes."))
 end
 
 FF:On("ADDON_ACTION_BLOCKED", function(addon)
@@ -189,6 +189,6 @@ end
 
 C_Timer.NewTicker(1, function()
   local ok, err = pcall(A.Tick, A)
-  if not ok then FF:Print("|cffff5555autopilot error:|r " .. tostring(err)) end
+  if not ok then FF:Print(FF:T("|cffff5555autopilot error:|r ") .. tostring(err)) end
   if FF.UI and FF.UI.frame and FF.UI.frame:IsShown() then FF.UI:Refresh() end
 end)

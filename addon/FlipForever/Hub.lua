@@ -42,7 +42,7 @@ end
 local MODIFIERS = { LSHIFT = true, RSHIFT = true, LCTRL = true, RCTRL = true, LALT = true, RALT = true, UNKNOWN = true }
 
 local function startCapture(label, onKey)
-  if InCombatLockdown() then FF:Print("Can't change keys during a fight.") return end
+  if InCombatLockdown() then FF:Print(FF:T("Can't change keys during a fight.")) return end
   if not capture then
     capture = CreateFrame("Frame", "FlipForeverKeyCapture", UIParent, "BackdropTemplate")
     capture:SetSize(320, 90)
@@ -108,7 +108,7 @@ local function buildOverview(f)
   button(pg, "Gathering", 118, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
-    else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
+    else FF:Print(FF:T("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.")) end
   end):SetPoint("TOPLEFT", 140, -352)
   button(pg, "Professions", 118, function() FF.Professions:Toggle() end):SetPoint("TOPLEFT", 264, -352)
   pg.combat = check(pg, "Combat helper on screen", function() FF.Combat:Toggle() end)
@@ -190,7 +190,7 @@ function H:RefreshGear()
   if G.running then
     pg.summary:SetText("Searching your latest scan...")
   elseif G.searched then
-    pg.summary:SetText(#list > 0 and ("%d upgrade%s you can afford (budget %s)"):format(#list, #list > 1 and "s" or "", FF:Money(G:Budget()))
+    pg.summary:SetText(#list > 0 and FF:T("%d upgrade%s you can afford (budget %s)"):format(#list, FF:Plural(#list), FF:Money(G:Budget()))
       or "No affordable upgrades in your latest scan.")
   else
     pg.summary:SetText("Find upgrades for your character in your latest scan.")
@@ -394,7 +394,7 @@ local function build()
   f.gather = button(pg, "Gathering", 118, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
-    else FF:Print("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.") end
+    else FF:Print(FF:T("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.")) end
   end)
   f.gather:SetPoint("TOPLEFT", 140, -82)
   f.profs = button(pg, "Professions", 118, function() FF.Professions:Toggle() end)

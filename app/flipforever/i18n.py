@@ -236,6 +236,10 @@ _ROWS = {
     "Language changes apply after restarting the app.": ("Die Sprache wird nach einem Neustart der App übernommen.", "La langue s'applique après le redémarrage de l'appli.", "El idioma se aplica al reiniciar la app.", "El idioma se aplica al reiniciar la app.", "La lingua si applica dopo il riavvio dell'app.", "O idioma é aplicado ao reiniciar o app.", "Язык применится после перезапуска приложения.", "언어는 앱을 다시 시작하면 적용됩니다.", "语言将在重启应用后生效。", "語言將在重新啟動應用程式後生效。"),
 }
 
+from .i18n_messages import ROWS as _MESSAGES  # noqa: E402  chat messages and status lines
+for _en, _row in _MESSAGES.items():
+    _ROWS.setdefault(_en, _row)
+
 _ORDER = [k for k in LANGUAGES if k != "enUS"]
 TRANSLATIONS: dict[str, dict[str, str]] = {lang: {} for lang in _ORDER}
 for _en, _row in _ROWS.items():

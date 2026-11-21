@@ -66,7 +66,7 @@ function Scan:WatchReplicate(own)
   self.busy = own and "replicate" or "external"
   local w = { started = time(), own = own, initial = AH.GetNumReplicateItems() or 0, last = -1, stable = 0, gotEvent = false }
   self.watch = w
-  FF:SetStatus(own and "Full scan requested, waiting for the server (can take a few minutes)..."
+  FF:SetStatus(own and FF:T("Full scan requested, waiting for the server (can take a few minutes)...")
     or "Another addon is running a full scan - FlipForever will read the same data.")
   if self.poller then self.poller:Cancel() end
   self.poller = C_Timer.NewTicker(2, function()
@@ -77,7 +77,7 @@ function Scan:WatchReplicate(own)
       if n == w.last then w.stable = w.stable + 2 else w.stable = 0 end
       w.last = n
       if self.busy ~= "processing" then
-        FF:SetStatus(("Full scan arriving: %d auctions so far..."):format(n))
+        FF:SetStatus(FF:T("Full scan arriving: %d auctions so far..."):format(n))
       end
       if w.stable >= STABLE_SECONDS then
         self.poller:Cancel()
@@ -87,7 +87,7 @@ function Scan:WatchReplicate(own)
       self.poller:Cancel()
       self.watch, self.busy = nil, nil
       if w.own then
-        FF:Print("The full scan never arrived from the server.")
+        FF:Print(FF:T("The full scan never arrived from the server."))
         if FF.Auto then FF.Auto:ScanFailed("no data from the server") end
       end
     end
@@ -114,7 +114,7 @@ function Scan:ProcessReplicate(w)
       end
       i = i + 1
     end
-    FF:SetStatus(("Reading full scan... %d / %d auctions"):format(i, total))
+    FF:SetStatus(FF:T("Reading full scan... %d / %d auctions"):format(i, total))
     if i < total then
       C_Timer.After(0, step)
     else
@@ -123,8 +123,8 @@ function Scan:ProcessReplicate(w)
       local n = FF:AddScan("full", summary)
       self.busy, self.watch = nil, nil
       local who = w.own and "Full scan" or "Full scan (shared from another addon's scan)"
-      FF:Print(("%s saved: %d auctions, %d items. /reload or log out so the app can import it."):format(who, total, n))
-      FF:SetStatus(("%s done: %d items."):format(who, n))
+      FF:Print(FF:T("%s saved: %d auctions, %d items. /reload or log out so the app can import it."):format(who, total, n))
+      FF:SetStatus(FF:T("%s done: %d items."):format(who, n))
       if FF.Auto then FF.Auto:ScanDone(true) end
       FF:ScanFinished(n)
     end
@@ -137,11 +137,11 @@ end
 -- Returns started(bool), secondsUntilPossible
 function Scan:StartFull(auto)
   if self.busy then
-    if not auto then FF:Print("A scan is already running.") end
+    if not auto then FF:Print(FF:T("A scan is already running.")) end
     return false, 30
   end
   if not (AuctionHouseFrame and AuctionHouseFrame:IsShown()) then
-    if not auto then FF:Print("Open the auction house first.") end
+    if not auto then FF:Print(FF:T("Open the auction house first.")) end
     return false, 30
   end
   if not auto and FF.Auto then FF.Auto.scanBlocked = false end
@@ -150,14 +150,14 @@ function Scan:StartFull(auto)
   if wait > 0 then
     if auto then return false, wait end
     if wait < math.huge then
-      FF:Print(("Full scan is on the shared 15-min cooldown (%d:%02d left - also used by Auctioneer/Auctionator). Doing a browse scan instead.")
+      FF:Print(FF:T("Full scan is on the shared 15-min cooldown (%d:%02d left - also used by Auctioneer/Auctionator). Doing a browse scan instead.")
         :format(math.floor(wait / 60), wait % 60))
     end
     return self:StartBrowse(), 0
   end
   local ok, err = FF:Own(AH.ReplicateItems)
   if not ok then
-    FF:Print("Full scan request failed: " .. tostring(err))
+    FF:Print(FF:T("Full scan request failed: ") .. tostring(err))
     return false, 60
   end
   return true, 0
@@ -262,21 +262,21 @@ function Scan:StartBrowse()
   local ok, err = FF:Own(AH.SendBrowseQuery, query)
   if not ok then
     self.busy = nil
-    FF:Print("Browse scan failed: " .. tostring(err))
+    FF:Print(FF:T("Browse scan failed: ") .. tostring(err))
     return false
   end
-  FF:SetStatus("Browse scan running...")
+  FF:SetStatus(FF:T("Browse scan running..."))
   return true
 end
 
 local function continueBrowse()
   if Scan.busy ~= "browse" then return end
-  FF:SetStatus(("Browse scan: %d item groups so far..."):format(Scan.browseCount))
+  FF:SetStatus(FF:T("Browse scan: %d item groups so far..."):format(Scan.browseCount))
   if AH.HasFullBrowseResults and AH.HasFullBrowseResults() then
     local n = Scan:FlushBrowse("full-browse")
     Scan.busy = nil
-    FF:Print(("Browse scan saved: %d items."):format(n))
-    FF:SetStatus(("Browse scan done: %d items."):format(n))
+    FF:Print(FF:T("Browse scan saved: %d items."):format(n))
+    FF:SetStatus(FF:T("Browse scan done: %d items."):format(n))
     if FF.Auto then FF.Auto:ScanDone(true) end
     FF:ScanFinished(n)
   else

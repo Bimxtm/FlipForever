@@ -233,7 +233,7 @@ local ICON = {
 local function factionOK(f, p) return f == nil or f == p.faction end
 
 -- English plural "s"; other languages use a neutral form in their translation
-local function S(n) if FF.TRANSLATIONS[FF:Language()] then return "" end return n > 1 and "s" or "" end
+local function S(n) if FF.TRANSLATIONS[FF:Language()] then return "" end return FF:Plural(n) end
 
 function AD:Compute()
   local p = self:Player()
@@ -662,7 +662,7 @@ end
 function AD:Refresh()
   local ok, recs, p, cd, build = pcall(self.Compute, self)
   if not ok then
-    FF:Print("|cffff5555advisor error:|r " .. tostring(recs))
+    FF:Print(FF:T("|cffff5555advisor error:|r ") .. tostring(recs))
     return
   end
   pcall(self.Save, self, recs, p, build)
@@ -676,7 +676,7 @@ function AD:Refresh()
   frame.who:SetText(("%s - level %d %s %s (%s)%s"):format(p.name or "?", p.level, p.race, p.className, p.faction, raceTip))
   if build then
     local cdBuilds = cd and #cd.builds or 1
-    frame.build:SetText(("Following: |cffffd200%s|r  (%d option%s)"):format(build.name, cdBuilds, cdBuilds > 1 and "s" or ""))
+    frame.build:SetText(FF:T("Following: |cffffd200%s|r  (%d option%s)"):format(build.name, cdBuilds, FF:Plural(cdBuilds)))
     frame.source:SetText("Source: " .. (G.SOURCES[build.source] or "?"))
   else
     frame.build:SetText("No guide data for this class")
@@ -734,7 +734,7 @@ FF:On("PLAYER_LEVEL_UP", function(level)
   C_Timer.After(2, function()
     AD:Refresh()
     local recs = AD.last or {}
-    FF:Print(("|cffffd200Level %s!|r Next steps:"):format(tostring(level)))
+    FF:Print(FF:T("|cffffd200Level %s!|r Next steps:"):format(tostring(level)))
     for i = 1, math.min(3, #recs) do print("   " .. recs[i].text) end
     if FlipForeverDB.settings.advisorPopup ~= false and not InCombatLockdown() then AD:Show() end
   end)
