@@ -127,6 +127,7 @@ local function buildOverview(f)
   pg.combat:SetPoint("TOPLEFT", 14, -384)
   pg.autopilot = check(pg, "Autopilot at the auction house", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
   pg.autopilot:SetPoint("TOPLEFT", 14, -408)
+  if not FF.Auto.AVAILABLE then pg.autopilot:Hide() end
   return pg
 end
 
@@ -181,6 +182,22 @@ local function buildGear(f)
     local r = {}
     r.slot = text(pg, "GameFontHighlightSmall", 20, y - 5, 64)
     r.name = text(pg, "GameFontHighlightSmall", 86, y - 5, 148)
+    -- one line per item: long names end in "..." instead of running into the next row;
+    -- hover the name for the full item with all its stats
+    if r.name.SetWordWrap then r.name:SetWordWrap(false) end
+    if r.name.SetMaxLines then r.name:SetMaxLines(1) end
+    r.hover = CreateFrame("Button", nil, pg)
+    r.hover:SetPoint("TOPLEFT", 84, y)
+    r.hover:SetSize(150, 20)
+    r.hover:SetScript("OnEnter", function(self)
+      local d = r.data
+      if not (d and d.link) then return end
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:SetHyperlink(d.link)
+      if d.pct then GameTooltip:AddLine(FF:T("Better than what you wear by %d%%"):format(math.floor(d.pct * 100 + 0.5)), 0.2, 1, 0.6) end
+      GameTooltip:Show()
+    end)
+    r.hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
     r.price = text(pg, "GameFontHighlightSmall", 236, y - 5, 58)
     r.gain = text(pg, "GameFontHighlightSmall", 296, y - 5, 40)
     r.buy = button(pg, "Buy", 44, function() FF.Gear:Buy(r.data) end)
@@ -315,7 +332,7 @@ function H:RefreshOverview()
   pg.week:SetText(FF:WeekLine())
   pg.own:SetText(FF.Auctions and FF.Auctions:Line() or "")
   pg.auto:SetText(FF.Auto:Enabled() and ("Autopilot: on" .. (FF.Auto.StatusLine and ("  ·  " .. (FF.Auto:StatusLine() or "")) or ""))
-    or "Autopilot: off")
+    or (FF.Auto.AVAILABLE and "Autopilot: off" or ""))
   pg.reload:SetText(FF.needReload and "|cffffd200RELOAD|r" or "Reload UI (sync)")
   local adv = FF.Advisor and FF.Advisor.last
   pg.advice:SetText(adv and adv[1] and adv[1].text or "Open the Advisor to see what to do next.")

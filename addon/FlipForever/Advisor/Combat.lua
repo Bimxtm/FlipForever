@@ -267,7 +267,8 @@ function C:TargetHint(t)
 end
 
 -- Build the step list ------------------------------------------------------------------------------
-function C:BuildSteps()
+-- forceKey: one rotation regardless of the build (druid forms: "bear", "feral", "default")
+function C:BuildSteps(forceKey)
   local AD = FF.Advisor
   local p = AD:Player()
   local build = AD:Build(p)
@@ -275,17 +276,19 @@ function C:BuildSteps()
   if not cls then return {}, "" end
   -- three level bands: 1-10 starter spells, 11-39 the build's core, 40-60 the full rotation
   local level = p.level or 60
-  local key = build and (build.combat or build.id) or "default"
+  local key = forceKey or (build and (build.combat or build.id)) or "default"
   local known = AD:KnownSpells()
   local seq
-  if level <= 10 and cls.low then
+  if forceKey then
+    seq = (level >= 40 and cls.high and cls.high[forceKey]) or cls[forceKey]
+  elseif level <= 10 and cls.low then
     seq = cls.low
   elseif level >= 40 and cls.high then
     seq = cls.high[key] or cls.high.default
     if seq and seq.requires and not known[seq.requires] then seq = cls.high.default end
   end
   seq = seq or cls[key] or (build and cls[build.id]) or cls.default
-  if seq.requires and not known[seq.requires] then seq = cls.default end
+  if seq.requires and not known[seq.requires] and not forceKey then seq = cls.default end
   self.band = (level <= 10 and cls.low and "1-10") or (level >= 40 and cls.high and "40-60") or "11-39"
   local target = self:Target()
   local immune = target and target.immune or {}
@@ -373,7 +376,11 @@ function C:UpdateIcons()
     btn.label:SetText(nextSpell or "no spells yet")
   else
     local steps = self.steps or {}
-    local n = btn:GetAttribute("count") or 0
+    -- druids: the rotation of the form you're in
+    if self.formSteps and GetShapeshiftForm then
+      steps = self.formSteps[GetShapeshiftForm() or 0] or self.formSteps[0] or steps
+    end
+    local n = #steps
     local s = btn:GetAttribute("step") or 1
     local function stepSpell(k) return n > 0 and steps[((s - 1 + k) % n) + 1] or nil end
     btn.icon:SetTexture(iconOf(stepSpell(0)) or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -536,6 +543,65 @@ function C:SmartNext()
   return seq[1]
 end
 
+-- Druids: which shapeshift bar slot holds Bear Form and Cat Form (the order depends on what you've learned)
+function C:DruidForms()
+  local out = {}
+  if not (GetNumShapeshiftForms and GetShapeshiftFormInfo) then return out end
+  local S = FF.Spells
+  local bear = { [S:Local("Bear Form")] = true, [S:Local("Dire Bear Form")] = true }
+  local cat = S:Local("Cat Form")
+  for i = 1, GetNumShapeshiftForms() or 0 do
+    local _, a, _, b = GetShapeshiftFormInfo(i)
+    local name = type(a) == "string" and a or nil
+    if not name and type(b) == "number" then
+      name = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(b)) or (GetSpellInfo and GetSpellInfo(b))
+    end
+    if name and bear[name] then out.bear = i elseif name == cat then out.cat = i end
+  end
+  return out
+end
+
+-- Druids: every press casts the step of the form you're in, using the game's own [form:n] check,
+-- which also works in combat (an addon can't swap the button's spells during a fight)
+function C:DruidSetup()
+  local p = FF.Advisor:Player()
+  if p.class ~= "DRUID" then return false end
+  local forms = self:DruidForms()
+  if not (forms.bear or forms.cat) then return false end
+  local function list(key)
+    local s = self:BuildSteps(key)
+    for i, x in ipairs(s) do s[i] = FF.Spells:Local(x) end
+    return s
+  end
+  local build = FF.Advisor:Build(p)
+  local key = build and (build.combat or build.id)
+  local caster = (key == "feral" or key == "bear") and list("default") or self.steps
+  local bear = forms.bear and list("bear") or {}
+  local cat = forms.cat and list("feral") or {}
+  local n = math.max(#bear, #cat, #caster, 1)
+  local melee = {}
+  if #bear > 0 then melee[#melee + 1] = forms.bear end
+  if #cat > 0 then melee[#melee + 1] = forms.cat end
+  local prefix = self:TargetPrefix() .. (#melee > 0 and ("/startattack [form:" .. table.concat(melee, "/") .. "]\n") or "")
+  local function pick(l, i) return #l > 0 and l[(i - 1) % #l + 1] or nil end
+  for i = 1, n do
+    local parts = {}
+    if pick(bear, i) then parts[#parts + 1] = "[form:" .. forms.bear .. "] " .. pick(bear, i) end
+    if pick(cat, i) then parts[#parts + 1] = "[form:" .. forms.cat .. "] " .. pick(cat, i) end
+    if pick(caster, i) then parts[#parts + 1] = pick(caster, i) end
+    btn:SetAttribute("step" .. i, prefix .. "/cast " .. table.concat(parts, "; "))
+  end
+  btn:SetAttribute("count", n)
+  btn:SetAttribute("step", 1)
+  btn:SetAttribute("type", "macro")
+  btn:SetAttribute("macrotext", btn:GetAttribute("step1"))
+  self.steps = caster
+  self.formSteps = { [0] = caster }
+  if forms.bear then self.formSteps[forms.bear] = bear end
+  if forms.cat then self.formSteps[forms.cat] = cat end
+  return true
+end
+
 function C:Rebuild()
   if not btn then return end
   if InCombatLockdown() then pendingRebuild = true return end
@@ -564,7 +630,8 @@ function C:Rebuild()
   for i, s in ipairs(steps) do steps[i] = FF.Spells:Local(s) end
   self.steps = steps
   for i = 1, 20 do btn:SetAttribute("step" .. i, nil) end
-  self.cds, self.seq, self.seqText = nil, nil, nil
+  self.cds, self.seq, self.seqText, self.formSteps = nil, nil, nil, nil
+  if self:DruidSetup() then self:UpdateIcons() return end
   if self:Smart() and #steps > 0 then
     -- Cooldown abilities go in front of every press ("/cast" skips them silently while they
     -- recharge); the rest of the rotation moves on one step per press. A cast sequence was used
@@ -729,6 +796,11 @@ local function rebuildSoon()
     if InCombatLockdown() then pendingRebuild = true else C:Rebuild() end
   end
 end
+-- druids: shifting changes which rotation the button follows (the icon shows it right away);
+-- learning a new form moves the shapeshift bar, so the button is rebuilt out of combat
+FF:On("UPDATE_SHAPESHIFT_FORM", function() if btn and C.formSteps then C:UpdateIcons() end end)
+FF:On("UPDATE_SHAPESHIFT_FORMS", function() if btn and C:Enabled() then C:Rebuild() end end)
+
 FF:On("PLAYER_TARGET_CHANGED", function()
   if not btn then return end
   if InCombatLockdown() then

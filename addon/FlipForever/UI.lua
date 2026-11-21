@@ -106,6 +106,7 @@ function UI:Build()
   auto:SetPoint("TOP", 0, -298)
   auto:SetScript("OnClick", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
   self.autoButton = auto
+  if not FF.Auto.AVAILABLE then auto:Hide() end
 
   local autoText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   autoText:SetPoint("TOPLEFT", 14, -332)

@@ -246,6 +246,8 @@ print("all files compile and load")
 L = lua.eval
 lua.execute("""
 Fire("ADDON_LOADED", "FlipForever")
+AUTO_SHIPPED = FlipForever.Auto.AVAILABLE
+FlipForever.Auto.AVAILABLE = true             -- the autopilot is off for players, but its code stays tested
 FlipForeverDB.settings.livePlanning = false   -- in-game planning is tested on its own (Beta 4 block)
 FlipForeverDB.settings.combatSmart = false    -- the step mode is tested first; smart mode has its own block
 Fire("PLAYER_LOGIN")
@@ -1820,6 +1822,68 @@ BIND_NAME = BINDING_NAME_FLIPFOREVER_ADVISOR
 """)
 assert L("ADV_OPENED") == 2 and "Advisor" in L("BIND_NAME")
 assert (ADDON / "Bindings.xml").read_text(encoding="utf-8").count("FlipForever.Advisor:Toggle()") == 1
+
+# --- the autopilot is turned off for players: it can't be switched on
+lua.execute("""
+local A = FlipForever.Auto
+A.AVAILABLE = AUTO_SHIPPED
+FlipForeverDB.settings.auto = false
+printed = {}
+A:SetEnabled(true)
+AUTO_ON = A:Enabled()
+AUTO_MSG = printed[1] or ""
+A.AVAILABLE = true
+""")
+assert L("AUTO_SHIPPED") is False and L("AUTO_ON") is False and "turned off for now" in L("AUTO_MSG")
+
+# --- druids: each press casts the skill for the form you're in (bear, cat or caster)
+lua.execute("""
+local FF, C, AD = FlipForever, FlipForever.Combat, FlipForever.Advisor
+local oldClass, oldLevel, oldKnown = UnitClass, UnitLevel, KNOWN
+UnitClass = function() return "Druid", "DRUID" end
+UnitLevel = function() return 24 end
+KNOWN = { "Bear Form", "Cat Form", "Wrath", "Moonfire", "Maul", "Demoralizing Roar", "Swipe", "Claw", "Rake", "Rip", "Ferocious Bite" }
+FORMS = { "Bear Form", "Aquatic Form", "Cat Form" }
+CURFORM = 0
+GetNumShapeshiftForms = function() return #FORMS end
+GetShapeshiftFormInfo = function(i) return "icon", FORMS[i], false, true end
+GetShapeshiftForm = function() return CURFORM end
+AD:CharStore().build = nil
+if not C:Enabled() then C:Toggle() end
+C:Rebuild()
+local B = FlipForeverCombatButton
+DRUID_M1 = B:GetAttribute("macrotext")
+CURFORM = 1
+C:UpdateIcons()
+DRUID_BEAR_STEP = C.formSteps[1] and C.formSteps[1][1]
+C:Toggle()
+C.formSteps = nil
+UnitClass, UnitLevel, KNOWN = oldClass, oldLevel, oldKnown
+""")
+print("druid press 1:", repr(L("DRUID_M1")), "| bear step:", L("DRUID_BEAR_STEP"))
+_dm = L("DRUID_M1")
+assert "[form:1] " in _dm and "[form:3] " in _dm and "/startattack [form:1/3]" in _dm and len(_dm) <= 255
+assert _dm.split("; ")[-1] in ("Moonfire", "Wrath") and L("DRUID_BEAR_STEP") in ("Demoralizing Roar", "Maul", "Swipe")
+
+# --- the character record keeps the Advisor's data; an empty realm name doesn't split the data
+lua.execute("""
+local FF = FlipForever
+local rec = FF:DB().chars[UnitName("player")]
+rec.build, rec.advisor = "arms", { steps = { "x" } }
+FF:UpdateChar()
+REC_KEPT = (FF:DB().chars[UnitName("player")].build == "arms" and FF:DB().chars[UnitName("player")].advisor ~= nil) and true or false
+local oldRealm = GetRealmName
+GetRealmName = function() return "" end
+KEY_EMPTY = FF:RealmKey()
+-- data that an older version saved under " - Horde" moves to the real realm
+FlipForeverDB.realms[" - Horde"] = { scans = { { t = 5, d = "" } }, chars = { Alt = { level = 3, t = 9 } } }
+GetRealmName = oldRealm
+local before = #FF:DB().scans
+FF:MergeEmptyRealm()
+MERGED = (FlipForeverDB.realms[" - Horde"] == nil and #FF:DB().scans == before + 1 and FF:DB().chars.Alt.level == 3) and true or false
+""")
+print("record kept:", L("REC_KEPT"), "| empty realm key:", L("KEY_EMPTY"), "| merged:", L("MERGED"))
+assert L("REC_KEPT") is True and L("KEY_EMPTY") == "Testrealm - Horde" and L("MERGED") is True
 
 # --- your auctions: which listings the newest scan undercuts
 lua.execute("""

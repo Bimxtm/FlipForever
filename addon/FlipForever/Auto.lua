@@ -38,7 +38,11 @@ local function otherAddonScanning()
   return false
 end
 
-function A:Enabled() return settings().auto == true end
+-- Turned off for now (owner, 21 Nov): the autopilot needs more work before players use it.
+-- Set to true to bring it back; its buttons and checkbox show again on their own.
+A.AVAILABLE = false
+
+function A:Enabled() return A.AVAILABLE and settings().auto == true end
 
 function A:LastScanTime()
   local last = 0
@@ -49,6 +53,10 @@ function A:LastScanTime()
 end
 
 function A:SetEnabled(on)
+  if on and not A.AVAILABLE then
+    FF:Print(FF:T("The autopilot is turned off for now while it gets more work. Use the big button at the auction house instead."))
+    return
+  end
   settings().auto = on and true or false
   if on then
     self.nextSearch = 0

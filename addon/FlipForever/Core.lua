@@ -70,10 +70,62 @@ function FF:Money(copper)
 end
 
 -- Saved data -----------------------------------------------------------------
+-- The realm name can come back empty on this client; then use the last one seen (or the only
+-- realm already saved for this faction), so data never splits into a " - Horde" key.
 function FF:RealmKey()
-  local realm = GetRealmName() or "Unknown"
   local faction = UnitFactionGroup("player") or "Neutral"
+  local realm = GetRealmName and GetRealmName() or ""
+  if realm == "" and GetNormalizedRealmName then realm = GetNormalizedRealmName() or "" end
+  local db = FlipForeverDB
+  if realm ~= "" then
+    if db then db.lastRealm = realm end
+  elseif db and db.lastRealm then
+    realm = db.lastRealm
+  else
+    local found
+    for key in pairs(db and db.realms or {}) do
+      local r = key:match("^(.+) %- " .. faction .. "$")
+      if r and r ~= "" then
+        if found and found ~= r then found = nil break end
+        found = r
+      end
+    end
+    realm = found or "Unknown"
+    if db and found then db.lastRealm = found end
+  end
   return realm .. " - " .. faction
+end
+
+-- data saved under an empty realm name (" - Horde") goes back to the real realm
+function FF:MergeEmptyRealm()
+  local realms = FlipForeverDB and FlipForeverDB.realms
+  if not realms then return end
+  local faction = UnitFactionGroup("player") or "Neutral"
+  local stray = realms[" - " .. faction]
+  local key = self:RealmKey()
+  if not stray or key == " - " .. faction then return end
+  local target = realms[key] or {}
+  realms[key] = target
+  for k, v in pairs(stray) do
+    local t = target[k]
+    if t == nil then
+      target[k] = v
+    elseif type(t) == "table" and type(v) == "table" then
+      if #v > 0 or #t > 0 then
+        for _, e in ipairs(v) do t[#t + 1] = e end           -- lists (scans, log): keep both
+        if k == "scans" or k == "log" then table.sort(t, function(a, b) return (a.t or 0) < (b.t or 0) end) end
+      else
+        for kk, vv in pairs(v) do                            -- maps: the newer character record wins
+          local old = t[kk]
+          if old == nil or (type(vv) == "table" and type(old) == "table" and (vv.t or 0) > (old.t or 0)) then
+            if type(old) == "table" and type(vv) == "table" then for f, x in pairs(old) do if vv[f] == nil then vv[f] = x end end end
+            t[kk] = vv
+          end
+        end
+      end
+    end
+  end
+  realms[" - " .. faction] = nil
 end
 
 function FF:DB()
@@ -116,7 +168,11 @@ function FF:UpdateChar()
   local name = UnitName("player")
   if not name then return end
   local _, class = UnitClass("player")
-  self:DB().chars[name] = { money = GetMoney(), level = UnitLevel("player"), class = class, t = time() }
+  -- update in place: the record also holds the Advisor's build choice and next steps
+  local chars = self:DB().chars
+  local c = chars[name] or {}
+  c.money, c.level, c.class, c.t = GetMoney(), UnitLevel("player"), class, time()
+  chars[name] = c
 end
 
 function FF:Log(entry)
@@ -371,6 +427,7 @@ FF:On("ADDON_LOADED", function(name)
 end)
 
 FF:On("PLAYER_LOGIN", function()
+  FF:MergeEmptyRealm()
   FF:DB()
   FF:UpdateChar()
   local plan = FF:Plan()

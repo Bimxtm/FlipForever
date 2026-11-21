@@ -713,16 +713,22 @@ function AD:Refresh()
   end
 end
 
-function AD:Toggle()
-  frame = frame or makeFrame()
-  if frame:IsShown() then frame:Hide() else frame:Show() AD:Refresh() end
+-- opening the window: any error is shown and kept for bug reports instead of failing silently
+local function open(toggle)
+  local ok, err = pcall(function()
+    frame = frame or makeFrame()
+    if toggle and frame:IsShown() then frame:Hide() return end
+    frame:Show()
+    AD:Refresh()
+  end)
+  if not ok then
+    FF:Print("|cffff5555advisor error:|r " .. tostring(err))
+    FF:RecordError("advisor window", err)
+  end
 end
 
-function AD:Show()
-  frame = frame or makeFrame()
-  frame:Show()
-  AD:Refresh()
-end
+function AD:Toggle() open(true) end
+function AD:Show() open(false) end
 
 -- Re-check whenever something relevant changes (debounced) ----------------------------------------
 local pending = false

@@ -47,7 +47,7 @@ S.ID = {
   -- druid
   ["Moonfire"] = 8921, ["Wrath"] = 5176, ["Starfire"] = 2912, ["Insect Swarm"] = 5570, ["Rake"] = 1822,
   ["Claw"] = 1082, ["Rip"] = 1079, ["Ferocious Bite"] = 22568, ["Maul"] = 6807, ["Swipe"] = 779,
-  ["Lacerate"] = 33745, ["Bear Form"] = 5487, ["Cat Form"] = 768, ["Aquatic Form"] = 1066,
+  ["Lacerate"] = 33745, ["Bear Form"] = 5487, ["Dire Bear Form"] = 9634, ["Cat Form"] = 768, ["Aquatic Form"] = 1066,
   ["Demoralizing Roar"] = 99, ["Growl"] = 6795, ["Faerie Fire (Feral)"] = 16857,
   -- riding
   ["Apprentice Riding"] = 33388, ["Journeyman Riding"] = 33391,
