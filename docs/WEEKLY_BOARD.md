@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.2 beta 7: threat warning in the combat helper.
 - 2.5.2 beta 6: XP per hour, time to level and rested XP on the Overview.
 - 2.5.2 beta 5 (owner report): the app restarts cleanly after an update (no more "Failed to load Python DLL").
 - 2.5.2 beta 4: trainer reminder in the Advisor (learned from your class trainer's list).

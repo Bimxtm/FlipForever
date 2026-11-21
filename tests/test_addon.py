@@ -2341,7 +2341,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,talentOverlay=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,talentOverlay=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2423,4 +2423,33 @@ print("leveling:", repr(L("LV_EARLY")), "|", L("LV_LINE"), "| gained:", L("LV_GA
 assert "first kills" in L("LV_EARLY") and "rested 4,500 XP" in L("LV_EARLY")
 assert L("LV_RATE") == 6000 and "6,000 XP/hour" in L("LV_LINE") and "level 21 in 1 h 0 min" in L("LV_LINE")
 assert L("LV_GAINED") == 9500 and L("LV_CAP") == "" and L("LV_OFF") == ""
+
+# --- combat helper: threat warning (non-tanks near the aggro limit or tanked, tanks losing aggro)
+lua.execute("""
+local C = FlipForever.Combat
+local s = FlipForeverDB.settings
+local oldExists, oldAttack = UnitExists, UnitCanAttack
+UnitExists = function(u) return u == "target" or u == "targettarget" end
+UnitCanAttack = function() return true end
+THREAT = { false, 1, 92 }
+UnitDetailedThreatSituation = function() return THREAT[1], THREAT[2], THREAT[3] end
+s.combatTank = false
+TH_HIGH = C:ThreatWarning() or ""
+THREAT = { false, 0, 40 }
+TH_LOW = C:ThreatWarning() or ""
+THREAT = { true, 3, 100 }
+TH_TANKED = C:ThreatWarning() or ""
+s.combatTank = true
+THREAT = { false, 1, 80 }
+TH_TANK_LOST = C:ThreatWarning() or ""
+THREAT = { true, 3, 100 }
+TH_TANK_OK = C:ThreatWarning() or ""
+s.threatWarning = false
+TH_OFF = C:ThreatWarning() or ""
+s.threatWarning, s.combatTank = nil, nil
+UnitExists, UnitCanAttack, UnitDetailedThreatSituation = oldExists, oldAttack, nil
+""")
+print("threat:", L("TH_HIGH"), "|", L("TH_TANKED"), "|", L("TH_TANK_LOST"))
+assert "Threat 92%" in L("TH_HIGH") and L("TH_LOW") == "" and "attacking you" in L("TH_TANKED")
+assert "lost aggro" in L("TH_TANK_LOST") and L("TH_TANK_OK") == "" and L("TH_OFF") == ""
 print("ALL ADDON TESTS PASSED")
