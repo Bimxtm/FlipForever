@@ -29,6 +29,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 21: gear upgrade line in item tooltips, scan age on the Overview, clearer gathering price source.
 - 2.5.0 beta 20: spells looked up by spell ID, so the combat helper and Advisor work in every client language (P5); /ff spells check.
 - 2.5.0 beta 19: Deals page filters in the app (fast sellers, minimum profit), this week's result on the in-game Overview.
 - 2.5.0 beta 18: collect auction gold in one click, gear upgrade alert after scans, cooldown seconds on the combat icons.

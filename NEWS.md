@@ -1,6 +1,10 @@
-# FlipForever 2.5 Beta 20
+# FlipForever 2.5 Beta 21
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Is this an upgrade?** Hover any piece of gear: the tooltip tells you when it beats what you wear, and by how much.
+
+**Fresh prices.** The Overview shows how old your last scan is and reminds you to scan again when prices may have moved.
 
 **Your game language, your spells.** The combat helper and the Advisor now find your spells on every game language, not only English.
 

@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.21] - 2026-11-21 (beta)
+### Added
+- Item tooltips show **upgrade for you** with the gain and slot when a piece of gear beats what you wear (same stat weights as the Gear tab).
+- In-game Overview: how old your newest scan is, in orange after 6 hours with a reminder to scan again.
+### Fixed
+- Gathering prices page: without a scan it no longer says that no auction addon was found; it says vendor prices are used until you scan.
+
 ## [2.5.0-beta.20] - 2026-11-21 (beta)
 ### Added
 - **Spells in every client language.** The combat helper and the Advisor look spells up by their spell ID, so rotations, class quests and the cooldown check work on German, French, Spanish, Russian and the other game languages, not only English. A few WoW: Forever-only spells keep their English name for now.

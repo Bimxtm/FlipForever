@@ -1534,11 +1534,18 @@ RunTimers(5)
 BAGFIRST = FF.Gear.results[1]
 FF.Gear:Buy(BAGFIRST)
 BAGSTEP = FF.Gear:TopStep()
+-- item tooltips say when a piece beats what you wear; a worse or unusable one gets no line
+local function upLine(id) local l = FF.Tooltip:Upgrade(id) return l and (l[1] .. " = " .. l[2]) or "none" end
+TT_UP = upLine(103)
+ITEMS[104] = { "Rusty Bracers", 1, 20, "INVTYPE_WRIST", 4, 3, {} }
+TT_NONE = upLine(104) .. "|" .. upLine(999)
 FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, C_Container = oldModel, oldInfo, oldInstant, oldCont
 """)
 print("bag upgrade:", L("BAGFIRST").name, "| bag:", L("BAGFIRST").bag, "| equipped:", L("EQUIPPED_LINK"), "| step:", L("BAGSTEP"))
 assert L("BAGFIRST").name == "Scaled Chestguard" and L("BAGFIRST").bag is True and L("EQUIPPED_LINK") == "link:100"
 assert L("BAGSTEP").startswith("Equip Scaled Chestguard from your bags")
+print("tooltip upgrade line:", L("TT_UP"), "| no line:", L("TT_NONE"))
+assert "upgrade for you" in L("TT_UP") and "Main hand" in L("TT_UP") and L("TT_NONE") == "none|none"
 
 # --- app: profit per character
 import hashlib as _hashlib  # noqa: E402
@@ -1728,6 +1735,18 @@ assert L("EN_LOCAL") == "Frostbolt" and L("DE_LOCAL") == "Frostblitz|Holy Strike
 _de = L("DE_STEPS")
 assert L("DE_KNOWN") is True and L("DE_CD") is True and _de
 assert ("Feuerball" in _de or "Frostblitz" in _de) and not any(e in _de for e in ("Fireball", "Frostbolt", "Fire Blast"))
+
+# --- Overview: age of the newest scan
+lua.execute("""
+local scans = FlipForever:DB().scans
+scans[#scans + 1] = { t = NOW - 25 * 60, d = "" }
+AGE_FRESH = FlipForever:ScanAgeLine()
+scans[#scans].t = NOW - 7 * 3600
+AGE_OLD = FlipForever:ScanAgeLine()
+scans[#scans] = nil
+""")
+print("scan age:", L("AGE_FRESH"), "|", L("AGE_OLD"))
+assert L("AGE_FRESH") == "Last scan: 25 min ago" and "7 h ago" in L("AGE_OLD") and "scan again" in L("AGE_OLD")
 
 # --- gear finder: alert only for upgrades that are new since the last search
 lua.execute("""
