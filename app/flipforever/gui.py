@@ -977,6 +977,7 @@ class App(tk.Tk):
             self.vars["account"][0].set(accts[0])
 
     def save_settings(self, quiet=False):
+        old_default = self.settings.budget_gold
         for key, (v, kind) in self.vars.items():
             cur = getattr(self.settings, key)
             raw = v.get()
@@ -995,9 +996,19 @@ class App(tk.Tk):
                 messagebox.showerror("FlipForever", f"'{raw}' is not a valid number for {key}.")
                 return False
             setattr(self.settings, key, val)
+        # a new budget in Settings also applies to the selected character (and the box at the top)
+        new_default = self.settings.budget_gold
+        char_key = self._char_key()
+        if new_default != old_default and char_key:
+            self.settings.budgets[char_key] = new_default
+            self.budget_var.set(f"{new_default:g}")
         self.settings.save()
         if not quiet:
-            self.status("Settings saved.")
+            if new_default != old_default:
+                self.status(f"Settings saved. Budget is now {new_default:g} gold: click Build shopping list, "
+                            "then Reload in game, so the addon uses it.")
+            else:
+                self.status("Settings saved.")
         self.refresh()
         return True
 
@@ -1216,7 +1227,8 @@ class App(tk.Tk):
         if gold != self.settings.budget_for(key):
             self.settings.budgets[key] = gold
             self.settings.save()
-            self.status(f"Budget for {self.char}: {gold:g} gold.")
+            self.status(f"Budget for {self.char}: {gold:g} gold. Click Build shopping list, then Reload in game, "
+                        "so the addon uses it.")
             self.refresh()
 
     # ------------------------------------------------------------- refresh everything

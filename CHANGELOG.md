@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.0-beta.27] - 2026-11-21 (beta)
+### Fixed
+- Changing the gold budget in Settings now also changes it for the selected character and in the budget box at the top. Before, a character that already had its own budget kept the old one.
+- After a budget change, the app says what to do next: Build shopping list, then Reload in game, so the addon uses the new budget.
+
 ## [2.5.0-beta.26] - 2026-11-21 (beta)
 ### Added
 - `/ff errors` lists the addon's last five errors in chat (time, version, where it happened), so you can check or screenshot them for a bug report without leaving the game.

@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 27 (reported by the owner): budget changes in Settings apply to the selected character.
 - 2.5.0 beta 26: /ff errors.
 - 2.5.0 beta 25: Copy bug report info in the app; the addon keeps its last errors.
 - 2.5.0 beta 24: undercut auctions per character in the app.

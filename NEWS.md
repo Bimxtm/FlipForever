@@ -1,6 +1,8 @@
-# FlipForever 2.5 Beta 26
+# FlipForever 2.5 Beta 27
 
 This is a test version. Only apps with *Get beta versions* turned on (About & updates) receive it.
+
+**Budget changes stick.** A new gold budget in Settings now applies to the character you have selected, and the app reminds you to build the list and reload so the game uses it.
 
 **Errors at a glance.** Type `/ff errors` in game to see the addon's last five errors, handy for a quick screenshot in a bug report.
 
