@@ -128,6 +128,8 @@ local function buildOverview(f)
   pg.autopilot = check(pg, "Autopilot at the auction house", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
   pg.autopilot:SetPoint("TOPLEFT", 14, -408)
   if not FF.Auto.AVAILABLE then pg.autopilot:Hide() end
+  -- leveling: XP per hour, time to the next level, rested XP (Settings: Features)
+  pg.level = text(pg, "GameFontHighlightSmall", 20, -440, 360)
   return pg
 end
 
@@ -355,6 +357,7 @@ function H:RefreshOverview()
   pg.advice:SetText(adv and adv[1] and adv[1].text or "Open the Advisor to see what to do next.")
   pg.combat:SetChecked(FF.Combat:Enabled())
   pg.autopilot:SetChecked(FF.Auto:Enabled())
+  pg.level:SetText(FF.Leveling and FF.Leveling:Line() or "")
 end
 
 -- Language ---------------------------------------------------------------------------------------
@@ -586,6 +589,7 @@ local function build()
   feature("mailButton", "Collect auction gold button at the mailbox", -780, true)
   feature("gearTooltip", "Gear upgrade line in item tooltips", -804, true)
   feature("trainerReminder", "Advisor: remind me of new spells at my class trainer", -828, true)
+  feature("levelInfo", "Overview: XP per hour, time to level, rested XP", -852, true)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)

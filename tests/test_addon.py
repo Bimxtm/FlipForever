@@ -2159,7 +2159,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2205,4 +2205,40 @@ print("trainer:", L("TR_SAVED"), L("TR_DUE"), "|", L("TR_STEP"), "|", L("TR_WHY"
 assert L("TR_SAVED") == 3 and L("TR_DUE") == "2:3000:Frostbolt:Blink"
 assert "New at your class trainer: 2 spells" in L("TR_STEP") and L("TR_OFF") == "" and L("TR_PROF")
 assert "Frostbolt (Rank 3), Blink" in L("TR_WHY")
+
+# --- leveling: XP per hour this session, time to the next level, rested XP
+lua.execute("""
+local LV = FlipForever.Leveling
+local oldLevel, oldNow = UnitLevel, NOW
+local XP, XPMAX, LVL = 1000, 10000, 20
+UnitXP = function() return XP end
+UnitXPMax = function() return XPMAX end
+UnitLevel = function() return LVL end
+GetXPExhaustion = function() return 4500 end
+NOW = 1000
+LV:Start()
+LV_EARLY = LV:Line()
+-- 30 minutes later: 3,000 XP earned, then a level-up with 500 XP into the next level
+NOW = 1000 + 1800
+XP = 4000
+Fire("PLAYER_XP_UPDATE")
+LV_RATE = math.floor(LV:PerHour())
+LV_LINE = LV:Line()
+XP, XPMAX, LVL = 500, 11000, 21
+LV:Update()
+LV_GAINED = LV.gained
+-- at the level cap or switched off: no line
+LVL = 60
+LV_CAP = LV:Line()
+LVL = 21
+FlipForeverDB.settings.levelInfo = false
+LV_OFF = LV:Line()
+FlipForeverDB.settings.levelInfo = nil
+UnitLevel, NOW = oldLevel, oldNow
+UnitXP, UnitXPMax, GetXPExhaustion = nil, nil, nil
+""")
+print("leveling:", repr(L("LV_EARLY")), "|", L("LV_LINE"), "| gained:", L("LV_GAINED"))
+assert "first kills" in L("LV_EARLY") and "rested 4,500 XP" in L("LV_EARLY")
+assert L("LV_RATE") == 6000 and "6,000 XP/hour" in L("LV_LINE") and "level 21 in 1 h 0 min" in L("LV_LINE")
+assert L("LV_GAINED") == 9500 and L("LV_CAP") == "" and L("LV_OFF") == ""
 print("ALL ADDON TESTS PASSED")

@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 6
+
+**Time to level.** The Overview now shows your XP per hour this session, how long until your next level at that pace, and your rested XP. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 5
 
 **No more "Failed to load Python DLL" after updating.** The app sometimes showed this error when it restarted itself after an update. The update was installed fine; only the restart failed. From this version on, it restarts cleanly. If you see the message one more time while updating to this version, click OK and start FlipForever again.
