@@ -25,10 +25,10 @@
 | P3 | Private repository: the app can't see updates until a read-only GitHub token is entered (About & updates) | Medium | Or make the repository public when ready |
 | P4 | Guide data: 9 builds per class now; some are key talents only (no pick order), some Warcraft Tavern builds are still level 30 beta builds, and Mobalytics/Icy Veins block automated reading | Medium | Refresh when the guides update |
 | P5 | Spell IDs are from memory and untested on a non-English client; WoW: Forever-only spells stay English | Low | /ff spells in game (checklist step 11) |
-| P6 | Random-stat gear ("of the Bear") is priced per item, not per suffix | Low | Buying already prefers commodities; revisit if it causes bad buys |
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.0 beta 23: random-stat gear scored and bought version by version (P6).
 - 2.5.0 beta 22: undercut check for your own auctions when the auction house opens.
 - 2.5.0 beta 21: gear upgrade line in item tooltips, scan age on the Overview, clearer gathering price source.
 - 2.5.0 beta 20: spells looked up by spell ID, so the combat helper and Advisor work in every client language (P5); /ff spells check.

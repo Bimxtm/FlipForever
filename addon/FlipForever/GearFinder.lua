@@ -135,7 +135,8 @@ function G:Budget()
   return math.floor((GetMoney and GetMoney() or 0) * share)
 end
 
-function G:Check(id, price, level, weights, budget, minLevelFloor)
+-- variantLink: one random-stat version ("of the Bear") of the item, scored on its own stats
+function G:Check(id, price, level, weights, budget, minLevelFloor, variantLink)
   local instant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
   if not instant then return "skip" end
   local _, _, _, equipLoc, _, classID, subID = instant(id)
@@ -143,7 +144,7 @@ function G:Check(id, price, level, weights, budget, minLevelFloor)
   if not self:Usable(classID, subID, equipLoc, level) then return "skip" end
   if price > budget then return "skip" end
   local info = (C_Item and C_Item.GetItemInfo) or GetItemInfo
-  local name, link, quality, _, minLevel = info(id)
+  local name, link, quality, _, minLevel = info(variantLink or id)
   if not link then
     if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
     return "retry"
@@ -154,9 +155,10 @@ function G:Check(id, price, level, weights, budget, minLevelFloor)
   local cur, slot = self:EquippedScore(equipLoc, weights)
   local gain = score - cur
   if gain <= 0.5 then return "skip" end
+  local suffix = variantLink and FF:LinkSuffix(variantLink) or 0
   return { id = id, name = plain(name) or FF:ItemName(id), link = link, quality = plain(quality) or 1, minLevel = minLevel,
     price = price, score = score, current = cur, gain = gain, slot = slot, equipLoc = equipLoc,
-    pct = cur > 0 and gain / cur or nil }
+    pct = cur > 0 and gain / cur or nil, suffix = suffix ~= 0 and suffix or nil }
 end
 
 -- start a search over the latest scan (runs in the background, a batch per frame)
@@ -168,8 +170,9 @@ function G:Announce(list, alert)
   local new = {}
   for _, r in ipairs(list) do
     if not r.bag then
-      if known and not known[r.id] then new[#new + 1] = r end
-      self.known[r.id] = true
+      local key = r.id .. ":" .. (r.suffix or 0)
+      if known and not known[key] then new[#new + 1] = r end
+      self.known[key] = true
     end
   end
   if not alert or #new == 0 or FlipForeverDB.settings.gearAlert == false then return new end
@@ -183,8 +186,17 @@ end
 function G:Search(onDone, alert)
   local model = FF.Planner and FF.Planner:Model() or {}
   local queue = {}
-  for id, m in pairs(model) do queue[#queue + 1] = { id = id, price = m.cur_min } end
-  table.sort(queue, function(a, b) return a.id < b.id end)
+  local variants = FF.Scan and FF.Scan.variants or {}
+  for id, m in pairs(model) do
+    local v = variants[id]
+    if v and next(v) then
+      -- random-stat gear: every version on its own stats and price
+      for suffix, e in pairs(v) do queue[#queue + 1] = { id = id, price = e.price, link = e.link, suffix = suffix } end
+    else
+      queue[#queue + 1] = { id = id, price = m.cur_min }
+    end
+  end
+  table.sort(queue, function(a, b) if a.id ~= b.id then return a.id < b.id end return (a.suffix or 0) < (b.suffix or 0) end)
   local level = UnitLevel("player") or 1
   local weights, budget = self:Weights(), self:Budget()
   local floorLevel = math.max(1, level - 10)
@@ -194,7 +206,7 @@ function G:Search(onDone, alert)
     local n = 0
     while pos <= #queue and n < BATCH do
       local q = queue[pos]
-      local ok, r = pcall(self.Check, self, q.id, q.price, level, weights, budget, floorLevel)
+      local ok, r = pcall(self.Check, self, q.id, q.price, level, weights, budget, floorLevel, q.link)
       if ok and type(r) == "table" then found[#found + 1] = r
       elseif ok and r == "retry" then retries[#retries + 1] = q end
       pos, n = pos + 1, n + 1
@@ -269,7 +281,7 @@ function G:Buy(r)
     FF:Print(("Equipped %s."):format(r.name))
     return
   end
-  FF.Trader:StartBuying({ { id = r.id, qty = 1, max = math.floor(r.price * 1.15) } }, "gear upgrade")
+  FF.Trader:StartBuying({ { id = r.id, qty = 1, max = math.floor(r.price * 1.15), suffix = r.suffix } }, "gear upgrade")
 end
 
 -- the top upgrade, in words (the Advisor shows it)

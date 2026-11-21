@@ -1703,6 +1703,63 @@ _de = L("DE_STEPS")
 assert L("DE_KNOWN") is True and L("DE_CD") is True and _de
 assert ("Feuerball" in _de or "Frostblitz" in _de) and not any(e in _de for e in ("Fireball", "Frostbolt", "Fire Blast"))
 
+# --- random-stat gear: the scan keeps each version, the gear finder scores each on its own stats
+lua.execute("""
+local FF = FlipForever
+local oldModel, oldInfo, oldInstant, oldStats = FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, GetItemStats
+local oldClass, oldLevel, oldMoney, oldCont = UnitClass, UnitLevel, GetMoney, C_Container
+-- the scan: three listings of one bracer in two versions, plus cloth (not gear)
+REPL = {
+  { name = "Bracers", count = 1, buyout = 900, id = 105, link = "item:105:0:0:0:0:0:1200:0" },
+  { name = "Bracers", count = 1, buyout = 700, id = 105, link = "item:105:0:0:0:0:0:1200:0" },
+  { name = "Bracers", count = 1, buyout = 500, id = 105, link = "item:105:0:0:0:0:0:1700:0" },
+  { name = "Linen Cloth", count = 20, buyout = 2000, id = 2589, link = "item:2589:0:0:0:0:0:0:0" },
+}
+C_AuctionHouse.GetNumReplicateItems = function() return #REPL end
+C_AuctionHouse.GetReplicateItemLink = function(i) return REPL[i + 1].link end
+C_Item.GetItemInfoInstant = function(id) if id == 105 then return id, "", "", "INVTYPE_WRIST", 0, 4, 3 end return id, "", "", "", 0, 7, 0 end
+FF.Scan:ProcessReplicate({ own = false })
+RunTimers(1)
+local v = FF.Scan.variants[105]
+VAR_1200, VAR_1700, VAR_CLOTH = v and v[1200] and v[1200].price, v and v[1700] and v[1700].price, FF.Scan.variants[2589] and 1 or 0
+-- the gear finder: "of the Bear" (1200, strength) beats "of the Owl" (1700, intellect) for a warrior
+FF.Planner.Model = function() return { [105] = { cur_min = 500 } } end
+C_Item.GetItemInfo = function(l)
+  if l == "item:105:0:0:0:0:0:1200:0" then return "Bracers of the Bear", l, 2, 20, 18 end
+  if l == "item:105:0:0:0:0:0:1700:0" then return "Bracers of the Owl", l, 2, 20, 18 end
+  if l == 105 then return "Bracers", "item:105:0:0:0:0:0:0:0", 2, 20, 18 end
+end
+GetItemStats = function(l)
+  if l:find(":1200:") then return { ITEM_MOD_STRENGTH_SHORT = 6, ITEM_MOD_STAMINA_SHORT = 6 } end
+  if l:find(":1700:") then return { ITEM_MOD_INTELLECT_SHORT = 6, ITEM_MOD_SPIRIT_SHORT = 6 } end
+  return {}
+end
+UnitClass = function() return "Warrior", "WARRIOR" end
+UnitLevel = function() return 25 end
+GetMoney = function() return 100000 end
+C_Container = nil
+FF.Gear:Search()
+RunTimers(5)
+local top = FF.Gear.results[1]
+GEAR_VAR = top and (top.name .. "|" .. tostring(top.suffix) .. "|" .. top.price) or "none"
+-- buying asks the auction house for that version only
+calls = {}
+FF.Trader:StartBuying({ { id = 105, qty = 1, max = 1000, suffix = 1200 } }, "gear upgrade")
+RunTimers(1)
+BUY_SUFFIX = FF.Trader.searchSuffix
+FF.Trader:Stop()
+FF.Scan.variants = nil
+REPL = {}
+FF.Planner.Model, C_Item.GetItemInfo, C_Item.GetItemInfoInstant, GetItemStats = oldModel, oldInfo, oldInstant, oldStats
+UnitClass, UnitLevel, GetMoney, C_Container = oldClass, oldLevel, oldMoney, oldCont
+""")
+print("gear versions: bear", L("VAR_1200"), "owl", L("VAR_1700"), "| top:", L("GEAR_VAR"), "| buy suffix:", L("BUY_SUFFIX"))
+assert L("VAR_1200") == 700 and L("VAR_1700") == 500 and L("VAR_CLOTH") == 0
+assert L("GEAR_VAR") == "Bracers of the Bear|1200|700" and L("BUY_SUFFIX") == 1200
+_ls = (L("FlipForever:LinkSuffix('item:105:0:0:0:0:0:-23:0')"), L("FlipForever:LinkSuffix(nil)"))
+print("link suffixes:", _ls)
+assert _ls == (-23, 0)
+
 # --- your auctions: which listings the newest scan undercuts
 lua.execute("""
 local FF = FlipForever
@@ -1760,7 +1817,7 @@ GA_MSG = printed[#printed]
 GA_SOUND = #ALERTS
 GA3 = #G:Announce({ a, b }, true)           -- nothing new
 FlipForeverDB.settings.gearAlert = false
-G.known[502] = nil
+G.known["502:0"] = nil
 printed = {}
 GA4 = #G:Announce({ b }, true)
 GA_PRINT4 = #printed

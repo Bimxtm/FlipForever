@@ -177,7 +177,7 @@ local function buildGear(f)
     pg.rows[i] = r
   end
   pg.hint = text(pg, "GameFontDisableSmall", 16, -452, 368)
-  pg.hint:SetText("Upgrades over what you're wearing, scored with your class's stat weights. Only gear you can use at your level, at most a quarter of your gold. Random-suffix items are scored by their base stats. Buy works at the auction house, one key press per purchase.")
+  pg.hint:SetText("Upgrades over what you're wearing, scored with your class's stat weights. Only gear you can use at your level, at most a quarter of your gold. Random-stat items (\"of the Bear\") are scored version by version. Buy works at the auction house, one key press per purchase.")
   return pg
 end
 

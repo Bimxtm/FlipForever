@@ -102,6 +102,11 @@ function Scan:ProcessReplicate(w)
   self.busy = "processing"
   local total = AH.GetNumReplicateItems() or 0
   local raw, i = {}, 0
+  -- gear with random stats ("of the Bear"): the cheapest listing of each version, by its link,
+  -- so the gear finder can score every version on its own stats (kept for this session)
+  local variants = {}
+  local instant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+  local gearClass = {}
   local function step()
     local stop = math.min(i + 400, total)
     while i < stop do
@@ -111,6 +116,22 @@ function Scan:ProcessReplicate(w)
         if not list then list = {} raw[itemID] = list end
         list[#list + 1] = { math.floor(buyout / count), count }
         if name and name ~= "" then FF:SetName(itemID, name) end
+        local isGear = gearClass[itemID]
+        if isGear == nil and instant then
+          local classID = select(6, instant(itemID))
+          isGear = classID == 2 or classID == 4
+          gearClass[itemID] = isGear
+        end
+        if isGear and AH.GetReplicateItemLink then
+          local link = AH.GetReplicateItemLink(i)
+          local suffix = FF:LinkSuffix(link)
+          if suffix ~= 0 then
+            local v = variants[itemID] or {}
+            variants[itemID] = v
+            local unit = math.floor(buyout / count)
+            if not v[suffix] or unit < v[suffix].price then v[suffix] = { link = link, price = unit } end
+          end
+        end
       end
       i = i + 1
     end
@@ -119,6 +140,7 @@ function Scan:ProcessReplicate(w)
       C_Timer.After(0, step)
     else
       local summary = summarize(raw)
+      Scan.variants = variants
       Scan:QueueNames(summary)
       local n = FF:AddScan("full", summary)
       self.busy, self.watch = nil, nil
