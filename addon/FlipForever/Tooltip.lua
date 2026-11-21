@@ -35,19 +35,19 @@ function TT:Lines(itemID)
   local out = {}
   if not itemID then return out end
   local price = FF:PriceOf(itemID)
-  if price then out[#out + 1] = { "|cff33ff99FlipForever|r typical price", FF:Money(price) } end
+  if price then out[#out + 1] = { FF:T("|cff33ff99FlipForever|r typical price"), FF:Money(price) } end
   local perDay = FF.Planner and FF.Planner:SellsPerDay(itemID)
   if perDay then
-    local speed = perDay >= 10 and "|cff33ff99fast|r" or perDay >= 3 and "|cffffd200ok|r" or "|cffff8800slow|r"
-    out[#out + 1] = { "  sells on the AH", ("~%s/day (%s)"):format(perDay >= 10 and ("%d"):format(math.floor(perDay + 0.5)) or ("%.1f"):format(perDay), speed) }
+    local speed = perDay >= 10 and FF:T("|cff33ff99fast|r") or perDay >= 3 and FF:T("|cffffd200ok|r") or FF:T("|cffff8800slow|r")
+    out[#out + 1] = { FF:T("  sells on the AH"), FF:T("~%s/day (%s)"):format(perDay >= 10 and ("%d"):format(math.floor(perDay + 0.5)) or ("%.1f"):format(perDay), speed) }
   end
   local entry = planIndex()[itemID]
   if entry and entry.buy then
     local b = entry.buy
-    out[#out + 1] = { "  on your shopping list", b.gap and "price checked live" or ("max " .. FF:Money(b.max)) }
+    out[#out + 1] = { FF:T("  on your shopping list"), b.gap and FF:T("price checked live") or FF:T("max %s"):format(FF:Money(b.max)) }
   end
   if entry and entry.sell then
-    out[#out + 1] = { "  you post at", FF:Money(entry.sell.normal) .. " (never below " .. FF:Money(entry.sell.floor) .. ")" }
+    out[#out + 1] = { FF:T("  you post at"), FF:T("%s (never below %s)"):format(FF:Money(entry.sell.normal), FF:Money(entry.sell.floor)) }
   end
   -- gear: is this better than what you wear? (same stat weights as the Gear tab)
   local up = TT:Upgrade(itemID)
