@@ -801,6 +801,53 @@ def install_addon(settings: Settings) -> Path:
     return target
 
 
+def _scrub(text: str) -> str:
+    """Remove the Windows user name from paths before text leaves the computer."""
+    import os
+    import re
+    home = os.path.expanduser("~")
+    if home and home != "~":
+        text = text.replace(home, "<home>").replace(home.replace("\\", "/"), "<home>")
+    return re.sub(r"(?i)([a-z]:[\\/]+users[\\/]+)[^\\/\s]+", r"\1<user>", text)
+
+
+def bug_report_text(settings: Settings, app_version: str, now: float | None = None) -> str:
+    """Everything a bug report needs, ready to paste: versions, setup and the addon's last errors.
+    No character names, account names or user paths."""
+    import platform
+    now = now or time.time()
+    lines = ["FlipForever bug report info", f"App version: {app_version}"]
+    addon_version = "not installed"
+    addon_dir = settings.addon_path()
+    toc = addon_dir / "FlipForever.toc" if addon_dir else None
+    if toc and toc.exists():
+        for line in toc.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.startswith("## Version:"):
+                addon_version = line.split(":", 1)[1].strip()
+    lines.append(f"Addon version: {addon_version}")
+    lines.append(f"Windows: {platform.release()} ({platform.version()})")
+    lines.append(f"Language: {settings.language or 'game language'}")
+    lines.append(f"WoW folder set: {'yes' if settings.wow_path else 'no'}"
+                 f"  ·  account folder found: {'yes' if settings.account else 'no'}")
+    errors = []
+    sv = settings.savedvars_path()
+    if sv and sv.exists():
+        try:
+            db = luaio.load_savedvariables(sv).get("FlipForeverDB") or {}
+            errors = [e for e in _as_list(db.get("errors")) if isinstance(e, dict)]
+        except Exception as exc:  # a broken file is itself worth reporting
+            lines.append(f"SavedVariables could not be read: {exc}")
+    if errors:
+        lines.append(f"Last addon errors ({len(errors)}, newest first):")
+        for e in reversed(errors[-10:]):
+            when = time.strftime("%Y-%m-%d %H:%M", time.localtime(int(e.get("t") or 0)))
+            lines.append(f"  {when}  v{e.get('v', '?')}  {e.get('where', '?')}: {e.get('msg', '')}")
+    else:
+        lines.append("Last addon errors: none recorded")
+    lines.append(f"Created: {time.strftime('%Y-%m-%d %H:%M', time.localtime(now))}")
+    return _scrub("\n".join(lines))
+
+
 def profit_by_char(con, realm) -> list[dict]:
     """Per character on this realm: realized profit, last 7 days, stock at cost, sales and buys."""
     now = time.time()

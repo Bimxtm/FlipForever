@@ -189,6 +189,6 @@ end
 
 C_Timer.NewTicker(1, function()
   local ok, err = pcall(A.Tick, A)
-  if not ok then FF:Print("|cffff5555autopilot error:|r " .. tostring(err)) end
+  if not ok then FF:Print("|cffff5555autopilot error:|r " .. tostring(err)) FF:RecordError("autopilot", err) end
   if FF.UI and FF.UI.frame and FF.UI.frame:IsShown() then FF.UI:Refresh() end
 end)
