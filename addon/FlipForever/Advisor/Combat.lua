@@ -393,6 +393,8 @@ function C:UpdateIcons()
   local hint = t and self:TargetHint(t) or ""
   local ally = self:AllyUnderAttack()
   if ally then hint = ("|cffff5555Your target is attacking %s!|r  "):format(ally) .. hint end
+  local threat = self:ThreatWarning()
+  if threat then hint = threat .. "  " .. hint end
   hintText:SetText(hint)
 end
 
@@ -431,6 +433,27 @@ function C:AllyUnderAttack()
   local ok2, isMe = pcall(UnitIsUnit, "targettarget", "player")
   if not (ok and ok2) or not plain(friendly) or plain(isMe) then return nil end
   return plain(UnitName("targettarget"))
+end
+
+-- Threat on your target, from the game's threat API. Non-tanks: a warning from 85% of the threat
+-- that pulls aggro, and when the target is on you. Tanks: a warning when you lose it.
+-- Setting: threatWarning (on by default).
+function C:ThreatWarning()
+  if FlipForeverDB.settings.threatWarning == false then return nil end
+  if not (UnitDetailedThreatSituation and UnitExists("target") and UnitCanAttack("player", "target")) then return nil end
+  local ok, tanking, status, scaled = pcall(UnitDetailedThreatSituation, "player", "target")
+  if not ok then return nil end
+  tanking, status, scaled = plain(tanking), plain(status), tonumber(plain(scaled))
+  if status == nil then return nil end -- no threat on this target yet
+  if self:IsTank() then
+    if not tanking and (status or 0) < 2 and UnitExists("targettarget") then
+      return FF:T("|cffff5555You lost aggro - taunt or hit it hard|r")
+    end
+    return nil
+  end
+  if tanking then return FF:T("|cffff5555It's attacking you!|r") end
+  if scaled and scaled >= 85 then return FF:T("|cffff8800Threat %d%% - ease off|r"):format(math.floor(scaled)) end
+  return nil
 end
 
 -- Blizzard's own one-button rotation, if this client has it (retail-style Assisted Combat)
@@ -876,6 +899,10 @@ FF:On("SPELLS_CHANGED", rebuildSoon)
 pcall(FF.On, FF, "UNIT_TARGET", function(unit)
   if unit == "target" and btn and bar:IsShown() then C:UpdateIcons() end
 end)
+-- threat changes: refresh the warning line
+for _, ev in ipairs({ "UNIT_THREAT_LIST_UPDATE", "UNIT_THREAT_SITUATION_UPDATE" }) do
+  pcall(FF.On, FF, ev, function() if btn and bar:IsShown() then pcall(C.UpdateIcons, C) end end)
+end
 
 function C:SetAutoTarget(on)
   if InCombatLockdown() then FF:Print(FF:T("Can't change this during a fight.")) return end

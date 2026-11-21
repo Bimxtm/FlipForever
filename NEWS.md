@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 7
+
+**Threat warning.** The combat helper now warns you under its icons when you are close to pulling aggro, when your target turns on you, or, as a tank, when you lose aggro. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.2 Beta 6
 
 **Time to level.** The Overview now shows your XP per hour this session, how long until your next level at that pace, and your rested XP. You can switch it off under Settings, Features.

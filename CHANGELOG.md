@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.2-beta.7] - 2026-11-21 (beta)
+### Added
+- Combat helper: threat warning under the icons. Damage and healing: an orange line from 85% of the threat that pulls aggro, a red one when your target attacks you. Tanks: a red line when you lose aggro. Uses the game's own threat numbers. Switch: *Combat helper: warn me about high threat* in Settings, Features.
+
 ## [2.5.2-beta.6] - 2026-11-21 (beta)
 ### Added
 - Overview: a leveling line with your XP per hour this session, how long until the next level at that pace, and your rested XP. Hidden at level 60. Switch: *Overview: XP per hour, time to level, rested XP* in Settings, Features.
