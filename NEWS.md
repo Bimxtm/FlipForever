@@ -16,6 +16,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 3
+
+**Switch any feature on or off.** The Settings tab now scrolls and ends with a *Features* section: the sell junk strip, always selling junk, always repairing, the undercut check, the mailbox gold button and the gear line in tooltips each have their own switch, next to the ones that were already there.
+
 # FlipForever 2.5.2 Beta 2
 
 **Sell junk and repair in one go.** Open a merchant and you'll find a small strip under the window: *Sell junk* sells every grey item in your bags. Tick *Always sell junk* or *Always repair* and FlipForever does it on every visit. Both are off until you tick them, and repairs always use your own gold.

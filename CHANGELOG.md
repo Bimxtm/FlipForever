@@ -24,6 +24,12 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.3] - 2026-11-21 (beta)
+### Added
+- Settings: every feature can be switched on and off. A new *Features* section has switches for the sell junk strip at merchants, always selling grey items, always repairing, the undercut check at the auction house, the *Collect auction gold* button at the mailbox, and the gear upgrade line in item tooltips.
+### Changed
+- The Settings tab scrolls (mouse wheel or the bar on the right), so everything fits.
+
 ## [2.5.2-beta.2] - 2026-11-21 (beta)
 ### Added
 - Merchants: a strip under the merchant window with a *Sell junk* button (sells every grey item with a value) and two switches, *Always sell junk* and *Always repair*. Both are off until you tick them. Repairs use your own gold, never the guild bank, and a chat line shows what was earned or spent.

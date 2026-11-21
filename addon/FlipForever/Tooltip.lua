@@ -50,7 +50,7 @@ function TT:Lines(itemID)
     out[#out + 1] = { FF:T("  you post at"), FF:T("%s (never below %s)"):format(FF:Money(entry.sell.normal), FF:Money(entry.sell.floor)) }
   end
   -- gear: is this better than what you wear? (same stat weights as the Gear tab)
-  local up = TT:Upgrade(itemID)
+  local up = FlipForeverDB.settings.gearTooltip ~= false and TT:Upgrade(itemID)
   if up then out[#out + 1] = up end
   return out
 end

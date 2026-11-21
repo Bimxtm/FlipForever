@@ -2310,4 +2310,38 @@ print("merchant:", L("M_OFF"), L("M_SELL"), repr(L("M_MSG")), L("M_ON"), L("M_PO
 assert L("M_OFF") == "0:0" and L("M_STRIP")
 assert L("M_SELL") == "1:15:1" and "15" in L("M_MSG")
 assert L("M_ON") == "1:1" and L("M_POOR") == 0 and L("M_CLOSED") == 0
+
+# --- Settings: a switch for every feature; switching one off turns the feature off
+lua.execute("""
+local FF = FlipForever
+local s = FlipForeverDB.settings
+FF.Hub:Show("settings")
+local f = FlipForeverHub
+SW = {}
+for _, c in ipairs(f.features or {}) do SW[#SW + 1] = c.key .. "=" .. tostring(c:GetChecked()) end
+SW = table.concat(SW, ",")
+-- click every switch off
+for _, c in ipairs(f.features) do c:SetChecked(false) c:OnClick() end
+-- merchant strip gone
+MerchantFrame = MerchantFrame or CreateFrame("Frame", "MerchantFrame")
+MerchantFrame.shown = true
+FF.Merchant:RefreshStrip()
+SW_STRIP = FlipForeverMerchantStrip and FlipForeverMerchantStrip:IsShown()
+-- mailbox button not shown
+Fire("MAIL_SHOW")
+SW_MAIL = FlipForeverMailButton and FlipForeverMailButton:IsShown() or false
+-- no gear line in tooltips
+local oldUp = FF.Tooltip and FF.Tooltip.Upgrade
+UPCALLS = 0
+if FF.Tooltip then FF.Tooltip.Upgrade = function() UPCALLS = UPCALLS + 1 return { "x", "y" } end end
+if FF.Tooltip and FF.Tooltip.Lines then pcall(FF.Tooltip.Lines, FF.Tooltip, 2589) end
+if FF.Tooltip then FF.Tooltip.Upgrade = oldUp end
+SW_OFF = tostring(s.merchantStrip) .. "," .. tostring(s.autoJunk) .. "," .. tostring(s.autoRepair) .. "," .. tostring(s.undercutCheck) .. "," .. tostring(s.mailButton) .. "," .. tostring(s.gearTooltip)
+for _, c in ipairs(f.features) do s[c.key] = nil end
+FF.Hub:Toggle()
+""")
+print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,talentOverlay=true"
+assert L("SW_OFF") == "false,false,false,false,false,false"
+assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 print("ALL ADDON TESTS PASSED")

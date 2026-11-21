@@ -93,7 +93,13 @@ function M:Strip()
   return strip
 end
 
+function M:StripEnabled() return settings().merchantStrip ~= false end
+
 function M:RefreshStrip()
+  if not self:StripEnabled() then
+    if strip then strip:Hide() end
+    return
+  end
   local s = self:Strip()
   if not s then return end
   s.auto:SetChecked(self:AutoJunk())

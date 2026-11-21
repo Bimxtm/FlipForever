@@ -64,6 +64,7 @@ end
 
 local asked = false
 FF:On("AUCTION_HOUSE_SHOW", function()
+  if FlipForeverDB.settings.undercutCheck == false then return end -- switched off in Settings
   asked = true
   if C_AuctionHouse and C_AuctionHouse.QueryOwnedAuctions then
     pcall(C_AuctionHouse.QueryOwnedAuctions, {})
