@@ -22,12 +22,12 @@
 |---|---|---|---|
 | P1 | Nothing has run in the real game yet (auction house API, combat helper, profession API, tooltips) | High | In-game test checklist (Development tab); reported problems get fixed first |
 | P2 | Unverified game API details: full-scan timing, silver-only commodity prices, talent API shape, the step button in combat | High | Built with fallbacks; confirm in game (P1) |
-| P3 | Private repository: the app can't see updates until a read-only GitHub token is entered (About & updates) | Medium | Or make the repository public when ready |
 | P4 | Guide data: 9 builds per class now; some are key talents only (no pick order), some Warcraft Tavern builds are still level 30 beta builds, and Mobalytics/Icy Veins block automated reading | Medium | Refresh when the guides update |
 | P5 | Spell IDs are from memory and untested on a non-English client; WoW: Forever-only spells stay English | Low | /ff spells in game (checklist step 11) |
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- Repository is public (owner, 21 Nov): the app finds updates without a GitHub token (P3).
 - 2.5.0 stable: all betas, every text in 11 languages, Advisor data and realm fixes, druid forms, Gear tab hover compare, autopilot off for now.
 - 2.5.0 beta 29 (owner report): combat helper no longer gets stuck on one skill.
 - 2.5.0 beta 28 (owner request): Advisor button in the window title bar, clickable next step, key bindings.
