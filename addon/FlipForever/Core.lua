@@ -41,6 +41,19 @@ function FF:RecordError(where, err)
   while #list > 20 do table.remove(list, 1) end
 end
 
+-- an action the game blocked ("Interface action failed because of an AddOn"): keep which
+-- function it was and whether a fight was on, so a bug report shows the cause
+do
+  local f = CreateFrame("Frame")
+  f:RegisterEvent("ADDON_ACTION_BLOCKED")
+  f:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+  f:SetScript("OnEvent", function(_, event, addon, func)
+    if addon ~= "FlipForever" then return end
+    local fight = InCombatLockdown and InCombatLockdown() and " (in combat)" or ""
+    FF:RecordError(event, "blocked: " .. tostring(func) .. fight)
+  end)
+end
+
 function FF:Print(...)
   print("|cff33ff99FlipForever|r:", ...)
 end

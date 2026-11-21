@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.2-beta.1] - 2026-11-21 (beta)
+### Fixed
+- Combat helper, paladins: the seal is cast again after every Judgement. Seal and Judgement now run as a sequence that only moves on after a successful cast; Consecration and other cooldowns fill the gaps, then Holy Strike. Before, Consecration came first on every press and the seal was left out.
+- Combat helper: clicking the big icon in a fight no longer causes "Interface action failed because of an AddOn" (the bar only stops moving when you moved it).
+### Added
+- Actions the game blocks for FlipForever are kept in `/ff errors` and in *Copy bug report info*, with the function name and whether a fight was on.
+
 ## [2.5.1] - 2026-11-21
 ### Added
 - The app offers to put FlipForever on your desktop and in the Start menu the first time it starts, and About & updates has an *Add to desktop and Start menu* button.

@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 1
+
+**Combat helper fixes for paladins.** Your seal is cast again after every Judgement, so it is always up. Consecration and other cooldowns are used while Judgement recharges, then Holy Strike. Clicking the big icon during a fight no longer shows "Interface action failed because of an AddOn". If the game ever blocks an action again, `/ff errors` and *Copy bug report info* now say which one.
+
 # FlipForever 2.5.1
 
 **Updates in one click.** The app checks for a new version when it starts and asks you. Click Yes and it updates itself and the WoW addon. Nothing else to install. The first time it starts, it also offers to put FlipForever on your desktop and in the Start menu.
