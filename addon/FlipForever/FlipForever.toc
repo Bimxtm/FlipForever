@@ -18,6 +18,7 @@ UI.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua
+Leveling.lua
 
 Gather\Guard.lua
 Gather\Data.lua
