@@ -421,6 +421,10 @@ function FF:CollectAuctionGold()
 end
 
 FF:On("MAIL_SHOW", function()
+  if FlipForeverDB.settings.mailButton == false then -- switched off in Settings
+    if mailButton then mailButton:Hide() end
+    return
+  end
   if not mailButton then
     mailButton = CreateFrame("Button", "FlipForeverMailButton", MailFrame or UIParent, "UIPanelButtonTemplate")
     mailButton:SetSize(190, 24)

@@ -1,3 +1,7 @@
+# FlipForever 2.5.2 Beta 3
+
+**Switch any feature on or off.** The Settings tab now scrolls and ends with a *Features* section: the sell junk strip, always selling junk, always repairing, the undercut check, the mailbox gold button and the gear line in tooltips each have their own switch, next to the ones that were already there.
+
 # FlipForever 2.5.2 Beta 2
 
 **Sell junk and repair in one go.** Open a merchant and you'll find a small strip under the window: *Sell junk* sells every grey item in your bags. Tick *Always sell junk* or *Always repair* and FlipForever does it on every visit. Both are off until you tick them, and repairs always use your own gold.
