@@ -24,6 +24,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.8] - 2026-11-21 (beta)
+### Added
+- Mailbox: *Open all mail* under *Collect auction gold* takes the gold and items from every mail, one at a time. Mail with cash on delivery is left alone, and it stops with a message when your bags are full. A chat line shows what was taken. Switch: *Open all mail button at the mailbox* in Settings, Features.
+
 ## [2.5.2-beta.7] - 2026-11-21 (beta)
 ### Added
 - Combat helper: threat warning under the icons. Damage and healing: an orange line from 85% of the threat that pulls aggro, a red one when your target attacks you. Tanks: a red line when you lose aggro. Uses the game's own threat numbers. Switch: *Combat helper: warn me about high threat* in Settings, Features.

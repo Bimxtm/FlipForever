@@ -19,6 +19,7 @@ Tooltip.lua
 Planner.lua
 Merchant.lua
 Leveling.lua
+Mailbox.lua
 
 Gather\Guard.lua
 Gather\Data.lua
