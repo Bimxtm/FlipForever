@@ -395,7 +395,7 @@ end
 -- The window ----------------------------------------------------------------------------------------
 local function build()
   local f = CreateFrame("Frame", "FlipForeverHub", UIParent, "BackdropTemplate")
-  f:SetSize(400, 752)
+  f:SetSize(400, 776)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -530,6 +530,11 @@ local function build()
     FlipForeverDB.settings.gearAlert = self:GetChecked() and true or false
   end)
   f.gearAlert:SetPoint("TOPLEFT", 14, -686)
+  f.talentOverlay = check(pg, "Show my build on the Talents window (next point marked)", function(self)
+    FlipForeverDB.settings.talentOverlay = self:GetChecked() and true or false
+    if FF.TalentOverlay then FF.TalentOverlay:Refresh() end
+  end)
+  f.talentOverlay:SetPoint("TOPLEFT", 14, -710)
   f.livePlan = check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
     FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
   end)
@@ -608,6 +613,7 @@ function H:Refresh()
   frame.arrow:SetChecked(s.arrow ~= false)
   frame.autoDuration:SetChecked(s.autoDuration ~= false)
   frame.gearAlert:SetChecked(s.gearAlert ~= false)
+  frame.talentOverlay:SetChecked(s.talentOverlay ~= false)
   frame.mm:SetChecked(not s.hideMinimap)
   local ns = FF.gatherNS
   local gatherOn = ns and ns.db and not ns.skipGather

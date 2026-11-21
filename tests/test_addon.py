@@ -2017,4 +2017,62 @@ FlipForeverDB.settings.gearAlert = nil
 print("gear alert:", L("GA_MSG"))
 assert L("GA1") == 0 and L("GA_PRINT1") == 0 and L("GA2") == 1 and "Keen Dagger" in L("GA_MSG") and L("GA_SOUND") == 1
 assert L("GA3") == 0 and L("GA4") == 1 and L("GA_PRINT4") == 0
+
+# --- talent overlay: the chosen build on the game's Talents window
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+SAVED_TALENTS = TALENTS
+SAVED_CLASS = UnitClass
+function UnitClass() return "Mage", "MAGE" end
+TALENTS = { {"Improved Frostbolt", 5, 5}, {"Precision", 3, 3}, {"Frostbite", 1, 3}, {"Ice Shards", 0, 3}, {"Ice Lance", 0, 1} }
+FlipForever.Advisor:CharStore().build = nil
+PLEVEL = 22
+-- the load-on-demand Talents window with five talent buttons
+TF = CreateFrame("Frame", "TalentFrame")
+for i = 1, 5 do CreateFrame("Button", "TalentFrameTalent" .. i, TF) end
+TF.selectedTab = 1
+Fire("ADDON_LOADED", "Blizzard_TalentUI")
+TF.shown = true
+TO:Refresh()
+local plan = TO:PanelText().plan
+TO_STATES = {}
+for _, s in ipairs(plan.steps) do TO_STATES[#TO_STATES + 1] = s.name .. "=" .. s.state end
+TO_STATES = table.concat(TO_STATES, ",")
+TO_MARK3 = TO:Mark(TalentFrameTalent3) and TO:Mark(TalentFrameTalent3).state
+TO_MARK1 = TO:Mark(TalentFrameTalent1) and TO:Mark(TalentFrameTalent1).state
+TO_PANEL = FlipForeverTalentPanel and FlipForeverTalentPanel:IsShown()
+TO_HOOKED = #(TF.hooks.OnShow or {})
+-- a point spent: the next talent moves on
+TALENTS[3][2] = 3
+Fire("CHARACTER_POINTS_CHANGED")
+TO_MARK3B = TO:Mark(TalentFrameTalent3).state
+TO_MARK4B = TO:Mark(TalentFrameTalent4).state
+-- switched off in Settings: marks and panel go away
+FlipForeverDB.settings.talentOverlay = false
+TO:Refresh()
+TO_OFF_MARK = TO:Mark(TalentFrameTalent4):IsShown()
+TO_OFF_PANEL = FlipForeverTalentPanel:IsShown()
+FlipForeverDB.settings.talentOverlay = nil
+-- window closed: panel hides
+TF.shown = false
+TO:Refresh()
+TO_CLOSED = FlipForeverTalentPanel:IsShown()
+TALENTS = SAVED_TALENTS
+""")
+print("talent overlay:", L("TO_STATES"))
+assert L("TO_STATES").startswith("Improved Frostbolt=done,Precision=done,Frostbite=next,Ice Shards=todo,Ice Lance=todo"), L("TO_STATES")
+assert L("TO_MARK3") == "next" and L("TO_MARK1") == "done" and L("TO_PANEL") and L("TO_HOOKED") == 1
+assert L("TO_MARK3B") == "done" and L("TO_MARK4B") == "next"
+assert L("TO_OFF_MARK") is False and L("TO_OFF_PANEL") is False and L("TO_CLOSED") is False
+lua.execute("""
+PLEVEL = 12
+TO_LVL = {}
+for _, s in ipairs(FlipForever.TalentOverlay:Plan(FlipForever.Advisor:Build(FlipForever.Advisor:Player()), 12).steps) do
+  if s.name == "Ice Lance" then TO_LVL = s.state end
+end
+TO_LINE = FlipForever.TalentOverlay:StepLine({ order = 5, name = "Ice Lance", state = "level", minLevel = 20 })
+PLEVEL = 22
+UnitClass = SAVED_CLASS
+""")
+assert L("TO_LVL") == "level" and "from level 20" in L("TO_LINE")
 print("ALL ADDON TESTS PASSED")
