@@ -36,6 +36,11 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
   - Prepared on branch release/2.5.0-translations (chat messages, status lines, newer window texts, shared plural helper): merge it into main first (app pages are translated there too: labels, buttons, table headings, settings); the How to use text stays English. After merging, translate texts added in betas after the branch (beta 21 texts are already on the branch; beta 22 is on the branch; beta 23 merged and re-keyed too; later betas: check for new FF:T texts); run scratchpad-style check: every FF:T literal must be in i18n
 - [ ] Owner report (21 Nov, about 04:30): "/ff guide also doesnt work in the app". Find out what fails: the /ff guide command in game (Advisor window not opening, an error, slash command wiring) and the app's Advisor page (empty, or not showing what /ff guide shows). Fix, test, ship as the first beta after the 2.5.0 stable.
 
+## Discord check after every usage reset (owner, 21 Nov)
+- The first session after each 5-hour window reset reads #bug-reports and #suggestions in the private Discord server (built-in browser, the owner is signed in; channel list under the FlipForever server).
+- New bug reports go to the top of the Night queue (quote the report, note who sent it by Discord name only in this file, never in shipped text). New suggestions go to ROADMAP.md: small ones under Smaller improvements, big ones under Proposed for the owner's OK.
+- Read only: don't reply or react in Discord unless the owner asks. Mention what was found in the session report.
+
 ## Sharing with friends (internal)
 - Friends download from the Google Drive folder FlipForever (link in the private Discord server, #downloads). After a stable release, remind the owner to drag the new zip into that folder (the Drive connector cannot upload 12 MB files); offer to post the release in #announcements. For 2.5.0 the owner already said yes (21 Nov): after publishing, post a short plain announcement in #announcements (built-in browser, the owner is signed in) with what is new and that the zip is in #downloads once uploaded. Keep #planned-features in step with ROADMAP.md (offer to update it when the roadmap changes).
 
