@@ -257,6 +257,90 @@ function QH:RefreshMap()
   return n
 end
 
+-- Minimap pins -----------------------------------------------------------------------------------
+-- Quest spots on your map: inside the minimap where they are, the others on its edge (faded),
+-- pointing the way.
+local mmPins = {}
+
+local function mapSize(m)
+  local ns = FF.gatherNS
+  if ns and ns.MapSize then
+    local ok, w, h = pcall(ns.MapSize, m)
+    if ok and w and h then return w, h end
+  end
+  if C_Map and C_Map.GetMapWorldSize then
+    local w, h = C_Map.GetMapWorldSize(m)
+    w, h = plain(w), plain(h)
+    if w and w > 0 then return w, h end
+  end
+  return nil
+end
+
+-- yards shown from the centre to the edge of the minimap
+local function viewRadius()
+  if C_Minimap and C_Minimap.GetViewRadius then
+    local r = plain(C_Minimap.GetViewRadius())
+    if r and r > 0 then return r end
+  end
+  local ns = FF.gatherNS
+  if ns and ns.MinimapRadius and Minimap and Minimap.GetZoom then
+    local ok, r = pcall(ns.MinimapRadius, plain(Minimap:GetZoom()) or 0, IsIndoors and plain(IsIndoors()) or false)
+    if ok and r and r > 0 then return r end
+  end
+  return 150
+end
+
+local function rotate(dx, dy, facing)
+  -- the same turn as the gathering pins (the minimap turns against your facing)
+  local c, s = math.cos(facing), math.sin(facing)
+  return dx * c + dy * s, -dx * s + dy * c
+end
+
+-- returns how many pins are shown
+function QH:RefreshMinimap()
+  local used = 0
+  local m, px, py
+  if self:Enabled() and Minimap and FF.Arrow and FF.Arrow.PlayerPos then m, px, py = FF.Arrow.PlayerPos() end
+  local W, H
+  if m then W, H = mapSize(m) end
+  if W then
+    local half = (Minimap:GetWidth() or 140) / 2
+    local toPx = half / viewRadius()
+    local edge = half - 6
+    local getCVar = (C_CVar and C_CVar.GetCVar) or GetCVar
+    local rotating = getCVar and getCVar("rotateMinimap") == "1"
+    local facing = rotating and GetPlayerFacing and plain(GetPlayerFacing()) or 0
+    for _, s in ipairs(self:Spots()) do
+      if s.m == m then
+        local dx, dy = (s.x - px) * W, -(s.y - py) * H
+        if rotating then dx, dy = rotate(dx, dy, facing) end
+        local ox, oy = dx * toPx, dy * toPx
+        local d = math.sqrt(ox * ox + oy * oy)
+        local outside = d > edge
+        if outside then ox, oy = ox * edge / d, oy * edge / d end
+        used = used + 1
+        local p = mmPins[used]
+        if not p then
+          p = CreateFrame("Frame", nil, Minimap)
+          p.tex = p:CreateTexture(nil, "OVERLAY")
+          p.tex:SetAllPoints(p)
+          mmPins[used] = p
+        end
+        if p.SetFrameLevel and Minimap.GetFrameLevel then p:SetFrameLevel((Minimap:GetFrameLevel() or 1) + 6) end
+        p:SetSize(14, 14)
+        p:ClearAllPoints()
+        p:SetPoint("CENTER", Minimap, "CENTER", ox, oy)
+        p.tex:SetTexture(s.kind == "turnin" and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\GossipFrame\\AvailableQuestIcon")
+        p:SetAlpha(outside and 0.5 or 1)
+        p.spot, p.outside, p.ox, p.oy = s, outside, ox, oy
+        p:Show()
+      end
+    end
+  end
+  for i = used + 1, #mmPins do mmPins[i]:Hide() end
+  return used, mmPins
+end
+
 local mapHooked = false
 local function hookMap()
   if mapHooked or not WorldMapFrame then return end
@@ -274,4 +358,8 @@ end
 pcall(FF.On, FF, "QUEST_ACCEPTED", function(a, b) QH:OnAccepted(b or a) end)
 pcall(FF.On, FF, "QUEST_TURNED_IN", function(questID) QH:OnTurnedIn(questID) end)
 pcall(FF.On, FF, "QUEST_LOG_UPDATE", function() QH:OnLogUpdate() if WorldMapFrame and WorldMapFrame:IsShown() then QH:RefreshMap() end end)
-FF:On("PLAYER_LOGIN", function() hookMap() end)
+FF:On("PLAYER_LOGIN", function()
+  hookMap()
+  -- the minimap moves with you: refresh its quest pins twice a second
+  if C_Timer and C_Timer.NewTicker then C_Timer.NewTicker(0.5, function() pcall(QH.RefreshMinimap, QH) end) end
+end)

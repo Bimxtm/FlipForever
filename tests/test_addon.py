@@ -2730,6 +2730,23 @@ QH_TURNIN = FlipForeverDB.quests[788].turnin.n .. ":" .. FlipForeverDB.quests[78
 -- the next character with the same quest done goes to the learned hand-in
 s = QH:Spot(QH:Log()[1])
 QH_TURNIN2 = s.label
+-- minimap: 1000 x 1000 yard map, 100 yards to the edge of a 140 px minimap
+local oldNS, oldCMap, oldCMini = FF.gatherNS, C_Map, C_Minimap
+FF.gatherNS = nil
+C_Map = { GetMapWorldSize = function() return 1000, 1000 end }
+C_Minimap = { GetViewRadius = function() return 100 end }
+Minimap = CreateFrame("Frame")
+Minimap.GetWidth = function() return 140 end
+local n, pins = QH:RefreshMinimap()                    -- standing on the hand-in spot
+local p = pins[1]
+QH_MM1 = n .. ":" .. string.format("%.0f,%.0f", p.ox + 0, p.oy + 0) .. ":" .. tostring(p.outside)
+POS = { 1411, 0.40, 0.48 }                           -- 120 yards west of it: on the edge (64 px east), faded
+n, pins = QH:RefreshMinimap()
+p = pins[1]
+QH_MM2 = n .. ":" .. string.format("%.0f,%.0f", p.ox + 0, p.oy + 0) .. ":" .. tostring(p.outside)
+POS = { 1412, 0.40, 0.48 }                           -- another map: none
+QH_MM3 = QH:RefreshMinimap()
+FF.gatherNS, C_Map, C_Minimap, Minimap = oldNS, oldCMap, oldCMini, nil
 -- switched off: no arrow, no pins
 FlipForeverDB.settings.questHelper = false
 ARROWED = nil
@@ -2746,4 +2763,6 @@ assert L("QH_TURNIN_GUESS") == "turnin:0.50,0.50:Hand in (quest giver): Gornek"
 assert L("QH_ARROW") == "1411:0.5:0.5:Cutting Teeth - Hand in (quest giver): Gornek"
 assert "Cutting Teeth" in L("QH_READY_MSG") and L("QH_PINS") == 1 and L("QH_PINS_OTHER") == 0
 assert L("QH_TURNIN") == "Gornek:0.52" and L("QH_TURNIN2") == "Hand in: Gornek" and L("QH_OFF")
+print("minimap quest pins:", L("QH_MM1"), "|", L("QH_MM2"), "|", L("QH_MM3"))
+assert L("QH_MM1") == "1:0,0:false" and L("QH_MM2") == "1:64,0:true" and L("QH_MM3") == 0
 print("ALL ADDON TESTS PASSED")

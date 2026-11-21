@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.2] - 2026-11-21 (beta, branch feature/quest-helper)
+### Added
+- Quest helper: known quest spots on your map also show on the minimap. Spots out of the minimap's range sit faded on its edge, in their direction. Follows a rotating minimap.
+
 ## [2.7.0-beta.1] - 2026-11-21 (beta, branch feature/quest-helper)
 ### Added
 - Quest helper. FlipForever learns quest spots from your play and keeps them for all your characters: where you took each quest, where its objectives moved forward, and where you handed it in. The next spot of a quest is the area of its first unfinished objective, or the place to hand it in once it is done (the quest giver until a hand-in has been seen). Where the game client knows the next waypoint itself, that is used too.
