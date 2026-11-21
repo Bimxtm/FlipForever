@@ -40,6 +40,10 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 
 Version note (21 Nov): 2.5.1 is the current stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
 
+## Fresh session after every usage reset (owner, 21 Nov)
+- Long conversations make every step expensive, so the work never continues in the same session after a 5-hour window reset.
+- When a session pauses for the limit, its one-shot after the reset does this: start a new session (fresh context, same project folder, with a short brief pointing to this file, ROADMAP.md, WEEKLY_BOARD.md and the current branch/version state), let the new session create the 10-minute and 12-hour jobs, and delete every scheduled job in the old session.
+
 ## Discord check after every usage reset (owner, 21 Nov)
 - The first session after each 5-hour window reset reads #bug-reports and #suggestions in the private Discord server (built-in browser, the owner is signed in; channel list under the FlipForever server).
 - New bug reports go to the top of the Night queue (quote the report, note who sent it by Discord name only in this file, never in shipped text). New suggestions go to ROADMAP.md: small ones under Smaller improvements, big ones under Proposed for the owner's OK.
