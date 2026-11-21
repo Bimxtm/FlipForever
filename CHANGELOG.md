@@ -24,6 +24,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.2-beta.2] - 2026-11-21 (beta)
+### Added
+- Merchants: a strip under the merchant window with a *Sell junk* button (sells every grey item with a value) and two switches, *Always sell junk* and *Always repair*. Both are off until you tick them. Repairs use your own gold, never the guild bank, and a chat line shows what was earned or spent.
+
 ## [2.5.2-beta.1] - 2026-11-21 (beta)
 ### Fixed
 - Combat helper, paladins: the seal is cast again after every Judgement. Seal and Judgement now run as a sequence that only moves on after a successful cast; Consecration and other cooldowns fill the gaps, then Holy Strike. Before, Consecration came first on every press and the seal was left out.

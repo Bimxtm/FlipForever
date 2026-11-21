@@ -17,6 +17,7 @@ Auto.lua
 UI.lua
 Tooltip.lua
 Planner.lua
+Merchant.lua
 
 Gather\Guard.lua
 Gather\Data.lua

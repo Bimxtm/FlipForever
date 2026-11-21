@@ -16,6 +16,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.2 Beta 2
+
+**Sell junk and repair in one go.** Open a merchant and you'll find a small strip under the window: *Sell junk* sells every grey item in your bags. Tick *Always sell junk* or *Always repair* and FlipForever does it on every visit. Both are off until you tick them, and repairs always use your own gold.
+
 # FlipForever 2.5.2 Beta 1
 
 **Combat helper fixes for paladins.** Your seal is cast again after every Judgement, so it is always up. Consecration and other cooldowns are used while Judgement recharges, then Holy Strike. Clicking the big icon during a fight no longer shows "Interface action failed because of an AddOn". If the game ever blocks an action again, `/ff errors` and *Copy bug report info* now say which one.
