@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.3-beta.8] - 2026-11-22 (beta)
+### Changed
+- Combat helper learning now judges only the helper's own choices, not how you play: only casts that come right after a press of the helper's button or key count, and a fight only counts for comparing orders when at least 70% of its casts came from the helper. Spells you cast yourself no longer go into its statistics. `/ff combat report` shows how many fights the helper did itself.
+### Fixed
+- The note "you waited ... seconds between casts" could raise an error when the time was not a whole number of seconds.
+
 ## [2.5.3-beta.7] - 2026-11-22 (beta)
 ### Added
 - Combat helper plays like the WoW: Forever class guides teach (Skill Capped's WoW: Forever class guides, updated 19 Nov 2026; written for PvP, used here mainly against mobs and bosses):
