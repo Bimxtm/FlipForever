@@ -708,3 +708,42 @@ FF:On("PLAYER_LOGIN", function()
     FlipForeverDB.settings.key = nil
   end
 end)
+
+-- One window style for every FlipForever window: dark backdrop with the green border, dragging with the
+-- position saved in settings[pos], kept on screen, Escape and a close button (unless turned off).
+-- opts: pos (settings key), strata, alpha, default ({ point, x, y } to place it now), escape, close
+FF.WINDOW_BACKDROP = { bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+  tile = true, tileSize = 16, edgeSize = 14, insets = { left = 4, right = 4, top = 4, bottom = 4 } }
+function FF:Window(name, width, height, opts)
+  opts = opts or {}
+  local f = CreateFrame("Frame", name, opts.parent or UIParent, "BackdropTemplate")
+  f:SetSize(width, height)
+  f:SetFrameStrata(opts.strata or "MEDIUM")
+  f:SetClampedToScreen(true)
+  if f.SetBackdrop then
+    f:SetBackdrop(FF.WINDOW_BACKDROP)
+    f:SetBackdropColor(0.05, 0.06, 0.08, opts.alpha or 0.96)
+    f:SetBackdropBorderColor(0.2, 0.8, 0.5, 1)
+  end
+  if opts.pos then
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", function(self)
+      self:StopMovingOrSizing()
+      local point, _, relPoint, x, y = self:GetPoint()
+      FlipForeverDB.settings[opts.pos] = { point, relPoint, x, y }
+    end)
+    if opts.default then
+      local p = FlipForeverDB.settings[opts.pos]
+      if p then f:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else f:SetPoint(opts.default[1], opts.default[2], opts.default[3]) end
+    end
+  end
+  if name and opts.escape ~= false then tinsert(UISpecialFrames, name) end
+  if opts.close ~= false then
+    f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    f.close:SetPoint("TOPRIGHT", 2, 2)
+  end
+  return f
+end

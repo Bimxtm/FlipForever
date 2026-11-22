@@ -3180,6 +3180,18 @@ assert "Cutting Teeth" in L("QH_READY_MSG") and L("QH_PINS") == 1 and L("QH_PINS
 assert L("QH_TURNIN") == "Gornek:0.52" and L("QH_TURNIN2") == "Hand in: Gornek" and L("QH_OFF")
 print("minimap quest pins:", L("QH_MM1"), "|", L("QH_MM2"), "|", L("QH_MM3"))
 assert L("QH_MM1") == "1:0,0:false" and L("QH_MM2") == "1:64,0:true" and L("QH_MM3") == 0
+lua.execute("""
+-- one window style: position saved under its key, Escape closes it unless turned off
+local FF = FlipForever
+FlipForeverDB.settings.testPos = nil
+local n0 = #UISpecialFrames
+local w = FF:Window("FlipForeverTestWin", 200, 100, { pos = "testPos", default = { "CENTER", 0, 0 } })
+local n1 = #UISpecialFrames
+FF:Window("FlipForeverTestWin2", 200, 100, { escape = false, close = false })
+WIN = (n1 - n0) .. ":" .. (#UISpecialFrames - n1) .. ":" .. tostring(w.close ~= nil)
+""")
+print("window style:", L("WIN"))
+assert L("WIN") == "1:0:true", L("WIN")
 print("advisor map pin:", L("ADV_PIN"))
 assert L("ADV_PIN") == "true:1:0:false:0:0"
 print("ALL ADDON TESTS PASSED")

@@ -17,27 +17,8 @@ end
 
 function UI:Build()
   if self.frame then return end
-  local f = CreateFrame("Frame", "FlipForeverPanel", UIParent, "BackdropTemplate")
-  f:SetSize(WIDTH, 430)
-  f:SetFrameStrata("HIGH")
-  f:SetClampedToScreen(true)
-  f:SetBackdrop({
-    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 14,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 },
-  })
-  f:SetBackdropColor(0.05, 0.06, 0.08, 0.95)
-  f:SetBackdropBorderColor(0.2, 0.8, 0.5, 1)
-  f:SetMovable(true)
-  f:EnableMouse(true)
-  f:RegisterForDrag("LeftButton")
-  f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", function(self)
-    self:StopMovingOrSizing()
-    local point, _, relPoint, x, y = self:GetPoint()
-    FlipForeverDB.settings.panelPos = { point, relPoint, x, y }
-  end)
+  -- shown next to the auction house: no Escape or close button of its own
+  local f = FF:Window("FlipForeverPanel", WIDTH, 430, { pos = "panelPos", strata = "HIGH", alpha = 0.95, escape = false, close = false })
   self.frame = f
 
   -- flashing gold glow while a deal waits for you

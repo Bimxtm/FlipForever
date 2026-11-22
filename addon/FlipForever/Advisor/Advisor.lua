@@ -595,29 +595,8 @@ local frame
 local ROWS = 14
 
 local function makeFrame()
-  local f = CreateFrame("Frame", "FlipForeverAdvisor", UIParent, "BackdropTemplate")
-  f:SetSize(470, 470)
-  f:SetFrameStrata("MEDIUM")
-  f:SetClampedToScreen(true)
-  f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 14, insets = { left = 4, right = 4, top = 4, bottom = 4 } })
-  f:SetBackdropColor(0.05, 0.06, 0.08, 0.96)
-  f:SetBackdropBorderColor(0.2, 0.8, 0.5, 1)
-  f:SetMovable(true)
-  f:EnableMouse(true)
-  f:RegisterForDrag("LeftButton")
-  f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", function(self)
-    self:StopMovingOrSizing()
-    local point, _, relPoint, x, y = self:GetPoint()
-    FlipForeverDB.settings.advisorPos = { point, relPoint, x, y }
-  end)
-  local pos = FlipForeverDB.settings.advisorPos
-  if pos then f:SetPoint(pos[1], UIParent, pos[2], pos[3], pos[4]) else f:SetPoint("CENTER", 0, 60) end
-  tinsert(UISpecialFrames, "FlipForeverAdvisor") -- Escape closes it
-
-  local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-  close:SetPoint("TOPRIGHT", 2, 2)
+  local f = FF:Window("FlipForeverAdvisor", 470, 470, { pos = "advisorPos", default = { "CENTER", 0, 60 } })
+  local close = f.close
 
   f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   f.title:SetPoint("TOPLEFT", 14, -12)

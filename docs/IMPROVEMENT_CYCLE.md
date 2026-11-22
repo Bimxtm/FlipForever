@@ -64,7 +64,7 @@ Owner, 22 Nov early morning: work on the Discord suggestions now (few bug report
 - [x] App: switch to the character you play (2.5.3-beta.4).
 - [x] Gear finder: compare stat gains, not only armor/item level (2.7.1-beta.2).
 - [x] Advisor steps pinnable on the map like the quest tracker (right-click a step; switch advisorPins; 2.7.1-beta.2).
-- [ ] UI and content pass: plan in docs/UI_PASS.md (22 Nov), steps 1, 2, 4, 3, 5; next: step 1 (one window style).
+- [ ] UI and content pass: plan in docs/UI_PASS.md (22 Nov), steps 1, 2, 4, 3, 5; step 1 done (FF:Window in Core.lua); next: step 2 (Settings grouped).
 
 Version note (22 Nov): 2.7.0 is the current stable; the talent overlay and the quest helper are in main and the feature branches are done. Small fixes and new features now ship as 2.7.1-beta.N on main. Earlier (21 Nov, evening): 2.5.2 was the stable; small fixes now ship as 2.5.3-beta.N. Earlier: 2.5.1 was the stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
 

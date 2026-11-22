@@ -344,25 +344,7 @@ local function professionFrame()
 end
 
 local function build()
-  local f = CreateFrame("Frame", "FlipForeverProfPlanner", UIParent, "BackdropTemplate")
-  f:SetSize(380, 430)
-  f:SetFrameStrata("MEDIUM")
-  f:SetClampedToScreen(true)
-  f:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 14, insets = { left = 4, right = 4, top = 4, bottom = 4 } })
-  f:SetBackdropColor(0.05, 0.06, 0.08, 0.96)
-  f:SetBackdropBorderColor(0.2, 0.8, 0.5, 1)
-  f:SetMovable(true)
-  f:EnableMouse(true)
-  f:RegisterForDrag("LeftButton")
-  f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", function(self)
-    self:StopMovingOrSizing()
-    local point, _, relPoint, x, y = self:GetPoint()
-    FlipForeverDB.settings.profPos = { point, relPoint, x, y }
-  end)
-  tinsert(UISpecialFrames, "FlipForeverProfPlanner")
-  CreateFrame("Button", nil, f, "UIPanelCloseButton"):SetPoint("TOPRIGHT", 2, 2)
+  local f = FF:Window("FlipForeverProfPlanner", 380, 430, { pos = "profPos" })
 
   f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   f.title:SetPoint("TOPLEFT", 14, -12)

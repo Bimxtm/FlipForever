@@ -334,10 +334,11 @@ function TO:Panel(parent)
   panel = CreateFrame("Frame", "FlipForeverTalentPanel", parent or UIParent, "BackdropTemplate")
   panel:SetSize(240, 518)
   panel:SetPoint("TOPLEFT", parent or UIParent, "TOPRIGHT", -30, -12)
+  -- same look as the other FlipForever windows (Core.lua FF:Window), attached to the Talents window
   if panel.SetBackdrop then
-    panel:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-      tile = true, tileSize = 16, edgeSize = 14, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    panel:SetBackdropColor(0.05, 0.05, 0.08, 0.92)
+    panel:SetBackdrop(FF.WINDOW_BACKDROP)
+    panel:SetBackdropColor(0.05, 0.06, 0.08, 0.92)
+    if panel.SetBackdropBorderColor then panel:SetBackdropBorderColor(0.2, 0.8, 0.5, 1) end
   end
   panel.title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   panel.title:SetPoint("TOPLEFT", 12, -10)
