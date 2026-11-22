@@ -2,6 +2,87 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.11] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 9: shared combat learning (anonymous summaries, merged into each release; warning once, can be switched off).
+
+## [2.7.0-beta.10] - 2026-11-22 (beta, branch feature/quest-helper)
+### Changed
+- From 2.5.3 Beta 8: combat learning counts only the helper's own casts and fights; fix for the "you waited" note.
+
+## [2.7.0-beta.9] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 7: combat helper rules from the WoW: Forever class guides (cooldowns for elites, emergency key, advice in fights).
+
+## [2.7.0-beta.8] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 6: the combat helper learns from your fights per class and build, with notes after fights and `/ff combat report`.
+
+## [2.7.0-beta.7] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 5: the undercut fix (cancel and repost undercut auctions where it pays after the deposit).
+
+## [2.7.0-beta.6] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 4: the app switches to the character you played last after each import.
+
+## [2.7.0-beta.5] - 2026-11-22 (beta, branch feature/quest-helper)
+### Fixed
+- The fixes from 2.5.3 Beta 3: hidden auras and system chat text no longer cause errors, and Locale.lua is loaded once.
+
+## [2.7.0-beta.4] - 2026-11-22 (beta, branch feature/quest-helper)
+### Changed
+- The Advisor's talent step from 2.5.3 Beta 2: where each unspent point goes for the chosen build (talent, points, tree); clicking it opens the Talents window with the talent overlay.
+
+## [2.7.0-beta.3] - 2026-11-22 (beta, branch feature/quest-helper)
+### Fixed
+- The waypoint arrow fix from 2.5.3 Beta 1: no more "Arrow.lua:50: attempt to call a nil value" when changing zones with a pin on the world map.
+
+## [2.7.0-beta.2] - 2026-11-21 (beta, branch feature/quest-helper)
+### Added
+- Quest helper: known quest spots on your map also show on the minimap. Spots out of the minimap's range sit faded on its edge, in their direction. Follows a rotating minimap.
+
+## [2.7.0-beta.1] - 2026-11-21 (beta, branch feature/quest-helper)
+### Added
+- Quest helper. FlipForever learns quest spots from your play and keeps them for all your characters: where you took each quest, where its objectives moved forward, and where you handed it in. The next spot of a quest is the area of its first unfinished objective, or the place to hand it in once it is done (the quest giver until a hand-in has been seen). Where the game client knows the next waypoint itself, that is used too.
+- `/ff quest` points the waypoint arrow at the next quest spot, ready-to-hand-in quests first; type it again for the next quest.
+- World map: a quest pin on each known spot of the map you are looking at (yellow ? to hand in, ! for objectives), with the quest and what to do there on hover.
+- Chat: a line when a quest is ready to hand in and its hand-in spot is known.
+- Switch: *Quest helper: learn quest spots, map pins, /ff quest* in Settings, Features.
+- Includes the talent overlay (2.6.0 Beta 6) and 2.5.2 Beta 12.
+
+## [2.6.0-beta.6] - 2026-11-21 (beta)
+### Added
+- Talents panel: where your points should stand at levels 20, 30, 40, 50 and 60, as a point split per tree, for builds with a full talent order. The band you are in now is gold. When you have fewer points in the build's trees than the order asks for at your level (not counting points you still have to spend), an orange note says how many.
+- Includes 2.5.2 Beta 12 from the main line: combat helper buffs before a fight, paladin icon follows the seal and Judgement.
+
+## [2.6.0-beta.5] - 2026-11-21 (beta)
+### Added
+- Talents panel: an orange warning when you have points in a tree your build leaves empty, with how many and in which tree.
+- Includes 2.5.2 betas 2-11 from the main line: sell junk and repair, a switch for every feature, trainer reminder, clean restart after updates, time to level, threat warning, open all mail, bag value, price trend in the app, node timers.
+
+## [2.6.0-beta.4] - 2026-11-21 (beta)
+### Added
+- Talents panel: hover a talent for the game's description of it, its tree, the build's pick number, the target rank and whether it is done or next.
+- Talents window: the tooltip of a marked talent shows its pick number in the build and your rank against the target.
+
+## [2.6.0-beta.3] - 2026-11-21 (beta)
+### Added
+- Talents panel: click a talent to open its tree on the Talents window.
+- Builds whose guide names only the key talents now get an order: lower tiers first, and the next point is always one you can already take. When a key talent needs more points in its tree first, the panel says how many.
+
+## [2.6.0-beta.2] - 2026-11-21 (beta)
+### Added
+- Talents panel: the tree of every talent after its name, the build's role, how to play the build (its rotation), and how many points you have left to spend.
+- `/ff talents` opens or closes the game's Talents window (from level 10).
+- Includes the 2.5.2 Beta 1 fixes: paladin seal and Judgement in the combat helper, no blocked action when clicking the combat icon in a fight, blocked actions in `/ff errors`.
+
+## [2.6.0-beta.1] - 2026-11-21 (beta)
+### Added
+- Talents window: your chosen Advisor build is shown right on the game's Talents window. Every talent of the build carries its place in the order, talents you have finished are marked green and the next point is marked gold.
+- A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
+- Settings: *Show my build on the Talents window* (on by default).
+
 ## [2.5.3-beta.9] - 2026-11-22 (beta)
 ### Added
 - Shared combat learning: what every player's combat helper learns now improves the helper for everyone. The app sends an anonymous summary (class, build and level band, the spell orders compared, fight counts, kills, fight time, deaths and health lost; no character, realm or account names, no chat) at most once a day, only when something changed. Each release starts from what worked across all players; your own fights still decide (the shared results count as at most 20 fights).

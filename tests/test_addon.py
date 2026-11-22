@@ -2533,6 +2533,227 @@ print("gear alert:", L("GA_MSG"))
 assert L("GA1") == 0 and L("GA_PRINT1") == 0 and L("GA2") == 1 and "Keen Dagger" in L("GA_MSG") and L("GA_SOUND") == 1
 assert L("GA3") == 0 and L("GA4") == 1 and L("GA_PRINT4") == 0
 
+# --- talent overlay: the chosen build on the game's Talents window
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+SAVED_TALENTS = TALENTS
+SAVED_CLASS = UnitClass
+function UnitClass() return "Mage", "MAGE" end
+TALENTS = { {"Improved Frostbolt", 5, 5}, {"Precision", 3, 3}, {"Frostbite", 1, 3}, {"Ice Shards", 0, 3}, {"Ice Lance", 0, 1} }
+FlipForever.Advisor:CharStore().build = nil
+PLEVEL = 22
+-- the load-on-demand Talents window with five talent buttons
+TF = CreateFrame("Frame", "TalentFrame")
+for i = 1, 5 do CreateFrame("Button", "TalentFrameTalent" .. i, TF) end
+TF.selectedTab = 1
+Fire("ADDON_LOADED", "Blizzard_TalentUI")
+TF.shown = true
+TO:Refresh()
+local plan = TO:PanelText().plan
+TO_STATES = {}
+for _, s in ipairs(plan.steps) do TO_STATES[#TO_STATES + 1] = s.name .. "=" .. s.state end
+TO_STATES = table.concat(TO_STATES, ",")
+TO_MARK3 = TO:Mark(TalentFrameTalent3) and TO:Mark(TalentFrameTalent3).state
+TO_MARK1 = TO:Mark(TalentFrameTalent1) and TO:Mark(TalentFrameTalent1).state
+TO_PANEL = FlipForeverTalentPanel and FlipForeverTalentPanel:IsShown()
+TO_HOOKED = #(TF.hooks.OnShow or {})
+-- a point spent: the next talent moves on
+TALENTS[3][2] = 3
+Fire("CHARACTER_POINTS_CHANGED")
+TO_MARK3B = TO:Mark(TalentFrameTalent3).state
+TO_MARK4B = TO:Mark(TalentFrameTalent4).state
+-- switched off in Settings: marks and panel go away
+FlipForeverDB.settings.talentOverlay = false
+TO:Refresh()
+TO_OFF_MARK = TO:Mark(TalentFrameTalent4):IsShown()
+TO_OFF_PANEL = FlipForeverTalentPanel:IsShown()
+FlipForeverDB.settings.talentOverlay = nil
+-- window closed: panel hides
+TF.shown = false
+TO:Refresh()
+TO_CLOSED = FlipForeverTalentPanel:IsShown()
+TALENTS = SAVED_TALENTS
+""")
+print("talent overlay:", L("TO_STATES"))
+assert L("TO_STATES").startswith("Improved Frostbolt=done,Precision=done,Frostbite=next,Ice Shards=todo,Ice Lance=todo"), L("TO_STATES")
+assert L("TO_MARK3") == "next" and L("TO_MARK1") == "done" and L("TO_PANEL") and L("TO_HOOKED") == 1
+assert L("TO_MARK3B") == "done" and L("TO_MARK4B") == "next"
+assert L("TO_OFF_MARK") is False and L("TO_OFF_PANEL") is False and L("TO_CLOSED") is False
+lua.execute("""
+PLEVEL = 12
+TO_LVL = {}
+for _, s in ipairs(FlipForever.TalentOverlay:Plan(FlipForever.Advisor:Build(FlipForever.Advisor:Player()), 12).steps) do
+  if s.name == "Ice Lance" then TO_LVL = s.state end
+end
+TO_LINE = FlipForever.TalentOverlay:StepLine({ order = 5, name = "Ice Lance", state = "level", minLevel = 20 })
+PLEVEL = 22
+UnitClass = SAVED_CLASS
+""")
+assert L("TO_LVL") == "level" and "from level 20" in L("TO_LINE")
+
+# --- talent overlay beta 2: tree names, role, how to play, points to spend, /ff talents
+lua.execute("""
+local TO, AD = FlipForever.TalentOverlay, FlipForever.Advisor
+UnitClass = function() return "Mage", "MAGE" end
+SAVED_TABINFO = GetTalentTabInfo
+GetTalentTabInfo = function(tab) return "Frost" end
+UNSPENT = 2
+local txt = TO:PanelText()
+TO2_LINE = txt.lines[2]
+TO2_POINTS = txt.points
+TO2_ROLE = txt.role
+TO2_ROT = txt.rotation
+TO2_BUILD = AD:Build(AD:Player())
+TO2_HASROT = TO2_BUILD and TO2_BUILD.rotation ~= nil
+TO2_ROLEKEY = TO2_BUILD and TO2_BUILD.role
+-- /ff talents: loads the Talents window and toggles it
+TOGGLED = 0
+LoadAddOn = function(name) LOADED = name end
+ToggleTalentFrame = function() TOGGLED = TOGGLED + 1 end
+PLEVEL = 22
+TO2_OPEN = TO:Open()
+TO2_TOGGLED = TOGGLED
+PLEVEL = 5
+local savedLevel = UnitLevel
+UnitLevel = function() return PLEVEL end
+printed = {}
+TO2_OPENLOW = TO:Open()
+UnitLevel = savedLevel
+TO2_LOW = TOGGLED
+TO2_LOWMSG = printed[#printed] or ""
+PLEVEL = 22
+SlashCmdList.FLIPFOREVER("talents")
+TO2_SLASH = TOGGLED
+ToggleTalentFrame, LoadAddOn = nil, nil
+GetTalentTabInfo = SAVED_TABINFO
+UnitClass = SAVED_CLASS
+""")
+print("talent panel line:", repr(L("TO2_LINE")), "| points:", repr(L("TO2_POINTS")), "| role:", L("TO2_ROLE"))
+print("talents command:", L("TO2_OPEN"), L("TO2_TOGGLED"), L("TO2_OPENLOW"), L("TO2_LOW"), repr(L("TO2_LOWMSG")), L("TO2_SLASH"))
+assert L("TO2_LINE").endswith(" |cff888888Frost|r")
+assert "2 to spend" in L("TO2_POINTS")
+if L("TO2_ROLEKEY"):
+    assert L("TO2_ROLE").startswith("Role: ")
+if L("TO2_HASROT"):
+    assert "How to play:" in L("TO2_ROT")
+
+# --- talent overlay beta 5: warn about points in a tree the build leaves empty
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+DRIFT1 = TO:DriftLine({ points = "0/26/0" }, { spent = { 3, 10, 0 }, treeNames = { "Arms", "Fury", "Protection" } }) or ""
+DRIFT2 = TO:DriftLine({ points = "0/26/0" }, { spent = { 0, 10, 0 } }) or ""
+DRIFT3 = TO:DriftLine({}, { spent = { 3, 0, 0 } }) or ""
+""")
+print("talent drift:", L("DRIFT1"))
+assert "3 points in Arms" in L("DRIFT1") and L("DRIFT2") == "" and L("DRIFT3") == ""
+
+# --- talent overlay beta 6: where your points should stand per level band
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+-- order: 5 in tree 2, 5 in tree 2, 3 in tree 1, 5 in tree 2, then 33 more in tree 3 (51 points)
+local plan = { spent = { 0, 4, 0 }, steps = {
+  { tab = 2, target = 5 }, { tab = 2, target = 5 }, { tab = 1, target = 3 }, { tab = 2, target = 5 },
+  { tab = 3, target = 30 }, { tab = 3, target = 3 }, { name = "Missing", state = "missing" } } }
+local bands = TO:Bands({ talents = {} }, plan)
+BANDS = {}
+for _, b in ipairs(bands) do BANDS[#BANDS + 1] = b.level .. "=" .. table.concat(b.split, "/") end
+BANDS = table.concat(BANDS, " ")
+BAND1, BAND2, BEHIND = TO:BandLines({ talents = {} }, plan, 25)
+BAND_KEYONLY = TO:Bands({ keyOnly = true }, plan) == nil
+-- a short build: complete by level 30, no later bands
+local short = TO:Bands({}, { spent = { 0, 0, 0 }, steps = { { tab = 1, target = 15 } } })
+SHORT_N, SHORT_LAST = #short, short[#short].level .. "=" .. table.concat(short[#short].split, "/")
+-- the panel: points spent elsewhere show a note, unspent points don't
+local oldUCP = UnitCharacterPoints
+UnitCharacterPoints = function() return 2 end
+_, _, BEHIND_OK = TO:BandLines({}, { spent = { 0, 9, 0 }, steps = { { tab = 2, target = 20 } } }, 20)
+UnitCharacterPoints = oldUCP
+""")
+print("level bands:", L("BANDS"), "|", L("BAND1"), "|", L("BAND2"), "| behind at 25:", L("BEHIND"))
+assert L("BANDS") == "20=1/10/0 30=3/15/3 40=3/15/13 50=3/15/23 60=3/15/33"
+assert L("BAND1") == "By level 20: 1/10/0  |cffffd20030: 3/15/3|r  40: 3/15/13" and L("BAND2") == "50: 3/15/23  60: 3/15/33"
+assert L("BEHIND") == 12   # level 25: 16 points due (3 in tree 1, 13 in tree 2), 4 spent
+assert L("BAND_KEYONLY") and L("SHORT_N") == 2 and L("SHORT_LAST") == "30=15/0/0"
+assert L("BEHIND_OK") == 2
+
+# --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local savedInfo = GetTalentInfo
+TIERS = { 1, 1, 2, 3, 5 }   -- Improved Frostbolt, Precision, Frostbite, Ice Shards, Ice Lance
+GetTalentInfo = function(tab, i) local t = TALENTS[i] return t[1], nil, TIERS[i], 1, t[2], t[3] end
+TALENTS = { {"Improved Frostbolt", 5, 5}, {"Precision", 0, 3}, {"Frostbite", 0, 3}, {"Ice Shards", 0, 3}, {"Ice Lance", 0, 1} }
+local key = { keyOnly = true, talents = { {"Ice Lance"}, {"Ice Shards"}, {"Precision"}, {"Frostbite"} } }
+local plan = TO:Plan(key, 60)
+local o = {}
+for _, s in ipairs(plan.steps) do o[#o + 1] = s.name .. "=" .. s.state end
+TO3_ORDER = table.concat(o, ",")
+-- only key talents above tier 1 and 5 points spent: Frostbite (tier 2) is next, the rest wait
+key = { keyOnly = true, talents = { {"Ice Lance"}, {"Ice Shards"}, {"Frostbite"} } }
+plan = TO:Plan(key, 60)
+o = {}
+for _, s in ipairs(plan.steps) do o[#o + 1] = s.name .. "=" .. s.state end
+TO3_ORDER2 = table.concat(o, ",")
+-- no point spent yet: the first key talent is next, with the points its tier needs
+TALENTS[1][2] = 0
+key = { keyOnly = true, talents = { {"Ice Shards"}, {"Ice Lance"} } }
+plan = TO:Plan(key, 60)
+TO3_NEED = plan.steps[1].name .. ":" .. plan.steps[1].state .. ":" .. tostring(plan.steps[1].needPoints)
+TALENTS[1][2] = 5
+GetTalentInfo = savedInfo
+-- clicking a line opens that tree's tab
+TF.shown = true
+TF.selectedTab = 1
+CLICKED = nil
+TalentFrameTab2 = CreateFrame("Button")
+TalentFrameTab2.Click = function() CLICKED = 2 TF.selectedTab = 2 end
+TO3_SAME = TO:ShowTree(1)
+TO3_CLICK = TO:ShowTree(2) and CLICKED
+TF.selectedTab = 1
+TF.shown = false
+""")
+print("key-talent order:", L("TO3_ORDER"), "|", L("TO3_ORDER2"), "| need:", L("TO3_NEED"))
+assert L("TO3_ORDER") == "Precision=next,Frostbite=todo,Ice Shards=todo,Ice Lance=todo"
+assert L("TO3_ORDER2") == "Frostbite=next,Ice Shards=todo,Ice Lance=todo"
+assert L("TO3_NEED") == "Ice Shards:next:10"
+assert L("TO3_SAME") is True and L("TO3_CLICK") == 2
+
+# --- talent overlay beta 4: tooltips on panel lines (game description + build pick) and on marked talents
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local savedTip = GameTooltip
+TIP4 = {}
+GameTooltip = {
+  SetOwner = function(self, o) self.owner = o TIP4 = {} end,
+  SetTalent = function(self, tab, i) TIP4[#TIP4 + 1] = "talent " .. tab .. ":" .. i end,
+  AddLine = function(self, t) TIP4[#TIP4 + 1] = t end,
+  Show = function() end, Hide = function() end,
+  IsOwned = function(self, o) return self.owner == o end,
+}
+UnitClass = function() return "Mage", "MAGE" end
+TF.shown = true
+TF.selectedTab = 1
+TO:Refresh()
+local row = FlipForeverTalentPanel.rows[2]
+TO4_ROW = TO:RowTooltip(row) and table.concat(TIP4, "|")
+-- a marked talent button adds the build's line to the game's tooltip
+local b = TalentFrameTalent3
+GameTooltip.owner = b
+TIP4 = {}
+for _, fn in ipairs(b.hooks.OnEnter or {}) do fn(b) end
+TO4_BTN = table.concat(TIP4, "|")
+TO4_HOOKS = #(b.hooks.OnEnter or {})
+TO:Refresh()
+TO4_HOOKS2 = #(b.hooks.OnEnter or {})
+TF.shown = false
+GameTooltip = savedTip
+UnitClass = SAVED_CLASS
+""")
+print("row tooltip:", L("TO4_ROW"), "| button tooltip:", L("TO4_BTN"))
+assert L("TO4_ROW").startswith("talent 1:1|") and "FlipForever build: pick 1 - 5/5 - done" in L("TO4_ROW") and "Click to open this tree." in L("TO4_ROW")
+assert L("TO4_BTN").startswith("FlipForever build: pick 3") and L("TO4_HOOKS") == 1 and L("TO4_HOOKS2") == 1
+
+assert L("TO2_TOGGLED") == 1 and L("TO2_LOW") == 1 and "level 10" in L("TO2_LOWMSG") and L("TO2_SLASH") == 2
 # --- merchant: sell grey items and repair (button always there, automatic only when switched on)
 lua.execute("""
 local FF = FlipForever
@@ -2620,7 +2841,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,combatBuffs=true,undercutFix=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -2835,4 +3056,104 @@ FlipForeverDB.settings.nodeTimers = nil
 print("node timers:", L("NT_TIMERS"), L("NT_WAIT"), L("NT_OFF"))
 assert L("NT_TIMERS") == "2:1:840" and L("NT_WAIT") == 840 and L("NT_OFF") == 0
 assert L("BV_NUMS") == "900:1654:1:1" and "1 worth posting" in L("BV_LINE") and "Item1 x20" in L("BV_TIP") and L("BV_OFF") == ""
+
+# --- quest helper: learns the giver, objective spots and the hand-in; arrow and map pins
+lua.execute("""
+local QH, FF = FlipForever.QuestHelper, FlipForever
+local oldQL, oldPos, oldName, oldSet = C_QuestLog, FF.Arrow.PlayerPos, UnitName, FF.Arrow.SetTarget
+FlipForeverDB.quests = nil
+POS = { 1411, 0.50, 0.50 }
+FF.Arrow.PlayerPos = function() return POS[1], POS[2], POS[3] end
+NPC = "Gornek"
+UnitName = function(unit) if unit == "npc" then return NPC end return "Tester" end
+QLOG = {}
+C_QuestLog = {
+  GetNumQuestLogEntries = function() return #QLOG end,
+  GetInfo = function(i) local q = QLOG[i] return q and { title = q.title, questID = q.id } end,
+  IsComplete = function(id) for _, q in ipairs(QLOG) do if q.id == id then return q.complete end end return false end,
+  GetQuestObjectives = function(id) for _, q in ipairs(QLOG) do if q.id == id then return q.objs end end return {} end,
+}
+ARROWED = nil
+FF.Arrow.SetTarget = function(self, m, x, y, label) ARROWED = m .. ":" .. x .. ":" .. y .. ":" .. label end
+-- take the quest from Gornek at 50,50
+Fire("QUEST_DETAIL")
+QLOG[1] = { id = 788, title = "Cutting Teeth", objs = { { text = "Mottled Boar slain: 0/10", numFulfilled = 0, finished = false } } }
+Fire("QUEST_ACCEPTED", 788)
+Fire("QUEST_LOG_UPDATE")                    -- first look: no point
+QH_EMPTY = QH:Spot(QH:Log()[1]) == nil
+-- two kills, at 40,60 and 44,64
+POS = { 1411, 0.40, 0.60 }
+QLOG[1].objs[1].numFulfilled = 1
+Fire("QUEST_LOG_UPDATE")
+POS = { 1411, 0.44, 0.64 }
+QLOG[1].objs[1].numFulfilled = 2
+Fire("QUEST_LOG_UPDATE")
+local s = QH:Spot(QH:Log()[1])
+QH_OBJ = s.kind .. ":" .. string.format("%.2f,%.2f", s.x, s.y) .. ":" .. s.label
+-- done: the hand-in goes back to the giver (no hand-in seen yet), with a chat line
+QLOG[1].objs[1].numFulfilled, QLOG[1].objs[1].finished, QLOG[1].complete = 10, true, true
+PRINTED = {}
+local oldPrint = FF.Print
+FF.Print = function(self, msg) PRINTED[#PRINTED + 1] = msg end
+Fire("QUEST_LOG_UPDATE")
+FF.Print = oldPrint
+QH_READY_MSG = PRINTED[1] or ""
+s = QH:Spot(QH:Log()[1])
+QH_TURNIN_GUESS = s.kind .. ":" .. string.format("%.2f,%.2f", s.x, s.y) .. ":" .. s.label
+QH:Next()
+QH_ARROW = ARROWED
+-- a world map showing zone 1411: one pin at the giver
+local canvas = CreateFrame("Frame")
+canvas.GetWidth = function() return 1000 end
+canvas.GetHeight = function() return 600 end
+WorldMapFrame = CreateFrame("Frame")
+WorldMapFrame.GetMapID = function() return 1411 end
+WorldMapFrame.GetCanvas = function() return canvas end
+WorldMapFrame.shown = true
+QH_PINS = QH:RefreshMap()
+WorldMapFrame.GetMapID = function() return 1412 end
+QH_PINS_OTHER = QH:RefreshMap()
+-- handed in to Gornek, now standing at 52,48
+POS = { 1411, 0.52, 0.48 }
+Fire("QUEST_COMPLETE")
+Fire("QUEST_TURNED_IN", 788, 100, 0)
+QH_TURNIN = FlipForeverDB.quests[788].turnin.n .. ":" .. FlipForeverDB.quests[788].turnin.x
+-- the next character with the same quest done goes to the learned hand-in
+s = QH:Spot(QH:Log()[1])
+QH_TURNIN2 = s.label
+-- minimap: 1000 x 1000 yard map, 100 yards to the edge of a 140 px minimap
+local oldNS, oldCMap, oldCMini = FF.gatherNS, C_Map, C_Minimap
+FF.gatherNS = nil
+C_Map = { GetMapWorldSize = function() return 1000, 1000 end }
+C_Minimap = { GetViewRadius = function() return 100 end }
+Minimap = CreateFrame("Frame")
+Minimap.GetWidth = function() return 140 end
+local n, pins = QH:RefreshMinimap()                    -- standing on the hand-in spot
+local p = pins[1]
+QH_MM1 = n .. ":" .. string.format("%.0f,%.0f", p.ox + 0, p.oy + 0) .. ":" .. tostring(p.outside)
+POS = { 1411, 0.40, 0.48 }                           -- 120 yards west of it: on the edge (64 px east), faded
+n, pins = QH:RefreshMinimap()
+p = pins[1]
+QH_MM2 = n .. ":" .. string.format("%.0f,%.0f", p.ox + 0, p.oy + 0) .. ":" .. tostring(p.outside)
+POS = { 1412, 0.40, 0.48 }                           -- another map: none
+QH_MM3 = QH:RefreshMinimap()
+FF.gatherNS, C_Map, C_Minimap, Minimap = oldNS, oldCMap, oldCMini, nil
+-- switched off: no arrow, no pins
+FlipForeverDB.settings.questHelper = false
+ARROWED = nil
+QH:Next()
+QH_OFF = (ARROWED == nil) and QH:RefreshMap() == 0
+FlipForeverDB.settings.questHelper = nil
+WorldMapFrame = nil
+C_QuestLog, FF.Arrow.PlayerPos, UnitName, FF.Arrow.SetTarget = oldQL, oldPos, oldName, oldSet
+""")
+print("quest helper:", L("QH_OBJ"), "|", L("QH_TURNIN_GUESS"), "|", L("QH_ARROW"), "| pins:", L("QH_PINS"), L("QH_PINS_OTHER"))
+print("quest ready line:", L("QH_READY_MSG"), "| hand-in:", L("QH_TURNIN"), "|", L("QH_TURNIN2"))
+assert L("QH_EMPTY") and L("QH_OBJ") == "objective:0.42,0.62:Mottled Boar slain: 0/10"
+assert L("QH_TURNIN_GUESS") == "turnin:0.50,0.50:Hand in (quest giver): Gornek"
+assert L("QH_ARROW") == "1411:0.5:0.5:Cutting Teeth - Hand in (quest giver): Gornek"
+assert "Cutting Teeth" in L("QH_READY_MSG") and L("QH_PINS") == 1 and L("QH_PINS_OTHER") == 0
+assert L("QH_TURNIN") == "Gornek:0.52" and L("QH_TURNIN2") == "Hand in: Gornek" and L("QH_OFF")
+print("minimap quest pins:", L("QH_MM1"), "|", L("QH_MM2"), "|", L("QH_MM3"))
+assert L("QH_MM1") == "1:0,0:false" and L("QH_MM2") == "1:64,0:true" and L("QH_MM3") == 0
 print("ALL ADDON TESTS PASSED")

@@ -1,3 +1,73 @@
+# FlipForever 2.7.0 Beta 11
+
+**The combat helper learns from all players.** What your combat helper learns now also helps everyone else: the app shares an anonymous summary (class, build, the spell orders it compared and how long its fights took; no names, no chat), and every new version starts from what worked best for all players. You can switch this off in game under Settings, Features ("Share anonymous combat data") or in the app's Settings. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 9.
+
+# FlipForever 2.7.0 Beta 10
+
+**The combat helper learns from itself.** It now only learns from the spells it cast itself (right after you press its key) and only from fights it did itself, not from the spells you cast by hand. `/ff combat report` shows how many fights that were. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 8.
+
+# FlipForever 2.7.0 Beta 9
+
+**The combat helper plays like the guides teach.** Using the WoW: Forever class guides, the combat helper now saves your big cooldowns for elites, rares and bosses, and gives you an emergency key (Shift + your combat key): it casts your first ready defensive spell and uses your best healthstone or healing potion. During a fight it tells you when to press it, when to interrupt a cast, when to slow a target that may run and when to switch to your wand. You can switch it off under Settings, Features. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 7.
+
+# FlipForever 2.7.0 Beta 8
+
+**The combat helper learns from your fights.** It now keeps track of every fight for your class and build: what you cast, what failed and why, how long you waited between casts, when you ran out of mana, rage or energy, and how much health you lost. It tries small changes to the guide's order and keeps the one that kills fastest for you. After a fight it tells you what to do better when it matters, and `/ff combat report` shows everything it has learned. Both parts have a switch under Settings, Features. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 6.
+
+# FlipForever 2.7.0 Beta 7
+
+**Undercut auctions are now fixed, not just reported.** At the auction house, press the FlipForever button and it checks each undercut auction live. Only where reposting really pays does it offer *CANCEL*: never when the cheaper ones should sell before yours ends, never below your floor, and never when the new deposit would eat the gain. Collect the cancelled items from the mailbox, press the button again, and they go back up just under the cheapest seller. You can switch it off under Settings, Features. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 5.
+
+# FlipForever 2.7.0 Beta 6
+
+**The app follows the character you play.** Every time the game saves (on /reload or logout), the app switches to the realm and character you played last, with their budget and shopping list. Pick another character by hand and it stays until you play a different one. You can switch it off in the app's Settings. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 4.
+
+# FlipForever 2.7.0 Beta 5
+
+**Fewer error messages.** The fixes from 2.5.3 Beta 3: no more "Auras cannot be accessed when secret" after a fight, no "secret string value" error from system chat messages, and no duplicate file warning at login. This beta also has the quest helper and the talent overlay.
+
+# FlipForever 2.7.0 Beta 4
+
+**Where your talent points go.** When you have talent points to spend, the Advisor now tells you exactly where they go for your chosen build: which talents, how many points each and in which tree. Hover the step for the full list, click it to open the Talents window with the build marked on it. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 2.
+
+# FlipForever 2.7.0 Beta 3
+
+**Waypoint arrow fix.** Changing zones while a pin is set on the world map no longer shows the error "Arrow.lua:50: attempt to call a nil value". The arrow points to your map pin again. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 1.
+
+# FlipForever 2.7.0 Beta 2
+
+**Quest spots on the minimap.** The quest helper now also shows its known quest spots on the minimap. Spots further away sit faded on the minimap's edge, so you can see which way to go.
+
+# FlipForever 2.7.0 Beta 1
+
+**Quest helper (first test version).** FlipForever now learns where your quests happen: where you took them, where you made progress, and where you handed them in, shared by all your characters. Type `/ff quest` and the waypoint arrow points to the next spot of a quest; type it again for the next quest. Known spots also show as quest pins on the world map, and a chat line tells you when a quest is ready to hand in. It gets better the more you play. You can switch it off under Settings, Features. This beta also has the talent overlay and everything from the 2.5.2 betas up to Beta 12.
+
+# FlipForever 2.6.0 Beta 6
+
+**Your points by level.** The panel beside the Talents window now shows where your points should stand at levels 20, 30, 40, 50 and 60 for builds with a full talent order, with the band you are in marked. If you are behind the order for your level, it tells you by how many points. This beta also has everything from the 2.5.2 betas up to Beta 12.
+
+# FlipForever 2.6.0 Beta 5
+
+**Off-build points flagged.** If you have talent points in a tree your build leaves empty, the panel beside the Talents window now says so, with how many and where. This beta also has everything from the 2.5.2 betas up to Beta 11.
+
+# FlipForever 2.6.0 Beta 4
+
+**Talent details on hover.** Hover a talent in the panel beside the Talents window to read what it does, which tree it is in and where it comes in the build. Talents marked on the Talents window show their pick number and target rank in their tooltip too.
+
+# FlipForever 2.6.0 Beta 3
+
+**Click a talent to open its tree.** Each line in the panel beside the Talents window now takes you to that talent's tree. Builds whose guide names only the key talents get an order too: lower tiers first, so the next point is always one you can take. If a key talent needs more points in its tree first, the panel tells you how many.
+
+# FlipForever 2.6.0 Beta 2
+
+**More of your build beside the Talents window.** The panel now shows which tree each talent is in, the build's role, how to play it, and how many talent points you have left to spend. Type `/ff talents` to open the Talents window.
+
+Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts your seal again after every Judgement and no longer causes "Interface action failed because of an AddOn" when you click its icon in a fight.
+
+# FlipForever 2.6.0 Beta 1
+
+**Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
+
 # FlipForever 2.5.3 Beta 9
 
 **The combat helper learns from all players.** What your combat helper learns now also helps everyone else: the app shares an anonymous summary (class, build, the spell orders it compared and how long its fights took; no names, no chat), and every new version starts from what worked best for all players. You can switch this off in game under Settings, Features ("Share anonymous combat data") or in the app's Settings.
