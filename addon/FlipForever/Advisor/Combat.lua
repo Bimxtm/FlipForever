@@ -631,21 +631,30 @@ local BUFF_FAMILY = { ["Aspect of the Hawk"] = "Aspect of", ["Aspect of the Monk
 
 function C:BuffsOn() return FlipForeverDB.settings.combatBuffs ~= false end
 
+-- your buff names, or nil when the game keeps them hidden right now (auras can be secret around
+-- fights; reading them then raises an error, so it is done in a protected call)
 local function playerBuffNames()
   local names = {}
   for i = 1, 40 do
-    local name
+    local ok, raw
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
-      local a = C_UnitAuras.GetAuraDataByIndex("player", i, "HELPFUL")
-      name = a and plain(a.name)
+      ok, raw = pcall(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
+      if ok and raw ~= nil and issecretvalue and issecretvalue(raw) then return nil end
+      if ok and raw then raw = raw.name end
     elseif UnitBuff then
-      name = plain((UnitBuff("player", i)))
+      ok, raw = pcall(UnitBuff, "player", i)
+    else
+      ok = true
     end
-    if not name then break end
+    if not ok then return nil end
+    if raw == nil then break end
+    local name = plain(raw)
+    if not name then return nil end
     names[#names + 1] = name
   end
   return names
 end
+C.PlayerBuffNames = playerBuffNames
 
 -- the buffs to cast before the next fight, in the client's language
 function C:MissingBuffs()
@@ -658,6 +667,7 @@ function C:MissingBuffs()
   if not list then return {} end
   local known = AD:KnownSpells()
   local have = playerBuffNames()
+  if not have then return C.lastMissing or {} end   -- hidden right now: keep the last answer
   local S = FF.Spells
   local function present(spell)
     local loc = S:Local(spell)
@@ -678,6 +688,7 @@ function C:MissingBuffs()
       end
     end
   end
+  C.lastMissing = out
   return out
 end
 

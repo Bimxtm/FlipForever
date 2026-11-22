@@ -25,7 +25,6 @@ BagValue.lua
 Gather\Guard.lua
 Gather\Data.lua
 Gather\Core.lua
-Locale.lua
 Gather\Main.lua
 Gather\GatherLite.lua
 Gather\Prices.lua

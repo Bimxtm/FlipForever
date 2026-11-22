@@ -33,6 +33,8 @@
 - 2.6.0 beta 6 (talent branch): points per level band on the Talents panel.
 
 
+
+- 2.5.3 beta 3 (owner report 22 Nov 04:20, check all addons' error logs): secret aura and chat text handled, duplicate Locale.lua load removed; Swatter log checked, other errors belong to other addons.
 - 2.5.3 beta 2 (owner suggestion 22 Nov 03:59, asked for right away): the Advisor says where to spend talent points for the chosen build; click opens the Talents window.
 - 2.5.3 beta 1 (owner report): Arrow.lua:50 error on zone change with a world map pin fixed.
 - 2.5.2 stable: all 2.5.2 betas, translated into every game language.
