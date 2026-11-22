@@ -1,3 +1,9 @@
+# FlipForever 2.7.1 Beta 2
+
+- **Report from the game:** `/ff bug <text>`, `/ff suggest <text>` or the *Report a bug* button. Your report becomes a ticket on the Community page, where you can follow its status.
+- **Gear finder:** see the stat gains of each upgrade against what you wear, in the Gear tab and in tooltips.
+- **Advisor on the map:** right-click a step to pin it on the world map and minimap; click the pin to point the arrow there.
+
 # FlipForever 2.7.1 Beta 1
 
 **New Community page in the app.** See what changed, what is planned and what is being worked on, report bugs and suggest ideas right from the app, and follow the status of your own reports: Reported, Confirmed, In progress, Fixed. Set a nickname in Settings to show up on the Top reporters board for confirmed bugs and shipped ideas.

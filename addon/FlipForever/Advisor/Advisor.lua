@@ -668,12 +668,28 @@ local function makeFrame()
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:AddLine(r.text, 1, 1, 1, true)
       if r.why then GameTooltip:AddLine(r.why, 0.6, 0.8, 1, true) end
+      local QH = FF.QuestHelper
+      if r.target and QH and QH:PinsEnabled() then
+        local t = r.target
+        GameTooltip:AddLine(QH:IsPinned(t.mapID, t.x, t.y, t.label) and FF:T("Pinned on the map. Right-click: remove.")
+          or FF:T("Right-click: pin on the map and minimap."), 0.6, 0.6, 0.6, true)
+      end
       GameTooltip:Show()
     end)
     hit:SetScript("OnLeave", function() GameTooltip:Hide() end)
     -- click a step that has a place (a quest giver you've met): the waypoint arrow points there
-    hit:SetScript("OnMouseUp", function()
+    hit:SetScript("OnMouseUp", function(_, button)
       local r = f.recs and f.recs[i]
+      local QH = FF.QuestHelper
+      if button == "RightButton" then
+        -- right-click a step that has a place: pin it on the world map and minimap
+        if r and r.target and QH and QH:PinsEnabled() then
+          local t = r.target
+          QH:TogglePin(t.mapID, t.x, t.y, t.label, r.text)
+          if GameTooltip then GameTooltip:Hide() end
+        end
+        return
+      end
       if r and r.action then r.action() return end
       if r and r.target and FF.Arrow then FF.Arrow:SetTarget(r.target.mapID, r.target.x, r.target.y, r.target.label) end
     end)

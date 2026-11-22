@@ -183,6 +183,66 @@ function QH:Spots()
   return out
 end
 
+-- Advisor steps pinned on the map (right-click a step in the Advisor) -----------------------------
+function QH:PinsEnabled() return FlipForeverDB.settings.advisorPins ~= false end
+
+function QH:PinStore()
+  local db = FF:DB()
+  local name = UnitName("player") or "?"
+  db.chars[name] = db.chars[name] or {}
+  db.chars[name].mapPins = db.chars[name].mapPins or {}
+  return db.chars[name].mapPins
+end
+
+local function samePin(a, m, x, y, label)
+  return a.m == m and math.abs(a.x - x) < 0.0005 and math.abs(a.y - y) < 0.0005 and a.label == label
+end
+
+function QH:IsPinned(m, x, y, label)
+  for _, a in ipairs(self:PinStore()) do if samePin(a, m, x, y, label) then return true end end
+  return false
+end
+
+-- pins or unpins a place; returns true when it is pinned afterwards
+function QH:TogglePin(m, x, y, label, title)
+  if not (m and x and y) then return false end
+  local list = self:PinStore()
+  for i, a in ipairs(list) do
+    if samePin(a, m, x, y, label) then
+      table.remove(list, i)
+      FF:Print(FF:T("Removed from the map:") .. " " .. (label or ""))
+      self:RefreshAll()
+      return false
+    end
+  end
+  list[#list + 1] = { m = m, x = x, y = y, label = label, title = title }
+  FF:Print(FF:T("Pinned on the map:") .. " " .. (label or ""))
+  self:RefreshAll()
+  return true
+end
+
+-- quest spots (quest helper) and pinned Advisor steps, each behind its own switch
+function QH:MapSpots()
+  local out = {}
+  if self:Enabled() then for _, s in ipairs(self:Spots()) do out[#out + 1] = s end end
+  if self:PinsEnabled() then
+    for _, a in ipairs(self:PinStore()) do
+      out[#out + 1] = { m = a.m, x = a.x, y = a.y, kind = "advisor", label = a.label or "", quest = { title = a.title or FF:T("Advisor step") }, pin = a }
+    end
+  end
+  return out
+end
+
+function QH:RefreshAll()
+  pcall(self.RefreshMap, self)
+  pcall(self.RefreshMinimap, self)
+end
+
+local function iconFor(s)
+  if s.kind == "advisor" then return "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1" end
+  return s.kind == "turnin" and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\GossipFrame\\AvailableQuestIcon"
+end
+
 -- /ff quest: the arrow points at the next quest spot; again for the one after it
 QH.pick = 0
 function QH:Next()
@@ -223,10 +283,24 @@ local function pin(i, canvas)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip:AddLine(self.spot.quest.title, 1, 0.82, 0)
     GameTooltip:AddLine(self.spot.label, 1, 1, 1, true)
-    GameTooltip:AddLine(FF:T("Learned from your play. /ff quest points the arrow here."), 0.6, 0.6, 0.6, true)
+    if self.spot.kind == "advisor" then
+      GameTooltip:AddLine(FF:T("Pinned from the Advisor. Click: arrow points here. Right-click: remove."), 0.6, 0.6, 0.6, true)
+    else
+      GameTooltip:AddLine(FF:T("Learned from your play. /ff quest points the arrow here."), 0.6, 0.6, 0.6, true)
+    end
     GameTooltip:Show()
   end)
   p:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+  p:SetScript("OnMouseUp", function(self, button)
+    local s = self.spot
+    if not s then return end
+    if button == "RightButton" and s.pin then
+      if GameTooltip then GameTooltip:Hide() end
+      QH:TogglePin(s.pin.m, s.pin.x, s.pin.y, s.pin.label, s.pin.title)
+    elseif FF.Arrow and FF.Arrow.SetTarget then
+      FF.Arrow:SetTarget(s.m, s.x, s.y, ("%s - %s"):format(s.quest.title, s.label))
+    end
+  end)
   pins[i] = p
   return p
 end
@@ -234,7 +308,7 @@ end
 -- returns how many pins are shown
 function QH:RefreshMap()
   for _, p in ipairs(pins) do p:Hide() end
-  if not (self:Enabled() and WorldMapFrame and WorldMapFrame:IsShown()) then return 0 end
+  if not ((self:Enabled() or self:PinsEnabled()) and WorldMapFrame and WorldMapFrame:IsShown()) then return 0 end
   local canvas = mapCanvas()
   local shown = canvas and plain(WorldMapFrame:GetMapID())
   if not shown then return 0 end
@@ -242,7 +316,7 @@ function QH:RefreshMap()
   local scale = plain(WorldMapFrame.GetCanvasScale and WorldMapFrame:GetCanvasScale()) or 1
   local size = 18 / ((scale and scale > 0) and scale or 1)
   local n = 0
-  for _, s in ipairs(self:Spots()) do
+  for _, s in ipairs(self:MapSpots()) do
     if s.m == shown then
       n = n + 1
       local p = pin(n, canvas)
@@ -250,7 +324,7 @@ function QH:RefreshMap()
       p:SetSize(size, size)
       p:ClearAllPoints()
       p:SetPoint("CENTER", canvas, "TOPLEFT", s.x * w, -s.y * h)
-      p.tex:SetTexture(s.kind == "turnin" and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\GossipFrame\\AvailableQuestIcon")
+      p.tex:SetTexture(iconFor(s))
       p:Show()
     end
   end
@@ -300,7 +374,7 @@ end
 function QH:RefreshMinimap()
   local used = 0
   local m, px, py
-  if self:Enabled() and Minimap and FF.Arrow and FF.Arrow.PlayerPos then m, px, py = FF.Arrow.PlayerPos() end
+  if (self:Enabled() or self:PinsEnabled()) and Minimap and FF.Arrow and FF.Arrow.PlayerPos then m, px, py = FF.Arrow.PlayerPos() end
   local W, H
   if m then W, H = mapSize(m) end
   if W then
@@ -310,7 +384,7 @@ function QH:RefreshMinimap()
     local getCVar = (C_CVar and C_CVar.GetCVar) or GetCVar
     local rotating = getCVar and getCVar("rotateMinimap") == "1"
     local facing = rotating and GetPlayerFacing and plain(GetPlayerFacing()) or 0
-    for _, s in ipairs(self:Spots()) do
+    for _, s in ipairs(self:MapSpots()) do
       if s.m == m then
         local dx, dy = (s.x - px) * W, -(s.y - py) * H
         if rotating then dx, dy = rotate(dx, dy, facing) end
@@ -330,7 +404,7 @@ function QH:RefreshMinimap()
         p:SetSize(14, 14)
         p:ClearAllPoints()
         p:SetPoint("CENTER", Minimap, "CENTER", ox, oy)
-        p.tex:SetTexture(s.kind == "turnin" and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\GossipFrame\\AvailableQuestIcon")
+        p.tex:SetTexture(iconFor(s))
         p:SetAlpha(outside and 0.5 or 1)
         p.spot, p.outside, p.ox, p.oy = s, outside, ox, oy
         p:Show()

@@ -2845,7 +2845,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true,gearStats=true,advisorPins=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3147,6 +3147,15 @@ FlipForeverDB.settings.questHelper = false
 ARROWED = nil
 QH:Next()
 QH_OFF = (ARROWED == nil) and QH:RefreshMap() == 0
+-- an Advisor step pinned on the map shows even with the quest helper off; its own switch hides it
+WorldMapFrame.GetMapID = function() return 1411 end
+local on = QH:TogglePin(1411, 0.3, 0.7, "Gornek", "Talk to Gornek")
+local shown = QH:RefreshMap()
+FlipForeverDB.settings.advisorPins = false
+local hidden = QH:RefreshMap()
+FlipForeverDB.settings.advisorPins = nil
+local off = QH:TogglePin(1411, 0.3, 0.7, "Gornek", "Talk to Gornek")
+ADV_PIN = tostring(on) .. ":" .. shown .. ":" .. hidden .. ":" .. tostring(off) .. ":" .. #QH:PinStore() .. ":" .. QH:RefreshMap()
 FlipForeverDB.settings.questHelper = nil
 WorldMapFrame = nil
 C_QuestLog, FF.Arrow.PlayerPos, UnitName, FF.Arrow.SetTarget = oldQL, oldPos, oldName, oldSet
@@ -3160,4 +3169,6 @@ assert "Cutting Teeth" in L("QH_READY_MSG") and L("QH_PINS") == 1 and L("QH_PINS
 assert L("QH_TURNIN") == "Gornek:0.52" and L("QH_TURNIN2") == "Hand in: Gornek" and L("QH_OFF")
 print("minimap quest pins:", L("QH_MM1"), "|", L("QH_MM2"), "|", L("QH_MM3"))
 assert L("QH_MM1") == "1:0,0:false" and L("QH_MM2") == "1:64,0:true" and L("QH_MM3") == 0
+print("advisor map pin:", L("ADV_PIN"))
+assert L("ADV_PIN") == "true:1:0:false:0:0"
 print("ALL ADDON TESTS PASSED")

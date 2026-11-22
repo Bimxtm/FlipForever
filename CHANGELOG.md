@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.2] - 2026-11-22 (beta)
+### Added
+- Report bugs and suggest ideas from the game: `/ff bug <text>`, `/ff suggest <text>` and a *Report a bug* button in the FlipForever window. The report keeps your version, class, level, zone and the last FlipForever errors; the app sends it after the next save and it shows up as a ticket on the Community page.
+- Gear finder: each upgrade shows the stat gains against what you wear, in the Gear tab and in item tooltips. Switch in Settings, Features.
+- Advisor: right-click a step that has a place (for example a quest giver you've met) to pin it on the world map and minimap. Click the pin to point the arrow there, right-click it to remove it. Switch in Settings, Features.
+
 ## [2.7.1-beta.1] - 2026-11-22 (beta)
 ### Added
 - App: new Community page with Updates, Roadmap, Bug reports, Suggestions and Top reporters. The status comes from the FlipForever repository on GitHub (the last copy is kept for offline use).
