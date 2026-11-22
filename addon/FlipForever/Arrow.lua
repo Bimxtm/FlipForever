@@ -12,6 +12,18 @@ local atan2, sqrt, floor = math.atan2 or function(y, x) return math.atan(y, x) e
 
 function A:Enabled() return FlipForeverDB.settings.arrow ~= false end
 
+-- x, y of a map position: a vector with GetXY, or a plain { x = , y = } table on some clients
+local function posXY(v)
+  if type(v) ~= "table" then return nil end
+  if type(v.GetXY) == "function" then
+    local ok, x, y = pcall(v.GetXY, v)
+    if ok and x and y then return x, y end
+  end
+  if type(v.x) == "number" and type(v.y) == "number" then return v.x, v.y end
+  return nil
+end
+A.PosXY = posXY
+
 -- where am I: map, x, y (0-1), or nil
 local function playerPos()
   local ns = FF.gatherNS
@@ -23,7 +35,8 @@ local function playerPos()
   local mapID = C_Map.GetBestMapForUnit("player")
   local pos = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
   if not pos then return nil end
-  local x, y = pos:GetXY()
+  local x, y = posXY(pos)
+  if not x then return nil end
   return mapID, x, y
 end
 
@@ -47,8 +60,8 @@ function A:Target()
   if C_Map and C_Map.HasUserWaypoint and C_Map.HasUserWaypoint() and C_Map.GetUserWaypoint then
     local wp = C_Map.GetUserWaypoint()
     if wp and wp.uiMapID and wp.position then
-      local x, y = wp.position:GetXY()
-      return { mapID = wp.uiMapID, x = x, y = y, label = FF:T("Map pin") }
+      local x, y = posXY(wp.position)
+      if x then return { mapID = wp.uiMapID, x = x, y = y, label = FF:T("Map pin") } end
     end
   end
   local ns = FF.gatherNS

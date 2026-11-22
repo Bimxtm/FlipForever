@@ -34,6 +34,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.3-beta.1] - 2026-11-22 (beta)
+### Fixed
+- Waypoint arrow: no more error "Arrow.lua:50: attempt to call a nil value" when changing zones with a pin on the world map. The arrow now reads the map pin the way this game client stores it.
+
 ## [2.5.2] - 2026-11-21
 All 2.5.2 betas in one release (see the beta entries below), plus:
 ### Added
