@@ -53,6 +53,14 @@ Pace: about 3.5% of the weekly limit per hour (55% left at 21:30 Fri, reset Sat 
 
 - [x] Stable 2.5.2 at the 18:41 cycle (all 2.5.2 betas; texts translated in app/flipforever/i18n_252.py).
 
+Owner, 22 Nov early morning: work on the Discord suggestions now (few bug reports until more users join). Order:
+- [x] Undercut fix (owner: "act on it, not just tell me", "don't make me lose my deposit"; top priority): 2.5.3-beta.5 / 2.7.0-beta.7.
+- [ ] Combat helper that learns (owner: "make the combat helper smart and let it learn from combat and what it could do better"; "class and build specific learning"; "take pvp guides and other sources ... be sure that it's WoW Forever guides and other resources"; next priority after the undercut fix). Plan: per class + build, record each fight (spells cast, damage/healing done where readable, time to kill, deaths, resource starvation, idle gaps, cooldowns left unused) and learn which order and which skipped spells give the best results; feed that back into the sequence (priority tweaks, cooldown timing, buffs) with a short "what to do better" note after fights. Add PvP priorities (separate mode, e.g. in battlegrounds/arenas or when targeting a player) from WoW: Forever / Classic Era PvP guides and class discords that cover WoW: Forever; check sources are for WoW: Forever (level 60, its patch and talents). Every part gets a switch.
+- [x] App: switch to the character you play (2.5.3-beta.4).
+- [ ] Gear finder: compare stat gains, not only armor/item level.
+- [ ] Advisor steps pinnable on the map like the quest tracker.
+- [ ] UI and content pass (plan first).
+
 Version note (21 Nov, evening): 2.5.2 is the current stable; small fixes now ship as 2.5.3-beta.N. Earlier: 2.5.1 was the stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
 
 ## Fresh session after every usage reset (owner, 21 Nov)

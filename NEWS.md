@@ -24,6 +24,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.3 Beta 5
+
+**Undercut auctions are now fixed, not just reported.** At the auction house, press the FlipForever button and it checks each undercut auction live. Only where reposting really pays does it offer *CANCEL*: never when the cheaper ones should sell before yours ends, never below your floor, and never when the new deposit would eat the gain. Collect the cancelled items from the mailbox, press the button again, and they go back up just under the cheapest seller. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.3 Beta 4
 
 **The app follows the character you play.** Every time the game saves (on /reload or logout), the app switches to the realm and character you played last, with their budget and shopping list. Pick another character by hand and it stays until you play a different one. You can switch it off in the app's Settings.

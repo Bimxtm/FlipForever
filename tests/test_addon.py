@@ -1157,6 +1157,65 @@ print("undercut anchors:", (L("A1"), L("I1")), (L("A2"), L("I2")), (L("A3"), L("
 assert (L("A1"), L("I1")) == (100, 40) and (L("A2"), L("I2")) == (90, None) and (L("A3"), L("I3")) == (40, None)
 assert (L("A4"), L("I4")) == (100, None) and L("A5") == 30
 
+# --- undercut fix: cancel and repost only where it pays after the deposit
+lua.execute("""
+local T = FlipForever.Trader
+local u = { mine = 1000, qty = 10, timeLeft = 20 * 3600 }
+local function d(...) local a, w, p = T:UndercutDecision(...) return tostring(a) .. ":" .. w .. ":" .. tostring(p) end
+UD = table.concat({
+  d(u, 900, 50, 10, 500, 0.05, 100, 0),            -- 50 cheaper, ~8 sell before yours ends: act
+  d(u, 1000, 50, 10, 500, 0.05, 100, 0),           -- not undercut
+  d(u, nil, 0, 10, 500, 0.05, 100, 0),             -- no competition left
+  d({ mine = 1000, qty = 10, timeLeft = 1800 }, 900, 50, 10, 500, 0.05, 100, 0),   -- ends in 30 min
+  d(u, 900, 50, 10, 950, 0.05, 100, 0),            -- below the floor
+  d(u, 900, 5, 10, 500, 0.05, 100, 0),             -- the 5 cheaper ones sell first
+  d(u, 900, 50, 10, 500, 0.05, 3000, 0),           -- deposit eats the repost
+  d(u, 900, 50, nil, 500, 0.05, 100, 3000),        -- cancel fee too high
+}, " ")
+-- the full flow: live search, one press to cancel, the item comes back for reposting
+local AHT = C_AuctionHouse
+local cancelled
+local saved = {}
+local patch = {
+  CancelAuction = function(id) cancelled = id end,
+  CalculateCommodityDeposit = function() return 50 end,
+  GetCancelCost = function() return 0 end,
+  CanCancelAuction = function() return true end,
+}
+for k, v in pairs(patch) do saved[k] = AHT[k] AHT[k] = v end
+FlipForeverDB.settings.undercutFix = nil
+FlipForever.Auctions.undercut = { { id = 2589, name = "Linen Cloth", mine = 1000, qty = 20, timeLeft = 40000, auctionID = 77 },
+                                  { id = 2592, name = "Wool Cloth", mine = 500, qty = 2, timeLeft = 40000, auctionID = 78 } }
+T.state, T.mode = "idle", nil
+local realSearch = T.Search
+T.Search = function(self, id) self.searchID = id self.state = "searching" end
+T:Primary()
+UF_SEARCH1 = T.searchID
+T.isCommodity = true
+T:OnResults({ { unitPrice = 900, quantity = 200 }, { unitPrice = 1000, quantity = 20, containsOwnerItem = true } })
+UF_STATE1, UF_BTN = T.state, T:ButtonText()
+T:Primary()
+UF_CANCELLED, UF_STATE2 = cancelled, T.state
+Fire("AUCTION_CANCELED", 77)
+UF_SEARCH2 = T.searchID
+T:OnResults({ { unitPrice = 499, quantity = 1 }, { unitPrice = 500, quantity = 2, containsOwnerItem = true } })  -- 1 cheaper: sells first
+UF_STATE3 = T.state
+UF_REPOST = T:Reposts()[2589] and T:Reposts()[2589].price
+local hasRepost = false
+for _, s in ipairs(T:BuildSellList()) do if s.id == 2589 and s.repost then hasRepost = true end end
+UF_INLIST = hasRepost
+T:Reposts()[2589] = nil
+T.Search = realSearch
+for k in pairs(patch) do AHT[k] = saved[k] end
+""")
+print("undercut decisions:", L("UD"))
+assert L("UD") == "true:repost:899 false:cheapest:nil false:cheapest:nil false:ends:nil false:floor:899 false:sells:899 false:deposit:899 false:deposit:899", L("UD")
+print("undercut flow:", L("UF_SEARCH1"), L("UF_STATE1"), L("UF_BTN"), "| cancelled", L("UF_CANCELLED"), L("UF_STATE2"),
+      "| next", L("UF_SEARCH2"), L("UF_STATE3"), "| repost at", L("UF_REPOST"), L("UF_INLIST"))
+assert L("UF_SEARCH1") == 2589 and L("UF_STATE1") == "ready_cancel" and L("UF_BTN") == "CANCEL 20 x Linen Cloth"
+assert L("UF_CANCELLED") == 77 and L("UF_STATE2") == "cancelling" and L("UF_SEARCH2") == 2592
+assert L("UF_STATE3") == "idle" and L("UF_REPOST") == 899 and L("UF_INLIST") is True
+
 # --- 2.4.0: tabbed FlipForever window, shopping-list view with Skip
 lua.execute("""
 FlipForever_Plan = nil
@@ -2202,7 +2261,8 @@ OWN_SAVED = saved and (saved.up .. "/" .. saved.n .. "/" .. saved.undercut[1].mi
 FF.Planner.Model = oldModel
 """)
 print("own auctions:", L("OWN_MSG"), "|", L("OWN_LINE"))
-assert L("OWNED_QUERIED") >= 1 and L("OWN_MSGS") == 1 and "2 of your 3 auctions are undercut" in L("OWN_MSG")
+assert L("OWNED_QUERIED") >= 1 and L("OWN_MSGS") == 2 and "2 of your 3 auctions are undercut" in L("OWN_MSG")
+assert "cancel and repost only where that pays" in L("printed[2]")   # the undercut fix is offered
 assert L("OWN_FIRST") == 503 and "3 up" in L("OWN_LINE") and "2 undercut" in L("OWN_LINE")
 print("saved for the app:", L("OWN_SAVED"))
 assert L("OWN_SAVED") == "3/2/80"
@@ -2553,7 +2613,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

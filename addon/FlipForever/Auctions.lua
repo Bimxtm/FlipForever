@@ -1,6 +1,7 @@
 -- Your auctions: when the auction house opens, check which of your own listings are no
 -- longer the cheapest in your newest scan, and say so once in chat (and on the Overview).
--- Read-only: nothing is cancelled or reposted without you clicking.
+-- Nothing is cancelled here: the Trader (Trader.lua, "undercut fix") checks each one live and
+-- offers a cancel only when reposting pays, one key press each.
 local FF = FlipForever
 local A = {}
 FF.Auctions = A
@@ -23,7 +24,8 @@ function A:Owned()
     local unit = info and plain(info.buyoutAmount)
     -- status 1 = sold (waiting in the mail); only active listings count
     if id and unit and unit > 0 and plain(info.status) ~= 1 then
-      out[#out + 1] = { id = id, name = FF:ItemName(id), unit = unit, qty = plain(info.quantity) or 1 }
+      out[#out + 1] = { id = id, name = FF:ItemName(id), unit = unit, qty = plain(info.quantity) or 1,
+                        auctionID = plain(info.auctionID), timeLeft = plain(info.timeLeftSeconds) }
     end
   end
   return out
@@ -37,7 +39,8 @@ function A:Check()
   for _, a in ipairs(owned) do
     local m = model[a.id]
     if m and m.cur_min and m.cur_min > 0 and m.cur_min < a.unit then
-      under[#under + 1] = { id = a.id, name = a.name, mine = a.unit, now = m.cur_min, qty = a.qty }
+      under[#under + 1] = { id = a.id, name = a.name, mine = a.unit, now = m.cur_min, qty = a.qty,
+                            auctionID = a.auctionID, timeLeft = a.timeLeft }
     end
   end
   table.sort(under, function(x, y) return (x.mine - x.now) * x.qty > (y.mine - y.now) * y.qty end)
@@ -60,6 +63,9 @@ function A:Report()
   local more = #under > 1 and (" " .. FF:T("(+%d more)"):format(#under - 1)) or ""
   FF:Print(FF:T("%d of your %d auctions are undercut. Biggest: %s (yours %s, now %s)."):format(
     #under, total, first.name, FF:Money(first.mine), FF:Money(first.now)) .. more)
+  if FF.Trader and FF.Trader.UndercutOn and FF.Trader:UndercutOn() then
+    FF:Print(FF:T("Press the FlipForever button: it checks each one live and offers to cancel and repost only where that pays after the deposit."))
+  end
 end
 
 local asked = false
