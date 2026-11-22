@@ -129,7 +129,12 @@ def main(argv=None) -> tuple[int, int]:
     if args.idea:
         path = pathlib.Path(args.data) / "owner_inbox.json"
         inbox = load(path, [])
-        rid = "idea-" + time.strftime("%Y%m%d%H%M%S")
+        rid = base = "idea-" + time.strftime("%Y%m%d%H%M%S")
+        taken = {x.get("id") for x in inbox if isinstance(x, dict)}
+        n = 1
+        while rid in taken:                 # several ideas in the same second get their own IDs
+            n += 1
+            rid = f"{base}-{n}"
         inbox.append({"id": rid, "r": rid, "kind": "suggestion", "nick": "", "text": "Idea: " + args.idea.strip()})
         save(path, inbox)
         print("idea waiting for approval:", rid)
