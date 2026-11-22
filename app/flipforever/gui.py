@@ -1024,6 +1024,9 @@ class App(tk.Tk):
             lbl.pack(anchor="w", pady=(4, 0))
             self.cards[key] = v
             self.card_values[key] = lbl
+            if key == "realized":       # sales with no known buy price are shown apart, not as profit
+                self.realized_note = tk.StringVar()
+                ttk.Label(f, textvariable=self.realized_note, style="Card.TLabel").pack(anchor="w")
         mid = ttk.Frame(self.tab_dash)
         mid.pack(fill="both", expand=True, pady=(14, 0))
         left = ttk.Frame(mid)
@@ -1753,6 +1756,7 @@ class App(tk.Tk):
         self.trends = engine.price_trends(self.con, realm)
         s = engine.summary(self.con, realm, self.ledger, self.model)
         self.cards["realized"].set(money(s["realized"], True))
+        self.realized_note.set(f"+ {money(s['other_income'], True)} loot and older stock" if s.get("other_income") else "")
         self.cards["week"].set(money(s["week"], True))
         for key in ("realized", "week"):        # green when you're up, red when you're down
             val = s[key] or 0

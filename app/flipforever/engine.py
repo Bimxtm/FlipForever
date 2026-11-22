@@ -332,6 +332,7 @@ class ItemLedger:
     posted_units: int = 0
     deposits_paid: int = 0
     profit: int = 0
+    other_income: int = 0     # sales with no known buy price (loot, stock from before tracking)
     ratios: list = field(default_factory=list)        # realized unit price / expected
     days_to_sell: list = field(default_factory=list)
     flip_outcomes: list = field(default_factory=list)  # (t, profit, cost) for flipped units
@@ -369,6 +370,14 @@ def build_ledger(con, realm, char: str | None = None) -> Ledger:
         if led is None:
             led = items[key] = ItemLedger(iid if iid is not None else -1, name or names.get(iid, f"item {iid}"))
         return led
+
+    # what each item cost on average across all characters: for sales of stock that was bought on
+    # another character (and mailed over), so its price isn't counted as pure profit
+    avg_cost = {}
+    for iid_, spent_, units_ in con.execute(
+            "SELECT id, SUM(q * p), SUM(q) FROM events WHERE realm=? AND e='buy' AND id IS NOT NULL GROUP BY id", (realm,)):
+        if units_:
+            avg_cost[iid_] = spent_ / units_
 
     if char:
         rows = con.execute("SELECT * FROM events WHERE realm=? AND char=? ORDER BY t", (realm, char)).fetchall()
@@ -419,17 +428,26 @@ def build_ledger(con, realm, char: str | None = None) -> Ledger:
                 remaining -= take
                 if lot[0] <= 0:
                     led.inventory.popleft()
-            profit = net - cost
+            # units sold without a buy on this character: bought elsewhere (average cost), or never
+            # bought at all (loot, stock from before tracking) -> income, not flip profit
+            if remaining and iid in avg_cost:
+                cost += round(remaining * avg_cost[iid])
+                flipped += remaining
+                remaining = 0
+            net_flip = round(net * flipped / q)
+            other = net - net_flip
+            profit = net_flip - cost
             led.sold_units += q
             led.sold_lots += 1
             led.revenue += net
             led.cost_sold += cost
             led.profit += profit
+            led.other_income += other
             led.last_expired_streak = 0
             if flipped:
                 led.flip_outcomes.append((t, profit, cost))
-            timeline.append((t, profit, f"Sold {q}x {name}"))
-            trades.append((t, "Sold", name, q, int(unit_gross), profit, ev["char"]))
+                timeline.append((t, profit, f"Sold {q}x {name}"))
+            trades.append((t, "Sold", name, q, int(unit_gross), profit if flipped else None, ev["char"]))
         elif e == "expired":
             lot = led.open_posts.popleft() if led.open_posts else None
             dep = lot[2] if lot else 0
@@ -946,6 +964,7 @@ def summary(con, realm, ledger: Ledger, model: dict) -> dict:
     ls = last_scan(con, realm)
     return {
         "realized": realized, "week": week, "held_cost": held_cost, "held_value": held_value,
+        "other_income": sum(l.other_income for l in ledger.items.values()),
         "sell_through": (sold / (sold + expired)) if sold + expired else None,
         "tracked": len(model), "last_scan": ls,
         "spent": sum(l.spent for l in ledger.items.values()),

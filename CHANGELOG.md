@@ -21,6 +21,9 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - App Settings: grouped into sections.
 - Community page: a fuller roadmap.
 
+### Fixed
+- Realized profit: items sold on a character that bought them on another character now count their buy price, and sales with no buy price at all (loot, stock from before tracking) are shown apart instead of as profit.
+
 ## [2.7.1-beta.2] - 2026-11-22 (beta)
 ### Added
 - Report bugs and suggest ideas from the game: `/ff bug <text>`, `/ff suggest <text>` and a *Report a bug* button in the FlipForever window. The report keeps your version, class, level, zone and the last FlipForever errors; the app sends it after the next save and it shows up as a ticket on the Community page.
