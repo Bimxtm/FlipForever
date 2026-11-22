@@ -398,6 +398,44 @@ assert T.state == "idle" and spent == 990
 lua.execute("FlipForever.Trader:StartBuying() RunTimers(1) Fire('COMMODITY_SEARCH_RESULTS_UPDATED', 2589)")
 print("restart with 10c left:", T.state, "|", L("FlipForever.status"))
 assert T.state == "idle"
+# --- gold reserve: 20% of the gold at the start, never below 20g; purchases sized to what is left
+lua.execute("""
+OLD_MONEY = GetMoney
+GetMoney = function() return 300000 end   -- 30g: reserve = max(6g, 20g) = 20g, 10g spendable
+FlipForever_Plan = { generated = 901, realm = "Testrealm - Horde", budget = 10000000,
+  buy = { {id=2589, max=6000, qty=50, exp=8000} }, sell = {} }
+COMMODITY[2589] = { {unitPrice=4000, quantity=40} }
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("reserve:", T.state, T.pending and T.pending.qty, L("FlipForever.Trader.reserve"))
+assert T.state == "ready_commodity" and T.pending.qty == 25 and L("FlipForever.Trader.reserve") == 200000
+lua.execute("""
+GetMoney = function() return 200500 end
+FlipForever.Trader.state = "idle"
+FlipForever.Trader:EvaluateBuy(COMMODITY[2589])
+""")
+print("reserve reached:", T.state, "|", L("FlipForever.status"))
+assert T.state == "idle" and "reserve" in L("FlipForever.status")
+lua.execute("""
+FlipForeverDB.settings.goldReserve = false
+GetMoney = function() return 300000 end
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("reserve off:", T.state, T.pending and T.pending.qty)
+assert T.state == "ready_commodity" and T.pending.qty == 40
+lua.execute("""
+FlipForever.Trader:Stop()
+SlashCmdList.FLIPFOREVER("reserve 30 50")
+RS = tostring(FlipForeverDB.settings.goldReserve) .. "," .. FlipForeverDB.settings.reservePct .. "," .. FlipForeverDB.settings.reserveMin
+FlipForeverDB.settings.goldReserve, FlipForeverDB.settings.reservePct, FlipForeverDB.settings.reserveMin = nil, nil, nil
+GetMoney = OLD_MONEY
+""")
+print("/ff reserve:", L("RS"))
+assert L("RS") == "true,0.3,500000"
 # --- first-scan mode: price judged live from the listing ladder
 lua.execute("""
 FlipForever_Plan = { generated = 789, realm = "Testrealm - Horde", budget = 100000, cut = 0.05,
@@ -2883,7 +2921,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

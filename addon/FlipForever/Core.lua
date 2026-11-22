@@ -536,6 +536,25 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Auto:SetEnabled(not FF.Auto:Enabled())
   elseif cmd == "key" then
     FF:SetActionKey(rest ~= "" and rest:upper() or nil)
+  elseif cmd == "reserve" then
+    -- /ff reserve <percent> [min gold] | off
+    local s = FlipForeverDB.settings
+    if rest == "off" then
+      s.goldReserve = false
+    else
+      local pct, min = rest:match("^(%d+)%%?%s*(%d*)")
+      if pct then
+        s.goldReserve = true
+        s.reservePct = math.min(90, tonumber(pct)) / 100
+        if min ~= "" then s.reserveMin = tonumber(min) * 10000 end
+      end
+    end
+    if s.goldReserve == false then
+      FF:Print(FF:T("Gold reserve is off: buying may spend all your gold."))
+    else
+      FF:Print(FF:T("Gold reserve: buying keeps %d%% of your gold, at least %s. Change: /ff reserve <percent> <gold>, or off."):format(
+        math.floor((tonumber(s.reservePct) or 0.20) * 100 + 0.5), FF:Money(tonumber(s.reserveMin) or 200000)))
+    end
   elseif cmd == "reset" then
     FF:ResetProgress()
   elseif cmd == "errors" then
@@ -569,7 +588,7 @@ FF.HELP = {
   { "/ff", "open the FlipForever window (or click the gold coin on the minimap)" },
   { "Leveling", "guide (Advisor) | quest (arrow to the next quest spot) | talents | /ffway x y (arrow)" },
   { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
-  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reset" },
+  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | reset" },
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },

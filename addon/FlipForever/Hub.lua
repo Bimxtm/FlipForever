@@ -620,6 +620,8 @@ local function build()
   feature("undercutCheck", "Check my auctions for undercuts at the auction house", true)
   feature("undercutFix", "Undercut auctions: cancel and repost where it pays", true, nil,
     "Only when the new price still earns more than the deposit you lose by cancelling.")
+  feature("goldReserve", "Buying keeps a gold reserve (20% of my gold, at least 20g)", true, nil,
+    "Buying stops before your gold drops below the reserve and sizes purchases to what is left. Change it with /ff reserve <percent> <gold>.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)
   feature("mailOpenAll", "Open all mail button at the mailbox", true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
   group("Gathering and bags")

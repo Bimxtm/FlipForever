@@ -155,14 +155,36 @@ function T:StartBuying(list, label)
     if not ok then FF:Print(err) FF:SetStatus(err) return end
   end
   self.mode, self.idx = "buy", 0
+  self.reserve = self:Reserve(GetMoney and GetMoney() or 0)
+  self.reserveHit = nil
   self:NextBuyTarget()
+end
+
+-- Gold reserve (switch goldReserve): buying keeps a share of the gold you had when the run started
+-- (reservePct, default 20%) and never less than reserveMin (default 20 gold), so a character is never drained.
+function T:Reserve(money)
+  local s = FlipForeverDB.settings
+  if s.goldReserve == false then return 0 end
+  local pct = tonumber(s.reservePct) or 0.20
+  local min = tonumber(s.reserveMin) or 200000
+  return math.max(math.floor((money or 0) * pct), min)
+end
+
+-- gold this run may still spend: your gold minus the reserve
+function T:Spendable()
+  local money = GetMoney and GetMoney() or 0
+  if self.reserve == nil then self.reserve = self:Reserve(money) end
+  return math.max(0, money - self.reserve)
 end
 
 function T:NextBuyTarget()
   local list = self.custom and self.list or plan().buy
   repeat self.idx = self.idx + 1 until self.idx > #list or self:Remaining(list[self.idx]) > 0
   if self.idx > #list then
-    if self.custom then
+    if self.reserveHit then
+      self.reserveHit = nil
+      self:Stop(FF:T("Done - some deals were skipped to keep your gold reserve of %s (/ff reserve)."):format(FF:Money(self.reserve or 0)))
+    elseif self.custom then
       self:Stop(("Done with the %s - everything affordable under the price limits is bought."):format(self.customLabel))
     else
       self:Stop("Shopping list done. Switch to Sell, or rescan later for new deals.")
@@ -215,9 +237,13 @@ end
 function T:EvaluateBuy(rows)
   local t = self.target
   local want = self:Remaining(t)
-  local money = math.min(GetMoney(), self:BudgetLeft())
+  local money = math.min(self:Spendable(), self:BudgetLeft())
   if money <= 0 then
-    self:Stop("Budget for this shopping list is used up. Post your items, then build a new list.")
+    if self:BudgetLeft() > 0 and (self.reserve or 0) > 0 then
+      self:Stop(FF:T("Stopped to keep your gold reserve of %s. Change it with /ff reserve."):format(FF:Money(self.reserve)))
+    else
+      self:Stop("Budget for this shopping list is used up. Post your items, then build a new list.")
+    end
     return
   end
   local limit, expected = self:LimitFor(t, rows)
@@ -232,7 +258,10 @@ function T:EvaluateBuy(rows)
         if cost + take * r.unitPrice > money then
           take = math.floor((money - cost) / r.unitPrice)
         end
-        if take <= 0 then break end
+        if take <= 0 then
+          if qty == 0 and money < self:BudgetLeft() and (self.reserve or 0) > 0 then self.reserveHit = true end
+          break
+        end
         qty, cost = qty + take, cost + take * r.unitPrice
         if qty >= want then break end
       end
@@ -256,6 +285,9 @@ function T:EvaluateBuy(rows)
         self:DealAlert()
         self:Refresh()
         return
+      end
+      if not owned(r) and r.buyoutAmount > money and money < self:BudgetLeft() and (self.reserve or 0) > 0 then
+        self.reserveHit = true
       end
     end
   end
@@ -290,7 +322,7 @@ end
 FF:On("COMMODITY_PRICE_UPDATED", function(unitPrice, totalPrice)
   if T.state ~= "quoting" or not T.pending then return end
   local p = T.pending
-  if unitPrice <= (T.target.liveMax or T.target.max) and totalPrice <= T:BudgetLeft() then
+  if unitPrice <= (T.target.liveMax or T.target.max) and totalPrice <= T:BudgetLeft() and totalPrice <= T:Spendable() then
     p.quoteUnit, p.quoteTotal = unitPrice, totalPrice
     T.state = "confirm_commodity"
     FF:SetStatus(FF:T("Confirm %d x %s for %s total (avg %s)."):format(p.qty, FF:ItemName(p.id), FF:Money(totalPrice), FF:Money(unitPrice)))

@@ -14,6 +14,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - FlipForever window: Talents button next to Advisor, Gathering and Professions.
 - Advisor: pinned steps are marked, and *Clear pins* removes all map pins. Minimap pins show what they are when you hover them.
 - A page on the game's rules and how FlipForever stays inside them (docs/RULES.md, linked from the README).
+- **Gold reserve when buying:** auction buying keeps 20% of the gold you had when you started (at least 20 gold) and sizes each purchase to what is left, so a character is never drained to a few silver. `/ff reserve <percent> <gold>` changes it. Switch in Settings, Features.
 - App: About & updates can install an older version (Load versions, pick one, Install this version). Going back turns off the update check at start and puts the matching addon in. Switch in Settings: *Choose an older version*.
 ### Changed
 - All FlipForever windows share one look: same frame, Escape closes them, and they remember where you put them.
