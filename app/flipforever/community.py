@@ -225,11 +225,23 @@ def parse_reports(text: str) -> list[dict]:
     return out
 
 
+REPORT_ARCHIVE = store.DATA_DIR / "owner_reports.json"   # every report ever read: r -> details (private)
+
+
+def owner_archive() -> dict:
+    return _load(REPORT_ARCHIVE, {})
+
+
 def owner_take_reports(text: str) -> tuple[int, int]:
     """New bug reports and suggestions from text -> Waiting for approval. Returns (bugs, suggestions)."""
     reports = parse_reports(text)
     if not reports:
         return 0, 0
+    archive = owner_archive()
+    for d in reports:
+        archive.setdefault(d["r"], {"kind": d.get("k", ""), "nick": d.get("n", ""), "text": d["t"],
+                                    "extra": d.get("x", ""), "version": d.get("v", ""), "date": time.strftime("%Y-%m-%d")})
+    _save(REPORT_ARCHIVE, archive)
     REPORT_INBOX.mkdir(parents=True, exist_ok=True)
     with open(REPORT_INBOX / (time.strftime("%Y-%m-%d") + ".txt"), "a", encoding="utf-8") as f:
         f.write(text.strip() + "\n")

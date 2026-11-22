@@ -511,8 +511,10 @@ class App(tk.Tk):
             self.comm_tversion = tk.StringVar()
             ttk.Entry(r3, textvariable=self.comm_tversion, width=14).pack(side="left", padx=6)
             ttk.Button(r3, text="Set", command=self._comm_set_ticket).pack(side="left")
-            self.comm_tickets = tree_page(own, ("Ticket", "Status", "Report", "r"), (80, 150, 600, 0))
-            self.comm_tickets.configure(height=6)
+            self.comm_tickets = tree_page(own, ("Ticket", "Status", "From", "Version", "Date", "Report", "r"),
+                                          (70, 150, 100, 90, 85, 520, 0))
+            self.comm_tickets.configure(height=8)
+            self.comm_tickets.bind("<Double-1>", lambda _e: self._comm_ticket_details())
             self._comm_fill_owner()
         self._comm_refresh()
 
@@ -559,11 +561,22 @@ class App(tk.Tk):
         if self.comm_owner is not None:
             set_to = {d.get("r"): d for d in c._load(c.OWNER_DECISIONS, []) if d.get("status")}
             self.comm_tickets.delete(*self.comm_tickets.get_children())
+            arch = c.owner_archive()
+            # every bug report read so far: not ticketed yet on top, then the public tickets, newest first
+            ticketed = {t.get("r") for t in feed.get("tickets", [])}
+            for r, a in sorted(arch.items(), key=lambda kv: kv[1].get("date", ""), reverse=True):
+                if a.get("kind") == "bug" and r not in ticketed:
+                    self.comm_tickets.insert("", "end", values=("-", "New (no ticket yet)", a.get("nick") or "anonymous",
+                                                                a.get("version", ""), a.get("date", ""), a.get("text", ""), r))
             for t in reversed(feed.get("tickets", [])):
                 d = set_to.get(t.get("r"))
                 label = c.status_label(dict(t, **d)) + " (not published yet)" if d and (
                     d["status"], d.get("version", "")) != (t.get("status"), t.get("version", "")) else c.status_label(t)
-                self.comm_tickets.insert("", "end", values=(t.get("id", ""), label, t.get("title", ""), t.get("r", "")))
+                a = arch.get(t.get("r"), {})
+                self.comm_tickets.insert("", "end", values=(
+                    t.get("id", ""), label, t.get("nick") or a.get("nick") or "anonymous",
+                    t.get("from_version") or a.get("version", ""), t.get("reported", ""),
+                    a.get("text") or t.get("title", ""), t.get("r", "")))
         waiting = [m for m in c.my_reports() if m.get("r") not in {t.get("r") for t in feed.get("tickets", [])}
                    and m.get("r") not in {s.get("r") for s in feed.get("suggestions", [])}]
         for m in reversed(waiting[-10:]):
@@ -645,8 +658,25 @@ class App(tk.Tk):
     def _comm_set_ticket(self):
         status = {v: k for k, v in self.comm.STATUS.items()}.get(self.comm_tstatus.get())
         for sel in self.comm_tickets.selection():
-            self.comm.owner_set_ticket(str(self.comm_tickets.item(sel, "values")[3]), status, self.comm_tversion.get())
+            self.comm.owner_set_ticket(str(self.comm_tickets.item(sel, "values")[6]), status, self.comm_tversion.get())
         self._comm_refresh()
+
+    def _comm_ticket_details(self):
+        sel = self.comm_tickets.selection()
+        if not sel:
+            return
+        v = self.comm_tickets.item(sel[0], "values")
+        a = self.comm.owner_archive().get(str(v[6]), {})
+        win = tk.Toplevel(self)
+        win.title(f"Bug report {v[0]}")
+        win.configure(bg=BG)
+        t = tk.Text(win, bg=PANEL, fg=FG, relief="flat", wrap="word", width=90, height=14, font=("Segoe UI", 10),
+                    padx=10, pady=8)
+        t.pack(fill="both", expand=True, padx=10, pady=10)
+        t.insert("end", f"{v[0]}   {v[1]}\nFrom: {v[2]}   Version: {v[3]}   Date: {v[4]}\n\n{v[5]}\n")
+        if a.get("extra"):
+            t.insert("end", f"\nAttached: {a['extra']}\n")
+        t.configure(state="disabled")
 
     def _comm_owner_remove(self):
         for sel in self.comm_owner.selection():
