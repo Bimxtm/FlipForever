@@ -465,6 +465,8 @@ class App(tk.Tk):
         ttk.Label(board, text="Confirmed bugs count double, shipped suggestions once. Set a nickname in Settings "
                   "to be listed.", style="Muted.TLabel").pack(anchor="w")
         self.comm_board = tree_page(board, ("#", "Nickname", "Confirmed bugs", "Shipped suggestions"), (40, 220, 140, 160))
+        if self.settings.rules_page:
+            self._show_markdown(text_page("Rules"), _read_doc("docs/RULES.md"))
         self.comm_owner = None
         if community.is_owner():
             own = ttk.Frame(nb, padding=8)
@@ -1300,6 +1302,8 @@ class App(tk.Tk):
         add("Choose an older version", "version_picker", "bool",
             hint="About & updates: go back to an earlier release (applies after restarting the app)")
         add("Community page", "community", "bool", hint="updates, roadmap, bug reports and suggestions (loaded from GitHub)")
+        add("Rules page", "rules_page", "bool",
+            hint="Community, Rules: how FlipForever stays inside the game's rules (applies after restarting the app)")
         add("Nickname for Top reporters", "nickname", width=24, hint="optional; empty = your reports stay anonymous")
         btns = ttk.Frame(f)
         btns.grid(row=row, column=0, columnspan=3, sticky="w", pady=(18, 0))

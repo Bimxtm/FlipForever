@@ -134,6 +134,7 @@ class Settings:
     share_last: float = 0.0       # when the summary was last sent
     share_digest: str = ""        # what was sent last (nothing is sent twice)
     community: bool = True        # Community page: load updates, roadmap and ticket status from GitHub
+    rules_page: bool = True       # Community, Rules: how FlipForever stays inside the game's rules (docs/RULES.md)
     nickname: str = ""            # optional name for the Top reporters board ("" = anonymous, not listed)
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True

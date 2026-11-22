@@ -6,6 +6,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 ### Added
 - Combat helper: the spell orders from the WoW: Forever leveling guides on Warcraft Tavern are tested next to the helper's own order, and the one that kills faster for you is kept. Switch in Settings, Features.
 - `/ff help` lists every command, grouped.
+- App: Community, Rules shows how FlipForever stays inside the game's rules. Switch in Settings, Community and sharing.
 - FlipForever window: Talents button next to Advisor, Gathering and Professions.
 - Advisor: pinned steps are marked, and *Clear pins* removes all map pins. Minimap pins show what they are when you hover them.
 - A page on the game's rules and how FlipForever stays inside them (docs/RULES.md, linked from the README).
