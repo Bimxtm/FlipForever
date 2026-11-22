@@ -529,7 +529,23 @@ SlashCmdList.FLIPFOREVER = function(msg)
   elseif cmd == "" or cmd == "show" or cmd == "options" or cmd == "settings" then
     if FF.Hub then FF.Hub:Toggle() end
   else
-    FF:Print(FF:T("/ff opens the FlipForever window (or click the gold coin on the minimap). Commands: guide | combat | combatkey <KEY> | combatmode | gather | scan | buy | sell | stop | auto | key <KEY> | reset"))
+    FF:Help()
+  end
+end
+
+-- /ff help: every command, grouped
+FF.HELP = {
+  { "/ff", "open the FlipForever window (or click the gold coin on the minimap)" },
+  { "Leveling", "guide (Advisor) | quest (arrow to the next quest spot) | talents | /ffway x y (arrow)" },
+  { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
+  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reset" },
+  { "Gathering", "gather" },
+  { "Reports", "bug <text> | suggest <text> | errors" },
+}
+function FF:Help()
+  FF:Print(FF:T("Commands (type /ff and the word):"))
+  for _, h in ipairs(self.HELP) do
+    FF:Print(("  |cffffd200%s|r: %s"):format(FF:T(h[1]), FF:T(h[2])))
   end
 end
 

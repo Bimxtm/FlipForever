@@ -11,7 +11,7 @@ FF.Guide = G
 
 G.SOURCES = {
   method = "Method.gg leveling guides (updated 14-19 Nov 2026, after launch)",
-  wct    = "Warcraft Tavern leveling guides (undated; written for the beta, level cap 30)",
+  wct    = "Warcraft Tavern leveling guides (read again 22 Nov 2026; some builds still written for the beta, level cap 30)",
   cc     = "Conquest Capped leveling guide (15 Nov 2026)",
   fdb    = "FoReverDB leveling guide (5 Nov 2026)",
   wiki   = "Warcraft Wiki: World of Warcraft: Forever (20 Nov 2026)",

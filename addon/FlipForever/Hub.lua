@@ -643,7 +643,7 @@ local function build()
   foot:SetPoint("BOTTOMLEFT", 16, 14)
   foot:SetPoint("RIGHT", -16, 0)
   foot:SetJustifyH("LEFT")
-  foot:SetText(FF:T("Buy / post / scan buttons appear next to the auction house when you open it."))
+  foot:SetText(FF:T("Buy / post / scan buttons appear next to the auction house. Type /ff help for every command."))
   -- keep the open page current (purchases, autopilot, new lists) without spamming refreshes
   local since = 0
   f:SetScript("OnUpdate", function(_, elapsed)
