@@ -2883,7 +2883,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3252,6 +3252,46 @@ local ps = QH:PinStore() for k in pairs(ps) do ps[k] = nil end
 FlipForeverDB.settings.questHelper = nil
 FF.Arrow.SetTarget = oldSet
 """)
+lua.execute("""
+-- leveling route: step by race, faction and level; map by learned name first; switch brings back "Level in:"
+local FF, AD = FlipForever, FlipForever.Advisor
+local oU = { UnitRace, UnitFactionGroup, UnitLevel, UnitClass }
+local race, fac, lvl = "Tauren", "Horde", 14
+UnitRace = function() return race, race end
+UnitFactionGroup = function() return fac end
+UnitLevel = function() return lvl end
+UnitClass = function() return "Druid", "DRUID" end
+local function zoneLine()
+  for _, r in ipairs(AD:Compute()) do
+    if r.kind == "zone" then return r.text:gsub("^|T.-|t ", ""), r.target end
+  end
+end
+local t1, g1 = zoneLine()
+lvl = 3
+local t2 = zoneLine()
+lvl = 14
+FlipForeverDB.mapNames = FlipForeverDB.mapNames or {}
+FlipForeverDB.mapNames[99001] = "The Barrens"
+local _, g3 = zoneLine()
+FlipForeverDB.mapNames[99001] = nil
+race, lvl = "Skyborne", 13
+local t4, g4 = zoneLine()
+race, fac, lvl = "Human", "Alliance", 59
+local t5 = zoneLine()
+lvl = 60
+local _, _, r60 = AD:RouteStep(AD:Player())
+t5 = t5 .. ':' .. tostring(r60)
+FlipForeverDB.settings.levelRoute = false
+lvl = 14
+local t6 = zoneLine()
+FlipForeverDB.settings.levelRoute = nil
+ROUTE = table.concat({ t1, g1 and (g1.mapID .. "@" .. g1.x) or "-", t2, g3 and g3.mapID or "-", t4, tostring(g4), t5, t6 }, "|")
+UnitRace, UnitFactionGroup, UnitLevel, UnitClass = oU[1], oU[2], oU[3], oU[4]
+""")
+print("route:", L("ROUTE"))
+assert L("ROUTE") == ("Route (level 11-17): The Crossroads, The Barrens|1413@0.52|Route (level 1-5): Camp Narache, Mulgore|99001|"
+                      "Route (level 12-17): Level in The Barrens (Crossroads) or Silverpine Forest.|nil|"
+                      "Route (level 58-60): Light's Hope Chapel, Eastern Plaguelands:nil|Level in: Westfall, Loch Modan or Darkshore"), L("ROUTE")
 xml = (ADDON / "Bindings.xml").read_text(encoding="utf-8")
 print("controller:", L("PAD_LABEL"), "| hit", L("PAD_HIT"), "|", L("NEXT_SPOT"))
 assert L("PAD_LABEL") == "A,SHIFT-A,NUMPADPLUS,PAD1,PAD1" and L("PAD_HIT") == -5

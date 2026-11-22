@@ -11,10 +11,10 @@ New ideas of our own wait in the app's Community, Developer page (Waiting for ap
 ## In the 2.7.1 betas
 - **Community page** (beta 1): updates, roadmap, bug tickets, suggestions, Top reporters, private developer inbox.
 - **Reports from the game** (beta 2): `/ff bug`, `/ff suggest`, Report a bug button; gear finder stat gains; Advisor steps pinned on the map.
-- **Beta 3:** the combat helper tests the spell orders from written class guides; UI and content pass (one window style, grouped Settings in game and app, `/ff help`, Talents button, Clear pins, minimap pin tooltips); Rules page in the app's Community; choose an older version; controller support (bindable combat, emergency and arrow actions, gamepad buttons in Set key, readable button names); quest log Pin on map button; Advisor class quests use their learned next spot.
+- **Beta 3:** the combat helper tests the spell orders from written class guides; UI and content pass (one window style, grouped Settings in game and app, `/ff help`, Talents button, Clear pins, minimap pin tooltips); Rules page in the app's Community; choose an older version; controller support (bindable combat, emergency and arrow actions, gamepad buttons in Set key, readable button names); quest log Pin on map button; Advisor class quests use their learned next spot; leveling route guide (approved suggestion).
 
 ## Planned
-- **Leveling route guide (approved 22 Nov):** a step-by-step route per race and level range inside the Advisor, with the waypoint arrow. Big: plan first.
+- **Leveling route guide, next:** positions for the towns in WoW: Forever's own zones (learned as you play), and moving on when you reach the town.
 - **Autopilot rework:** the auction house autopilot is off until it is reworked.
 
 ## Smaller improvements

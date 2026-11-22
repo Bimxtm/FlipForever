@@ -6,6 +6,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 ### Added
 - Combat helper: the spell orders from the WoW: Forever leveling guides on Warcraft Tavern are tested next to the helper's own order, and the one that kills faster for you is kept. Switch in Settings, Features.
 - `/ff help` lists every command, grouped.
+- **Leveling route:** the Advisor shows the next town or camp for your race, faction and level up to 60; click it for the arrow, right-click to pin it. Build details lists the next steps. Switch in Settings, Features.
 - **Quest log: Pin on map.** Select a quest and click *Pin on map*: its next spot (objective area or hand-in, learned from your play) is pinned on the map and minimap and the arrow points there. Switch in Settings, Features.
 - **Advisor:** class quests already in your quest log point to their next learned spot (objective or hand-in) instead of the quest giver. Switch in Settings, Features.
 - **Controller support:** bind the combat helper, the emergency key and the arrow (next Advisor pin or quest spot, clear) in Key Bindings, FlipForever; Set key takes gamepad buttons, and keys show the button's name. Switch in Settings, Features.

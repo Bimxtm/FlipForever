@@ -305,6 +305,55 @@ function AD:OpenTalents()
   return false
 end
 
+-- Leveling route (RouteData.lua; switch levelRoute) ------------------------------------------------
+-- map IDs by zone name: the ones seen while playing first (any client, WoW: Forever's own zones),
+-- then the usual IDs of the classic zones
+local ROUTE_MAPS = {
+  ["Elwynn Forest"] = 1429, ["Dun Morogh"] = 1426, ["Teldrassil"] = 1438, ["Durotar"] = 1411, ["Mulgore"] = 1412,
+  ["Tirisfal Glades"] = 1420, ["Westfall"] = 1436, ["Loch Modan"] = 1432, ["Darkshore"] = 1439, ["The Barrens"] = 1413,
+  ["Silverpine Forest"] = 1421, ["Redridge Mountains"] = 1433, ["Wetlands"] = 1437, ["Duskwood"] = 1431,
+  ["Hillsbrad Foothills"] = 1424, ["Stonetalon Mountains"] = 1442, ["Ashenvale"] = 1440, ["Thousand Needles"] = 1441,
+  ["Stranglethorn Vale"] = 1434, ["Tanaris"] = 1446, ["Feralas"] = 1444, ["Un'Goro Crater"] = 1449, ["Felwood"] = 1448,
+  ["Burning Steppes"] = 1428, ["Winterspring"] = 1452, ["Eastern Plaguelands"] = 1423, ["Silithus"] = 1451,
+}
+
+function AD:ZoneMap(zone)
+  if not zone then return nil end
+  for id, name in pairs(FlipForeverDB.mapNames or {}) do
+    if name == zone then return id end
+  end
+  return ROUTE_MAPS[zone]
+end
+
+-- the route step for this character (nil when the switch is off or there is no route data)
+function AD:RouteStep(p)
+  local R = FF.RouteData
+  if not R or FlipForeverDB.settings.levelRoute == false or (p.level or 1) >= 60 then return nil end
+  local _, token = UnitRace("player")
+  local race = (token and R.START[plain(token)]) and plain(token) or p.race
+  return R:Current(race, p.faction, p.level or 1)
+end
+
+-- arrow target of a step: { mapID, x, y, label } when its zone's map and the hub's spot are known
+function AD:RouteTarget(step)
+  local m = step and step[5] and self:ZoneMap(step[3])
+  if not m then return nil end
+  return { mapID = m, x = step[5] / 100, y = step[6] / 100, label = step[4] or step[3] }
+end
+
+-- remember the name of every map you are on (also used for the route's map lookup)
+local function noteZone()
+  if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetMapInfo) then return end
+  local m = plain(C_Map.GetBestMapForUnit("player"))
+  local info = m and C_Map.GetMapInfo(m)
+  local name = info and plain(info.name)
+  if name then
+    FlipForeverDB.mapNames = FlipForeverDB.mapNames or {}
+    FlipForeverDB.mapNames[m] = name
+  end
+end
+pcall(FF.On, FF, "ZONE_CHANGED_NEW_AREA", function() pcall(noteZone) end)
+
 -- The recommendations ------------------------------------------------------------------------------
 local ICON = {
   talent = "|TInterface\\Icons\\Ability_Marksmanship:14|t", quest = "|TInterface\\GossipFrame\\AvailableQuestIcon:14|t",
@@ -470,7 +519,16 @@ function AD:Compute()
       if L >= z[1] and L <= z[2] then zones[#zones + 1] = z[3] end
     end
   end
-  if #zones > 0 then add(45, "zone", FF:T("Level in: ") .. zones[1] .. (zones[2] and (" (or " .. zones[2] .. ")") or "")) end
+  local step = self:RouteStep(p)
+  if step then
+    local where = step[3] and (step[4] and (step[4] .. ", " .. step[3]) or step[3])
+    local target = self:RouteTarget(step)
+    -- a step with a zone: "Route: hub, zone" and its text below; without one, the text is the line
+    local why = where and (step[7] .. (target and (" " .. FF:T("Click to point the waypoint arrow there.")) or "")) or nil
+    local head = L < step[1] and FF:T("Route from level %d: %s"):format(step[1], where or step[7])
+      or FF:T("Route (level %d-%d): %s"):format(step[1], step[2], where or step[7])
+    add(46, "zone", head, why, target)
+  elseif #zones > 0 then add(45, "zone", FF:T("Level in: ") .. zones[1] .. (zones[2] and (" (or " .. zones[2] .. ")") or "")) end
 
   -- professions
   if #profs < 2 and cd then
@@ -790,6 +848,15 @@ local function detailsText(p, cd, build)
     if factionOK(q.faction, p) then line(("L%d  %s"):format(q.level, q.text)) end
   end
   if #cd.quests == 0 then line("none listed in the guides") end
+  local _, i, route = AD:RouteStep(p)
+  if route then
+    line(" ")
+    line("|cffffd200Leveling route|r")
+    for k = i, math.min(i + 3, #route) do
+      local s = route[k]
+      line(("L%d-%d  %s"):format(s[1], s[2], s[3] and ((s[4] and (s[4] .. ", ") or "") .. s[3]) or s[7]))
+    end
+  end
   line(" ")
   line("|cffffd200Gear to hunt|r")
   for _, g in ipairs(cd.gear) do
