@@ -1,3 +1,14 @@
+# FlipForever 2.7.1 Beta 4
+
+- **Dungeon advisor:** the Advisor names the dungeon around your level with the most upgrades for your weak gear slots, lists the drops and points the arrow to the entrance.
+- **Crafting:** a Craft button in the profession planner, and reminders to craft and post again when your crafted items sell out.
+- **Mailbox:** Send to alt mails your crafting materials and flip stock to another of your characters in one click.
+- **Smarter selling:** see the hours your auctions sell best when posting, and a short summary of each auction house visit.
+- **Vendor resale finder:** limited vendor items that sell for more on the auction house are named at the merchant; `/ff vendors` pins the best ones on the map.
+- **Safer buying:** auction buying stops before your bags are full (`/ff bags`).
+- **Gold goals:** set a daily or weekly profit goal (`/ff goal`) and follow it on the Overview and in the app.
+- **Price chart in the app:** select an item in Deals to see its price and the amount listed over the last 14 days.
+
 # FlipForever 2.7.1 Beta 3
 
 - **Leveling route:** the Advisor shows the next town or camp for your race and level up to 60, with the arrow. Pin quests on the map straight from the quest log, and class quests point to their next spot.

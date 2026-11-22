@@ -2,7 +2,7 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
-## [2.7.1-beta.4] - unreleased (beta)
+## [2.7.1-beta.4] - 2026-11-23 (beta)
 ### Added
 - **Best time to post:** when posting, and in item tooltips, FlipForever shows the 4-hour window of the day in which your own auctions of that item sold most (all your sales together until the item has 5). Switch in Settings, Features.
 - **Dungeon advisor:** of the dungeons around your level, the Advisor names the one with the most upgrades for your weak gear slots (for your class's armor), lists the drops when you hover it and points the arrow to the entrance when you click it. Switch in Settings, Features.

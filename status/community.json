@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22",
+ "updated": "2026-11-23",
  "developers": [
   "Alix"
  ],
@@ -203,6 +203,66 @@
    "text": "Opt-in gold scoreboard: the most profitable FlipForever players",
    "status": "shipped",
    "version": "2.7.1-beta.3"
+  },
+  {
+   "r": "idea-20261122134737",
+   "text": "Dungeon advisor: which dungeon around your level has the most upgrades for your build",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134741",
+   "text": "Best time to post: the hours your auctions sell best, shown when posting",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134731",
+   "text": "Price chart in the Deals tab: price and amount listed over the last 14 days",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134733",
+   "text": "Send to alt: mail crafting materials and auction stock to another of your characters in one click",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134735",
+   "text": "Vendor resale finder: limited vendor items that sell for more on the auction house, with the merchant on the map",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134736",
+   "text": "Bag space aware buying: auction buying stops before your bags are full",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134739",
+   "text": "Auction session summary: what you bought, posted and sold when you close the auction house",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134740",
+   "text": "Gold goals: set a daily or weekly profit goal and follow your progress",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134742",
+   "text": "Restock reminders: a reminder to craft and post again when your crafted items sell out",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "idea-20261122134734",
+   "text": "Craft button in the profession planner: craft the top recipe the planned number of times",
+   "status": "shipped",
+   "version": "2.7.1-beta.4"
   }
  ],
  "scores": []
