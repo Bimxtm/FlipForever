@@ -481,7 +481,15 @@ class App(tk.Tk):
             ttk.Button(row, text="Add", style="Accent.TButton",
                        command=lambda: (ev.get().strip() and community.owner_add(ev.get(), src.get()),
                                         ev.set(""), self._comm_fill_owner())).pack(side="left", padx=6)
-            ttk.Label(own, text="Waiting for approval", style="H.TLabel").pack(anchor="w", pady=(10, 0))
+            # players' reports come in here (no Discord reading needed)
+            r0 = ttk.Frame(own)
+            r0.pack(fill="x", pady=(10, 0))
+            ttk.Label(r0, text="Waiting for approval", style="H.TLabel").pack(side="left")
+            ttk.Button(r0, text="Get new reports", command=self._comm_get_reports).pack(side="left", padx=(12, 4))
+            ttk.Button(r0, text="Paste reports...", command=self._comm_paste_reports).pack(side="left")
+            self.comm_reader_msg = tk.StringVar(value="" if community.reader_ready() else
+                                                "Report reader not set up: use Paste, or see docs/DISCORD_BOT.md.")
+            ttk.Label(r0, textvariable=self.comm_reader_msg, style="Muted.TLabel").pack(side="left", padx=10)
             self.comm_inbox = tree_page(own, ("id", "Kind", "From", "Text"), (80, 90, 120, 640))
             self.comm_inbox.configure(height=6)
             r2 = ttk.Frame(own)
@@ -492,6 +500,19 @@ class App(tk.Tk):
             ttk.Label(own, text="Suggestion list (worked from in this order)", style="H.TLabel").pack(anchor="w", pady=(8, 0))
             self.comm_owner = tree_page(own, ("id", "Status", "Source", "Date", "Suggestion"), (80, 130, 80, 90, 560))
             ttk.Button(own, text="Remove selected", command=self._comm_owner_remove).pack(anchor="w", pady=4)
+            # ticket statuses: published on the Bug reports page with the next status update
+            r3 = ttk.Frame(own)
+            r3.pack(fill="x", pady=(8, 0))
+            ttk.Label(r3, text="Bug tickets: set the selected one to", style="H.TLabel").pack(side="left")
+            self.comm_tstatus = tk.StringVar(value="In progress")
+            ttk.Combobox(r3, textvariable=self.comm_tstatus, values=list(community.STATUS.values()), width=16,
+                         state="readonly").pack(side="left", padx=6)
+            ttk.Label(r3, text="fixed in version:").pack(side="left")
+            self.comm_tversion = tk.StringVar()
+            ttk.Entry(r3, textvariable=self.comm_tversion, width=14).pack(side="left", padx=6)
+            ttk.Button(r3, text="Set", command=self._comm_set_ticket).pack(side="left")
+            self.comm_tickets = tree_page(own, ("Ticket", "Status", "Report", "r"), (80, 150, 600, 0))
+            self.comm_tickets.configure(height=6)
             self._comm_fill_owner()
         self._comm_refresh()
 
@@ -535,6 +556,14 @@ class App(tk.Tk):
             self.comm_sugg.insert("", "end", values=(st, s.get("text", ""), "yes" if s.get("r") in mine else ""))
         for i, (nick, bugs, sugg) in enumerate(c.leaderboard(feed), 1):
             self.comm_board.insert("", "end", values=(i, nick, bugs, sugg))
+        if self.comm_owner is not None:
+            set_to = {d.get("r"): d for d in c._load(c.OWNER_DECISIONS, []) if d.get("status")}
+            self.comm_tickets.delete(*self.comm_tickets.get_children())
+            for t in reversed(feed.get("tickets", [])):
+                d = set_to.get(t.get("r"))
+                label = c.status_label(dict(t, **d)) + " (not published yet)" if d and (
+                    d["status"], d.get("version", "")) != (t.get("status"), t.get("version", "")) else c.status_label(t)
+                self.comm_tickets.insert("", "end", values=(t.get("id", ""), label, t.get("title", ""), t.get("r", "")))
         waiting = [m for m in c.my_reports() if m.get("r") not in {t.get("r") for t in feed.get("tickets", [])}
                    and m.get("r") not in {s.get("r") for s in feed.get("suggestions", [])}]
         for m in reversed(waiting[-10:]):
@@ -580,6 +609,44 @@ class App(tk.Tk):
         for sel in self.comm_inbox.selection():
             self.comm.owner_decide(str(self.comm_inbox.item(sel, "values")[0]), approve)
         self._comm_fill_owner()
+
+    def _comm_get_reports(self):
+        self.comm_reader_msg.set("Reading...")
+        res = []
+        threading.Thread(target=lambda: res.append(self.comm.owner_fetch_reports()), daemon=True).start()
+
+        def wait(n=0):
+            if not res:
+                if n < 100:
+                    self.after(150, lambda: wait(n + 1))
+                return
+            r = res[0]
+            self.comm_reader_msg.set(
+                f"{r[0]} new bug reports, {r[1]} new suggestions." if r is not None else
+                "Could not read the reports (reader not set up, or offline). Paste them instead.")
+            self._comm_fill_owner()
+        self.after(150, wait)
+
+    def _comm_paste_reports(self):
+        win = tk.Toplevel(self)
+        win.title("Paste reports")
+        win.configure(bg=BG)
+        ttk.Label(win, text="Paste the report messages (copied from the report channel):").pack(anchor="w", padx=10, pady=(10, 4))
+        t = tk.Text(win, bg=PANEL, fg=FG, insertbackground=FG, relief="flat", width=90, height=16, font=("Segoe UI", 10))
+        t.pack(fill="both", expand=True, padx=10)
+
+        def take():
+            b, s = self.comm.owner_take_reports(t.get("1.0", "end"))
+            self.comm_reader_msg.set(f"{b} new bug reports, {s} new suggestions.")
+            self._comm_fill_owner()
+            win.destroy()
+        ttk.Button(win, text="Add to Waiting for approval", style="Accent.TButton", command=take).pack(anchor="e", padx=10, pady=10)
+
+    def _comm_set_ticket(self):
+        status = {v: k for k, v in self.comm.STATUS.items()}.get(self.comm_tstatus.get())
+        for sel in self.comm_tickets.selection():
+            self.comm.owner_set_ticket(str(self.comm_tickets.item(sel, "values")[3]), status, self.comm_tversion.get())
+        self._comm_refresh()
 
     def _comm_owner_remove(self):
         for sel in self.comm_owner.selection():

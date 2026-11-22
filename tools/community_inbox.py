@@ -64,45 +64,56 @@ def main(argv=None) -> tuple[int, int]:
         print("idea waiting for approval:", rid)
         return 0, 1
     reports = []
-    for f in sorted(INBOX.glob("*.txt")):
+    # channel copies here, and what the developer's app read itself (Developer page, Get new reports)
+    for f in sorted(INBOX.glob("*.txt")) + sorted((pathlib.Path(args.data) / "report_inbox").glob("*.txt")):
         reports += parse(f.read_text(encoding="utf-8", errors="replace"))
     feed = load(FEED, {})
     tickets = feed.setdefault("tickets", [])
     owner_inbox_path = pathlib.Path(args.data) / "owner_inbox.json"
     owner_list = load(pathlib.Path(args.data) / "owner_suggestions.json", [])
     inbox = load(owner_inbox_path, [])
-    seen = {t.get("r") for t in tickets} | {s.get("r") for s in feed.get("suggestions", [])} \
-        | {i.get("r") for i in inbox} | {i.get("r") for i in owner_list}
-    seen |= set(load(pathlib.Path(args.data) / "declined_reports.json", []))
+    decisions = load(pathlib.Path(args.data) / "owner_decisions.json", [])
+    ticket_rs = {t.get("r") for t in tickets}
+    # already in the developer's lists (the app may have put them there itself) or decided
+    known = {s.get("r") for s in feed.get("suggestions", [])} | {i.get("r") for i in inbox} \
+        | {i.get("r") for i in owner_list} | {d.get("r") for d in decisions}
+    known |= set(load(pathlib.Path(args.data) / "declined_reports.json", []))
     bugs = sugg = 0
     for d in reports:
-        if d["r"] in seen:
-            continue
-        seen.add(d["r"])
         if d.get("k") == "bug":
-            tickets.append({"id": f"BUG-{len(tickets) + 1:03d}", "r": d["r"], "nick": d.get("n", ""),
-                            "title": d["t"][:140], "status": "reported", "reported": time.strftime("%Y-%m-%d"),
-                            "version": "", "from_version": d.get("v", "")})
-            # full text and attached info stay private, for the developer only
-            inbox.append({"id": d["r"], "r": d["r"], "kind": "bug", "nick": d.get("n", ""),
-                          "text": d["t"] + (f"  [{d['x']}]" if d.get("x") else "")})
-            bugs += 1
-        else:
+            if d["r"] not in ticket_rs:
+                ticket_rs.add(d["r"])
+                tickets.append({"id": f"BUG-{len(tickets) + 1:03d}", "r": d["r"], "nick": d.get("n", ""),
+                                "title": d["t"][:140], "status": "reported", "reported": time.strftime("%Y-%m-%d"),
+                                "version": "", "from_version": d.get("v", "")})
+                bugs += 1
+            if d["r"] not in known:
+                # full text and attached info stay private, for the developer only
+                inbox.append({"id": d["r"], "r": d["r"], "kind": "bug", "nick": d.get("n", ""),
+                              "text": d["t"] + (f"  [{d['x']}]" if d.get("x") else "")})
+        elif d["r"] not in known:
             inbox.append({"id": d["r"], "r": d["r"], "kind": "suggestion", "nick": d.get("n", ""), "text": d["t"]})
             sugg += 1
-    # the developer's Confirm / Not reproducible choices from the app's Developer page
+        known.add(d["r"])
+    # the developer's choices from the app's Developer page: Confirm / Not reproducible, and set statuses
     changed = bugs
     by_r = {t.get("r"): t for t in tickets}
-    for dec in load(pathlib.Path(args.data) / "owner_decisions.json", []):
+    for dec in decisions:
         t = by_r.get(dec.get("r"))
-        if dec.get("kind") == "bug" and t and t.get("status") == "reported":
+        if dec.get("kind") != "bug" or not t:
+            continue
+        if dec.get("status"):
+            new = (dec["status"], dec.get("version", "") if dec["status"] == "fixed" else t.get("version", ""))
+            if (t.get("status"), t.get("version", "")) != new:
+                t["status"], t["version"] = new
+                changed += 1
+        elif t.get("status") == "reported":
             t["status"] = "confirmed" if dec.get("approve") else "not_reproducible"
             changed += 1
     if changed:
         feed["updated"] = time.strftime("%Y-%m-%d")
         save(FEED, feed)
-    if bugs or sugg:
-        save(owner_inbox_path, inbox)
+    save(owner_inbox_path, inbox)
     print(f"new bug tickets: {bugs}, new suggestions waiting for approval: {sugg}")
     return bugs, sugg
 

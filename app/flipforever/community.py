@@ -12,6 +12,7 @@ suggestions waiting for approval and the approved suggestion list the work is pl
 from __future__ import annotations
 
 import json
+import re
 import time
 import urllib.request
 import uuid
@@ -189,3 +190,111 @@ def owner_decide(item_id: str, approve: bool) -> None:
 
 def owner_remove(item_id: str) -> None:
     _save(OWNER_SUGGESTIONS, [it for it in _load(OWNER_SUGGESTIONS, []) if it.get("id") != item_id])
+
+
+def owner_set_ticket(r: str, status: str, version: str = "") -> None:
+    """A ticket's new status; the next status update publishes it on the Bug reports page."""
+    if status not in STATUS or not r:
+        return
+    decisions = _load(OWNER_DECISIONS, [])
+    decisions.append({"r": r, "kind": "bug", "status": status, "version": version.strip()[:20],
+                      "date": time.strftime("%Y-%m-%d")})
+    _save(OWNER_DECISIONS, decisions[-500:])
+
+
+# Reports into the Developer page ------------------------------------------------------------------
+# Players' reports travel through the private report channel (share.post). The developer's app
+# reads them back with the report reader (a bot token in report_reader.json, never in the repo) or
+# from pasted text, and puts them straight into "Waiting for approval". The raw text is kept in
+# report_inbox\ so the status update turns bugs into public tickets.
+READER = store.DATA_DIR / "report_reader.json"        # {"token": "...", "channel": "combat-data"}
+READER_STATE = store.DATA_DIR / "report_reader_state.json"
+REPORT_INBOX = store.DATA_DIR / "report_inbox"
+_BLOCK = re.compile(r"\{[^{}]*\"k\"\s*:\s*\"(?:bug|suggestion)\"[^{}]*\}")
+
+
+def parse_reports(text: str) -> list[dict]:
+    out = []
+    for m in _BLOCK.finditer(text or ""):
+        try:
+            d = json.loads(m.group(0))
+        except ValueError:
+            continue
+        if isinstance(d.get("r"), str) and isinstance(d.get("t"), str):
+            out.append(d)
+    return out
+
+
+def owner_take_reports(text: str) -> tuple[int, int]:
+    """New bug reports and suggestions from text -> Waiting for approval. Returns (bugs, suggestions)."""
+    reports = parse_reports(text)
+    if not reports:
+        return 0, 0
+    REPORT_INBOX.mkdir(parents=True, exist_ok=True)
+    with open(REPORT_INBOX / (time.strftime("%Y-%m-%d") + ".txt"), "a", encoding="utf-8") as f:
+        f.write(text.strip() + "\n")
+    inbox, items = owner_lists()
+    seen = {i.get("r") for i in inbox} | {i.get("r") for i in items} | set(_load(DECLINED, []))
+    seen |= {d.get("r") for d in _load(OWNER_DECISIONS, [])}
+    bugs = sugg = 0
+    for d in reports:
+        if d["r"] in seen:
+            continue
+        seen.add(d["r"])
+        is_bug = d.get("k") == "bug"
+        inbox.append({"id": d["r"], "r": d["r"], "kind": "bug" if is_bug else "suggestion", "nick": d.get("n", ""),
+                      "text": d["t"] + (f"  [{d['x']}]" if is_bug and d.get("x") else "")
+                      + (f"  (v{d['v']})" if d.get("v") else "")})
+        bugs += is_bug
+        sugg += not is_bug
+    _save(OWNER_INBOX, inbox)
+    return bugs, sugg
+
+
+def _reader_cfg() -> dict:
+    # its own file, else the token of the Discord bot from docs/DISCORD_BOT.md
+    return _load(READER, {}) or _load(store.DATA_DIR / "discord_bot.json", {})
+
+
+def reader_ready() -> bool:
+    return bool(_reader_cfg().get("token"))
+
+
+def _discord(path: str, token: str):
+    req = urllib.request.Request("https://discord.com/api/v10" + path,
+                                 headers={"Authorization": "Bot " + token, "User-Agent": "FlipForever"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def owner_fetch_reports(api=None) -> tuple[int, int] | None:
+    """Read new messages from the report channel. None when the reader isn't set up or unreachable."""
+    cfg = _reader_cfg()
+    token = (cfg.get("token") or "").strip()
+    if not token:
+        return None
+    api = api or (lambda p: _discord(p, token))
+    st = _load(READER_STATE, {})
+    try:
+        cid = st.get("channel_id")
+        if not cid:
+            want = (cfg.get("channel") or "combat-data").lstrip("#")
+            for g in api("/users/@me/guilds") or []:
+                for c in api(f"/guilds/{g['id']}/channels") or []:
+                    if c.get("name") == want and c.get("type") in (0, 5):
+                        cid = c["id"]
+            if not cid:
+                return None
+        after = st.get("last")
+        msgs = api(f"/channels/{cid}/messages?limit=100" + (f"&after={after}" if after else "")) or []
+    except Exception:  # noqa: BLE001  - offline, wrong token, no access
+        return None
+    parts = []
+    for m in msgs:
+        parts.append(m.get("content", ""))
+        parts += [e.get("description", "") for e in m.get("embeds", []) or []]
+    if msgs:
+        st["last"] = max((m["id"] for m in msgs), key=int)
+    st["channel_id"] = cid
+    _save(READER_STATE, st)
+    return owner_take_reports("\n".join(parts))

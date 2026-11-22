@@ -26,3 +26,6 @@ Once the token file exists, the scheduled runs use the bot:
 - **Check marks:** `react <channel> <message id>`.
 
 Until then, Discord posts are handed over as text to paste.
+
+## Reports in the app
+Once the token file exists, the app's Community, Developer page reads players' bug reports and suggestions itself (Get new reports): no Discord reading by hand. The bot needs Read Message History in #combat-data. Without it, Paste reports... works too.
