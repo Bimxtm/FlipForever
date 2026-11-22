@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.10] - 2026-11-22 (beta, branch feature/quest-helper)
+### Changed
+- From 2.5.3 Beta 8: combat learning counts only the helper's own casts and fights; fix for the "you waited" note.
+
 ## [2.7.0-beta.9] - 2026-11-22 (beta, branch feature/quest-helper)
 ### Added
 - From 2.5.3 Beta 7: combat helper rules from the WoW: Forever class guides (cooldowns for elites, emergency key, advice in fights).
