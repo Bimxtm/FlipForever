@@ -2856,7 +2856,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3194,4 +3194,43 @@ print("window style:", L("WIN"))
 assert L("WIN") == "1:0:true", L("WIN")
 print("advisor map pin:", L("ADV_PIN"))
 assert L("ADV_PIN") == "true:1:0:false:0:0"
+lua.execute("""
+-- controller support: pad names, keyboard keys unchanged, switch off = raw names, next-spot binding
+local FF = FlipForever
+local oldGBT, oldSet, oldPos = GetBindingText, FF.Arrow.SetTarget, FF.Arrow.PlayerPos
+GetBindingText = function(key) return (key:gsub("PAD1$", "A")) end
+local l1, l2, l3 = FF:KeyLabel("PAD1"), FF:KeyLabel("SHIFT-PAD1"), FF:KeyLabel("NUMPADPLUS")
+FlipForeverDB.settings.controller = false
+local l4 = FF:KeyLabel("PAD1")
+FlipForeverDB.settings.controller = nil
+GetBindingText = nil
+local l5 = FF:KeyLabel("PAD1")
+GetBindingText = oldGBT
+PAD_LABEL = table.concat({ l1, l2, l3, l4, l5 }, ",")
+local b = CreateFrame("Button")
+local hit = 0
+b.SetHitRectInsets = function(_, l) hit = l end
+FF:PadFriendly(b, nil)
+PAD_HIT = hit
+local QH = FF.QuestHelper
+local target
+FF.Arrow.SetTarget = function(_, m, x, y, label) target = label end
+local ps = QH:PinStore() for k in pairs(ps) do ps[k] = nil end
+FlipForeverDB.settings.questHelper = false
+local none = QH:NextSpot()
+QH:TogglePin(1411, 0.3, 0.7, "Gornek", "Talk to Gornek")
+QH:NextSpot()
+NEXT_SPOT = tostring(none) .. ":" .. tostring(target)
+local ps = QH:PinStore() for k in pairs(ps) do ps[k] = nil end
+FlipForeverDB.settings.questHelper = nil
+FF.Arrow.SetTarget = oldSet
+""")
+xml = (ADDON / "Bindings.xml").read_text(encoding="utf-8")
+print("controller:", L("PAD_LABEL"), "| hit", L("PAD_HIT"), "|", L("NEXT_SPOT"))
+assert L("PAD_LABEL") == "A,SHIFT-A,NUMPADPLUS,PAD1,PAD1" and L("PAD_HIT") == -5
+assert L("NEXT_SPOT") == "nil:Talk to Gornek - Gornek"
+for name in ("CLICK FlipForeverCombatButton:LeftButton", "CLICK FlipForeverEmergencyButton:LeftButton",
+             "FLIPFOREVER_NEXT_SPOT", "FLIPFOREVER_ARROW_CLEAR"):
+    assert f'name="{name}"' in xml, name
+assert "QuestHelper:NextSpot()" in xml and "Arrow:SetManual()" in xml
 print("ALL ADDON TESTS PASSED")

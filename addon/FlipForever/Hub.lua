@@ -64,6 +64,13 @@ local function startCapture(label, onKey)
       local combo = (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "") .. key
       if self.onKey then self.onKey(combo) end
     end)
+    -- gamepad buttons work too (switch: controller); Back cancels
+    capture:SetScript("OnGamePadButtonDown", function(self, button)
+      self:Hide()
+      if button == "PADBACK" then return end
+      local combo = (IsAltKeyDown() and "ALT-" or "") .. (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "") .. button
+      if self.onKey then self.onKey(combo) end
+    end)
     -- mouse buttons 4/5 work too
     capture:SetScript("OnMouseDown", function(self, mouse)
       if mouse == "Button4" or mouse == "Button5" then
@@ -73,6 +80,7 @@ local function startCapture(label, onKey)
     end)
   end
   capture.onKey = onKey
+  if capture.EnableGamePadButton then pcall(capture.EnableGamePadButton, capture, FF:Controller()) end
   capture.text:SetText(FF:T("Press the key you want for\n|cffffd200") .. label .. "|r\n\n|cff888888(Escape cancels)|r")
   capture:Show()
 end
@@ -634,6 +642,8 @@ local function build()
     "Big cooldowns are kept for elites, rares, bosses and players.")
   feature("combatTutorial", "Combat helper: also test the orders from written class guides", true, combatApply,
     "The spell orders from WoW: Forever leveling guides are tested next to the helper's own.")
+  feature("controller", "Controller: gamepad buttons for keys, readable button names", true, nil,
+    "Bind the combat helper, emergency and arrow in Key Bindings, FlipForever, or use Set key with a gamepad button.")
   feature("combatShare", "Share anonymous combat data to improve the helper", true, nil,
     "Only spell orders and fight times, no names. The desktop app sends them.")
   group("Gear")
@@ -670,10 +680,11 @@ function H:Refresh()
   frame.combatMode:SetEnabled(FF.Combat:BlizzardAssistSpell() ~= nil)
   frame.combatMode.text:SetText(FF.Combat:BlizzardAssistSpell() and "Blizzard's assistant decides"
     or "|cff888888Blizzard's assistant (not in this client)|r")
-  local ckeys = FF.Combat:Keys()
+  local ckeys = {}
+  for i, k in ipairs(FF.Combat:Keys()) do ckeys[i] = FF:KeyLabel(k) end
   frame.combatKeyText:SetText(FF:T("Key: ") .. (#ckeys > 0 and ("|cffffff00" .. table.concat(ckeys, ", ") .. "|r") or "|cff888888none - click the icon|r"))
   frame.auto:SetChecked(FF.Auto:Enabled())
-  frame.ahKeyText:SetText(FF:T("Big-button key: ") .. (s.key and ("|cffffff00" .. s.key .. "|r") or "|cff888888none - click it|r"))
+  frame.ahKeyText:SetText(FF:T("Big-button key: ") .. (s.key and ("|cffffff00" .. FF:KeyLabel(s.key) .. "|r") or "|cff888888none - click it|r"))
   local plan = FF:Plan()
   frame.planText:SetText(plan and plan.buy and ("Shopping list for " .. (UnitName("player") or "?") .. ": " .. #plan.buy .. " buys, " .. #(plan.sell or {}) .. " sell prices" .. (plan.live and " (built in game from your newest scan)." or "."))
     or "No shopping list for this character yet - build one in the FlipForever app.")

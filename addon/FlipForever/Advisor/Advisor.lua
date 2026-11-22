@@ -721,6 +721,8 @@ local function makeFrame()
     FF:Print(FF:T("Map pins cleared."))
     AD:Refresh()
   end)
+  -- controller: bigger click areas for the gamepad cursor
+  FF:PadFriendly(prev, nxt, details, refresh, settings, f.clearPins)
   f.clearPins:Hide()
   local auto = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
   auto:SetSize(22, 22)

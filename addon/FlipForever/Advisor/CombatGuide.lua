@@ -134,7 +134,7 @@ function GD:Hint()
   local d = self:Data()
   local hp = pct("player")
   if hp and hp < GD.LOW_HEALTH and self.emergencyFirst then
-    local key = self.emergencyKey and (" (" .. self.emergencyKey .. ")") or ""
+    local key = self.emergencyKey and (" (" .. FF:KeyLabel(self.emergencyKey) .. ")") or ""
     return FF:T("|cffff5555Low health: press the emergency key%s - %s|r"):format(key, self.emergencyLabel or self.emergencyFirst)
   end
   if UnitExists("target") and UnitCanAttack("player", "target") then
@@ -171,7 +171,7 @@ local function createButton(parent)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
     GameTooltip:AddLine(FF:T("Emergency"))
     GameTooltip:AddLine(FF:T("Casts your first ready defensive spell and uses your best healthstone or healing potion."), 1, 1, 1, true)
-    if GD.emergencyKey then GameTooltip:AddLine(FF:T("Key: %s"):format(GD.emergencyKey), 0.7, 0.7, 0.7) end
+    if GD.emergencyKey then GameTooltip:AddLine(FF:T("Key: %s"):format(FF:KeyLabel(GD.emergencyKey)), 0.7, 0.7, 0.7) end
     GameTooltip:Show()
   end)
   ebtn:SetScript("OnLeave", function() GameTooltip:Hide() end)

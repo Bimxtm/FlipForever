@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Ready for approval
-- Nothing waiting.
+New ideas of our own wait in the app's Community, Developer page (Waiting for approval) and are only built once approved.
+- Leveling route guide and disenchant profits (from Proposed below), sent 22 Nov.
 
 ## Released in 2.7.0
 - **Talent builds on the Talents window** (from the 2.6.0 betas): build marked on the Talents window, next point gold, order panel, level bands, `/ff talents`.
@@ -10,12 +11,9 @@
 ## In the 2.7.1 betas
 - **Community page** (beta 1): updates, roadmap, bug tickets, suggestions, Top reporters, private developer inbox.
 - **Reports from the game** (beta 2): `/ff bug`, `/ff suggest`, Report a bug button; gear finder stat gains; Advisor steps pinned on the map.
-- **Beta 3:** the combat helper tests the spell orders from written class guides; UI and content pass (one window style, grouped Settings in game and app, `/ff help`, Talents button, Clear pins, minimap pin tooltips).
+- **Beta 3:** the combat helper tests the spell orders from written class guides; UI and content pass (one window style, grouped Settings in game and app, `/ff help`, Talents button, Clear pins, minimap pin tooltips); Rules page in the app's Community; choose an older version; controller support (bindable combat, emergency and arrow actions, gamepad buttons in Set key, readable button names).
 
 ## Planned
-- **Rules page (top priority, owner 22 Nov):** a Discord channel and an app/README section on WoW: Forever's rules and how FlipForever stays inside them (game API only, every buy, post, cancel and cast on your own key press, the app only reads the game's saved files).
-- **Choose a version (owner 22 Nov):** the app's About & updates page lists older releases, so you can go back to one.
-- **Controller support (owner 22 Nov):** the combat helper, Advisor and FlipForever window usable with a gamepad (bindable actions, no mouse needed). Big: plan first.
 - **Quest helper, next:** pins from the quest log, and Advisor quest steps that use learned spots.
 - **Autopilot rework:** the auction house autopilot is off until it is reworked.
 

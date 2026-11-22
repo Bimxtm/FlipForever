@@ -8,6 +8,7 @@ summaries), and:
 
 Reports are matched by their random report ID, so running it again adds nothing twice.
 Usage: python tools/community_inbox.py [--data <app data folder>]
+       python tools/community_inbox.py --idea "<text>"   (an idea of our own, waits for approval too)
 """
 from __future__ import annotations
 
@@ -52,7 +53,16 @@ def save(path: pathlib.Path, data) -> None:
 def main(argv=None) -> tuple[int, int]:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DEFAULT_DATA))
+    ap.add_argument("--idea", help="add a feature idea of the developer's own to the approval list")
     args = ap.parse_args(argv)
+    if args.idea:
+        path = pathlib.Path(args.data) / "owner_inbox.json"
+        inbox = load(path, [])
+        rid = "idea-" + time.strftime("%Y%m%d%H%M%S")
+        inbox.append({"id": rid, "r": rid, "kind": "suggestion", "nick": "", "text": "Idea: " + args.idea.strip()})
+        save(path, inbox)
+        print("idea waiting for approval:", rid)
+        return 0, 1
     reports = []
     for f in sorted(INBOX.glob("*.txt")):
         reports += parse(f.read_text(encoding="utf-8", errors="replace"))

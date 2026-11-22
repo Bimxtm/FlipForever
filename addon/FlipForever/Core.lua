@@ -62,6 +62,37 @@ end
 BINDING_HEADER_FLIPFOREVER = "FlipForever"
 BINDING_NAME_FLIPFOREVER_ADVISOR = "Open or close the Advisor"
 BINDING_NAME_FLIPFOREVER_HUB = "Open or close the FlipForever window"
+BINDING_NAME_FLIPFOREVER_NEXT_SPOT = "Arrow: next Advisor pin or quest spot"
+BINDING_NAME_FLIPFOREVER_ARROW_CLEAR = "Arrow: clear the point I set"
+_G["BINDING_NAME_CLICK FlipForeverCombatButton:LeftButton"] = "Combat helper: next spell"
+_G["BINDING_NAME_CLICK FlipForeverEmergencyButton:LeftButton"] = "Combat helper: emergency"
+
+-- Controller support (switch: Settings, Features, "controller") ------------------------------------
+-- Gamepad buttons are bound like keys (Key Bindings menu, or "Set key"); nothing here presses anything.
+function FF:Controller()
+  local s = FlipForeverDB and FlipForeverDB.settings
+  return not (s and s.controller == false)
+end
+
+-- a key as the player reads it: gamepad buttons get the game's own name (PAD1 -> "A" or "Cross")
+function FF:KeyLabel(key)
+  if type(key) ~= "string" then return key end
+  local base = key:match("([^%-]+)$") or key
+  if self:Controller() and base:sub(1, 3) == "PAD" and GetBindingText then
+    local ok, text = pcall(GetBindingText, key, "KEY_")
+    if ok and type(text) == "string" and text ~= "" then return text end
+  end
+  return key
+end
+
+-- bigger click areas for the gamepad cursor (no layout change)
+function FF:PadFriendly(...)
+  if not self:Controller() then return end
+  for i = 1, select("#", ...) do
+    local b = select(i, ...)
+    if b and b.SetHitRectInsets then b:SetHitRectInsets(-5, -5, -5, -5) end
+  end
+end
 
 -- English plural "s"; translations use a neutral form, so other languages get ""
 function FF:Plural(n)
@@ -540,6 +571,7 @@ FF.HELP = {
   { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
   { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reset" },
   { "Gathering", "gather" },
+  { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },
 }
 function FF:Help()
@@ -760,6 +792,7 @@ function FF:Window(name, width, height, opts)
   if opts.close ~= false then
     f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
     f.close:SetPoint("TOPRIGHT", 2, 2)
+    FF:PadFriendly(f.close)
   end
   return f
 end

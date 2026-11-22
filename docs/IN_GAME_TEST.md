@@ -18,6 +18,7 @@ Use this list to confirm everything works on a live client. For anything that fa
 ## Combat helper
 10. Show the combat helper (FlipForever window), set a key, and fight a mob: each press casts and the icon moves on. (Tests the secure step button in combat.)
 11. With no target, press the key: it picks the nearest enemy.
+12b. Controller: in Key Bindings, FlipForever, bind "Combat helper: next spell" and "Arrow: next Advisor pin or quest spot" to gamepad buttons (or use Set key and press a pad button). Pressing them casts and points the arrow; the window shows the button's name, not PAD1.
 12. Type `/ff spells`: it should say that all spell IDs match their names. Any line it lists is a spell the combat helper can't find on clients in other languages.
 
 ## Advisor and professions

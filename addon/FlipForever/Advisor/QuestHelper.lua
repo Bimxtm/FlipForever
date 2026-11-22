@@ -260,6 +260,28 @@ function QH:Next()
   return s
 end
 
+-- key binding (keyboard or gamepad): the arrow points at the next Advisor pin, then the quest spots
+QH.spotPick = 0
+function QH:NextSpot()
+  local spots = {}
+  if self:PinsEnabled() then
+    for _, a in ipairs(self:PinStore()) do
+      spots[#spots + 1] = { m = a.m, x = a.x, y = a.y, label = a.label or "", quest = { title = a.title or FF:T("Advisor step") } }
+    end
+  end
+  if self:Enabled() then for _, s in ipairs(self:Spots()) do spots[#spots + 1] = s end end
+  if #spots == 0 then
+    FF:Print(FF:T("No map pins or quest spots yet. Right-click an Advisor step to pin it."))
+    return nil
+  end
+  self.spotPick = self.spotPick % #spots + 1
+  local s = spots[self.spotPick]
+  if FF.Arrow and FF.Arrow.SetTarget then
+    FF.Arrow:SetTarget(s.m, s.x, s.y, ("%s - %s"):format(s.quest.title, s.label))
+  end
+  return s
+end
+
 -- World map pins ----------------------------------------------------------------------------------
 local pins, overlay = {}, nil
 

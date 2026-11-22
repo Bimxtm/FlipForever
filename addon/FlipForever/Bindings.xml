@@ -5,4 +5,12 @@
   <Binding name="FLIPFOREVER_HUB" category="ADDONS">
     FlipForever.Hub:Toggle()
   </Binding>
+  <Binding name="CLICK FlipForeverCombatButton:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK FlipForeverEmergencyButton:LeftButton" category="ADDONS"/>
+  <Binding name="FLIPFOREVER_NEXT_SPOT" category="ADDONS">
+    FlipForever.QuestHelper:NextSpot()
+  </Binding>
+  <Binding name="FLIPFOREVER_ARROW_CLEAR" category="ADDONS">
+    FlipForever.Arrow:SetManual()
+  </Binding>
 </Bindings>

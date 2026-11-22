@@ -1,7 +1,7 @@
 # Controller support (plan)
 
 Owner suggestion, 22 Nov. Goal: a player on a gamepad can use the combat helper, the emergency key, the Advisor and
-the waypoint arrow without a keyboard. One switch: `controller` in Settings, Features (default off), next to the
+the waypoint arrow without a keyboard. One switch: `controller` in Settings, Features (default on; it changes nothing without a gamepad), next to the
 combat helper switches in Hub.lua (the Hub order is the test's switch list).
 
 Rules that stay: every press is the player's own button press; secure buttons are only clicked through bindings;
