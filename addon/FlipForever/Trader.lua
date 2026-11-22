@@ -259,9 +259,45 @@ function T:SlowQueue(t, rows, buying)
   end
 end
 
+-- Bag space aware buying (switch bagSpace): buying stops before your bags are full and keeps
+-- bagKeepFree slots (default 2) free. Only normal bags count (no profession bags).
+function T:FreeBagSlots()
+  local C = C_Container
+  if not (C and C.GetContainerNumFreeSlots) then return nil end
+  local n = 0
+  for bag = 0, (NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS or 4) do
+    local free, family = C.GetContainerNumFreeSlots(bag)
+    if (family or 0) == 0 then n = n + (free or 0) end
+  end
+  return n
+end
+
+-- slots this run may still fill, or nil when the check is off or bags can't be read
+function T:BagRoom()
+  if FlipForeverDB.settings.bagSpace == false then return nil end
+  local free = self:FreeBagSlots()
+  if not free then return nil end
+  local keep = tonumber(FlipForeverDB.settings.bagKeepFree) or 2
+  return math.max(0, free - keep), keep
+end
+
+local function stackSize(id)
+  local n = C_Item and C_Item.GetItemInfo and select(8, C_Item.GetItemInfo(id))
+  return (tonumber(n) or 0) > 0 and tonumber(n) or 20
+end
+
 function T:EvaluateBuy(rows)
   local t = self.target
   local want = self:Remaining(t)
+  local room, keep = self:BagRoom()
+  if room then
+    if room <= 0 then
+      self:Stop(FF:T("Stopped: your bags are nearly full (keeping %d slot%s free). Post or mail items, then buy again."):format(keep, FF:Plural(keep)))
+      return
+    end
+    -- commodities stack; other auctions take one slot each
+    if self.isCommodity then want = math.min(want, room * stackSize(t.id)) end
+  end
   local money = math.min(self:Spendable(), self:BudgetLeft())
   if money <= 0 then
     if self:BudgetLeft() > 0 and (self.reserve or 0) > 0 then

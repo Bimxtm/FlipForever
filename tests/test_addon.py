@@ -436,6 +436,38 @@ GetMoney = OLD_MONEY
 """)
 print("/ff reserve:", L("RS"))
 assert L("RS") == "true,0.3,500000"
+# --- bag space: 3 free slots, 2 kept -> one stack of 20; 2 free -> stops; switch off -> no limit; /ff bags
+lua.execute("""
+OLD_MONEY, OLD_FREE, OLD_INFO = GetMoney, C_Container.GetContainerNumFreeSlots, C_Item.GetItemInfo
+GetMoney = function() return 100000000 end
+FREE_SLOTS = 3
+C_Container.GetContainerNumFreeSlots = function(bag) if bag == 0 then return FREE_SLOTS, 0 end if bag == 1 then return 9, 8 end return 0, 0 end
+C_Item.GetItemInfo = function(id) return "Item", nil, 1, 1, 1, "", "", 20 end
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+BS1 = FlipForever.Trader.pending and FlipForever.Trader.pending.qty or 0
+FlipForever.Trader:Stop()
+FREE_SLOTS = 2
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+BS2 = FlipForever.Trader.state .. ":" .. FlipForever.status
+FlipForever.Trader:Stop()
+FlipForeverDB.settings.bagSpace = false
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+BS3 = FlipForever.Trader.pending and FlipForever.Trader.pending.qty or 0
+FlipForever.Trader:Stop()
+FlipForeverDB.settings.bagSpace = nil
+SlashCmdList.FLIPFOREVER("bags 4")
+BS4 = FlipForeverDB.settings.bagKeepFree
+FlipForeverDB.settings.bagKeepFree = nil
+GetMoney, C_Container.GetContainerNumFreeSlots, C_Item.GetItemInfo = OLD_MONEY, OLD_FREE, OLD_INFO
+""")
+print("bag space:", L("BS1"), "|", L("BS2"), "|", L("BS3"), "|", L("BS4"))
+assert L("BS1") == 20 and "bags are nearly full" in L("BS2") and L("BS3") == 40 and L("BS4") == 4
 # --- fast flips: 300 cheaper units ahead of a 10/day item (5/day for us = 60 days) -> skipped
 lua.execute("""
 OLD_MONEY = GetMoney
@@ -3004,7 +3036,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,vendorResale=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

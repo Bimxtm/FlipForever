@@ -622,6 +622,8 @@ local function build()
     "Only when the new price still earns more than the deposit you lose by cancelling.")
   feature("goldReserve", "Buying keeps a gold reserve (20% of my gold, at least 20g)", true, nil,
     "Buying stops before your gold drops below the reserve and sizes purchases to what is left. Change it with /ff reserve <percent> <gold>.")
+  feature("bagSpace", "Buying stops before my bags are full (keeps 2 slots free)", true, nil,
+    "Auction buying counts your free bag slots (profession bags not counted) and stops while a few stay free. Change how many with /ff bags <slots>.")
   feature("fastFlips", "Buying skips flips with too many cheaper listings ahead", true, nil,
     "Before buying, counts the units listed below your sell price and how fast the item sells; skips it when they would take more than twice the hold time to sell.")
   feature("disenchant", "Disenchant values in tooltips, /ff disenchant buy list", true, nil,

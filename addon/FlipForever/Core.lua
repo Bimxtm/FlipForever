@@ -567,6 +567,11 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF:SetActionKey(rest ~= "" and rest:upper() or nil)
   elseif cmd == "disenchant" or cmd == "de" then
     if FF.Disenchant then FF.Disenchant:Command() end
+  elseif cmd == "bags" then
+    -- /ff bags <slots>: free bag slots auction buying keeps (switch bagSpace)
+    local n = tonumber(rest)
+    if n and n >= 0 and n <= 30 then FlipForeverDB.settings.bagKeepFree = math.floor(n) end
+    FF:Print(FF:T("Bag space: buying keeps %d bag slot%s free. Change: /ff bags <slots>."):format(tonumber(FlipForeverDB.settings.bagKeepFree) or 2, FF:Plural(tonumber(FlipForeverDB.settings.bagKeepFree) or 2)))
   elseif cmd == "vendors" then
     if FF.VendorResale then FF.VendorResale:Command() end
   elseif cmd == "reserve" then
@@ -621,7 +626,7 @@ FF.HELP = {
   { "/ff", "open the FlipForever window (or click the gold coin on the minimap)" },
   { "Leveling", "guide (Advisor) | quest (arrow to the next quest spot) | talents | /ffway x y (arrow)" },
   { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
-  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | disenchant (buy items worth more disenchanted) | vendors (vendor items that resell for more) | reset" },
+  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | bags <slots> (free bag slots kept while buying) | disenchant (buy items worth more disenchanted) | vendors (vendor items that resell for more) | reset" },
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },

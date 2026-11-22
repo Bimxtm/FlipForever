@@ -9,6 +9,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - **Price chart in Deals (app):** select an item in the Deals tab to see its cheapest and typical price and the amount listed over the last 14 days below the list. Switch in the app's Settings (Price chart under Deals).
 - **Send to alt:** a mailbox button mails your crafting materials and flip stock (up to 12 stacks per click, never soulbound items) to another character of yours on the same realm and faction; right-click picks the character. Switch in Settings, Features.
 - **Vendor resale finder:** merchants you visit are remembered with their spot on the map. Their limited items (such as recipes) that sell for clearly more on the auction house are named at the merchant, and `/ff vendors` lists the best ones and pins them on the map. Switch in Settings, Features.
+- **Bag space aware buying:** auction buying stops before your bags are full and keeps 2 slots free (profession bags not counted); stacks are sized to the room left. Change it with `/ff bags <slots>`. Switch in Settings, Features.
 
 ## [2.7.1-beta.3] - 2026-11-22 (beta)
 ### Added
