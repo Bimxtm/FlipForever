@@ -67,6 +67,7 @@ def make_zip() -> Path:
                 continue
             p = ROOT / name
             files = [p] if p.is_file() else [f for f in p.rglob("*") if f.is_file() and "__pycache__" not in f.parts
+                                             and "combat_inbox" not in f.parts      # raw shared summaries stay local
                                              and f.relative_to(ROOT).as_posix() not in INTERNAL]
             for f in files:
                 z.write(f, "FlipForever/" + f.relative_to(ROOT).as_posix())
@@ -86,6 +87,8 @@ def release_notes() -> str:
 def main():
     import gen_locale
     gen_locale.main()          # addon translations from app/flipforever/i18n.py
+    import merge_combat_learning
+    merge_combat_learning.main()   # what all players' combat helpers learned (tools/combat_inbox)
     check_versions()
     DIST.mkdir(exist_ok=True)
     build_exe(skip="--skip-exe" in sys.argv)

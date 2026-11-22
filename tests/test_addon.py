@@ -1306,6 +1306,78 @@ assert L("GUIDE_MACRO") == "/cast Shield Wall\n/cast Retaliation\n/use item:9421
 assert "Low health" in L("HINT_LOW") and "SHIFT-+" in L("HINT_LOW") and "Interrupt Heal: Pummel" in L("HINT_KICK")
 assert L("HINT_NONE") is None and L("HINT_OFF") is None
 
+# --- shared combat learning: what all players learned gives the helper a head start
+lua.execute("""
+local L = FlipForever.CombatLearn
+FlipForeverDB.combatLearn = nil
+L.Key = function() return "MAGE:test:11-39" end
+local base = { "Frostbolt", "Fire Blast", "Frost Nova" }
+local sig = table.concat(base, ">")
+-- everyone found "swap1" faster; nothing learned locally yet
+FlipForever.COMBAT_SHARED = { ["MAGE:test:11-39"] = { [sig] = {
+  base = { n = 200, kills = 200, time = 2000, deaths = 0, hp = 40 },
+  swap1 = { n = 200, kills = 200, time = 1400, deaths = 0, hp = 40 },
+  swap2 = { n = 200, kills = 200, time = 2200, deaths = 0, hp = 40 } } } }
+local oldRandom = math.random
+math.random = function() return 0.99 end
+SHARED_PICK = table.concat(L:Apply(base), ",") .. ":" .. L.current.variant
+math.random = oldRandom
+FlipForever.COMBAT_SHARED = {}
+NO_SHARED = L.current and L:Apply(base) and L.current.variant
+FlipForeverDB.combatLearn = nil
+L.Key = nil
+-- the warning about collecting data is shown once
+FlipForeverDB.settings.combatShareWarned = nil
+printed = {}
+WARN1 = L:WarnOnce()
+WARN2 = L:WarnOnce()
+WARN_TEXT = printed[1]
+""")
+print("shared learning:", L("SHARED_PICK"), "| without:", L("NO_SHARED"), "| warning once:", L("WARN1"), L("WARN2"))
+assert L("SHARED_PICK") == "Fire Blast,Frostbolt,Frost Nova:swap1" and L("NO_SHARED") == "base"
+assert L("WARN1") is True and L("WARN2") is False and "anonymous combat data" in L("WARN_TEXT") and "Settings, Features" in L("WARN_TEXT")
+
+# the app side: anonymous summary, one message per entry, both switches respected, nothing sent twice
+from flipforever import share as _share  # noqa: E402
+_learn = {"MAGE:frost:11-39": {"spells": {"Frostbolt": {"cast": 3}}, "fights": [{"dur": 9}],
+                                "bases": {"Frostbolt>Fire Blast": {"variants": {"base": {"n": 6, "kills": 6, "time": 54.25, "hp": 1.2},
+                                                                              "swap1": {"n": 0}}}}},
+          "bad key": {"bases": {}}}
+_sum = _share.summarize(_learn)
+_msgs = _share.messages(_sum, "abc123")
+print("share summary:", _sum, "|", _msgs)
+assert _sum == {"MAGE:frost:11-39": {"Frostbolt>Fire Blast": {"base": {"n": 6, "kills": 6, "time": 54.2, "deaths": 0, "hp": 1.2}}}}
+assert len(_msgs) == 1 and '"i":"abc123"' in _msgs[0] and "Tester" not in _msgs[0] and _msgs[0].startswith("```json")
+
+
+class _ShareSettings(_store.Settings):
+    def save(self):
+        pass
+
+
+_ss = _ShareSettings()
+_posted = []
+_n1 = _share.send(_ss, _learn, True, poster=lambda m: _posted.append(m) or True, now=1000000)
+_n2 = _share.send(_ss, _learn, True, poster=lambda m: _posted.append(m) or True, now=1000000 + 30 * 3600)   # unchanged
+_ss.share_digest = ""
+_n3 = _share.send(_ss, _learn, False, poster=lambda m: _posted.append(m) or True, now=1000000 + 60 * 3600)  # off in game
+_ss.share_combat = False
+_n4 = _share.send(_ss, _learn, True, poster=lambda m: _posted.append(m) or True, now=1000000 + 90 * 3600)   # off in the app
+print("share sends:", _n1, _n2, _n3, _n4)
+assert (_n1, _n2, _n3, _n4) == (1, 0, 0, 0) and len(_posted) == 1
+
+# the release build merges the summaries: newest per install, then summed; junk is ignored
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "tools"))
+import merge_combat_learning as _mcl  # noqa: E402
+_dump = ("FlipForever combat data BOT\n" + _msgs[0] + "\n" + _msgs[0].replace('"n":6', '"n":7').replace('"kills":6', '"kills":7')
+         + "\n" + _msgs[0].replace("abc123", "zzz999") + '\n{"f":1,"i":"x","k":"<script>","s":"a","v":{"base":{"n":1}}}'
+         + '\n{"f":1,"i":"y","k":"MAGE:frost:11-39","s":"Frostbolt","v":{"base":{"n":5,"kills":9}}}')
+_parsed = _mcl.parse(_dump)
+_total = _mcl.merge(_parsed, {})
+print("merged:", len(_parsed), _total)
+assert len(_parsed) == 3 and _total["MAGE:frost:11-39"]["Frostbolt>Fire Blast"]["base"]["n"] == 13
+assert 'FF.COMBAT_SHARED = {' in _mcl.to_lua(_total) and '["base"] = { n = 13' in _mcl.to_lua(_total)
+
 # --- undercut fix: cancel and repost only where it pays after the deposit
 lua.execute("""
 local T = FlipForever.Trader
@@ -2769,7 +2841,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,combatLearn=true,combatTips=true,combatGuide=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

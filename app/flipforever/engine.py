@@ -95,6 +95,12 @@ def import_savedvars(con, path: Path) -> dict:
                  ev.get("q"), ev.get("p"), ev.get("dep"), ev.get("gross"), ev.get("cut"), ev.get("exp"),
                  ev.get("char")))
             summary["events"] += cur.rowcount
+    # The combat helper's learning (anonymous: class/build/band keys and spell orders only) and
+    # whether the player lets the app share it (Settings, Features in game)
+    learn = db.get("combatLearn")
+    summary["combat"] = learn if isinstance(learn, dict) else {}
+    settings_in_game = db.get("settings") if isinstance(db.get("settings"), dict) else {}
+    summary["combat_share"] = settings_in_game.get("combatShare") is not False
     # Gathering (the merged Ore Farmer module): stored next to FlipForever's data now;
     # before the merge it lived in its own OreFarmer.lua file.
     gather = data.get("OreFarmerDB")
