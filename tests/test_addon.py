@@ -236,6 +236,7 @@ lua.execute(MOCK)
 toc = (ADDON / "FlipForever.toc").read_text(encoding="utf-8").splitlines()
 files = [l.strip() for l in toc if l.strip().endswith(".lua")]
 print("load order from TOC:", files)
+assert len(files) == len(set(f.lower() for f in files)), "a file is listed twice in the TOC (the game warns: Duplicate File Load)"
 shared_ns = lua.table()   # WoW gives every file of one addon the same private table
 for f in files:
     src = (ADDON / f.replace("\\", "/")).read_text(encoding="utf-8")
@@ -1768,6 +1769,16 @@ BUFF_MACRO2 = CB:GetAttribute("macrotext")
 PBUFFS = { "Greater Blessing of Might", "Devotion Aura" }
 Fire("UNIT_AURA", "player")
 BUFF_MACRO3 = CB:GetAttribute("macrotext")
+-- auras hidden by the game (around fights): no error, the last answer stays
+local oldUB, oldSecret = UnitBuff, issecretvalue
+UnitBuff = function() error("Auras cannot be accessed when secret") end
+HIDDEN_OK, HIDDEN_MISS = pcall(function() return #C:MissingBuffs() end)
+UnitBuff = oldUB
+issecretvalue = function(v) return v == "Devotion Aura" end
+HIDDEN_NIL = C.PlayerBuffNames() == nil
+issecretvalue = function(v) return v == "SECRET" end
+CHAT_OK = pcall(Fire, "CHAT_MSG_SYSTEM", "SECRET")
+issecretvalue = oldSecret
 SEQ0 = C:SmartNext()
 Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "g1", 1)
 SEQ1 = C:SmartNext()
@@ -1801,6 +1812,8 @@ assert L("BUFF_MACRO").startswith("/cast [nocombat] Blessing of Might\n/cast [no
 assert L("BUFF_LABEL") == "Blessing of Might (before the fight)"
 assert L("BUFF_MACRO2").startswith("/cast [nocombat] Devotion Aura\n/startattack")   # Greater Blessing counts
 assert L("BUFF_MACRO3").startswith("/startattack") and len(L("BUFF_MACRO")) <= 255
+print("hidden auras:", L("HIDDEN_OK"), L("HIDDEN_MISS"), L("HIDDEN_NIL"), "| hidden chat text:", L("CHAT_OK"))
+assert L("HIDDEN_OK") is True and L("HIDDEN_MISS") == 0 and L("HIDDEN_NIL") is True and L("CHAT_OK") is True
 print("sequence icon:", L("SEQ0"), L("SEQ1"), L("SEQ2"), L("SEQ3"), L("SEQ4"), "| new target in combat:", L("SEQ5"))
 assert L("SEQ0") == "Seal of Righteousness" and L("SEQ1") == "Judgement" and L("SEQ1_LABEL") == "Judgement"
 assert L("SEQ2") == "Judgement" and L("SEQ3") == "Judgement" and L("SEQ4") == "Seal of Righteousness"
