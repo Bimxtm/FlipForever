@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.3-beta.9] - 2026-11-22 (beta)
+### Added
+- Shared combat learning: what every player's combat helper learns now improves the helper for everyone. The app sends an anonymous summary (class, build and level band, the spell orders compared, fight counts, kills, fight time, deaths and health lost; no character, realm or account names, no chat) at most once a day, only when something changed. Each release starts from what worked across all players; your own fights still decide (the shared results count as at most 20 fights).
+- A warning says so the first time (in game and in the app). Switch it off in game under Settings, Features (*Share anonymous combat data*) or in the app's Settings.
+- Release builds merge the shared summaries into the addon (tools/merge_combat_learning.py, Advisor/CombatShared.lua).
+
 ## [2.5.3-beta.8] - 2026-11-22 (beta)
 ### Changed
 - Combat helper learning now judges only the helper's own choices, not how you play: only casts that come right after a press of the helper's button or key count, and a fight only counts for comparing orders when at least 70% of its casts came from the helper. Spells you cast yourself no longer go into its statistics. `/ff combat report` shows how many fights the helper did itself.

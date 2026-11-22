@@ -128,6 +128,11 @@ class Settings:
     auto_build: bool = True       # after importing a new scan: build the shopping list and notify
     auto_character: bool = True   # after importing: switch to the character you played last
     auto_char_seen: str = ""      # the last character switched to automatically ("Name @ Realm")
+    share_combat: bool = True     # share the combat helper's anonymous learning (share.py)
+    share_warned: bool = False    # the warning about it was shown once
+    share_id: str = ""            # random install ID for the shared summaries (not linked to anything)
+    share_last: float = 0.0       # when the summary was last sent
+    share_digest: str = ""        # what was sent last (nothing is sent twice)
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True
     beta_updates: bool = False    # also offer beta versions (pre-releases) for testing

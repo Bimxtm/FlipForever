@@ -94,20 +94,46 @@ function L:Score(v)
   return perKill * (1 + hpLost * 0.5) * (1 + deathRate * 3)
 end
 
--- pick the version for the next fight: each one first gets MIN_FIGHTS, then mostly the best one,
--- now and then another (so a change in your gear or level is noticed)
-function L:Pick(variants, bstore, rnd)
+-- What all players' helpers learned, shipped with each release (CombatShared.lua, built from the
+-- anonymous summaries players share): FF.COMBAT_SHARED[key][baseSig][variant] = { n, kills, time, deaths, hp }.
+-- It counts as at most SHARED_WEIGHT fights next to your own, so your fights still decide.
+local SHARED_WEIGHT = 20
+
+function L:Shared(key, sig, name)
+  local s = FF.COMBAT_SHARED and FF.COMBAT_SHARED[key]
+  s = s and s[sig]
+  return s and s[name]
+end
+
+-- your own results for a version plus everyone's (scaled down)
+function L:Combined(bstore, name, key, sig)
+  local own = bstore.variants[name] or {}
+  local sh = self:Shared(key or (self.current and self.current.key) or self:Key(), sig or bstore.sig, name)
+  local out = { n = own.n or 0, kills = own.kills or 0, time = own.time or 0, deaths = own.deaths or 0, hp = own.hp or 0 }
+  if sh and (sh.n or 0) > 0 then
+    local w = math.min(1, SHARED_WEIGHT / sh.n)
+    out.n = out.n + sh.n * w
+    out.kills = out.kills + (sh.kills or 0) * w
+    out.time = out.time + (sh.time or 0) * w
+    out.deaths = out.deaths + (sh.deaths or 0) * w
+    out.hp = out.hp + (sh.hp or 0) * w
+  end
+  return out
+end
+
+-- pick the version for the next fight: each one first gets MIN_FIGHTS (counting what all players
+-- shared), then mostly the best one, now and then another (so a change in gear or level is noticed)
+function L:Pick(variants, bstore, rnd, key, sig)
   rnd = rnd or math.random
   local names = {}
   for name in pairs(variants) do names[#names + 1] = name end
   table.sort(names)
   for _, name in ipairs(names) do
-    local v = bstore.variants[name]
-    if not v or (v.n or 0) < MIN_FIGHTS then return name, false end
+    if self:Combined(bstore, name, key, sig).n < MIN_FIGHTS then return name, false end
   end
   local best, bestScore = "base", nil
   for _, name in ipairs(names) do
-    local sc = self:Score(bstore.variants[name])
+    local sc = self:Score(self:Combined(bstore, name, key, sig))
     if sc and (not bestScore or sc < bestScore) then best, bestScore = name, sc end
   end
   if rnd() < 0.1 then return names[math.floor(rnd() * #names) + 1], false end
@@ -123,8 +149,9 @@ function L:Apply(steps)
   store.bases[sig] = store.bases[sig] or { variants = {} }
   local bstore = store.bases[sig]
   local variants = self:Variants(steps, store)
-  local name, settled = self:Pick(variants, bstore)
-  self.current = { key = self:Key(), sig = sig, variant = name }
+  local key = self:Key()
+  local name, settled = self:Pick(variants, bstore, nil, key, sig)
+  self.current = { key = key, sig = sig, variant = name }
   if settled and name ~= "base" and bstore.told ~= name and self:TipsOn() then
     bstore.told = name
     FF:Print(FF:T("Combat helper learned: this order works better for you - %s."):format(table.concat(variants[name], ", ")))
@@ -372,3 +399,18 @@ pcall(FF.On, FF, "UNIT_HEALTH", function(unit)
   if UnitIsDead and UnitIsDead("target") then fight.targetDied = true end
 end)
 C_Timer.NewTicker(0.5, function() if fight then L:Tick(0.5) end end)
+
+-- Sharing ------------------------------------------------------------------------------------------
+-- The FlipForever app sends an anonymous summary of what the helper learned (class, build, level
+-- band, the spell orders compared, fight counts and times; no names, no chat, nothing else) so every
+-- release starts from what worked for all players. Setting combatShare (on); the app reads it.
+function L:ShareOn() return FlipForeverDB.settings.combatShare ~= false end
+
+function L:WarnOnce()
+  local s = FlipForeverDB.settings
+  if s.combatShareWarned then return false end
+  s.combatShareWarned = true
+  FF:Print(FF:T("|cffffd200Note:|r the combat helper collects anonymous combat data (class, build, spell order, fight length; no names) and the FlipForever app shares it to improve the helper for everyone. Switch it off under Settings, Features: \"Share anonymous combat data\"."))
+  return true
+end
+FF:On("PLAYER_LOGIN", function() C_Timer.After(8, function() pcall(L.WarnOnce, L) end) end)

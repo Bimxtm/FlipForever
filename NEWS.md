@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 9
+
+**The combat helper learns from all players.** What your combat helper learns now also helps everyone else: the app shares an anonymous summary (class, build, the spell orders it compared and how long its fights took; no names, no chat), and every new version starts from what worked best for all players. You can switch this off in game under Settings, Features ("Share anonymous combat data") or in the app's Settings.
+
 # FlipForever 2.5.3 Beta 8
 
 **The combat helper learns from itself.** It now only learns from the spells it cast itself (right after you press its key) and only from fights it did itself, not from the spells you cast by hand. `/ff combat report` shows how many fights that were.
