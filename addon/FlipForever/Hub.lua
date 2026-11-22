@@ -438,6 +438,9 @@ local function build()
   -- the Advisor from every tab (also: right-click the minimap coin, /ff guide, or a key in Key Bindings)
   f.advisorBtn = button(f, "Advisor", 80, function() FF.Advisor:Toggle() end)
   f.advisorBtn:SetPoint("TOPRIGHT", -30, -10)
+  -- bug reports and suggestions go to the FlipForever app, which sends them (Community page)
+  f.reportBtn = button(f, "Report a bug", 100, function() FF:AskReport("bug") end)
+  f.reportBtn:SetPoint("RIGHT", f.advisorBtn, "LEFT", -6, 0)
 
   -- Tabs: Overview · Shopping list · Settings ------------------------------
   f.pages = {}

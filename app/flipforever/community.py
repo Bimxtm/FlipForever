@@ -25,6 +25,8 @@ MINE = store.DATA_DIR / "my_reports.json"
 OWNER_KEY = store.DATA_DIR / "owner.key"
 OWNER_SUGGESTIONS = store.DATA_DIR / "owner_suggestions.json"
 OWNER_INBOX = store.DATA_DIR / "owner_inbox.json"
+OWNER_DECISIONS = store.DATA_DIR / "owner_decisions.json"
+DECLINED = store.DATA_DIR / "declined_reports.json"
 MAX_TEXT = 1500
 
 STATUS = {
@@ -115,6 +117,34 @@ def submit(kind: str, text: str, nick: str = "", extra: str = "", poster=None) -
     return rid
 
 
+SENT_GAME = store.DATA_DIR / "sent_game_reports.json"
+
+
+def forward_game_reports(reports: list, nick: str = "", poster=None) -> int:
+    """Send the reports typed in game that were not sent yet. Returns how many went out."""
+    sent = set(_load(SENT_GAME, []))
+    n = 0
+    for r in reports or []:
+        if not isinstance(r, dict) or r.get("k") not in ("bug", "suggestion"):
+            continue
+        key = f"{r.get('time', 0)}:{str(r.get('t', ''))[:40]}"
+        if key in sent:
+            continue
+        extra = ""
+        if r.get("k") == "bug":
+            extra = "addon {v}, {c} {l}, {z}; errors: {e}".format(v=r.get("v", "?"), c=r.get("class", "?"),
+                                                                  l=r.get("level", "?"), z=r.get("zone", "?"),
+                                                                  e=r.get("errors") or "none")
+        if submit(r["k"], str(r.get("t", "")), nick, extra, poster):
+            sent.add(key)
+            n += 1
+        else:
+            break                     # no connection: try again after the next import
+    if n:
+        _save(SENT_GAME, sorted(sent)[-500:])
+    return n
+
+
 def is_owner() -> bool:
     return OWNER_KEY.exists()
 
@@ -138,6 +168,17 @@ def owner_decide(item_id: str, approve: bool) -> None:
     for it in inbox:
         if it.get("id") != item_id:
             keep.append(it)
+            continue
+        # remembered for the next status update: bugs become Confirmed / Not reproducible, declined
+        # suggestions are never offered again
+        decisions = _load(OWNER_DECISIONS, [])
+        decisions.append({"r": it.get("r", ""), "kind": it.get("kind", "suggestion"), "approve": approve,
+                          "date": time.strftime("%Y-%m-%d")})
+        _save(OWNER_DECISIONS, decisions[-500:])
+        if it.get("kind") == "bug":
+            continue
+        if not approve:
+            _save(DECLINED, (_load(DECLINED, []) + [it.get("r", "")])[-1000:])
         elif approve:
             items.append({"id": it.get("id"), "r": it.get("r", ""), "nick": it.get("nick", ""),
                           "text": it.get("text", ""), "source": "user", "date": time.strftime("%Y-%m-%d"),

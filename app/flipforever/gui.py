@@ -473,8 +473,9 @@ class App(tk.Tk):
             self.comm_inbox.configure(height=6)
             r2 = ttk.Frame(own)
             r2.pack(fill="x", pady=4)
-            ttk.Button(r2, text="Approve", command=lambda: self._comm_decide(True)).pack(side="left")
-            ttk.Button(r2, text="Decline", command=lambda: self._comm_decide(False)).pack(side="left", padx=6)
+            ttk.Button(r2, text="Approve idea / Confirm bug", command=lambda: self._comm_decide(True)).pack(side="left")
+            ttk.Button(r2, text="Decline idea / Not reproducible",
+                       command=lambda: self._comm_decide(False)).pack(side="left", padx=6)
             ttk.Label(own, text="Suggestion list (worked from in this order)", style="H.TLabel").pack(anchor="w", pady=(8, 0))
             self.comm_owner = tree_page(own, ("id", "Status", "Source", "Date", "Suggestion"), (80, 130, 80, 90, 560))
             ttk.Button(own, text="Remove selected", command=self._comm_owner_remove).pack(anchor="w", pady=4)
@@ -1352,6 +1353,10 @@ class App(tk.Tk):
             self.settings.save()
         switched = self._follow_played_character()
         self._share_combat(res.get("combat") or {}, res.get("combat_share", True))
+        if res.get("reports"):
+            from . import community
+            threading.Thread(target=lambda: community.forward_game_reports(res["reports"], self.settings.nickname),
+                             daemon=True).start()
         self.refresh(commit_tuning=True)
         if switched:
             self.status(f"Switched to {switched}, the character you played last.")

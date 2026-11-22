@@ -483,6 +483,9 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Advisor:Toggle()
   elseif cmd == "quest" or cmd == "quests" then
     FF.QuestHelper:Next()
+  elseif cmd == "bug" or cmd == "suggest" or cmd == "suggestion" then
+    local kind = cmd == "bug" and "bug" or "suggestion"
+    if rest ~= "" then FF:SaveReport(kind, rest) else FF:AskReport(kind) end
   elseif cmd == "talents" or cmd == "talent" then
     FF.TalentOverlay:Open()
   elseif cmd == "fights" or (cmd == "combat" and (rest == "report" or rest == "learn")) then
@@ -528,6 +531,57 @@ SlashCmdList.FLIPFOREVER = function(msg)
   else
     FF:Print(FF:T("/ff opens the FlipForever window (or click the gold coin on the minimap). Commands: guide | combat | combatkey <KEY> | combatmode | gather | scan | buy | sell | stop | auto | key <KEY> | reset"))
   end
+end
+
+-- Bug reports and suggestions ----------------------------------------------------------------------
+-- Saved with the game data; the FlipForever app sends them after the next /reload or logout and
+-- shows their status on its Community page. Attached to a bug report: version, class, level, zone
+-- and the last FlipForever errors. No names.
+function FF:SaveReport(kind, text)
+  text = (text or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  if #text < 5 then
+    FF:Print(FF:T("Please write a bit more (at least a sentence)."))
+    return false
+  end
+  local list = FlipForeverDB.reports or {}
+  FlipForeverDB.reports = list
+  local meta = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+  local r = { k = kind, t = text:sub(1, 1500), v = meta and meta("FlipForever", "Version") or "?", time = time() }
+  if kind == "bug" then
+    local _, class = UnitClass("player")
+    r.class, r.level, r.zone = class, UnitLevel("player"), GetRealZoneText and GetRealZoneText() or nil
+    local errs, all = {}, FlipForeverDB.errors or {}
+    for i = #all, math.max(1, #all - 2), -1 do
+      local e = all[i]
+      errs[#errs + 1] = ("%s: %s"):format(e.where or "?", (e.msg or ""):sub(1, 120))
+    end
+    r.errors = table.concat(errs, " | ")
+  end
+  list[#list + 1] = r
+  while #list > 20 do table.remove(list, 1) end
+  FF:Print(kind == "bug" and FF:T("Bug report saved. The FlipForever app sends it after your next /reload or logout.")
+    or FF:T("Suggestion saved. The FlipForever app sends it after your next /reload or logout."))
+  return true
+end
+
+function FF:AskReport(kind)
+  StaticPopupDialogs.FLIPFOREVER_REPORT = StaticPopupDialogs.FLIPFOREVER_REPORT or {
+    button1 = OKAY, button2 = CANCEL, hasEditBox = true, editBoxWidth = 320, maxLetters = 500,
+    timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
+    OnAccept = function(self, data)
+      local box = self.editBox or self.EditBox
+      FF:SaveReport(data, box and box:GetText() or "")
+    end,
+    EditBoxOnEnterPressed = function(self)
+      local p = self:GetParent()
+      if FF:SaveReport(p.data, self:GetText()) then p:Hide() end
+    end,
+  }
+  StaticPopupDialogs.FLIPFOREVER_REPORT.text = kind == "bug"
+    and FF:T("Report a bug: what happened, and what did you do right before?")
+    or FF:T("Suggest an idea for FlipForever:")
+  local dlg = StaticPopup_Show("FLIPFOREVER_REPORT")
+  if dlg then dlg.data = kind end
 end
 
 -- Shared by the window and the commands ------------------------------------------------------------

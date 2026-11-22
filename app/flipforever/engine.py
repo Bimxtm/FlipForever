@@ -101,6 +101,9 @@ def import_savedvars(con, path: Path) -> dict:
     summary["combat"] = learn if isinstance(learn, dict) else {}
     settings_in_game = db.get("settings") if isinstance(db.get("settings"), dict) else {}
     summary["combat_share"] = settings_in_game.get("combatShare") is not False
+    # bug reports and suggestions typed in game (/ff bug, /ff suggest); the app sends them (community.py)
+    reports = db.get("reports")
+    summary["reports"] = list(reports.values()) if isinstance(reports, dict) else (reports or [])
     # Gathering (the merged Ore Farmer module): stored next to FlipForever's data now;
     # before the merge it lived in its own OreFarmer.lua file.
     gather = data.get("OreFarmerDB")
