@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 2
+
+**Where your talent points go.** When you have talent points to spend, the Advisor now tells you exactly where they go for your chosen build: which talents, how many points each and in which tree. Hover the step for the full list, click it to open the Talents window.
+
 # FlipForever 2.5.3 Beta 1
 
 **Waypoint arrow fix.** Changing zones while a pin is set on the world map no longer shows the error "Arrow.lua:50: attempt to call a nil value". The arrow points to your map pin again.

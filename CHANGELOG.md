@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.3-beta.2] - 2026-11-22 (beta)
+### Changed
+- Advisor, talents: the step for unspent talent points now says where each point goes for your chosen build, with the talent, how many points and the tree (up to three in the line, the full list on hover). Builds that only name their key talents are filled lower tiers first, and a talent is only suggested once its tier is open. Points the build does not place yet are named as free. Clicking the step opens the Talents window.
+
 ## [2.5.3-beta.1] - 2026-11-22 (beta)
 ### Fixed
 - Waypoint arrow: no more error "Arrow.lua:50: attempt to call a nil value" when changing zones with a pin on the world map. The arrow now reads the map pin the way this game client stores it.

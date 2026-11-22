@@ -564,7 +564,54 @@ for i, r in ipairs(FlipForever.Advisor.last) do ADV[i] = r.text:gsub('|T.-|t%s*'
 adv = list(L("ADV").values())
 print("ADVISOR (level 22 mage):")
 for a in adv: print("   -", a)
-assert any("Spend 2 talent points" in a and "Ice Shards (1/3)" in a for a in adv), "talent advice"
+assert any("Spend 2 talent points" in a and "Ice Shards +2" in a for a in adv), "talent advice"
+
+# --- advisor: where talent points go, across talents, tiers and trees
+lua.execute("""
+local AD = FlipForever.Advisor
+local oT, oN, oI, oTab = GetNumTalentTabs, GetNumTalents, GetTalentInfo, GetTalentTabInfo
+local TREES = {
+  { name = "Holy", t = { {"Divine Strength", 1, 0, 5}, {"Divine Intellect", 1, 0, 5} } },
+  { name = "Retribution", t = { {"Benediction", 1, 3, 5}, {"Improved Judgement", 2, 0, 2}, {"Seal of Command", 3, 0, 1} } },
+}
+GetNumTalentTabs = function() return #TREES end
+GetNumTalents = function(tab) return #TREES[tab].t end
+GetTalentInfo = function(tab, i) local t = TREES[tab].t[i] return t[1], nil, t[2], 1, t[3], t[4] end
+GetTalentTabInfo = function(tab) return TREES[tab].name end
+local build = { name = "Ret", keyOnly = true, talents = { {"Seal of Command", 1}, {"Improved Judgement", 2}, {"Benediction", 5} } }
+local plan, left = AD:SpendPlan(build, 6, 30)
+local s = {}
+for _, o in ipairs(plan) do s[#s + 1] = AD:SpendText(o) end
+SPEND = table.concat(s, "; ") .. " | left " .. left
+-- not enough points in the tree yet for tier 3: Seal of Command waits
+plan, left = AD:SpendPlan(build, 1, 30)
+SPEND1 = AD:SpendText(plan[1]) .. " | left " .. left
+-- an ordered build hands out points in its order and stops at the minimum level
+local ordered = { name = "Ord", talents = { {"Divine Strength", 2}, {"Benediction", 5}, {"Seal of Command", 1, 40} } }
+plan, left = AD:SpendPlan(ordered, 10, 30)
+s = {}
+for _, o in ipairs(plan) do s[#s + 1] = AD:SpendText(o) end
+SPEND_ORD = table.concat(s, "; ") .. " | left " .. left
+NOPLAN = AD:SpendPlan(build, 0, 30) == nil and AD:SpendPlan({ name = "x" }, 3, 30) == nil
+-- the Advisor step opens the Talents window when clicked
+OPENED = 0
+ToggleTalentFrame = function() OPENED = OPENED + 1 end
+local oldBuild = AD.Build
+AD.Build = function() return build end
+UNSPENT = 3
+FlipForever.Advisor:Show()
+for _, r in ipairs(AD.last) do if r.kind == "talent" then TSTEP = r.text TWHY = r.why if r.action then r.action() end end end
+AD.Build = oldBuild
+UNSPENT = 2
+GetNumTalentTabs, GetNumTalents, GetTalentInfo, GetTalentTabInfo = oT, oN, oI, oTab
+""")
+print("spend plan:", L("SPEND"), "|", L("SPEND1"), "|", L("SPEND_ORD"))
+print("talent step:", L("TSTEP"), "| opened:", L("OPENED"))
+assert L("SPEND") == "Benediction +2 (Retribution); Improved Judgement +2 (Retribution) | left 2", L("SPEND")
+assert L("SPEND1") == "Benediction +1 (Retribution) | left 0", L("SPEND1")
+assert L("SPEND_ORD") == "Divine Strength +2 (Holy); Benediction +2 (Retribution) | left 6", L("SPEND_ORD")
+assert L("NOPLAN") is True
+assert "Spend 3 talent points for Ret" in L("TSTEP") and "Benediction" in L("TSTEP") and "Improved Judgement" in L("TSTEP") and "Talents window" in L("TWHY") and L("OPENED") == 1
 assert any("Hypnotic" not in a for a in adv)
 assert any("Coldspire Staff" in a for a in adv), "gear advice"
 assert any("Learn Tailoring + Enchanting" in a for a in adv), "profession advice"
@@ -585,7 +632,7 @@ for i, r in ipairs(FlipForever.Advisor.last) do ADV[i] = r.text:gsub('|T.-|t%s*'
 """)
 adv = list(L("ADV").values())
 print("after level-up + new staff:", adv[:3])
-assert any("Ice Lance (0/1)" in a for a in adv)
+assert any("Ice Lance +1" in a for a in adv)
 assert not any("Get Coldspire Staff" in a for a in adv)
 snap = L("FlipForeverDB.realms['Testrealm - Horde'].chars.Tester.advisor")
 print("snapshot for app:", snap.build, "|", snap.steps[1])
