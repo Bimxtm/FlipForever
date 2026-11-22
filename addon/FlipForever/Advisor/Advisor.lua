@@ -221,6 +221,90 @@ function AD:NextTalent(build, ranks, level)
   return nil
 end
 
+-- Where your talent points should go: follows the build's order point by point from what you
+-- have now. Builds that only name their key talents are taken lower tiers first, and a talent
+-- is only picked once its tier is open (5 points per tier in that tree).
+-- Returns { { name, add, tree, cur, target }, ... }, points left over (or nil without talent data).
+function AD:SpendPlan(build, points, level)
+  if not (build and build.talents and points and points > 0) then return nil end
+  if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return nil end
+  local where, spent, names = {}, {}, {}
+  local okT, tabs = pcall(GetNumTalentTabs)
+  for tab = 1, (okT and tonumber(tabs) or 0) do
+    spent[tab] = 0
+    if GetTalentTabInfo then
+      local r = { pcall(GetTalentTabInfo, tab) }
+      if r[1] and type(r[2]) == "string" then names[tab] = r[2] end
+    end
+    local okN, n = pcall(GetNumTalents, tab)
+    for i = 1, (okN and tonumber(n) or 0) do
+      local r = { pcall(GetTalentInfo, tab, i) }
+      if r[1] and type(r[2]) == "string" then
+        local rank = tonumber(r[6]) or 0
+        where[r[2]] = { tab = tab, tier = tonumber(r[4]) or 1, rank = rank, max = tonumber(r[7]) or 1 }
+        spent[tab] = spent[tab] + rank
+      end
+    end
+  end
+  if not next(where) then return nil end
+  local list = {}
+  for i, t in ipairs(build.talents) do list[i] = { t = t, i = i } end
+  if build.keyOnly then
+    table.sort(list, function(a, b)
+      local wa, wb = where[a.t[1]], where[b.t[1]]
+      local ta, tb = wa and wa.tier or 99, wb and wb.tier or 99
+      if ta ~= tb then return ta < tb end
+      return a.i < b.i
+    end)
+  end
+  local rank, out, byName, left = {}, {}, {}, points
+  for name, w in pairs(where) do rank[name] = w.rank end
+  local progress = true
+  while left > 0 and progress do
+    progress = false
+    for _, e in ipairs(list) do
+      local name, want, minLevel = e.t[1], e.t[2], e.t[3]
+      local w = where[name]
+      if w and (minLevel or 0) <= (level or 60) then
+        local target = math.min(want or w.max, w.max)
+        if rank[name] < target and (spent[w.tab] or 0) >= (w.tier - 1) * 5 then
+          local give = math.min(target - rank[name], left)
+          local o = byName[name]
+          if not o then
+            o = { name = name, add = 0, tree = names[w.tab], cur = rank[name], target = target }
+            byName[name] = o
+            out[#out + 1] = o
+          end
+          o.add = o.add + give
+          rank[name] = rank[name] + give
+          spent[w.tab] = spent[w.tab] + give
+          left = left - give
+          progress = true
+          break           -- start over from the top: a new tier may be open now
+        end
+      end
+    end
+  end
+  return out, left
+end
+
+-- "Benediction +2 (Retribution)" for one entry of SpendPlan
+function AD:SpendText(o, color)
+  local s = (color and "|cffffd200" .. o.name .. "|r" or o.name) .. " +" .. o.add
+  if o.tree then s = s .. " (" .. o.tree .. ")" end
+  return s
+end
+
+-- open the game's Talents window (outside fights)
+function AD:OpenTalents()
+  if InCombatLockdown and InCombatLockdown() then return false end
+  if FF.TalentOverlay and FF.TalentOverlay.Open then return FF.TalentOverlay:Open() end
+  local load = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
+  if not (_G.PlayerTalentFrame or _G.TalentFrame) and load then pcall(load, "Blizzard_TalentUI") end
+  if type(ToggleTalentFrame) == "function" then pcall(ToggleTalentFrame) return true end
+  return false
+end
+
 -- The recommendations ------------------------------------------------------------------------------
 local ICON = {
   talent = "|TInterface\\Icons\\Ability_Marksmanship:14|t", quest = "|TInterface\\GossipFrame\\AvailableQuestIcon:14|t",
@@ -268,12 +352,29 @@ function AD:Compute()
   -- talents
   local ranks, unspent = self:Talents()
   local nextName, cur, target = self:NextTalent(build, ranks, L)
-  if unspent and unspent > 0 then
+  local spend, free = nil, 0
+  if unspent and unspent > 0 then spend, free = self:SpendPlan(build, unspent, L) end
+  if spend and #spend > 0 then
+    local parts, lines = {}, {}
+    for k, o in ipairs(spend) do
+      if k <= 3 then parts[#parts + 1] = self:SpendText(o, true) end
+      lines[#lines + 1] = ("%d. %s (%d/%d)"):format(k, self:SpendText(o), o.cur + o.add, o.target)
+    end
+    if #spend > 3 then parts[#parts + 1] = FF:T("%d more"):format(#spend - 3) end
+    if (free or 0) > 0 then
+      lines[#lines + 1] = FF:T("%d point%s left that the build does not place yet - spend them where you like."):format(free, S(free))
+    end
+    add(100, "talent", FF:T("Spend %d talent point%s for %s: %s"):format(unspent, S(unspent), build.name, table.concat(parts, ", ")),
+      FF:T("Where your points go, in the order of %s:"):format(build.name) .. "\n" .. table.concat(lines, "\n")
+        .. "\n" .. FF:T("Click to open the Talents window."))
+    recs[#recs].action = function() AD:OpenTalents() end
+  elseif unspent and unspent > 0 then
     if nextName then
       add(100, "talent", FF:T("Spend %d talent point%s - next for %s: |cffffd200%s|r (%d/%d)"):format(unspent, S(unspent), build.name, nextName, cur, target))
     else
       add(100, "talent", FF:T("Spend %d talent point%s - follow %s (see Build details)"):format(unspent, S(unspent), build and build.name or "your build"))
     end
+    recs[#recs].action = function() AD:OpenTalents() end
   elseif nextName then
     add(20, "talent", FF:T("Next talent for %s: %s (%d/%d)"):format(build.name, nextName, cur, target))
   end
@@ -573,6 +674,7 @@ local function makeFrame()
     -- click a step that has a place (a quest giver you've met): the waypoint arrow points there
     hit:SetScript("OnMouseUp", function()
       local r = f.recs and f.recs[i]
+      if r and r.action then r.action() return end
       if r and r.target and FF.Arrow then FF.Arrow:SetTarget(r.target.mapID, r.target.x, r.target.y, r.target.label) end
     end)
     fs.hit = hit
