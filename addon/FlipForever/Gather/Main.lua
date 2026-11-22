@@ -110,8 +110,13 @@ function ns.MapSize(mapID)
     local ok, _, tl = pcall(C_Map.GetWorldPosFromMapPos, mapID, CreateVector2D(0, 0))
     local ok2, _, br = pcall(C_Map.GetWorldPosFromMapPos, mapID, CreateVector2D(1, 1))
     if ok and ok2 and tl and br then
-      local top, left = tl:GetXY()
-      local bottom, right = br:GetXY()
+      local function xy(v)
+        if type(v) ~= "table" then return nil end
+        if type(v.GetXY) == "function" then return v:GetXY() end
+        return v.x, v.y
+      end
+      local top, left = xy(tl)
+      local bottom, right = xy(br)
       if top and left and bottom and right then w, h = math.abs(left - right), math.abs(top - bottom) end
     end
   end

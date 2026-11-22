@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 1
+
+**Waypoint arrow fix.** Changing zones while a pin is set on the world map no longer shows the error "Arrow.lua:50: attempt to call a nil value". The arrow points to your map pin again.
+
 # FlipForever 2.5.2
 
 Everything from the 2.5.2 test versions, now in every game language:
