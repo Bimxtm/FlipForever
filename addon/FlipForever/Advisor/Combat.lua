@@ -402,6 +402,10 @@ function C:UpdateIcons()
   if ally then hint = ("|cffff5555Your target is attacking %s!|r  "):format(ally) .. hint end
   local threat = self:ThreatWarning()
   if threat then hint = threat .. "  " .. hint end
+  if FF.CombatGuide then
+    local ok, advice = pcall(FF.CombatGuide.Hint, FF.CombatGuide)
+    if ok and advice then hint = advice .. "  " .. hint end
+  end
   hintText:SetText(hint)
 end
 
@@ -823,6 +827,11 @@ function C:Rebuild()
   self.buffs = self:MissingBuffs()
   self.buffSig = table.concat(self.buffs, ",")
   local steps, prefix = self:BuildSteps()
+  -- big cooldowns only against targets that deserve them (CombatGuide.lua)
+  if FF.CombatGuide then
+    local ok, kept = pcall(FF.CombatGuide.FilterSteps, FF.CombatGuide, steps, self:Target())
+    if ok and type(kept) == "table" then steps = kept end
+  end
   -- the order that worked best in your own fights (CombatLearn.lua; the guide's order until then)
   if FF.CombatLearn then
     local ok, learned = pcall(FF.CombatLearn.Apply, FF.CombatLearn, steps)
@@ -873,6 +882,8 @@ function C:Rebuild()
   btn:SetAttribute("step", 1)
   btn:SetAttribute("type", "macro")
   btn:SetAttribute("macrotext", steps[1] and (prefix .. "/cast " .. steps[1]) or "")
+  -- the emergency macro follows what is in your bags (a potion used up, a new healthstone)
+  if FF.CombatGuide then pcall(FF.CombatGuide.Setup, FF.CombatGuide, bar, btn) end
   self:UpdateIcons()
 end
 
@@ -967,6 +978,7 @@ function C:Apply()
     self:Rebuild()
     ClearOverrideBindings(bar)
     for _, key in ipairs(self:Keys()) do SetOverrideBindingClick(bar, false, key, "FlipForeverCombatButton", "LeftButton") end
+    if FF.CombatGuide then pcall(FF.CombatGuide.Setup, FF.CombatGuide, bar, btn) end
   elseif bar then
     ClearOverrideBindings(bar)
     bar:Hide()
