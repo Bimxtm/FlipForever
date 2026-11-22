@@ -33,6 +33,7 @@ Gather\UI.lua
 
 Advisor\GuideData.lua
 Advisor\GuideBuilds.lua
+Advisor\RouteData.lua
 Advisor\Spells.lua
 Advisor\QuestStarts.lua
 Advisor\QuestHelper.lua
