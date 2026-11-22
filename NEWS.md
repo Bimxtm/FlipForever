@@ -1,3 +1,7 @@
+# FlipForever 2.7.0 Beta 6
+
+**The app follows the character you play.** Every time the game saves (on /reload or logout), the app switches to the realm and character you played last, with their budget and shopping list. Pick another character by hand and it stays until you play a different one. You can switch it off in the app's Settings. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 4.
+
 # FlipForever 2.7.0 Beta 5
 
 **Fewer error messages.** The fixes from 2.5.3 Beta 3: no more "Auras cannot be accessed when secret" after a fight, no "secret string value" error from system chat messages, and no duplicate file warning at login. This beta also has the quest helper and the talent overlay.
