@@ -135,6 +135,7 @@ class Settings:
     share_digest: str = ""        # what was sent last (nothing is sent twice)
     community: bool = True        # Community page: load updates, roadmap and ticket status from GitHub
     rules_page: bool = True       # Community, Rules: how FlipForever stays inside the game's rules (docs/RULES.md)
+    gold_board: bool = False      # Community, Gold scoreboard: share total profit with the nickname (opt-in)
     nickname: str = ""            # optional name for the Top reporters board ("" = anonymous, not listed)
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True

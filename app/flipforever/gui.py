@@ -465,6 +465,11 @@ class App(tk.Tk):
         ttk.Label(board, text="Confirmed bugs count double, shipped suggestions once. Set a nickname in Settings "
                   "to be listed.", style="Muted.TLabel").pack(anchor="w")
         self.comm_board = tree_page(board, ("#", "Nickname", "Confirmed bugs", "Shipped suggestions"), (40, 220, 140, 160))
+        gold = ttk.Frame(nb, padding=8)
+        nb.add(gold, text="Gold scoreboard")
+        ttk.Label(gold, text="Total profit from flipping, for players who turned on Gold scoreboard in Settings "
+                  "(with a nickname). Updated once a day.", style="Muted.TLabel").pack(anchor="w")
+        self.comm_gold = tree_page(gold, ("#", "Nickname", "Earned gold"), (40, 260, 160))
         if self.settings.rules_page:
             self._show_markdown(text_page("Rules"), _read_doc("docs/RULES.md"))
         self.comm_owner = None
@@ -554,7 +559,7 @@ class App(tk.Tk):
                 lines.append(f"## {title}")
                 lines += [f"- {r.get('text', '')}" + (f" ({r['version']})" if r.get("version") else "") for r in items]
         self._show_markdown(self.comm_road, "\n".join(lines) if len(lines) > 1 else _read_doc("ROADMAP.md"))
-        for tv in (self.comm_bugs, self.comm_sugg, self.comm_board):
+        for tv in (self.comm_bugs, self.comm_sugg, self.comm_board, self.comm_gold):
             tv.delete(*tv.get_children())
         for t in reversed(feed.get("tickets", [])):
             self.comm_bugs.insert("", "end", values=(t.get("id", ""), c.status_label(t), t.get("title", ""),
@@ -566,6 +571,8 @@ class App(tk.Tk):
             self.comm_sugg.insert("", "end", values=(st, s.get("text", ""), "yes" if s.get("r") in mine else ""))
         for i, (nick, bugs, sugg) in enumerate(c.leaderboard(feed), 1):
             self.comm_board.insert("", "end", values=(i, nick, bugs, sugg))
+        for i, (nick, g) in enumerate(c.gold_board(feed), 1):
+            self.comm_gold.insert("", "end", values=(i, nick, f"{g:,}g"))
         if self.comm_owner is not None:
             set_to = {d.get("r"): d for d in c._load(c.OWNER_DECISIONS, []) if d.get("status")}
             self.comm_tickets.delete(*self.comm_tickets.get_children())
@@ -1438,6 +1445,8 @@ class App(tk.Tk):
         add("Rules page", "rules_page", "bool",
             hint="Community, Rules: how FlipForever stays inside the game's rules (applies after restarting the app)")
         add("Nickname for Top reporters", "nickname", width=24, hint="optional; empty = your reports stay anonymous")
+        add("Gold scoreboard", "gold_board", "bool",
+            hint="Community, Gold scoreboard: share your total flipping profit (whole gold) with your nickname once a day; off = not listed")
         btns = ttk.Frame(f)
         btns.grid(row=row, column=0, columnspan=3, sticky="w", pady=(18, 0))
         ttk.Button(btns, text="Save settings", style="Accent.TButton", command=self.save_settings).pack(side="left")
@@ -1566,6 +1575,7 @@ class App(tk.Tk):
             self.settings.save()
         switched = self._follow_played_character()
         self._share_combat(res.get("combat") or {}, res.get("combat_share", True))
+        self._send_gold_score()
         if res.get("reports"):
             from . import community
             threading.Thread(target=lambda: community.forward_game_reports(res["reports"], self.settings.nickname),
@@ -1576,6 +1586,20 @@ class App(tk.Tk):
         # a new scan arrived: build the shopping list straight away and tell the player
         if res["scans"] > 0 and self.settings.auto_build:
             self._auto_build()
+
+    def _send_gold_score(self):
+        """Gold scoreboard (opt-in): total realized profit over every realm, at most once a day, in the background."""
+        from . import community
+        if not self.settings.gold_board or not self.settings.nickname.strip():
+            return
+        if time.time() - community._load(community.SCORE_SENT, {}).get("t", 0) < 20 * 3600:
+            return
+        try:
+            total = sum(sum(l.profit for l in engine.build_ledger(self.con, r).items.values())
+                        for r in engine.realms(self.con) if r != demo.DEMO_REALM)
+        except Exception:  # noqa: BLE001
+            return
+        threading.Thread(target=lambda: community.send_gold_score(self.settings, total), daemon=True).start()
 
     def _share_combat(self, learn, allowed_in_game):
         """Send the combat helper's anonymous learning (share.py): warn once first, then in the background."""

@@ -92,6 +92,56 @@ def leaderboard(feed: dict, limit: int = 10) -> list[tuple[str, int, int]]:
     return rows[:limit]
 
 
+# Gold scoreboard (opt-in, setting gold_board): each PC sends its total realized profit once a day
+# with the nickname; the daily feed update keeps the latest score per install. Developers never listed.
+SCORE_SENT = store.DATA_DIR / "gold_score_sent.json"
+MAX_GOLD = 5_000_000          # totals above this are not believable and are ignored
+_GOLD = re.compile(r"\{[^{}]*\"k\"\s*:\s*\"gold\"[^{}]*\}")
+
+
+def parse_gold(text: str) -> list[dict]:
+    out = []
+    for m in _GOLD.finditer(text or ""):
+        try:
+            d = json.loads(m.group(0))
+        except ValueError:
+            continue
+        if isinstance(d.get("r"), str) and isinstance(d.get("g"), int) and 0 <= d["g"] <= MAX_GOLD \
+                and isinstance(d.get("n"), str) and d["n"].strip():
+            out.append(d)
+    return out
+
+
+def send_gold_score(settings, gold_copper: int, poster=None, now: float | None = None) -> bool:
+    """Send this PC's total realized profit (whole gold) once a day, only when opted in with a nickname."""
+    now = now or time.time()
+    nick = (settings.nickname or "").strip()[:24]
+    if not getattr(settings, "gold_board", False) or not nick:
+        return False
+    state = _load(SCORE_SENT, {})
+    if now - state.get("t", 0) < 20 * 3600:
+        return False
+    body = {"f": 1, "r": share.install_id(settings), "k": "gold", "n": nick,
+            "g": max(0, min(MAX_GOLD, int(gold_copper) // 10000)), "v": VERSION}
+    msg = "Gold score\n```json\n" + json.dumps(body, ensure_ascii=False, separators=(",", ":")).replace("`", "\\u0060") + "\n```"
+    try:
+        ok = (poster or share.post)(msg)
+    except Exception:  # noqa: BLE001
+        ok = False
+    if ok:
+        _save(SCORE_SENT, {"t": int(now), "g": body["g"]})
+    return bool(ok)
+
+
+def gold_board(feed: dict, limit: int = 20) -> list[tuple[str, int]]:
+    """(nickname, earned gold), most first. Developers are never listed."""
+    skip = {n.lower() for n in feed.get("developers", [])} | {"alix"}
+    rows = [((s.get("nick") or "").strip(), int(s.get("gold") or 0)) for s in feed.get("scores", [])]
+    rows = [r for r in rows if r[0] and r[0].lower() not in skip]
+    rows.sort(key=lambda r: (-r[1], r[0].lower()))
+    return rows[:limit]
+
+
 def my_reports() -> list[dict]:
     return _load(MINE, [])
 
@@ -280,9 +330,14 @@ def owner_archive() -> dict:
 
 
 def owner_take_reports(text: str) -> tuple[int, int]:
-    """New bug reports and suggestions from text -> Waiting for approval. Returns (bugs, suggestions)."""
+    """New bug reports and suggestions from text -> Waiting for approval. Returns (bugs, suggestions).
+    Gold scores in the text are kept in the report inbox for the daily feed update."""
     reports = parse_reports(text)
     if not reports:
+        if parse_gold(text):
+            REPORT_INBOX.mkdir(parents=True, exist_ok=True)
+            with open(REPORT_INBOX / (time.strftime("%Y-%m-%d") + ".txt"), "a", encoding="utf-8") as f:
+                f.write(text.strip() + "\n")
         return 0, 0
     archive = owner_archive()
     for d in reports:

@@ -50,6 +50,35 @@ def save(path: pathlib.Path, data) -> None:
     path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+GOLD = re.compile(r"\{[^{}]*\"k\"\s*:\s*\"gold\"[^{}]*\}")
+MAX_GOLD = 5_000_000
+
+
+def sync_scores(feed: dict, text: str) -> int:
+    """Gold scoreboard: the latest score per install (r) with its nickname, from "Gold score" lines."""
+    scores = feed.setdefault("scores", [])
+    by_r = {s.get("r"): s for s in scores}
+    changed = 0
+    for m in GOLD.finditer(text):
+        try:
+            d = json.loads(m.group(0))
+        except ValueError:
+            continue
+        if not (isinstance(d.get("r"), str) and isinstance(d.get("g"), int) and 0 <= d["g"] <= MAX_GOLD
+                and isinstance(d.get("n"), str) and d["n"].strip()):
+            continue
+        entry = {"r": d["r"][:16], "nick": d["n"].strip()[:24], "gold": d["g"]}
+        old = by_r.get(entry["r"])
+        if old is None:
+            scores.append(entry)
+            by_r[entry["r"]] = entry
+            changed += 1
+        elif old.get("nick") != entry["nick"] or old.get("gold") != entry["gold"]:
+            old.update(entry)
+            changed += 1
+    return changed
+
+
 def _public_status(status: str) -> tuple[str, str] | None:
     s = (status or "open").strip().lower()
     if s.startswith("shipped"):
@@ -106,9 +135,11 @@ def main(argv=None) -> tuple[int, int]:
         print("idea waiting for approval:", rid)
         return 0, 1
     reports = []
+    texts = []
     # channel copies here, and what the developer's app read itself (Developer page, Get new reports)
     for f in sorted(INBOX.glob("*.txt")) + sorted((pathlib.Path(args.data) / "report_inbox").glob("*.txt")):
-        reports += parse(f.read_text(encoding="utf-8", errors="replace"))
+        texts.append(f.read_text(encoding="utf-8", errors="replace"))
+        reports += parse(texts[-1])
     feed = load(FEED, {})
     tickets = feed.setdefault("tickets", [])
     owner_inbox_path = pathlib.Path(args.data) / "owner_inbox.json"
@@ -153,6 +184,7 @@ def main(argv=None) -> tuple[int, int]:
             t["status"] = "confirmed" if dec.get("approve") else "not_reproducible"
             changed += 1
     changed += sync_approved(feed, owner_list)
+    changed += sync_scores(feed, "\n".join(texts))
     if changed:
         feed["updated"] = time.strftime("%Y-%m-%d")
         save(FEED, feed)
