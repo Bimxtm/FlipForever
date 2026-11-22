@@ -2,6 +2,14 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.3-beta.6] - 2026-11-22 (beta)
+### Added
+- Combat helper learns from your fights, separately for each class, build and level band (shared by all your characters of that class). Every fight is recorded: casts, failed casts and why (out of range or sight, not enough mana/rage/energy, no combo points), time spent waiting between casts, time out of power, health lost, deaths and kills.
+- It compares small changes to the guide's order: two neighbouring steps swapped, and a spell that keeps failing for lack of power moved to the end. Each version gets at least 6 fights; then the one with the fastest kills (adjusted for the target's level), the least health lost and no deaths is used, with an occasional re-check so changes in gear and level are noticed. Fights against players are kept out of this.
+- After a fight it tells you what to do better when it matters (dying, waiting between casts, spells failing out of range, running out of power, losing most of your health), at most every 5 minutes.
+- `/ff combat report` (or `/ff fights`): recent fights, kills, deaths, average fight length, waiting time, spells that often fail, and the orders being compared.
+- Switches: *Combat helper: learn the best order from my fights* and *Combat helper: tell me after a fight what to do better* in Settings, Features (both on).
+
 ## [2.5.3-beta.5] - 2026-11-22 (beta)
 ### Added
 - Undercut fix at the auction house: when your auctions are undercut, the FlipForever button now checks each one live and offers to cancel it (one key press each, as the game requires) only where reposting pays. An auction is kept when the cheaper listings should sell before it ends (from the item's sales per day), when it ends within the hour, when the new price would be below your floor, or when the repost would bring less than four times the new deposit and any cancel fee. A deposit is lost on a cancel and on an expiry alike, so an auction that no longer sells has already lost it; acting only costs the new deposit.

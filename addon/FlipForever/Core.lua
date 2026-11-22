@@ -481,6 +481,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Trader:Stop()
   elseif cmd == "guide" or cmd == "advisor" or cmd == "next" then
     FF.Advisor:Toggle()
+  elseif cmd == "fights" or (cmd == "combat" and (rest == "report" or rest == "learn")) then
+    if FF.CombatLearn then FF.CombatLearn:Report() end
   elseif cmd == "combat" then
     FF.Combat:Toggle()
   elseif cmd == "combatkey" then

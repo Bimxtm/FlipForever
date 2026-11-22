@@ -27,6 +27,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.5.3 beta 6 (owner request 22 Nov): combat helper learns per class/build/level band from fights (order versions compared, notes after fights, /ff combat report). Next: PvP priorities from WoW: Forever PvP guides.
 - 2.5.3 beta 5 (owner request 22 Nov, top priority): undercut auctions are cancelled and reposted where it pays after the deposit, one key press each.
 - 2.5.3 beta 4 (owner suggestion 21 Nov 08:06): the app switches to the character you played last after each import.
 - 2.5.3 beta 3 (owner report 22 Nov 04:20, check all addons' error logs): secret aura and chat text handled, duplicate Locale.lua load removed; Swatter log checked, other errors belong to other addons.

@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 6
+
+**The combat helper learns from your fights.** It now keeps track of every fight for your class and build: what you cast, what failed and why, how long you waited between casts, when you ran out of mana, rage or energy, and how much health you lost. It tries small changes to the guide's order and keeps the one that kills fastest for you. After a fight it tells you what to do better when it matters, and `/ff combat report` shows everything it has learned. Both parts have a switch under Settings, Features. PvP priorities follow in a later beta.
+
 # FlipForever 2.5.3 Beta 5
 
 **Undercut auctions are now fixed, not just reported.** At the auction house, press the FlipForever button and it checks each undercut auction live. Only where reposting really pays does it offer *CANCEL*: never when the cheaper ones should sell before yours ends, never below your floor, and never when the new deposit would eat the gain. Collect the cancelled items from the mailbox, press the button again, and they go back up just under the cheapest seller. You can switch it off under Settings, Features.
