@@ -67,8 +67,8 @@ Owner, 22 Nov early morning: work on the Discord suggestions now (few bug report
 
 Version note (21 Nov, evening): 2.5.2 is the current stable; small fixes now ship as 2.5.3-beta.N. Earlier: 2.5.1 was the stable. Small fixes now ship as 2.5.2-beta.N; the talent overlay (owner request) is built on branch feature/talent-overlay as 2.6.0-beta.N and is shown to the owner before it reaches main.
 
-## Discord check after every usage reset (owner, 21 Nov)
-- The first session after each 5-hour window reset reads #bug-reports and #suggestions in the private Discord server (built-in browser, the owner is signed in; channel list under the FlipForever server).
+## Discord check once a day (owner, 21 Nov; changed 22 Nov)
+- Bug reports are read only once a day (owner, 22 Nov): the daily cycle reads #bug-reports, #beta-testing and #suggestions in the private Discord server (built-in browser, the owner is signed in; channel list under the FlipForever server) and the in-game bug reports ("Bug report" messages in #combat-data). Work sessions don't check Discord; they work the queue.
 - New bug reports go to the top of the Night queue (quote the report, note who sent it by Discord name only in this file, never in shipped text). New suggestions go to ROADMAP.md: small ones under Smaller improvements, big ones under Proposed for the owner's OK.
 - Once a report or suggestion is fixed and released, react to that message with a check mark (white_check_mark), so it's clear next time what is done (owner, 21 Nov). Don't reply in text unless the owner asks. Messages without a check mark are still open. Mention what was found in the session report.
 - After a release, post a short plain update in #announcements (owner, 21 Nov) (downloads come from GitHub releases, linked in #downloads; nothing to upload).
