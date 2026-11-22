@@ -46,10 +46,25 @@ def build_exe(skip: bool):
     if skip and (EXE_OUT / "FlipForever.exe").exists():
         return
     work = DIST / "build"
-    subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--onefile", "--windowed", "--name", "FlipForever",
-                    "--icon", str(ROOT / "flipforever.ico"), "--paths", str(ROOT / "app"), "--distpath", str(EXE_OUT),
-                    "--workpath", str(work), "--specpath", str(work), "--log-level", "WARN",
-                    str(ROOT / "FlipForever.pyw")], check=True)
+    work.mkdir(parents=True, exist_ok=True)
+    spec = work / "FlipForever.spec"
+    spec.write_text(SPEC.format(script=str(ROOT / "FlipForever.pyw"), app=str(ROOT / "app"),
+                                icon=str(ROOT / "flipforever.ico")), encoding="utf-8")
+    subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--distpath", str(EXE_OUT),
+                    "--workpath", str(work), "--log-level", "WARN", str(spec)], check=True)
+
+
+# One-file windowed build without modules and Tcl/Tk data the app never uses (time zones,
+# Tcl/Tk message catalogs, Tk demo images) to keep the download small.
+SPEC = """
+EXCLUDES = ["unittest", "pydoc", "doctest", "pdb", "lzma", "_lzma", "bz2", "_bz2", "tkinter.tix",
+            "test", "xmlrpc", "lib2to3", "pygame", "setuptools", "pkg_resources"]
+DROP = ("_tcl_data/tzdata", "_tcl_data/msgs", "_tk_data/msgs", "_tk_data/images", "_tk_data/demos")
+a = Analysis([{script!r}], pathex=[{app!r}], excludes=EXCLUDES)
+a.datas = [d for d in a.datas if not d[0].replace("\\\\", "/").startswith(DROP)]
+pyz = PYZ(a.pure)
+exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name="FlipForever", console=False, upx=False, icon={icon!r})
+"""
 
 
 def refresh_local_exe():
