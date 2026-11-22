@@ -18,6 +18,7 @@ UI.lua
 Disenchant.lua
 VendorResale.lua
 Session.lua
+Restock.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

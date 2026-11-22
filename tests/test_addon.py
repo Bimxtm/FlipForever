@@ -3036,7 +3036,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3327,6 +3327,39 @@ GOALS = table.concat({ none, day, week, reached, off, tostring(s.goalDay) }, "|"
 for k in pairs(log) do log[k] = nil end for i, e in ipairs(saved) do log[i] = e end
 """)
 print("gold goals:", L("GOALS"))
+lua.execute("""
+-- restock: crafted + posted lately + not up + not in bags -> one reminder per day
+local FF, R, P = FlipForever, FlipForever.Restock, FlipForever.Professions
+local oStore, oCount = P.Store, C_Item.GetItemCount
+P.Store = function() return { Tailoring = { recipes = {
+  { learned = true, out = 501 }, { learned = true, out = 502 }, { learned = true, out = 503 }, { learned = false, out = 504 } } } } end
+local BAGS2 = { [503] = 2 }
+C_Item.GetItemCount = function(id) return BAGS2[id] or 0 end
+local log = FF:DB().log
+local saved = {} for i, e in ipairs(log) do saved[i] = e end for k in pairs(log) do log[k] = nil end
+FF:Log({ e = "post", id = 501, q = 4 })   -- gone: reminder
+FF:Log({ e = "sold", id = 501 })
+FF:Log({ e = "sold", id = 501 })
+FF:Log({ e = "post", id = 502, q = 1 })   -- still up
+FF:Log({ e = "post", id = 503, q = 1 })   -- still in bags
+FF:Log({ e = "post", id = 504, q = 1 })   -- recipe not learned
+FF:Log({ e = "post", id = 600, q = 1 })   -- not crafted (a flip)
+FF:DB().restockSeen = nil
+printed = {}
+local n1 = R:Remind({ { id = 502 } })
+local msg = printed[1] or ""
+local n2 = R:Remind({ { id = 502 } })     -- same day: quiet
+FF:DB().restockSeen = nil
+FlipForeverDB.settings.restock = false
+local n3 = R:Remind({})
+FlipForeverDB.settings.restock = nil
+RESTOCK = n1 .. "|" .. n2 .. "|" .. n3 .. "|" .. msg
+for k in pairs(log) do log[k] = nil end for i, e in ipairs(saved) do log[i] = e end
+FF:DB().restockSeen = nil
+P.Store, C_Item.GetItemCount = oStore, oCount
+""")
+print("restock:", L("RESTOCK"))
+assert L("RESTOCK").startswith("1|0|0|") and "item:501 is sold out (2 sold" in L("RESTOCK"), L("RESTOCK")
 assert L("GOALS") == ("  ·  goal |cffffd2000%|r of 50g|  ·  goal |cffffd20050%|r of 50g|  ·  goal |cffffd20012%|r of 200g|"
                       "  ·  goal |cff33ff99110%|r of 50g||nil"), L("GOALS")
 assert "bought 12 for" in L("AHSUM") and "posted 10 worth" in L("AHSUM") and "1 auction sold" in L("AHSUM") and "Gold: -" in L("AHSUM") and L("AHSUM").endswith("|0|0"), L("AHSUM")

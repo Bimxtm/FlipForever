@@ -634,6 +634,8 @@ local function build()
     "What you bought, posted and sold while the auction house was open, and how your gold changed, in one chat line.")
   feature("goldGoals", "Gold goals on the Overview (/ff goal day|week <gold>)", true, function() H:Refresh() end,
     "Set a daily or weekly profit goal with /ff goal day <gold> or /ff goal week <gold>; the Overview shows how far you are (sales after the cut minus buying).")
+  feature("restock", "Restock reminders for crafted items I sell", true, nil,
+    "When an item you craft and posted in the last two weeks is gone from the auction house and your bags, the auction house reminds you once a day to craft and post it again.")
   feature("bestPostTime", "Show the hours my auctions sell best when posting", true, nil,
     "From your own sales: the 4-hour window of the day in which an item (or all your items) sold most. Shown when posting and in tooltips.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)
