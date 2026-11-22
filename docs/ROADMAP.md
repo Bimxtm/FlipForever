@@ -7,26 +7,32 @@
 - **Talent builds on the Talents window** (from the 2.6.0 betas): build marked on the Talents window, next point gold, order panel, level bands, `/ff talents`.
 - **Quest helper** (from the 2.7.0 betas): learned quest spots, world map and minimap pins, `/ff quest`. Next: pins from the quest log, and the Advisor's quest steps using the learned spots.
 
+## In the 2.7.1 betas
+- **Community page** (beta 1): updates, roadmap, bug tickets, suggestions, Top reporters, private developer inbox.
+- **Reports from the game** (beta 2): `/ff bug`, `/ff suggest`, Report a bug button; gear finder stat gains; Advisor steps pinned on the map.
+- **Beta 3:** the combat helper tests the spell orders from written class guides; UI and content pass (one window style, grouped Settings in game and app, `/ff help`, Talents button, Clear pins, minimap pin tooltips).
+
 ## Planned
+- **Rules page (top priority, owner 22 Nov):** a Discord channel and an app/README section on WoW: Forever's rules and how FlipForever stays inside them (game API only, every buy, post, cancel and cast on your own key press, the app only reads the game's saved files).
+- **Choose a version (owner 22 Nov):** the app's About & updates page lists older releases, so you can go back to one.
+- **Controller support (owner 22 Nov):** the combat helper, Advisor and FlipForever window usable with a gamepad (bindable actions, no mouse needed). Big: plan first.
+- **Quest helper, next:** pins from the quest log, and Advisor quest steps that use learned spots.
 - **Autopilot rework:** the auction house autopilot is off until it is reworked.
 
 ## Smaller improvements
+- Code protection (owner question 22 Nov): no obfuscation of the addon (Blizzard's addon rules require readable code); the app stays open source.
 - Fixes from real play come first (bug reports from players).
 - Combat helper and Advisor: names for the WoW Forever-only spells in every game language.
 - Advisor: refresh builds when Warcraft Tavern replaces its level 30 beta builds, and add Mobalytics/Icy Veins builds once they can be read.
 - App: the How to use page in every language.
-- App: switch to the character you are logged in with automatically.
-- Gear finder: compare the stat gains of an upgrade, not only armor and item level.
-- Advisor: pin a step to the map with the place and the person to talk to, like the game's quest tracker (extends the waypoint arrow).
 
 ### Ideas from popular addons (21 Nov, owner request; our own versions, nothing copied)
 Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. All eight small ideas from that list are built (2.5.2 betas 2-11): sell junk and repair, trainer reminder, time to level, threat warning, open all mail, bag value, price trend in the app, node timers. The big ones are below under Proposed.
 
 ## Proposed
-- **Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations. Big: needs our own quest data. Branch feature/quest-helper.
+- **(done in 2.7.0) Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations. Big: needs our own quest data. Branch feature/quest-helper.
 - **Leveling route guide** (RestedXP-style guides): a step-by-step route per race and level range inside the Advisor, with the waypoint arrow. Big: route data written from scratch. Branch feature/leveling-route.
 - **Disenchant and enchanting profits** (Enchantrix): what an item is worth disenchanted against its auction price, and a "buy to disenchant" list. Needs our own disenchant tables. Branch feature/disenchant.
-- **UI and content pass:** rework the windows a little and refresh all content so the parts work better together (owner suggestion, 21 Nov). Needs a plan before work starts.
 
 ## Done
 - 2.5.2 (betas): sell junk and repair, open all mail, time to level, bag value, trainer reminder, threat warning, combat helper buffs and paladin fixes, gathering node timers, 7-day price trend in the app, a switch for every feature; all in every game language.

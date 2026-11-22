@@ -1,24 +1,130 @@
 {
  "updated": "2026-11-22",
- "developers": ["Alix"],
+ "developers": [
+  "Alix"
+ ],
  "roadmap": [
-  {"text": "Community page: bug reports, suggestions and the Top reporters board in the app", "status": "done", "version": "2.7.1-beta.2"},
-  {"text": "Report bugs and suggest ideas from the game (/ff bug, /ff suggest)", "status": "done", "version": "2.7.1-beta.2"},
-  {"text": "Combat helper: more knowledge from written tutorials and videos", "status": "in_progress"},
-  {"text": "Gear finder: show the stat gains of each upgrade", "status": "done", "version": "2.7.1-beta.2"},
-  {"text": "Advisor steps shown on the map", "status": "done", "version": "2.7.1-beta.2"},
-  {"text": "A visual pass over the in-game windows", "status": "planned"},
-  {"text": "Talent builds on the Talents window", "status": "done", "version": "2.7.0"},
-  {"text": "Quest helper with map and minimap pins", "status": "done", "version": "2.7.0"},
-  {"text": "Combat helper that learns from fights", "status": "done", "version": "2.7.0"},
-  {"text": "Cancel and repost undercut auctions where it pays", "status": "done", "version": "2.7.0"}
+  {
+   "text": "A page on the game's rules and how FlipForever stays inside them",
+   "status": "in_progress"
+  },
+  {
+   "text": "Choose an older version on the About & updates page",
+   "status": "planned"
+  },
+  {
+   "text": "Controller support for the addon",
+   "status": "planned"
+  },
+  {
+   "text": "Quest helper: pins from the quest log, Advisor quest steps",
+   "status": "planned"
+  },
+  {
+   "text": "Leveling route guide in the Advisor, step by step with the arrow",
+   "status": "planned"
+  },
+  {
+   "text": "Disenchant and enchanting profits",
+   "status": "planned"
+  },
+  {
+   "text": "Auction house autopilot reworked",
+   "status": "planned"
+  },
+  {
+   "text": "All new texts in every game language (next stable release)",
+   "status": "planned"
+  },
+  {
+   "text": "A visual pass over the in-game windows and the app (one window style, grouped settings, /ff help)",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Community page: bug reports, suggestions and the Top reporters board in the app",
+   "status": "done",
+   "version": "2.7.1-beta.2"
+  },
+  {
+   "text": "Report bugs and suggest ideas from the game (/ff bug, /ff suggest)",
+   "status": "done",
+   "version": "2.7.1-beta.2"
+  },
+  {
+   "text": "Combat helper: more knowledge from written tutorials and videos",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Gear finder: show the stat gains of each upgrade",
+   "status": "done",
+   "version": "2.7.1-beta.2"
+  },
+  {
+   "text": "Advisor steps shown on the map",
+   "status": "done",
+   "version": "2.7.1-beta.2"
+  },
+  {
+   "text": "Talent builds on the Talents window",
+   "status": "done",
+   "version": "2.7.0"
+  },
+  {
+   "text": "Quest helper with map and minimap pins",
+   "status": "done",
+   "version": "2.7.0"
+  },
+  {
+   "text": "Combat helper that learns from fights",
+   "status": "done",
+   "version": "2.7.0"
+  },
+  {
+   "text": "Cancel and repost undercut auctions where it pays",
+   "status": "done",
+   "version": "2.7.0"
+  }
  ],
  "tickets": [],
  "suggestions": [
-  {"text": "Show the chosen build on the Talents window", "status": "shipped", "version": "2.7.0"},
-  {"text": "Switch the app to the character you play", "status": "shipped", "version": "2.7.0"},
-  {"text": "Gear finder: stat gains of each upgrade", "status": "shipped", "version": "2.7.1-beta.2"},
-  {"text": "Advisor steps on the map", "status": "shipped", "version": "2.7.1-beta.2"},
-  {"text": "A visual pass over the windows", "status": "planned"}
+  {
+   "text": "Show the chosen build on the Talents window",
+   "status": "shipped",
+   "version": "2.7.0"
+  },
+  {
+   "text": "Switch the app to the character you play",
+   "status": "shipped",
+   "version": "2.7.0"
+  },
+  {
+   "text": "Gear finder: stat gains of each upgrade",
+   "status": "shipped",
+   "version": "2.7.1-beta.2"
+  },
+  {
+   "text": "Advisor steps on the map",
+   "status": "shipped",
+   "version": "2.7.1-beta.2"
+  },
+  {
+   "text": "A visual pass over the windows",
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Choose an older version in the app",
+   "status": "planned"
+  },
+  {
+   "text": "A page on the game's rules",
+   "status": "planned"
+  },
+  {
+   "text": "Controller support",
+   "status": "planned"
+  }
  ]
 }

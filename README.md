@@ -18,7 +18,7 @@ Everyone runs their own copy: unzip, start `FlipForever.exe`, and the first-run 
 The app checks GitHub on start (*About & updates*). While the repository is private, each user needs a read-only GitHub token with access to it, stored encrypted with Windows data protection. **Install update** downloads the new version, verifies its SHA-256 checksum, swaps the files in, keeps your `data\` folder, and updates the WoW addon too.
 
 ## Fair play
-Every purchase, post and spell cast happens on your own key press or click, because that's what Blizzard allows addons to do. FlipForever searches, calculates and suggests; it never plays for you.
+Every purchase, post and spell cast happens on your own key press or click, because that's what Blizzard allows addons to do. FlipForever searches, calculates and suggests; it never plays for you. The desktop app only reads the files the game saves itself. Details: [FlipForever and the game's rules](docs/RULES.md).
 
 ## Files
 * `FlipForever.exe` (or the **FlipForever** shortcut on the Desktop): opens the desktop app. No Python needed. Keep the .exe in this folder, because it stores its data in `data\` and installs the addon from `addon\`.
