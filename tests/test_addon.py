@@ -3036,7 +3036,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3305,6 +3305,30 @@ GetMoney = oMoney
 AHSUM = s1 .. "|" .. quiet .. "|" .. off
 """)
 print("ah summary:", L("AHSUM"))
+lua.execute("""
+-- gold goals: /ff goal sets them; progress from today's and this week's trades; switch hides it
+local FF = FlipForever
+local log = FF:DB().log
+local saved = {} for i, e in ipairs(log) do saved[i] = e end for k in pairs(log) do log[k] = nil end
+local s = FlipForeverDB.settings
+SlashCmdList.FLIPFOREVER("goal day 50")
+SlashCmdList.FLIPFOREVER("goal week 200")
+local none = FF:GoalSuffix("day")
+FF:Log({ e = "invoice", gross = 300000, cut = 15000 })
+FF:Log({ e = "buy", q = 10, p = 3500 })
+local day, week = FF:GoalSuffix("day"), FF:GoalSuffix("week")
+FF:Log({ e = "invoice", gross = 300000, cut = 0 })
+local reached = FF:GoalSuffix("day")
+s.goldGoals = false
+local off = FF:GoalSuffix("day")
+s.goldGoals = nil
+SlashCmdList.FLIPFOREVER("goal off")
+GOALS = table.concat({ none, day, week, reached, off, tostring(s.goalDay) }, "|")
+for k in pairs(log) do log[k] = nil end for i, e in ipairs(saved) do log[i] = e end
+""")
+print("gold goals:", L("GOALS"))
+assert L("GOALS") == ("  ·  goal |cffffd2000%|r of 50g|  ·  goal |cffffd20050%|r of 50g|  ·  goal |cffffd20012%|r of 200g|"
+                      "  ·  goal |cff33ff99110%|r of 50g||nil"), L("GOALS")
 assert "bought 12 for" in L("AHSUM") and "posted 10 worth" in L("AHSUM") and "1 auction sold" in L("AHSUM") and "Gold: -" in L("AHSUM") and L("AHSUM").endswith("|0|0"), L("AHSUM")
 assert L("VENDOR").startswith("3|1000|0.4|") and L("VENDOR").endswith("|1|7500|true|true|0") and "1 item here can sell for more" in L("VENDOR"), L("VENDOR")
 assert L("SEND_ALT") == "Bank|15|Zed|Bank|true|false|12|12|Bank||cff33ff99FlipForever|r: Sent 12 stacks to Bank. Click again to send the rest (3).|false", L("SEND_ALT")

@@ -572,6 +572,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     local n = tonumber(rest)
     if n and n >= 0 and n <= 30 then FlipForeverDB.settings.bagKeepFree = math.floor(n) end
     FF:Print(FF:T("Bag space: buying keeps %d bag slot%s free. Change: /ff bags <slots>."):format(tonumber(FlipForeverDB.settings.bagKeepFree) or 2, FF:Plural(tonumber(FlipForeverDB.settings.bagKeepFree) or 2)))
+  elseif cmd == "goal" then
+    FF:GoalCommand(rest)
   elseif cmd == "vendors" then
     if FF.VendorResale then FF.VendorResale:Command() end
   elseif cmd == "reserve" then
@@ -626,7 +628,7 @@ FF.HELP = {
   { "/ff", "open the FlipForever window (or click the gold coin on the minimap)" },
   { "Leveling", "guide (Advisor) | quest (arrow to the next quest spot) | talents | /ffway x y (arrow)" },
   { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
-  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | bags <slots> (free bag slots kept while buying) | disenchant (buy items worth more disenchanted) | vendors (vendor items that resell for more) | reset" },
+  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | goal day|week <gold> (profit goals) | bags <slots> (free bag slots kept while buying) | disenchant (buy items worth more disenchanted) | vendors (vendor items that resell for more) | reset" },
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },
@@ -738,6 +740,32 @@ function FF:WeekLine()
   local net = t.sold - t.spent
   local color = net >= 0 and "|cff33ff99+" or "|cffff5555-"
   return FF:T("This week: %s%s|r  (sold %s, bought %s)"):format(color, self:Money(math.abs(net)), self:Money(t.sold), self:Money(t.spent))
+end
+
+-- Gold goals (switch goldGoals): a daily and weekly profit goal in gold (/ff goal day|week <gold>),
+-- progress = sales after the AH cut minus buying, like the week line. Returns "" when no goal is set.
+function FF:GoalSuffix(kind)
+  local s = FlipForeverDB.settings
+  if s.goldGoals == false then return "" end
+  local goal = tonumber(kind == "week" and s.goalWeek or s.goalDay)
+  if not goal or goal <= 0 then return "" end
+  local t = self:Today(kind == "week" and 7 or 1)
+  local pct = math.floor(math.max(0, t.sold - t.spent) / (goal * 10000) * 100)
+  local color = pct >= 100 and "|cff33ff99" or "|cffffd200"
+  return ("  ·  " .. FF:T("goal %s%d%%|r of %dg")):format(color, pct, goal)
+end
+
+-- /ff goal day <gold> | week <gold> | off
+function FF:GoalCommand(rest)
+  local s = FlipForeverDB.settings
+  local kind, n = (rest or ""):lower():match("^(%a*)%s*(%d*)")
+  if kind == "off" then s.goalDay, s.goalWeek = nil, nil
+  elseif (kind == "day" or kind == "week") and tonumber(n) then
+    s[kind == "day" and "goalDay" or "goalWeek"] = tonumber(n) > 0 and tonumber(n) or nil
+  end
+  FF:Print(FF:T("Gold goals: today %s, this week %s. Change: /ff goal day <gold>, /ff goal week <gold>, /ff goal off."):format(
+    s.goalDay and (s.goalDay .. "g") or "-", s.goalWeek and (s.goalWeek .. "g") or "-"))
+  if self.Hub and self.Hub.Refresh then pcall(self.Hub.Refresh, self.Hub) end
 end
 
 -- Reload the UI from a button: the game saves FlipForever's data (scans, trades) for the app

@@ -371,8 +371,8 @@ function H:RefreshOverview()
   else
     pg.plan:SetText(FF:T("|cffff8800No shopping list yet.|r Scan at the auction house; the list builds itself.\n") .. FF:ScanAgeLine())
   end
-  pg.today:SetText(FF:TodayLine())
-  pg.week:SetText(FF:WeekLine())
+  pg.today:SetText(FF:TodayLine() .. FF:GoalSuffix("day"))
+  pg.week:SetText(FF:WeekLine() .. FF:GoalSuffix("week"))
   pg.own:SetText(FF.Auctions and FF.Auctions:Line() or "")
   pg.auto:SetText(FF.Auto:Enabled() and ("Autopilot: on" .. (FF.Auto.StatusLine and ("  ·  " .. (FF.Auto:StatusLine() or "")) or ""))
     or (FF.Auto.AVAILABLE and "Autopilot: off" or ""))
@@ -632,6 +632,8 @@ local function build()
     "Merchants you visit are remembered with their spot. Their limited items that sell for clearly more on the auction house are named at the merchant; /ff vendors lists the best ones and pins them on the map.")
   feature("ahSummary", "Summary when I close the auction house", true, nil,
     "What you bought, posted and sold while the auction house was open, and how your gold changed, in one chat line.")
+  feature("goldGoals", "Gold goals on the Overview (/ff goal day|week <gold>)", true, function() H:Refresh() end,
+    "Set a daily or weekly profit goal with /ff goal day <gold> or /ff goal week <gold>; the Overview shows how far you are (sales after the cut minus buying).")
   feature("bestPostTime", "Show the hours my auctions sell best when posting", true, nil,
     "From your own sales: the 4-hour window of the day in which an item (or all your items) sold most. Shown when posting and in tooltips.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)

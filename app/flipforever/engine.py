@@ -951,10 +951,23 @@ def profit_by_char(con, realm) -> list[dict]:
 
 
 # ============================================================== dashboard numbers
+def goal_text(today: int, week: int, day_gold: int, week_gold: int) -> str:
+    """Gold goals (settings goal_day_gold / goal_week_gold, 0 = off): progress as one line, empty when none set."""
+    parts = []
+    for label, val, goal in (("today", today, day_gold), ("this week", week, week_gold)):
+        if goal and goal > 0:
+            pct = max(0, val) / (goal * 10000)
+            parts.append(f"{label} {pct:.0%} of {goal:,}g" + (" (reached)" if pct >= 1 else ""))
+    return ("Goal: " + ", ".join(parts)) if parts else ""
+
+
 def summary(con, realm, ledger: Ledger, model: dict) -> dict:
     now = time.time()
     realized = sum(l.profit for l in ledger.items.values())
     week = sum(p for t, p, _ in ledger.timeline if now - t < 7 * DAY)
+    lt = time.localtime(now)
+    midnight = time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 0, 0, 0, 0, 0, -1))
+    today = sum(p for t, p, _ in ledger.timeline if t >= midnight)
     held_cost = sum(l.held_cost for l in ledger.items.values())
     held_value = 0
     for iid, l in ledger.items.items():
@@ -964,7 +977,7 @@ def summary(con, realm, ledger: Ledger, model: dict) -> dict:
     expired = sum(l.expired_lots for l in ledger.items.values())
     ls = last_scan(con, realm)
     return {
-        "realized": realized, "week": week, "held_cost": held_cost, "held_value": held_value,
+        "realized": realized, "week": week, "today": today, "held_cost": held_cost, "held_value": held_value,
         "other_income": sum(l.other_income for l in ledger.items.values()),
         "sell_through": (sold / (sold + expired)) if sold + expired else None,
         "tracked": len(model), "last_scan": ls,

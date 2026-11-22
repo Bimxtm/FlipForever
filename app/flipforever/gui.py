@@ -1097,6 +1097,9 @@ class App(tk.Tk):
             if key == "realized":       # sales with no known buy price are shown apart, not as profit
                 self.realized_note = tk.StringVar()
                 ttk.Label(f, textvariable=self.realized_note, style="Card.TLabel").pack(anchor="w")
+            if key == "week":           # gold goals (Settings): progress today and this week
+                self.goal_note = tk.StringVar()
+                ttk.Label(f, textvariable=self.goal_note, style="Card.TLabel").pack(anchor="w")
         mid = ttk.Frame(self.tab_dash)
         mid.pack(fill="both", expand=True, pady=(14, 0))
         left = ttk.Frame(mid)
@@ -1478,6 +1481,8 @@ class App(tk.Tk):
         section("Auction house: selling")
         add("Auction duration", "duration", "combo", 10, ["1", "2", "3"], "1 = 12h, 2 = 24h, 3 = 48h")
         add("Also post my farmed loot", "sell_farmed", "bool", hint="items you didn't flip get posted at fair value (floor 75%)")
+        add("Daily profit goal", "goal_day_gold", width=12, hint="gold; progress under Last 7 days on the Dashboard (0 = off)")
+        add("Weekly profit goal", "goal_week_gold", width=12, hint="gold; 0 = off")
         add("Let it tune the margin itself", "autotune", "bool", hint="the self-improving part: tightens after losses, loosens when winning")
         section("Automation")
         add("Auto-import when the game saves", "auto_import", "bool", hint="watches for /reload or logout")
@@ -1894,6 +1899,8 @@ class App(tk.Tk):
         self.cards["realized"].set(money(s["realized"], True))
         self.realized_note.set(f"+ {money(s['other_income'], True)} loot and older stock" if s.get("other_income") else "")
         self.cards["week"].set(money(s["week"], True))
+        self.goal_note.set(engine.goal_text(s.get("today", 0), s["week"], int(self.settings.goal_day_gold or 0),
+                                            int(self.settings.goal_week_gold or 0)))
         for key in ("realized", "week"):        # green when you're up, red when you're down
             val = s[key] or 0
             self.card_values[key].configure(foreground=ACCENT if val > 0 else RED if val < 0 else FG)
