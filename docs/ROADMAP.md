@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Ready for approval
-- Nothing waiting.
+- Nothing waiting. All proposed features were approved on 22 Nov (see Approved).
 
 ## Released in 2.7.0
 - **Talent builds on the Talents window** (from the 2.6.0 betas): build marked on the Talents window, next point gold, order panel, level bands, `/ff talents`.
@@ -26,9 +26,11 @@
 ### Ideas from popular addons (21 Nov, owner request; our own versions, nothing copied)
 Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, WeakAuras, GatherMate/GatherLite, WhatsTraining and threat meters as must-haves for Classic and WoW: Forever. All eight small ideas from that list are built (2.5.2 betas 2-11): sell junk and repair, trainer reminder, time to level, threat warning, open all mail, bag value, price trend in the app, node timers. The big ones are below under Proposed.
 
-## Proposed
-- **(done in 2.7.0) Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations. Big: needs our own quest data. Branch feature/quest-helper.
-- **Leveling route guide** (RestedXP-style guides): a step-by-step route per race and level range inside the Advisor, with the waypoint arrow. Big: route data written from scratch. Branch feature/leveling-route.
+## Approved (owner, 22 Nov: all proposed features)
+Approved for the next stable release, together with everything in the 2.7.1 betas.
+- **(done in 2.7.0) Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations.
+- **(in 2.7.1-beta.3) Leveling route guide** (RestedXP-style guides): a step-by-step route per race and level range inside the Advisor, with the waypoint arrow. Next steps under Planned.
+- **(in 2.7.1-beta.3) UI and content pass:** plan in docs/UI_PASS.md; remaining steps continue in betas.
 - **(done in 2.7.1-beta.3) Disenchant values** (Enchantrix): disenchant value in tooltips at your scanned prices, and `/ff disenchant` to buy items listed below that value.
 
 ## Done
