@@ -247,22 +247,18 @@ class App(tk.Tk):
         self.tab_hist = ttk.Frame(self.nb, padding=10)
         self.tab_learn = ttk.Frame(self.nb, padding=10)
         self.tab_set = ttk.Frame(self.nb, padding=14)
-        self.tab_help = ttk.Frame(self.nb, padding=14)
         self.tab_adv = ttk.Frame(self.nb, padding=10)
         self.tab_gather = ttk.Frame(self.nb, padding=10)
         self.tab_about = ttk.Frame(self.nb, padding=14)
-        self.tab_dev = ttk.Frame(self.nb, padding=10)
         self.tab_comm = ttk.Frame(self.nb, padding=10)
         self.nb.add(self.tab_comm, text="Community")
         for tab, name in ((self.tab_dash, "Dashboard"), (self.tab_deals, "Deals"), (self.tab_sell, "Inventory & selling"),
                           (self.tab_hist, "Trade history"), (self.tab_learn, "What it learned"),
                           (self.tab_adv, "Advisor"), (self.tab_gather, "Gathering"),
-                          (self.tab_set, "Settings"), (self.tab_help, "How to use"), (self.tab_about, "About & updates"),
-                          (self.tab_dev, "Development")):
+                          (self.tab_set, "Settings"), (self.tab_about, "About & updates")):
             self.nb.add(tab, text=name)
         self._build_nav()
         self._build_about()
-        self._build_dev()
         self._build_dash()
         self._build_deals()
         self._build_sell()
@@ -292,9 +288,7 @@ class App(tk.Tk):
         ("APP", (
             ("tab_comm", "Community", "updates, roadmap, bug reports and suggestions"),
             ("tab_set", "Settings", "budget, speed rules and your WoW folder"),
-            ("tab_help", "How to use", "the short version"),
-            ("tab_about", "About & updates", "news, changelog and updates"),
-            ("tab_dev", "Development", "this week's plan, test checklist and roadmap"),
+            ("tab_about", "About & updates", "how to use, news, changelog and updates"),
         )),
     )
 
@@ -386,17 +380,19 @@ class App(tk.Tk):
             self.ver_box.pack(side="left", padx=6)
             ttk.Button(pick, text="Load versions", command=self.load_versions).pack(side="left")
             ttk.Button(pick, text="Install this version", command=self.install_version).pack(side="left", padx=8)
-        panes = ttk.Frame(f)
+        # How to use, Update news and Changelog share one notebook (fewer pages in the sidebar)
+        panes = ttk.Notebook(f)
         panes.pack(fill="both", expand=True, pady=(12, 0))
-        panes.columnconfigure(0, weight=1)
-        panes.columnconfigure(1, weight=1)
-        panes.rowconfigure(1, weight=1)
-        ttk.Label(panes, text="Update news", style="H.TLabel").grid(row=0, column=0, sticky="w")
-        ttk.Label(panes, text="Changelog", style="H.TLabel").grid(row=0, column=1, sticky="w", padx=(12, 0))
-        self.news_text = tk.Text(panes, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
-        self.news_text.grid(row=1, column=0, sticky="nsew")
-        self.log_text = tk.Text(panes, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
-        self.log_text.grid(row=1, column=1, sticky="nsew", padx=(12, 0))
+        self.tab_help = ttk.Frame(panes, padding=4)
+        panes.add(self.tab_help, text="How to use")
+        pages = []
+        for title in ("Update news", "Changelog"):
+            page = ttk.Frame(panes, padding=4)
+            panes.add(page, text=title)
+            t = tk.Text(page, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
+            t.pack(fill="both", expand=True)
+            pages.append(t)
+        self.news_text, self.log_text = pages
         for t in (self.news_text, self.log_text):
             t.tag_configure("h1", font=("Segoe UI Semibold", 13), foreground=ACCENT, spacing3=4)
             t.tag_configure("h2", font=("Segoe UI Semibold", 11), foreground=GOLD, spacing1=8)
@@ -472,6 +468,10 @@ class App(tk.Tk):
         self.comm_gold = tree_page(gold, ("#", "Nickname", "Earned gold"), (40, 260, 160))
         if self.settings.rules_page:
             self._show_markdown(text_page("Rules"), _read_doc("docs/RULES.md"))
+        # this week's plan and the in-game test checklist (was its own page in the sidebar)
+        self.tab_dev = ttk.Frame(nb, padding=8)
+        nb.add(self.tab_dev, text="Development")
+        self._build_dev()
         self.comm_owner = None
         if community.is_owner():
             own = ttk.Frame(nb, padding=8)
