@@ -29,6 +29,7 @@ OWNER_INBOX = store.DATA_DIR / "owner_inbox.json"
 OWNER_DECISIONS = store.DATA_DIR / "owner_decisions.json"
 DECLINED = store.DATA_DIR / "declined_reports.json"
 MAX_TEXT = 1500
+MAX_PER_HOUR = 5
 
 STATUS = {
     "reported": "Reported",
@@ -100,12 +101,18 @@ def submit(kind: str, text: str, nick: str = "", extra: str = "", poster=None) -
     text = (text or "").strip()[:MAX_TEXT]
     if not text or kind not in ("bug", "suggestion"):
         return None
+    # at most a few reports an hour from one PC, so a stuck loop or a pasted wall can't flood the channel
+    hour_ago = time.time() - 3600
+    if sum(1 for m in my_reports() if m.get("time", 0) > hour_ago) >= MAX_PER_HOUR:
+        return None
     rid = uuid.uuid4().hex[:8]
     body = {"f": 1, "r": rid, "k": kind, "v": VERSION, "n": (nick or "").strip()[:24], "t": text}
     if extra:
         body["x"] = extra[:400]
     head = "Bug report" if kind == "bug" else "Suggestion"
-    msg = head + "\n```json\n" + json.dumps(body, ensure_ascii=False, separators=(",", ":")) + "\n```"
+    # backticks escaped so no text can close the code block the reader parses
+    payload = json.dumps(body, ensure_ascii=False, separators=(",", ":")).replace("`", "\\u0060")
+    msg = head + "\n```json\n" + payload + "\n```"
     try:
         ok = (poster or share.post)(msg)
     except Exception:  # noqa: BLE001

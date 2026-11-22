@@ -23,6 +23,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - App Settings: grouped into sections.
 - Community page: a fuller roadmap.
 
+### Security
+- Updates only download files attached to FlipForever's own GitHub releases, a GitHub token is never sent on to the download host, and the check for unsafe paths in the update zip is stricter.
+- Bug reports and suggestions: at most 5 an hour from one PC, and report text can't break the report format.
+
 ### Fixed
 - Realized profit: items sold on a character that bought them on another character now count their buy price, and sales with no buy price at all (loot, stock from before tracking) are shown apart instead of as profit.
 

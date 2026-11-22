@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -72,7 +73,7 @@ def _request(url: str, token: str = "", accept: str = "application/vnd.github+js
         headers["Authorization"] = f"Bearer {token.strip()}"
     req = urllib.request.Request(url, headers=headers)
     try:
-        return urllib.request.urlopen(req, timeout=timeout)
+        return _opener.open(req, timeout=timeout)
     except urllib.error.HTTPError as e:
         if e.code == 404:
             raise UpdateError("No release found. If the repository is private, add a GitHub token "
@@ -119,9 +120,24 @@ def _release(data: dict) -> Release:
                    zip_asset=zip_asset, sums_asset=sums_asset)
 
 
+class _NoTokenRedirect(urllib.request.HTTPRedirectHandler):
+    """GitHub answers asset downloads with a redirect to its file host: never send the token along."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new is not None and urllib.parse.urlsplit(newurl).netloc != urllib.parse.urlsplit(req.full_url).netloc:
+            new.remove_header("Authorization")
+        return new
+
+
+_opener = urllib.request.build_opener(_NoTokenRedirect)
+
+
 def _download(asset: dict, token: str, dest: Path, progress=None):
-    # the API asset URL works for private and public repos alike
-    with _request(asset["url"], token, accept="application/octet-stream", timeout=120) as r, open(dest, "wb") as fh:
+    # the API asset URL works for private and public repos alike; only accept this repository's own assets
+    url = asset.get("url") or ""
+    if not url.lower().startswith(f"{API}/repos/{GITHUB_REPO}/releases/assets/".lower()):
+        raise UpdateError("Unexpected download address - not installed.")
+    with _request(url, token, accept="application/octet-stream", timeout=120) as r, open(dest, "wb") as fh:
         total = int(r.headers.get("Content-Length") or asset.get("size") or 0)
         done = 0
         while True:
@@ -155,9 +171,10 @@ def install(rel: Release, token: str = "", progress=None) -> Path:
         raise UpdateError("The download doesn't match its checksum - not installed. Try again.")
     staging = work / "new"
     with zipfile.ZipFile(zpath) as z:
+        root = staging.resolve()
         for member in z.namelist():
             target = (staging / member).resolve()
-            if not str(target).startswith(str(staging.resolve())):
+            if target != root and not target.is_relative_to(root):
                 raise UpdateError("Unsafe path in the update zip - not installed.")
         z.extractall(staging)
     # the zip contains one top folder "FlipForever"
