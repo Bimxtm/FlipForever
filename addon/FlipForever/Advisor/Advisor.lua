@@ -397,6 +397,20 @@ function AD:Compute()
               why = why .. " Click to point the waypoint arrow there."
             end
           end
+          -- already in the quest log: its next spot learned from your play (objective or hand-in) wins
+          local QH = FF.QuestHelper
+          if QH and QH:Enabled() and FlipForeverDB.settings.advisorQuestSpots ~= false then
+            for _, lq in ipairs(QH:Log()) do
+              if q.text:find(lq.title, 1, true) then
+                local s = QH:Spot(lq)
+                if s then
+                  target = { mapID = s.m, x = s.x, y = s.y, label = s.label }
+                  why = (why and (why .. " ") or "") .. FF:T("Next: %s (learned from your play). Click to point the waypoint arrow there."):format(s.label)
+                end
+                break
+              end
+            end
+          end
           add(90, "quest", FF:T("Class quest (level %d): %s%s"):format(q.level, q.text, inQuestLog(titles, q.text) and " |cff33ff99- in your quest log|r" or "")
             .. (start and (" |cff888888- " .. start.npc:match("^[^/]+"):gsub("%s+$", "") .. "|r") or ""), why, target)
         end

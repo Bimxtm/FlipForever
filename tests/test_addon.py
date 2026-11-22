@@ -1894,6 +1894,30 @@ STEP, TARGET = nil, nil
 for _, r in ipairs(AD:Compute()) do
   if r.text:find("Lessons Anew") then STEP = r.text TARGET = r.target and r.target.label WHY = r.why end
 end
+-- the quest is in the log and its hand-in spot is learned: the step points there instead (switch off: the NPC)
+local QH = FlipForever.QuestHelper
+local oldLog = QH.Log
+QH.Log = function() return { { questID = 7001, title = "Lessons Anew", complete = true, objectives = {} } } end
+QH:Entry(7001, "Lessons Anew").turnin = { n = "Mull Thunderhorn", m = 1456, x = 0.6, y = 0.4 }
+local function stepTarget()
+  for _, r in ipairs(AD:Compute()) do if r.text:find("Lessons Anew") then return r.target and r.target.label end end
+end
+LEARNED_STEP = stepTarget()
+FlipForeverDB.settings.advisorQuestSpots = false
+LEARNED_OFF = stepTarget()
+FlipForeverDB.settings.advisorQuestSpots = nil
+-- quest log button: pins the selected quest's next spot and points the arrow; again removes it
+local oldSet = FlipForever.Arrow.SetTarget
+local aimed
+FlipForever.Arrow.SetTarget = function(_, m, x, y, l) aimed = l end
+local ps = QH:PinStore() for k in pairs(ps) do ps[k] = nil end
+local on = QH:PinQuest(7001)
+local n1 = #QH:PinStore()
+local off = QH:PinQuest(7001)
+QLOG_PIN = tostring(on) .. ":" .. n1 .. ":" .. tostring(off) .. ":" .. #QH:PinStore() .. ":" .. tostring(QH:PinQuest(9999)) .. ":" .. tostring(aimed)
+FlipForever.Arrow.SetTarget = oldSet
+QH.Log = oldLog
+FlipForeverDB.quests[7001] = nil
 if ns then ns.PlayerPos = oldPP end
 C_Map = oldMap
 """)
@@ -1904,6 +1928,9 @@ assert L("VW_UD") == "Ageron Kargal" and L("DS_TAUREN").startswith("Sorek") and 
 _s = [float(v) for v in L("SEED").split(":")]
 assert _s[0] == 1438 and abs(_s[1] - 0.567) < 1e-9 and abs(_s[2] - 0.595) < 1e-9 and L("LEARNED") == "1456:0.7:0.3"
 assert "Turak Runetotem" in L("STEP") and L("TARGET") == "Turak Runetotem" and "Click to point" in L("WHY")
+print("advisor learned spot:", L("LEARNED_STEP"), "| off:", L("LEARNED_OFF"), "| quest log pin:", L("QLOG_PIN"))
+assert L("LEARNED_STEP") == "Hand in: Mull Thunderhorn" and L("LEARNED_OFF") == "Turak Runetotem"
+assert L("QLOG_PIN") == "true:1:false:0:false:Lessons Anew - Hand in: Mull Thunderhorn"
 # --- gear finder: upgrades already in your bags come first, with an Equip button
 lua.execute("""
 local FF = FlipForever
@@ -2856,7 +2883,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

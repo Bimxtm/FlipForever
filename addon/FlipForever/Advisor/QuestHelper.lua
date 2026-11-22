@@ -458,6 +458,62 @@ local function hookMap()
   if WorldMapFrame.OnMapChanged then hooksecurefunc(WorldMapFrame, "OnMapChanged", queue) end
 end
 
+-- Quest log button (switch: questLogPin) -----------------------------------------------------------
+-- "Pin on map" under the quest log: pins the selected quest's next spot and points the arrow there.
+function QH:LogPinEnabled() return self:Enabled() and FlipForeverDB.settings.questLogPin ~= false end
+
+-- the quest selected in the quest log: its questID, or nil
+function QH:SelectedQuest()
+  local idx = GetQuestLogSelection and GetQuestLogSelection()
+  if not idx or idx == 0 then return nil end
+  if C_QuestLog and C_QuestLog.GetInfo then
+    local info = C_QuestLog.GetInfo(idx)
+    if info and plain(info.questID) then return plain(info.questID) end
+  end
+  if GetQuestLogTitle then return plain(select(8, GetQuestLogTitle(idx))) end
+  return nil
+end
+
+-- pin (or unpin) a quest's next spot; true when it is pinned afterwards
+function QH:PinQuest(questID)
+  for _, q in ipairs(self:Log()) do
+    if q.questID == questID then
+      local s = self:Spot(q)
+      if not s then
+        FF:Print(FF:T("No spot known yet for %s. FlipForever learns it as you work on the quest."):format(q.title))
+        return false
+      end
+      local on = self:TogglePin(s.m, s.x, s.y, s.label, q.title)
+      if on and FF.Arrow and FF.Arrow.SetTarget then FF.Arrow:SetTarget(s.m, s.x, s.y, ("%s - %s"):format(q.title, s.label)) end
+      return on
+    end
+  end
+  return false
+end
+
+local logButton
+function QH:SetupLogButton()
+  if not QuestLogFrame then return end
+  if not logButton then
+    logButton = CreateFrame("Button", "FlipForeverQuestLogPin", QuestLogFrame, "UIPanelButtonTemplate")
+    logButton:SetSize(96, 22)
+    logButton:SetPoint("TOPRIGHT", QuestLogFrame, "TOPRIGHT", -40, -44)
+    logButton:SetText(FF:T("Pin on map"))
+    logButton:SetScript("OnClick", function()
+      local id = QH:SelectedQuest()
+      if id then QH:PinQuest(id) end
+    end)
+    logButton:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:AddLine(FF:T("FlipForever: pin this quest's next spot on the map and point the arrow there. Click again to remove it."), 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    logButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    FF:PadFriendly(logButton)
+  end
+  if self:LogPinEnabled() then logButton:Show() else logButton:Hide() end
+end
+
 -- Events ------------------------------------------------------------------------------------------
 for _, ev in ipairs({ "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE", "QUEST_GREETING", "GOSSIP_SHOW" }) do
   pcall(FF.On, FF, ev, function() QH:SeeNpc() end)
@@ -468,6 +524,7 @@ pcall(FF.On, FF, "QUEST_TURNED_IN", function(questID) QH:OnTurnedIn(questID) end
 pcall(FF.On, FF, "QUEST_LOG_UPDATE", function() QH:OnLogUpdate() if WorldMapFrame and WorldMapFrame:IsShown() then QH:RefreshMap() end end)
 FF:On("PLAYER_LOGIN", function()
   hookMap()
+  pcall(QH.SetupLogButton, QH)
   -- the minimap moves with you: refresh its quest pins twice a second
   if C_Timer and C_Timer.NewTicker then C_Timer.NewTicker(0.5, function() pcall(QH.RefreshMinimap, QH) end) end
 end)

@@ -632,6 +632,8 @@ local function build()
   feature("questHelper", "Quest helper: learn quest spots, map pins, /ff quest", true, function() if FF.QuestHelper then FF.QuestHelper:RefreshMap() end end,
     "FlipForever remembers where quest givers and objectives are as you play and shows them on the map and minimap.")
   feature("advisorPins", "Advisor: pin steps on the map and minimap (right-click a step)", true, function() if FF.QuestHelper then FF.QuestHelper:RefreshAll() end end)
+  feature("questLogPin", "Quest log: Pin on map button for the selected quest", true, function() if FF.QuestHelper then pcall(FF.QuestHelper.SetupLogButton, FF.QuestHelper) end end)
+  feature("advisorQuestSpots", "Advisor: class quests in my log point to their next learned spot", true)
   group("Combat helper")
   feature("combatBuffs", "Combat helper: cast my missing buffs before a fight", true, combatApply)
   feature("threatWarning", "Combat helper: warn me about high threat", true)
