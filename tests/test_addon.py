@@ -1396,6 +1396,14 @@ MANUAL = A:Target()
 SHOWN = FlipForeverArrow and FlipForeverArrow:IsShown()
 SlashCmdList.FLIPFOREVERWAY("")
 CLEARED = A.manual == nil
+-- map pin whose position is a plain table (no GetXY), as on some clients
+C_Map.HasUserWaypoint = function() return true end
+C_Map.GetUserWaypoint = function() return { uiMapID = 77, position = { x = 0.25, y = 0.75 } } end
+PIN = A:Target()
+C_Map.GetUserWaypoint = function() return { uiMapID = 77, position = {} } end
+PIN_BAD = A:Target()
+C_Map.GetPlayerMapPosition = function() return { x = 0.4, y = 0.6 } end
+POS_PLAIN = table.concat({ select(2, pcall(function() return FlipForever.Arrow.PosXY(C_Map.GetPlayerMapPosition()) end)) }, ",")
 if ns then ns.PlayerPos, ns.MapSize = oldPP, oldMS end
 C_Map = oldMap
 """)
@@ -1404,6 +1412,9 @@ print("arrow: rot north", round(L("ROT_N"), 3), "dist", L("DIST"), "| rot east",
 assert abs(L("ROT_N") + _m.pi / 2) < 1e-9 and abs(L("DIST") - 100) < 1e-9
 assert abs(L("ROT_E") % (2 * _m.pi)) < 1e-9 and L("OTHER") is None
 assert abs(L("MANUAL").x - 0.6) < 1e-9 and L("MANUAL").mapID == 77 and L("SHOWN") and L("CLEARED") is True
+print("arrow plain pin:", L("PIN") and (L("PIN").x, L("PIN").y), "| bad pin:", L("PIN_BAD"), "| plain pos:", L("POS_PLAIN"))
+assert abs(L("PIN").x - 0.25) < 1e-9 and abs(L("PIN").y - 0.75) < 1e-9 and L("PIN_BAD") is None
+assert L("POS_PLAIN") == "0.4,0.6"
 
 # --- translations keep every placeholder (%d, %s) and colour code in the same order
 import re as _re  # noqa: E402
