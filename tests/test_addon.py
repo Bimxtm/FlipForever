@@ -3004,7 +3004,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,vendorResale=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3199,6 +3199,49 @@ C_Container, C_Item.GetItemInfoInstant, FF.Plan, FF.Progress = oldCont, oldInst,
 ClickSendMailItemButton, SendMail = nil, nil
 """)
 print("send to alt:", L("SEND_ALT"))
+lua.execute("""
+-- vendor resale: limited items remembered with the spot; only clear profits; /ff vendors pins the best spot
+local FF, V, QH = FlipForever, FlipForever.VendorResale, FlipForever.QuestHelper
+local oName, oPrice, oMap = UnitName, FF.PriceOf, C_Map
+local SHOP = {
+  { 101, 1000, 1, 2 },    -- recipe, 10s, 2 in stock; sells for 50s
+  { 102, 1000, 1, -1 },   -- unlimited: not remembered
+  { 103, 1000, 1, 1 },    -- sells for 11s: not enough margin
+  { 104, 600, 5, 3 },     -- 5 for 6s (1.2s each), sells for 1.6s each: too little profit (< 50c)
+}
+UnitName = function(u) if u == "npc" then return "Recipe Seller" end return oName(u) end
+GetMerchantNumItems = function() return #SHOP end
+GetMerchantItemInfo = function(i) local s = SHOP[i] return "x", nil, s[2], s[3], s[4] end
+GetMerchantItemLink = function(i) return "|Hitem:" .. SHOP[i][1] .. ":0|h" end
+local AH = { [101] = 5000, [102] = 9000, [103] = 1100, [104] = 160 }
+FF.PriceOf = function(_, id) return AH[id] end
+C_Map = { GetBestMapForUnit = function() return 1429 end,
+  GetPlayerMapPosition = function() return { GetXY = function() return 0.4, 0.6 end } end }
+local spots = FF:DB().vendorSpots
+FF:DB().vendorSpots = {}
+printed = {}
+Fire("MERCHANT_SHOW")
+local s = FF:DB().vendorSpots["Recipe Seller"]
+local kept = 0 for _ in pairs(s.items) do kept = kept + 1 end
+local atShop = printed[1] or ""
+local pins = QH:PinStore() local oldPins = {} for i, p in ipairs(pins) do oldPins[i] = p end for k in pairs(pins) do pins[k] = nil end
+V:Command()
+local pinned = QH:IsPinned(1429, 0.4, 0.6, "Recipe Seller")
+V:Command()                     -- second call keeps the pin
+local still = QH:IsPinned(1429, 0.4, 0.6, "Recipe Seller")
+FlipForeverDB.settings.vendorResale = false
+printed = {}
+Fire("MERCHANT_SHOW")
+local off = #printed
+FlipForeverDB.settings.vendorResale = nil
+VENDOR = table.concat({ kept, s.items[101].price, tostring(s.x), atShop, #V:Best(), V:Best()[1].total, tostring(pinned), tostring(still), off }, "|")
+for k in pairs(pins) do pins[k] = nil end for i, p in ipairs(oldPins) do pins[i] = p end
+FF:DB().vendorSpots = spots
+UnitName, FF.PriceOf, C_Map = oName, oPrice, oMap
+GetMerchantNumItems, GetMerchantItemInfo, GetMerchantItemLink = nil, nil, nil
+""")
+print("vendor resale:", L("VENDOR"))
+assert L("VENDOR").startswith("3|1000|0.4|") and L("VENDOR").endswith("|1|7500|true|true|0") and "1 item here can sell for more" in L("VENDOR"), L("VENDOR")
 assert L("SEND_ALT") == "Bank|15|Zed|Bank|true|false|12|12|Bank||cff33ff99FlipForever|r: Sent 12 stacks to Bank. Click again to send the rest (3).|false", L("SEND_ALT")
 assert L("MB_OPEN") == "3:700:3" and L("MB_LEFT") == 1 and "7s 0c and 3 items" in L("MB_MSG")
 assert "bags are full" in L("MB_FULL") and L("MB_FULL").endswith("left 1") and L("MB_OFF") is False

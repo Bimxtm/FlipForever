@@ -8,6 +8,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - **Dungeon advisor:** of the dungeons around your level, the Advisor names the one with the most upgrades for your weak gear slots (for your class's armor), lists the drops when you hover it and points the arrow to the entrance when you click it. Switch in Settings, Features.
 - **Price chart in Deals (app):** select an item in the Deals tab to see its cheapest and typical price and the amount listed over the last 14 days below the list. Switch in the app's Settings (Price chart under Deals).
 - **Send to alt:** a mailbox button mails your crafting materials and flip stock (up to 12 stacks per click, never soulbound items) to another character of yours on the same realm and faction; right-click picks the character. Switch in Settings, Features.
+- **Vendor resale finder:** merchants you visit are remembered with their spot on the map. Their limited items (such as recipes) that sell for clearly more on the auction house are named at the merchant, and `/ff vendors` lists the best ones and pins them on the map. Switch in Settings, Features.
 
 ## [2.7.1-beta.3] - 2026-11-22 (beta)
 ### Added
