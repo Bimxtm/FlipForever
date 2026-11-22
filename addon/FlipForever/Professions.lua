@@ -344,7 +344,7 @@ local function professionFrame()
 end
 
 local function build()
-  local f = FF:Window("FlipForeverProfPlanner", 380, 430, { pos = "profPos" })
+  local f = FF:Window("FlipForeverProfPlanner", 470, 470, { pos = "profPos" })
 
   f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   f.title:SetPoint("TOPLEFT", 14, -12)
@@ -365,29 +365,35 @@ local function build()
 
   f.h1 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   f.h1:SetPoint("TOPLEFT", 14, -68)
+  f.h1:SetJustifyH("LEFT")
+  f.h1:SetWordWrap(false)
   f.h1:SetText(FF:T("Cheapest skill-ups"))
   f.mode = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
   f.mode:SetSize(130, 20)
   f.mode:SetPoint("TOPRIGHT", -14, -64)
+  f.h1:SetPoint("RIGHT", f.mode, "LEFT", -8, 0)
   f.mode:SetScript("OnClick", function() P:SetMode(P.mode == "profit" and "skill" or "profit") end)
   f.rows = {}
   for i = 1, ROWS do
     local fs = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    fs:SetPoint("TOPLEFT", 16, -70 - i * 20)
+    fs:SetPoint("TOPLEFT", 16, -72 - i * 20)
     fs:SetPoint("RIGHT", -14, 0)
     fs:SetJustifyH("LEFT")
     fs:SetWordWrap(false)
     f.rows[i] = fs
   end
   f.h2 = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  f.h2:SetPoint("TOPLEFT", 14, -70 - (ROWS + 1) * 20)
+  -- materials sit below the last row with a clear gap (the header used to overlap the first material)
+  local matTop = -72 - ROWS * 20 - 30
+  f.h2:SetPoint("TOPLEFT", 14, matTop)
   f.h2:SetText(FF:T("Materials for the top craft"))
   f.mats = {}
   for i = 1, 6 do
     local fs = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    fs:SetPoint("TOPLEFT", 16, -72 - (ROWS + 1 + i) * 18)
+    fs:SetPoint("TOPLEFT", 16, matTop - 4 - i * 18)
     fs:SetPoint("RIGHT", -14, 0)
     fs:SetJustifyH("LEFT")
+    fs:SetWordWrap(false)
     f.mats[i] = fs
   end
   f.buy = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
@@ -396,7 +402,7 @@ local function build()
   f.buy:SetText(FF:T("Buy missing mats at the AH"))
   f.buy:SetScript("OnClick", function() if P.mode == "profit" then P:QueueProfitMats() else P:QueueMats() end end)
   f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  f.hint:SetPoint("BOTTOMLEFT", 14, 44)
+  f.hint:SetPoint("BOTTOMLEFT", 14, 46)
   f.hint:SetPoint("RIGHT", -14, 0)
   f.hint:SetJustifyH("LEFT")
   f:Hide()
@@ -432,7 +438,7 @@ function P:RefreshProfit()
   for i, fs in ipairs(frame.rows) do
     local e = list[i]
     if e then
-      fs:SetText(FF:T("%dx %s  |cff33ff99+%s|r each (%d%%)  ·  ~%s/day"):format(e.crafts, e.recipe.name, FF:Money(e.profit),
+      fs:SetText(FF:T("%dx %s  |cff33ff99+%s|r each (%d%%)  ·  sells ~%s a day"):format(e.crafts, e.recipe.name, FF:Money(e.profit),
         math.floor(e.margin * 100 + 0.5), e.perDay >= 10 and ("%d"):format(math.floor(e.perDay + 0.5)) or ("%.1f"):format(e.perDay)))
     else
       fs:SetText(i == 1 and "Open each profession window once so FlipForever knows your recipes; prices come from your scans." or "")
@@ -445,13 +451,13 @@ function P:RefreshProfit()
     local m = missing[i]
     if m then
       local color = m.missing > 0 and "|cffff8080" or "|cff80ff80"
-      fs:SetText(FF:T("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
+      fs:SetText(FF:T("%s%s  %s%d / %d|r  %s each%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
         m.unit and FF:Money(m.unit) or "?", m.source == "vendor" and " |cff888888(vendor)|r" or ""))
     else
       fs:SetText(FF:T(""))
     end
   end
-  frame.hint:SetText(FF:T("Profit after the 5% AH cut and deposit. Only results that sell at least 3 a day; amounts sized to sell within about two days."))
+  frame.hint:SetText(FF:T("Profit after the 5% auction cut and the deposit. Only crafts that sell at least 3 a day, in amounts that sell within about two days."))
 end
 
 function P:QueueProfitMats()
@@ -472,6 +478,7 @@ function P:Refresh()
   self.mode = self.mode or FlipForeverDB.settings.profMode or "skill"
   if self.mode == "profit" then return self:RefreshProfit() end
   frame.h1:SetText(FF:T("Cheapest skill-ups"))
+  frame.h2:SetText(FF:T("Materials for the top skill-up"))
   frame.mode:SetText(FF:T("Show profitable crafts"))
   frame.buy:SetText(FF:T("Buy missing mats at the AH"))
   if not self.current then
@@ -491,7 +498,7 @@ function P:Refresh()
     local r = recs[i]
     if r then
       local cost = r.unknown and "|cff888888price unknown|r"
-        or (r.perPoint <= 0 and ("|cff33ff99+" .. FF:Money(-r.perPoint) .. " profit|r") or (FF:Money(r.perPoint) .. " / point"))
+        or (r.perPoint <= 0 and ("|cff33ff99+" .. FF:Money(-r.perPoint) .. " profit|r") or (FF:Money(r.perPoint) .. " per skill-up"))
       fs:SetText(FF:T("%s%dx %s  %s  ·  %s"):format(r.learnable and "|cffffd200[trainer]|r " or "", r.crafts, r.recipe.name,
         P.COLOR[r.recipe.diff or 3], cost))
     else
@@ -506,13 +513,13 @@ function P:Refresh()
       local src = (m.source == "vendor" and " |cff888888(vendor)|r") or (m.source == "crafted" and " |cff888888(craft it)|r") or ""
       if m.gather then src = src .. " |cff66ccff(you can gather this)|r" end
       local color = m.missing > 0 and "|cffff8080" or "|cff80ff80"
-      fs:SetText(FF:T("%s%s  %s%d / %d|r  %s%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
+      fs:SetText(FF:T("%s%s  %s%d / %d|r  %s each%s"):format(m.via and "   - " or "", FF:ItemName(m.id), color, m.have, m.need,
         m.unit and FF:Money(m.unit) or "?", src))
     else
       fs:SetText(FF:T(""))
     end
   end
-  frame.hint:SetText(FF:T("Chance to skill up: orange 100%; yellow and green exact once a recipe has changed colour in front of FlipForever (else ~75% / ~25%). Prices: your scans, vendor goods ~4x sell price."))
+  frame.hint:SetText(FF:T("Orange always gives a point; yellow about 75% and green about 25% until FlipForever has seen the real chance. Prices come from your scans; vendor goods count at about 4x their sell price."))
 end
 
 function P:QueueMats()

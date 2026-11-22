@@ -22,6 +22,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - Settings, Features: the switches are grouped (Merchant, Auction house and mail, Gathering and bags, Advisor, quests and talents, Combat helper, Gear), some with a short explanation on hover.
 - App Settings: grouped into sections.
 - Community page: a fuller roadmap.
+- Profession planner: wider window, the Materials header no longer overlaps the first material, long lines fit, and clearer wording (cost per skill-up, price each, sales a day).
 
 ### Security
 - Updates only download files attached to FlipForever's own GitHub releases, a GitHub token is never sent on to the download host, and the check for unsafe paths in the update zip is stricter.
