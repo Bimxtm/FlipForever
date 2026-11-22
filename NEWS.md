@@ -1,3 +1,7 @@
+# FlipForever 2.7.1 Beta 1
+
+**New Community page in the app.** See what changed, what is planned and what is being worked on, report bugs and suggest ideas right from the app, and follow the status of your own reports: Reported, Confirmed, In progress, Fixed. Set a nickname in Settings to show up on the Top reporters board for confirmed bugs and shipped ideas.
+
 # FlipForever 2.7.0
 
 Everything from the 2.5.3, 2.6.0 and 2.7.0 test versions, now in every game language:

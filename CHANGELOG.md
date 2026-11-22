@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.1] - 2026-11-22 (beta)
+### Added
+- App: new Community page with Updates, Roadmap, Bug reports, Suggestions and Top reporters. The status comes from the FlipForever repository on GitHub (the last copy is kept for offline use).
+- Bug reports and suggestions can be sent right from the app. Each report gets a ticket with a status (Reported, Confirmed, In progress, Fixed, Not reproducible, Won't fix), and you can see the status of your own reports. Suggestions are reviewed before they reach the roadmap.
+- Top reporters: confirmed bugs and shipped suggestions per nickname. The nickname is optional (Settings); without one your reports stay anonymous.
+- Switches in the app's Settings: *Community page* and *Nickname for Top reporters*.
+
 ## [2.7.0] - 2026-11-22
 All 2.5.3, 2.6.0 and 2.7.0 betas in one release (see the beta entries below), plus:
 ### Added

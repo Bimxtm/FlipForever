@@ -133,6 +133,8 @@ class Settings:
     share_id: str = ""            # random install ID for the shared summaries (not linked to anything)
     share_last: float = 0.0       # when the summary was last sent
     share_digest: str = ""        # what was sent last (nothing is sent twice)
+    community: bool = True        # Community page: load updates, roadmap and ticket status from GitHub
+    nickname: str = ""            # optional name for the Top reporters board ("" = anonymous, not listed)
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True
     beta_updates: bool = False    # also offer beta versions (pre-releases) for testing

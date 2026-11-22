@@ -252,6 +252,8 @@ class App(tk.Tk):
         self.tab_gather = ttk.Frame(self.nb, padding=10)
         self.tab_about = ttk.Frame(self.nb, padding=14)
         self.tab_dev = ttk.Frame(self.nb, padding=10)
+        self.tab_comm = ttk.Frame(self.nb, padding=10)
+        self.nb.add(self.tab_comm, text="Community")
         for tab, name in ((self.tab_dash, "Dashboard"), (self.tab_deals, "Deals"), (self.tab_sell, "Inventory & selling"),
                           (self.tab_hist, "Trade history"), (self.tab_learn, "What it learned"),
                           (self.tab_adv, "Advisor"), (self.tab_gather, "Gathering"),
@@ -270,6 +272,7 @@ class App(tk.Tk):
         self._build_gather()
         self._build_settings()
         self._build_help()
+        self._build_community()
         if i18n.language() != "enUS":
             translate_widgets(self)
 
@@ -287,6 +290,7 @@ class App(tk.Tk):
             ("tab_gather", "Gathering", "gold per hour by zone and resource"),
         )),
         ("APP", (
+            ("tab_comm", "Community", "updates, roadmap, bug reports and suggestions"),
             ("tab_set", "Settings", "budget, speed rules and your WoW folder"),
             ("tab_help", "How to use", "the short version"),
             ("tab_about", "About & updates", "news, changelog and updates"),
@@ -389,6 +393,184 @@ class App(tk.Tk):
         self._show_markdown(self.news_text, _read_doc("NEWS.md"))
         self._show_markdown(self.log_text, _read_doc("CHANGELOG.md"))
         self._release = None
+
+    # community: updates, roadmap, bug tickets, suggestions, top reporters (community.py)
+    def _build_community(self):
+        from . import community
+        self.comm = community
+        f = self.tab_comm
+        top = ttk.Frame(f)
+        top.pack(fill="x")
+        self.comm_info = tk.StringVar()
+        ttk.Label(top, textvariable=self.comm_info, style="Muted.TLabel").pack(side="left")
+        ttk.Button(top, text="Refresh", command=self._comm_refresh).pack(side="right")
+        nb = ttk.Notebook(f)
+        nb.pack(fill="both", expand=True, pady=(8, 0))
+
+        def text_page(title):
+            page = ttk.Frame(nb, padding=8)
+            nb.add(page, text=title)
+            t = tk.Text(page, bg=PANEL, fg=FG, relief="flat", wrap="word", font=("Segoe UI", 10), padx=12, pady=10)
+            t.pack(fill="both", expand=True)
+            t.tag_configure("h1", font=("Segoe UI Semibold", 13), foreground=ACCENT, spacing3=4)
+            t.tag_configure("h2", font=("Segoe UI Semibold", 11), foreground=GOLD, spacing1=8)
+            t.tag_configure("h3", font=FONT_B, foreground=FG, spacing1=4)
+            return t
+
+        def tree_page(page, cols, widths):
+            tv = ttk.Treeview(page, columns=cols, show="headings", height=12)
+            for c, w in zip(cols, widths):
+                tv.heading(c, text=c)
+                tv.column(c, width=w, anchor="w", stretch=(w >= 300))
+            tv.pack(fill="both", expand=True, pady=(8, 0))
+            return tv
+
+        def form(page, label, kind):
+            box = ttk.Frame(page)
+            box.pack(fill="x")
+            ttk.Label(box, text=label, style="H.TLabel").pack(anchor="w")
+            t = tk.Text(box, bg=PANEL, fg=FG, insertbackground=FG, relief="flat", wrap="word", height=4,
+                        font=("Segoe UI", 10), padx=8, pady=6)
+            t.pack(fill="x", pady=(4, 4))
+            row = ttk.Frame(box)
+            row.pack(fill="x")
+            msg = tk.StringVar()
+            ttk.Button(row, text="Send", style="Accent.TButton",
+                       command=lambda: self._comm_send(kind, t, msg)).pack(side="left")
+            ttk.Label(row, textvariable=msg, style="Muted.TLabel").pack(side="left", padx=10)
+
+        self.comm_updates = text_page("Updates")
+        self.comm_road = text_page("Roadmap")
+        bugs = ttk.Frame(nb, padding=8)
+        nb.add(bugs, text="Bug reports")
+        form(bugs, "Report a bug: what happened, and what you did right before", "bug")
+        self.comm_bugs = tree_page(bugs, ("Ticket", "Status", "Report", "Yours"), (80, 150, 560, 60))
+        sugg = ttk.Frame(nb, padding=8)
+        nb.add(sugg, text="Suggestions")
+        form(sugg, "Suggest an idea (the developer reviews each suggestion first)", "suggestion")
+        self.comm_sugg = tree_page(sugg, ("Status", "Suggestion", "Yours"), (150, 620, 60))
+        board = ttk.Frame(nb, padding=8)
+        nb.add(board, text="Top reporters")
+        ttk.Label(board, text="Confirmed bugs count double, shipped suggestions once. Set a nickname in Settings "
+                  "to be listed.", style="Muted.TLabel").pack(anchor="w")
+        self.comm_board = tree_page(board, ("#", "Nickname", "Confirmed bugs", "Shipped suggestions"), (40, 220, 140, 160))
+        self.comm_owner = None
+        if community.is_owner():
+            own = ttk.Frame(nb, padding=8)
+            nb.add(own, text="Developer")
+            row = ttk.Frame(own)
+            row.pack(fill="x")
+            ttk.Label(row, text="Add a suggestion to the work list:").pack(side="left")
+            ev = tk.StringVar()
+            ttk.Entry(row, textvariable=ev, width=80).pack(side="left", padx=6)
+            src = tk.StringVar(value="own")
+            ttk.Combobox(row, textvariable=src, values=["own", "Discord"], width=9, state="readonly").pack(side="left")
+            ttk.Button(row, text="Add", style="Accent.TButton",
+                       command=lambda: (ev.get().strip() and community.owner_add(ev.get(), src.get()),
+                                        ev.set(""), self._comm_fill_owner())).pack(side="left", padx=6)
+            ttk.Label(own, text="Waiting for approval", style="H.TLabel").pack(anchor="w", pady=(10, 0))
+            self.comm_inbox = tree_page(own, ("id", "Kind", "From", "Text"), (80, 90, 120, 640))
+            self.comm_inbox.configure(height=6)
+            r2 = ttk.Frame(own)
+            r2.pack(fill="x", pady=4)
+            ttk.Button(r2, text="Approve", command=lambda: self._comm_decide(True)).pack(side="left")
+            ttk.Button(r2, text="Decline", command=lambda: self._comm_decide(False)).pack(side="left", padx=6)
+            ttk.Label(own, text="Suggestion list (worked from in this order)", style="H.TLabel").pack(anchor="w", pady=(8, 0))
+            self.comm_owner = tree_page(own, ("id", "Status", "Source", "Date", "Suggestion"), (80, 130, 80, 90, 560))
+            ttk.Button(own, text="Remove selected", command=self._comm_owner_remove).pack(anchor="w", pady=4)
+            self._comm_fill_owner()
+        self._comm_refresh()
+
+    def _comm_refresh(self):
+        if not self.settings.community:
+            self.comm_info.set("The Community page is off (Settings).")
+            return
+        self.comm_info.set("Loading...")
+        box = []
+        threading.Thread(target=lambda: box.append(self.comm.fetch()), daemon=True).start()
+
+        def wait(n=0):          # the feed is filled in from the main thread once it arrived
+            if box:
+                self._comm_fill(box[0])
+            elif n < 100:
+                self.after(150, lambda: wait(n + 1))
+        self.after(150, wait)
+
+    def _comm_fill(self, feed):
+        c = self.comm
+        mine = {m.get("r") for m in c.my_reports()}
+        self.comm_info.set(f"Updated {feed.get('updated', '-')}" if feed else "No connection to GitHub yet.")
+        news = feed.get("updates_md") or _read_doc("NEWS.md")
+        self._show_markdown(self.comm_updates, news)
+        lines = ["# Roadmap"]
+        for title, key in (("In progress", "in_progress"), ("Planned", "planned"), ("Done", "done")):
+            items = [r for r in feed.get("roadmap", []) if r.get("status") == key]
+            if items:
+                lines.append(f"## {title}")
+                lines += [f"- {r.get('text', '')}" + (f" ({r['version']})" if r.get("version") else "") for r in items]
+        self._show_markdown(self.comm_road, "\n".join(lines) if len(lines) > 1 else _read_doc("ROADMAP.md"))
+        for tv in (self.comm_bugs, self.comm_sugg, self.comm_board):
+            tv.delete(*tv.get_children())
+        for t in reversed(feed.get("tickets", [])):
+            self.comm_bugs.insert("", "end", values=(t.get("id", ""), c.status_label(t), t.get("title", ""),
+                                                     "yes" if t.get("r") in mine else ""))
+        for s in reversed(feed.get("suggestions", [])):
+            st = {"planned": "Planned", "in_progress": "In progress", "shipped": "Shipped"}.get(s.get("status"), "Planned")
+            if s.get("status") == "shipped" and s.get("version"):
+                st += " in " + s["version"]
+            self.comm_sugg.insert("", "end", values=(st, s.get("text", ""), "yes" if s.get("r") in mine else ""))
+        for i, (nick, bugs, sugg) in enumerate(c.leaderboard(feed), 1):
+            self.comm_board.insert("", "end", values=(i, nick, bugs, sugg))
+        waiting = [m for m in c.my_reports() if m.get("r") not in {t.get("r") for t in feed.get("tickets", [])}
+                   and m.get("r") not in {s.get("r") for s in feed.get("suggestions", [])}]
+        for m in reversed(waiting[-10:]):
+            if m.get("k") == "bug":
+                self.comm_bugs.insert("", 0, values=("-", "Sent, not reviewed yet", m.get("t", "")[:120], "yes"))
+            else:
+                self.comm_sugg.insert("", 0, values=("Waiting for review", m.get("t", "")[:120], "yes"))
+
+    def _comm_send(self, kind, box, msg):
+        text = box.get("1.0", "end").strip()
+        if len(text) < 10:
+            msg.set("Please write a bit more (at least a sentence).")
+            return
+        msg.set("Sending...")
+
+        res = []
+        threading.Thread(target=lambda: res.append(self.comm.submit(kind, text, self.settings.nickname)),
+                         daemon=True).start()
+
+        def wait(n=0):
+            if not res:
+                if n < 100:
+                    self.after(150, lambda: wait(n + 1))
+                return
+            msg.set("Thanks, it was sent." if res[0] else "Could not send it. Check your connection.")
+            if res[0]:
+                box.delete("1.0", "end")
+                self._comm_refresh()
+        self.after(150, wait)
+
+    def _comm_fill_owner(self):
+        inbox, items = self.comm.owner_lists()
+        self.comm_inbox.delete(*self.comm_inbox.get_children())
+        for it in inbox:
+            self.comm_inbox.insert("", "end", values=(it.get("id", ""), it.get("kind", "suggestion"),
+                                                      it.get("nick", "") or "anonymous", it.get("text", "")))
+        self.comm_owner.delete(*self.comm_owner.get_children())
+        for it in items:
+            self.comm_owner.insert("", "end", values=(it.get("id", ""), it.get("status", "open"), it.get("source", ""),
+                                                      it.get("date", ""), it.get("text", "")))
+
+    def _comm_decide(self, approve):
+        for sel in self.comm_inbox.selection():
+            self.comm.owner_decide(str(self.comm_inbox.item(sel, "values")[0]), approve)
+        self._comm_fill_owner()
+
+    def _comm_owner_remove(self):
+        for sel in self.comm_owner.selection():
+            self.comm.owner_remove(str(self.comm_owner.item(sel, "values")[0]))
+        self._comm_fill_owner()
 
     # development overview: the weekly board + roadmap the improvement cycles keep up to date
     def _build_dev(self):
@@ -1040,6 +1222,8 @@ class App(tk.Tk):
             hint="after each import, picks the character the game saved last")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
+        add("Community page", "community", "bool", hint="updates, roadmap, bug reports and suggestions (loaded from GitHub)")
+        add("Nickname for Top reporters", "nickname", width=24, hint="optional; empty = your reports stay anonymous")
         btns = ttk.Frame(f)
         btns.grid(row=row, column=0, columnspan=3, sticky="w", pady=(18, 0))
         ttk.Button(btns, text="Save settings", style="Accent.TButton", command=self.save_settings).pack(side="left")
