@@ -1,4 +1,4 @@
-﻿"""Addon tests: loads every addon file in a real Lua VM (lupa) with a mocked WoW API.
+"""Addon tests: loads every addon file in a real Lua VM (lupa) with a mocked WoW API.
 Run: python tests/test_addon.py   (needs: pip install lupa)"""
 """Load the addon in a real Lua VM with a mocked WoW API and drive scan/buy/sell flows."""
 import pathlib
@@ -738,7 +738,7 @@ assert any("Hypnotic" not in a for a in adv)
 assert any("Coldspire Staff" in a for a in adv), "gear advice"
 assert any("Learn Tailoring + Enchanting" in a for a in adv), "profession advice"
 assert any("Weak slots" in a and "Main hand (white)" in a for a in adv), "weak slot"
-assert any("Dungeons for your level" in a and "Shadowfang Keep" in a for a in adv), "dungeon"
+assert any(a.startswith("Dungeon for upgrades: ") and "(entrance: " in a for a in adv), [a for a in adv if "ungeon" in a]
 assert any("empty bag slot" in a for a in adv), "bags"
 assert any("Next power spike at level 24: Counterspell" in a for a in adv), "spike"
 
@@ -3004,7 +3004,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,bestPostTime=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,bestPostTime=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3413,6 +3413,40 @@ print("route:", L("ROUTE"))
 assert L("ROUTE") == ("Route (level 11-17): The Crossroads, The Barrens|1413@0.52|Route (level 1-5): Camp Narache, Mulgore|99001|"
                       "Route (level 12-17): Level in The Barrens (Crossroads) or Silverpine Forest.|nil|"
                       "Route (level 58-60): Light's Hope Chapel, Eastern Plaguelands:nil|Level in: Westfall, Loch Modan or Darkshore"), L("ROUTE")
+lua.execute("""
+-- dungeon advisor: weak slots and armor pick the dungeon; arrow to the entrance; switch brings back the list
+local FF, AD, DD = FlipForever, FlipForever.Advisor, FlipForever.DungeonData
+local oU = { UnitRace, UnitFactionGroup, UnitLevel, UnitClass, AD.Gear }
+local lvl, cls = 22, "WARRIOR"
+UnitRace = function() return "Human", "Human" end
+UnitFactionGroup = function() return "Alliance" end
+UnitLevel = function() return lvl end
+UnitClass = function() return cls, cls end
+AD.Gear = function()
+  return {}, { [5] = { slot = 5, label = "Chest" }, [16] = { slot = 16, label = "Main hand", id = 1, quality = 1, ilvl = 10 },
+               [7] = { slot = 7, label = "Legs", id = 2, quality = 2, ilvl = 20 } }
+end
+local function line()
+  for _, r in ipairs(AD:Compute()) do
+    if r.kind == "dungeon" then return (r.text:gsub("^|T.-|t ", "")), r.target, r.why end
+  end
+end
+local t1, g1, w1 = line()
+cls = "MAGE"
+local t2 = line()
+local e = DD:Best(22, "Alliance", "WARRIOR", {})
+FlipForeverDB.settings.dungeonAdvisor = false
+cls = "WARRIOR"
+local t3 = line()
+FlipForeverDB.settings.dungeonAdvisor = nil
+DUNGEON = table.concat({ t1, g1 and (g1.mapID .. "@" .. g1.x .. ":" .. g1.label) or "-", tostring(w1:find("Mutant Scale Breastplate", 1, true) ~= nil),
+  t2, tostring(e), t3, tostring(DD:Fits({ "Chest", "Cloth" }, "Plate")), tostring(DD:Armor("HUNTER", 40)) }, "|")
+UnitRace, UnitFactionGroup, UnitLevel, UnitClass, AD.Gear = oU[1], oU[2], oU[3], oU[4], oU[5]
+""")
+print("dungeon:", L("DUNGEON"))
+assert L("DUNGEON") == ("Dungeon for upgrades: Wailing Caverns - Chest, Main hand (entrance: The Barrens)|1413@0.46:Wailing Caverns|true|"
+                        "Dungeon for upgrades: The Deadmines - Chest, Main hand (entrance: Westfall)|nil|"
+                        "Dungeons for your level: The Deadmines, Wailing Caverns, Shadowfang Keep|false|Mail"), L("DUNGEON")
 xml = (ADDON / "Bindings.xml").read_text(encoding="utf-8")
 print("controller:", L("PAD_LABEL"), "| hit", L("PAD_HIT"), "|", L("NEXT_SPOT"))
 assert L("PAD_LABEL") == "A,SHIFT-A,NUMPADPLUS,PAD1,PAD1" and L("PAD_HIT") == -5

@@ -315,6 +315,8 @@ local ROUTE_MAPS = {
   ["Hillsbrad Foothills"] = 1424, ["Stonetalon Mountains"] = 1442, ["Ashenvale"] = 1440, ["Thousand Needles"] = 1441,
   ["Stranglethorn Vale"] = 1434, ["Tanaris"] = 1446, ["Feralas"] = 1444, ["Un'Goro Crater"] = 1449, ["Felwood"] = 1448,
   ["Burning Steppes"] = 1428, ["Winterspring"] = 1452, ["Eastern Plaguelands"] = 1423, ["Silithus"] = 1451,
+  ["Orgrimmar"] = 1454, ["Stormwind City"] = 1453, ["Badlands"] = 1418, ["Desolace"] = 1443,
+  ["Swamp of Sorrows"] = 1435, ["Searing Gorge"] = 1427,
 }
 
 function AD:ZoneMap(zone)
@@ -487,6 +489,7 @@ function AD:Compute()
   end
 
   -- weak gear slots
+  local weakSet = {}
   if L >= 12 then
     local weak = {}
     for _, s in pairs(slots) do
@@ -496,6 +499,7 @@ function AD:Compute()
         elseif (s.quality or 2) <= 1 and L >= 15 then why = "white"
         elseif s.ilvl and s.ilvl < L - 12 then why = "old" end
         -- the weapon matters most, then outdated items, then empty slots
+        if why then weakSet[s.label] = true end
         if why then weak[#weak + 1] = { order = (s.slot == 16 and 0 or (why == "empty" and 2 or 1)), text = s.label .. " (" .. why .. ")" } end
       end
     end
@@ -512,7 +516,23 @@ function AD:Compute()
   for _, d in ipairs(G.DUNGEONS) do
     if factionOK(d[4], p) and L >= d[1] and L <= d[2] then dungeons[#dungeons + 1] = d[3] end
   end
-  if #dungeons > 0 then add(50, "dungeon", FF:T("Dungeons for your level: ") .. table.concat(dungeons, ", ", 1, math.min(3, #dungeons))) end
+  -- dungeon advisor (DungeonData.lua; switch dungeonAdvisor): the dungeon with the most upgrades for your weak slots
+  local DD = FF.DungeonData
+  local best, hits, bestSlots
+  if DD and FlipForeverDB.settings.dungeonAdvisor ~= false then
+    best, hits, bestSlots = DD:Best(L, p.faction, p.class, weakSet)
+  end
+  if best then
+    local lines = { "Upgrades for your weak slots in " .. best[1] .. " (level " .. best[2] .. "-" .. best[3] .. "):" }
+    for _, s in ipairs(bestSlots) do lines[#lines + 1] = s .. ": " .. table.concat(hits[s], ", ") end
+    lines[#lines + 1] = "Entrance: " .. best[5] .. ". Click to point the arrow there."
+    local m = self:ZoneMap(best[5])
+    local target = m and { mapID = m, x = best[6] / 100, y = best[7] / 100, label = best[1] } or nil
+    add(50, "dungeon", ("Dungeon for upgrades: %s - %s (entrance: %s)"):format(best[1], table.concat(bestSlots, ", "), best[5]),
+      table.concat(lines, "\n"), target)
+  elseif #dungeons > 0 then
+    add(50, "dungeon", FF:T("Dungeons for your level: ") .. table.concat(dungeons, ", ", 1, math.min(3, #dungeons)))
+  end
   local zones = {}
   for _, list in ipairs({ G.ZONES[p.faction] or {}, G.ZONES.Both }) do
     for _, z in ipairs(list) do
