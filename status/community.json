@@ -5,35 +5,62 @@
  ],
  "roadmap": [
   {
+   "text": "Profession planner clean-up",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Realized profit counts the buy price of every item sold, also across characters",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Opt-in gold scoreboard in the Community page",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Auction flips favour items that sell fast",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
+   "text": "Auction buying keeps a gold reserve",
+   "status": "done",
+   "version": "2.7.1-beta.3"
+  },
+  {
    "text": "A page on the game's rules and how FlipForever stays inside them",
-   "status": "in_progress"
+   "status": "done",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "Choose an older version on the About & updates page",
-   "status": "planned"
+   "status": "done",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "Controller support for the addon",
-   "status": "planned"
+   "status": "done",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "Quest helper: pins from the quest log, Advisor quest steps",
-   "status": "planned"
+   "status": "done",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "Leveling route guide in the Advisor, step by step with the arrow",
-   "status": "planned"
+   "status": "done",
+   "version": "2.7.1-beta.3"
   },
   {
-   "text": "Disenchant and enchanting profits",
-   "status": "planned"
+   "text": "Disenchant values in tooltips and a buy-to-disenchant list",
+   "status": "done",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "Auction house autopilot reworked",
-   "status": "planned"
-  },
-  {
-   "text": "All new texts in every game language (next stable release)",
    "status": "planned"
   },
   {
@@ -116,63 +143,67 @@
   },
   {
    "text": "Choose an older version in the app",
-   "status": "planned"
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "A page on the game's rules",
-   "status": "planned"
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "text": "Controller support",
-   "status": "planned"
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "idea-20261122092639",
    "text": "Leveling route guide: the next town or camp for your race and level in the Advisor, with the arrow",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "43aa4f51",
    "text": "Realized profit counts the buy price of every item sold, also across characters",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "f95db9a5",
    "text": "Auction buying keeps a gold reserve so a character is never drained",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "a08d0832",
    "text": "Auction flips favour items that sell fast (fewer cheaper listings ahead)",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "854a154d",
    "text": "Security review of updates and report sending",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "6b772623",
    "text": "Profession planner clean-up: no overlapping or cut-off lines, clearer wording",
-   "status": "planned",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "idea-20261122092640",
    "text": "Disenchant and enchanting profits: disenchant value against auction price, and a buy-to-disenchant list",
-   "status": "planned",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   },
   {
    "r": "f52c0e3c",
    "text": "Opt-in gold scoreboard: the most profitable FlipForever players",
-   "status": "planned",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.3"
   }
- ]
+ ],
+ "scores": []
 }

@@ -1,10 +1,15 @@
 # FlipForever 2.7.1 Beta 3
 
+- **Leveling route:** the Advisor shows the next town or camp for your race and level up to 60, with the arrow. Pin quests on the map straight from the quest log, and class quests point to their next spot.
+- **Safer buying:** auction buying keeps a gold reserve so a character is never drained, and skips flips with too many cheaper listings ahead so your profit comes quickly.
+- **Disenchant values:** tooltips show what gear disenchants for at your prices, and `/ff disenchant` buys items listed below that value.
+- **Gold scoreboard:** opt in with a nickname to show your flipping profit on the Community page.
 - **Combat helper:** also tests the spell orders from written WoW: Forever class guides and keeps whatever kills faster for you.
-- **Tidier windows:** one look for every window, grouped settings in the game and the app, a Talents button, and `/ff help` with every command.
-- **Advisor pins:** pinned steps are marked, *Clear pins* removes them, minimap pins explain themselves.
-- **Choose a version:** go back to an older release from About & updates.
-- **Fair play:** a new page on the game's rules and how FlipForever stays inside them.
+- **Controller support:** bind the combat helper, emergency key and arrow to gamepad buttons.
+- **Tidier windows:** one look for every window, grouped settings, a Talents button, a cleaner profession planner and `/ff help` with every command.
+- **Realized profit** now counts the buy price of items bought on another character.
+- **Choose a version** from About & updates, and a new page on the game's rules and how FlipForever stays inside them.
+- **Security:** updates only come from FlipForever's own releases, with stricter checks.
 
 # FlipForever 2.7.1 Beta 2
 
