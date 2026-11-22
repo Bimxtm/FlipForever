@@ -942,7 +942,10 @@ local function create()
     self:SetAttribute("step", s)
     self:SetAttribute("macrotext", self:GetAttribute("step" .. s))
   ]])
-  btn:HookScript("PostClick", function() C_Timer.After(0, function() C:UpdateIcons() end) end)
+  btn:HookScript("PostClick", function()
+    if FF.CombatLearn then FF.CombatLearn:OnHelperPress() end   -- the next cast is the helper's own choice
+    C_Timer.After(0, function() C:UpdateIcons() end)
+  end)
 
   -- drag the bar with Shift + right mouse (out of combat)
   -- the bar holds a secure button, so moving it is blocked in combat: only stop a move we started

@@ -38,6 +38,8 @@
 
 
 
+
+- 2.5.3 beta 8 (owner: "it should learn from itself, not from the player's gameplay"): learning counts only the helper's own casts and fights.
 - 2.5.3 beta 7 (owner request 22 Nov): combat helper part 2 from the WoW: Forever class guides (Skill Capped): big cooldowns for elites/bosses, emergency key, interrupt/slow/wand advice in fights.
 - 2.5.3 beta 6 (owner request 22 Nov): combat helper learns per class/build/level band from fights (order versions compared, notes after fights, /ff combat report). Next: PvP priorities from WoW: Forever PvP guides.
 - 2.5.3 beta 5 (owner request 22 Nov, top priority): undercut auctions are cancelled and reposted where it pays after the deposit, one key press each.

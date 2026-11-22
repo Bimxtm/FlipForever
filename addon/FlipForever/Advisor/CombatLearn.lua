@@ -1,7 +1,8 @@
--- Combat helper that learns from your fights, per class, build and level band (shared by all your
--- characters of that class). Every fight is recorded: what you cast, what failed and why, how long
--- you waited between casts, how long you were out of mana/rage/energy, health lost, deaths and
--- whether the target died. From that it
+-- Combat helper that learns from its own fights, per class, build and level band (shared by all your
+-- characters of that class). It learns from its own choices, not from how you play: only casts that
+-- come right after a press of the helper's button or key count, and a fight only counts when most
+-- casts (70%) came from the helper. Recorded: what it cast, what failed and why, how long the
+-- fight took, time out of mana/rage/energy, health lost, deaths and whether the target died. From that it
 --   * tries small changes to the guide's order (two neighbouring steps swapped, or a spell that keeps
 --     failing for lack of power moved later) and keeps the order that kills fastest with the least
 --     damage taken and no deaths, once each version has enough fights;
@@ -16,6 +17,7 @@ local MIN_FIGHTS = 6        -- fights per version before its result counts
 local MAX_FIGHTS_KEPT = 60  -- recent fights kept per class/build for the summary
 local TIP_GAP = 300         -- seconds between two notes after fights
 local IDLE_GAP = 2.5        -- seconds without a cast that count as waiting
+local HELPER_SHARE = 0.7    -- a fight counts for learning when at least this share of casts came from the helper
 
 local function plain(v)
   if v == nil then return nil end
@@ -166,13 +168,24 @@ function L:StartFight(now)
   self.fight = fight
 end
 
-function L:OnCast(spellName, now)
+-- the helper's button or key was pressed: casts right after it are the helper's own choices
+local HELPER_WINDOW = 0.6
+function L:OnHelperPress(now) self.pressAt = now or GetTime() end
+function L:IsHelperCast(now)
+  return self.pressAt ~= nil and (now or GetTime()) - self.pressAt <= HELPER_WINDOW
+end
+
+-- helper: true when the helper cast it (nil: decided from the last press)
+function L:OnCast(spellName, now, helper)
   if not fight then return end
   now = now or GetTime()
+  if helper == nil then helper = self:IsHelperCast(now) end
   local gap = now - fight.last
   if gap > IDLE_GAP then fight.idle = fight.idle + (gap - IDLE_GAP) end
   fight.last = now
   fight.casts = fight.casts + 1
+  if not helper then return end          -- your own casts are not what the helper learns from
+  fight.helperCasts = (fight.helperCasts or 0) + 1
   local name = english(spellName)
   if name then
     local st = self:Store(fight.cur and fight.cur.key).spells
@@ -181,8 +194,8 @@ function L:OnCast(spellName, now)
   end
 end
 
-function L:OnFail(spellName, reason)
-  if not fight then return end
+function L:OnFail(spellName, reason, helper)
+  if not fight or helper == false then return end
   local name = english(spellName) or "?"
   local st = self:Store(fight.cur and fight.cur.key).spells
   st[name] = st[name] or {}
@@ -215,15 +228,19 @@ function L:EndFight(now, killed, died)
   -- harder targets take longer: count time against a target 3 levels up as 30% less
   local adj = dur
   if f.tlevel and f.plevel and f.tlevel > 0 then adj = dur / math.max(0.5, 1 + 0.1 * (f.tlevel - f.plevel)) end
+  local share = f.casts > 0 and (f.helperCasts or 0) / f.casts or 0
   local rec = { t = time(), dur = math.floor(dur * 10) / 10, idle = math.floor(f.idle * 10) / 10,
                 low = math.floor(f.low * 10) / 10, hp = math.floor(hpLost * 100) / 100,
-                kill = killed and true or false, died = died and true or false, pvp = f.pvp, casts = f.casts }
+                kill = killed and true or false, died = died and true or false, pvp = f.pvp, casts = f.casts,
+                helper = share >= HELPER_SHARE }
   local key = f.cur and f.cur.key or self:Key()
   local store = self:Store(key)
   table.insert(store.fights, rec)
   while #store.fights > MAX_FIGHTS_KEPT do table.remove(store.fights, 1) end
-  -- the version used in this fight gets the result (PvP fights are kept out: players differ too much)
-  if f.cur and not f.pvp and store.bases[f.cur.sig] then
+  -- the version used in this fight gets the result, but only when the helper did the fighting
+  -- (most casts came from its button) - it learns from its own choices, not from how you play;
+  -- PvP fights are kept out too: players differ too much
+  if f.cur and not f.pvp and rec.helper and store.bases[f.cur.sig] then
     local vs = store.bases[f.cur.sig].variants
     local v = vs[f.cur.variant] or { n = 0 }
     vs[f.cur.variant] = v
@@ -251,7 +268,8 @@ function L:Tip(rec, f)
     return FF:T("Combat: you died. Pull one enemy at a time, start with full health and use your defensive spells or a potion below 40% health.")
   end
   if rec.idle >= 4 and rec.idle / rec.dur > 0.25 then
-    return FF:T("Combat: you waited %d of %d seconds between casts. Press the combat key as soon as the next spell lights up."):format(rec.idle, rec.dur)
+    return FF:T("Combat: you waited %d of %d seconds between casts. Press the combat key as soon as the next spell lights up."):format(
+      math.floor(rec.idle + 0.5), math.floor(rec.dur + 0.5))
   end
   for name, why in pairs(f and f.fails or {}) do
     if (why.range or 0) >= 3 then
@@ -271,9 +289,10 @@ end
 function L:Report()
   local key = self:Key()
   local store = self:Store(key)
-  local n, kills, dur, idle, deaths = 0, 0, 0, 0, 0
+  local n, kills, dur, idle, deaths, own = 0, 0, 0, 0, 0, 0
   for _, r in ipairs(store.fights) do
     n = n + 1
+    if r.helper then own = own + 1 end
     if r.kill then kills = kills + 1 end
     if r.died then deaths = deaths + 1 end
     dur, idle = dur + (r.dur or 0), idle + (r.idle or 0)
@@ -281,6 +300,7 @@ function L:Report()
   local lines = { FF:T("Combat helper, %s - recent fights: %d, kills: %d, deaths: %d."):format(key, n, kills, deaths) }
   if n > 0 then
     lines[#lines + 1] = FF:T("Average fight %.1f s, waiting between casts %d%%."):format(dur / n, dur > 0 and math.floor(idle / dur * 100) or 0)
+    lines[#lines + 1] = FF:T("Fights the helper did itself (these are what it learns from): %d of %d."):format(own, n)
   end
   local fails = {}
   for name, st in pairs(store.spells) do
@@ -327,17 +347,18 @@ pcall(FF.On, FF, "UNIT_SPELLCAST_FAILED", function(unit, _, spellID)
   if unit ~= "player" or not fight then return end
   spellID = plain(spellID)
   local name = spellID and ((C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)) or (GetSpellInfo and GetSpellInfo(spellID)))
-  lastFailed = plain(name) and { name = name, t = GetTime() } or nil
+  lastFailed = plain(name) and { name = name, t = GetTime(), helper = L:IsHelperCast() } or nil
 end)
 -- the reason comes as an error message right after the failed cast
 FF:On("UI_ERROR_MESSAGE", function(_, msg)
   if not fight or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
   local name = lastFailed and GetTime() - lastFailed.t < 0.5 and lastFailed.name
   if not name then return end
+  local helper = lastFailed.helper and true or false
   lastFailed = nil
-  if POWER_ERR[msg] then L:OnFail(name, "power")
-  elseif RANGE_ERR[msg] then L:OnFail(name, "range")
-  else L:OnFail(name, "other") end
+  if POWER_ERR[msg] then L:OnFail(name, "power", helper)
+  elseif RANGE_ERR[msg] then L:OnFail(name, "range", helper)
+  else L:OnFail(name, "other", helper) end
 end)
 pcall(FF.On, FF, "PLAYER_TARGET_CHANGED", function()
   -- the target you were fighting is dead: count the kill even if you clicked away before the fight ended
