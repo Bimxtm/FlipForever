@@ -118,6 +118,119 @@ function MB:OpenAll()
   self:Step()
 end
 
+-- Send to alt (switch sendToAlt): one click mails crafting materials and flip stock (up to 12 stacks
+-- per mail) to a character of yours on this realm and faction. Right-click picks the next character.
+local SEND_MAX = 12 -- attachments per sent mail
+local altButton, sending
+
+function MB:AltEnabled() return FlipForeverDB.settings.sendToAlt ~= false end
+
+-- your other characters here (same realm and faction), sorted
+function MB:Alts()
+  local me, list = UnitName("player"), {}
+  for name in pairs(FF:DB().chars or {}) do
+    if name ~= me then list[#list + 1] = name end
+  end
+  table.sort(list)
+  return list
+end
+
+-- the chosen character (kept per realm), or the first one
+function MB:Alt()
+  local alts, r = self:Alts(), FF:DB()
+  for _, n in ipairs(alts) do if n == r.sendAlt then return n end end
+  return alts[1]
+end
+
+function MB:NextAlt()
+  local alts, cur = self:Alts(), self:Alt()
+  if #alts == 0 then return nil end
+  local pick = alts[1]
+  for i, n in ipairs(alts) do if n == cur then pick = alts[i % #alts + 1] end end
+  FF:DB().sendAlt = pick
+  self:RefreshAlt()
+  return pick
+end
+
+-- flip stock: items on this character's sell list or bought by FlipForever
+local function stockIds()
+  local ids = {}
+  local plan = FF:Plan()
+  for _, e in ipairs(plan and plan.sell or {}) do if e.id then ids[tonumber(e.id) or e.id] = true end end
+  local prog = FF.Progress and FF:Progress()
+  for id in pairs(prog and prog.bought or {}) do ids[tonumber(id) or id] = true end
+  return ids
+end
+
+-- bag stacks to send: trade goods (crafting materials) and flip stock, never soulbound items
+function MB:AltItems()
+  local C, out, stock = C_Container, {}, stockIds()
+  if not (C and C.GetContainerItemInfo) then return out end
+  for bag = 0, 4 do
+    for slot = 1, (C.GetContainerNumSlots and C.GetContainerNumSlots(bag) or 0) do
+      local info = C.GetContainerItemInfo(bag, slot)
+      local id = info and info.itemID
+      if id and not info.isBound then
+        local classID = select(6, C_Item.GetItemInfoInstant(id))
+        if classID == 7 or stock[id] then out[#out + 1] = { bag = bag, slot = slot, id = id } end
+      end
+    end
+  end
+  return out
+end
+
+function MB:RefreshAlt()
+  if not altButton then return end
+  if not self:AltEnabled() then altButton:Hide() return end
+  altButton:Show()
+  local alt, n = self:Alt(), #self:AltItems()
+  if sending then
+    altButton:SetText(FF:T("Sending..."))
+    altButton:SetEnabled(false)
+  elseif not alt then
+    altButton:SetText(FF:T("Send to alt: no other character yet"))
+    altButton:SetEnabled(false)
+  elseif n == 0 then
+    altButton:SetText(FF:T("Nothing to send to %s"):format(alt))
+    altButton:SetEnabled(false)
+  else
+    altButton:SetText(FF:T("Send to %s (%d)"):format(alt, n))
+    altButton:SetEnabled(true)
+  end
+end
+
+-- one mail with up to 12 stacks; the next click sends the rest after the server confirms
+function MB:SendToAlt()
+  local alt = self:Alt()
+  if sending or not alt or not (SendMail and ClickSendMailItemButton and C_Container.PickupContainerItem) then return false end
+  local items = self:AltItems()
+  if #items == 0 then return false end
+  if MailFrameTab_OnClick then pcall(MailFrameTab_OnClick, nil, 2) end
+  if ClearSendMail then ClearSendMail() end
+  local n = math.min(SEND_MAX, #items)
+  for i = 1, n do
+    C_Container.PickupContainerItem(items[i].bag, items[i].slot)
+    ClickSendMailItemButton(i)
+  end
+  sending = { alt = alt, n = n, rest = #items - n }
+  SendMail(alt, FF:T("FlipForever: materials and stock"), "")
+  self:RefreshAlt()
+  return true
+end
+
+local function sent(ok)
+  local s = sending
+  if not s then return end
+  sending = nil
+  if ok then
+    FF:Print(FF:T("Sent %d stack%s to %s."):format(s.n, FF:Plural(s.n), s.alt)
+      .. (s.rest > 0 and (" " .. FF:T("Click again to send the rest (%d)."):format(s.rest)) or ""))
+  else
+    FF:Print(FF:T("The mail to %s was not sent."):format(s.alt))
+  end
+  MB:RefreshAlt()
+end
+
 FF:On("MAIL_SHOW", function()
   if not button then
     button = CreateFrame("Button", "FlipForeverOpenAllButton", MailFrame or UIParent, "UIPanelButtonTemplate")
@@ -125,7 +238,27 @@ FF:On("MAIL_SHOW", function()
     button:SetPoint("TOPLEFT", MailFrame or UIParent, "TOPRIGHT", 4, -58)
     button:SetScript("OnClick", function() MB:OpenAll() end)
   end
+  if not altButton then
+    altButton = CreateFrame("Button", "FlipForeverSendAltButton", MailFrame or UIParent, "UIPanelButtonTemplate")
+    altButton:SetSize(190, 24)
+    altButton:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -4)
+    altButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    altButton:SetScript("OnClick", function(_, mouse)
+      if mouse == "RightButton" then MB:NextAlt() else MB:SendToAlt() end
+    end)
+    altButton:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:AddLine(FF:T("Send to alt"))
+      GameTooltip:AddLine(FF:T("Mails crafting materials and flip stock (up to 12 stacks per click). Right-click: next character."), 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    altButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  end
   MB:Refresh()
+  MB:RefreshAlt()
 end)
 FF:On("MAIL_INBOX_UPDATE", function() MB:Refresh() end)
-FF:On("MAIL_CLOSED", function() if run then finish() end end)
+FF:On("BAG_UPDATE_DELAYED", function() if altButton and altButton:IsVisible() then MB:RefreshAlt() end end)
+FF:On("MAIL_SEND_SUCCESS", function() sent(true) end)
+FF:On("MAIL_FAILED", function() sent(false) end)
+FF:On("MAIL_CLOSED", function() if run then finish() end if sending then sent(false) end end)

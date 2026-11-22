@@ -3004,7 +3004,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,bestPostTime=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3160,6 +3160,46 @@ GetInboxHeaderInfo, TakeInboxMoney, C_Container = oldHeader, oldMoney, oldCont
 GetInboxItem, TakeInboxItem = nil, nil
 """)
 print("mailbox:", L("MB_OPEN"), "| left:", L("MB_LEFT"), "|", L("MB_MSG"), "|", L("MB_FULL"))
+lua.execute("""
+-- send to alt: trade goods and flip stock, not soulbound; 12 per mail; right-click cycles characters
+local FF, MB = FlipForever, FlipForever.Mailbox
+local oldCont, oldInst, oldPlan, oldProg = C_Container, C_Item.GetItemInfoInstant, FF.Plan, FF.Progress
+local chars = FF:DB().chars
+local saved = {} for k, v in pairs(chars) do saved[k] = v chars[k] = nil end
+chars[UnitName("player")] = {} chars["Zed"] = {} chars["Bank"] = {}
+local BAG = {}
+for s = 1, 14 do BAG[s] = { itemID = 700 + s } end         -- 14 stacks of trade goods
+BAG[15] = { itemID = 900 }                                  -- flip stock (on the sell list)
+BAG[16] = { itemID = 901 }                                  -- other item: stays
+BAG[17] = { itemID = 701, isBound = true }                  -- soulbound: stays
+local picked, attached, sentTo = 0, 0, nil
+C_Container = { GetContainerNumSlots = function(b) return b == 0 and 17 or 0 end,
+  GetContainerItemInfo = function(b, s) return b == 0 and BAG[s] or nil end,
+  PickupContainerItem = function() picked = picked + 1 end }
+C_Item.GetItemInfoInstant = function(id) return id, "", "", "", 0, (id < 800) and 7 or 2, 0 end
+FF.Plan = function() return { sell = { { id = 900 } } } end
+FF.Progress = function() return { bought = {} } end
+ClickSendMailItemButton = function() attached = attached + 1 end
+SendMail = function(to) sentTo = to end
+local a1 = MB:Alt()
+local n = #MB:AltItems()
+local a2 = MB:NextAlt()
+local a3 = MB:NextAlt()
+local ok = MB:SendToAlt()
+local again = MB:SendToAlt()        -- busy until the server confirms
+printed = {}
+Fire("MAIL_SEND_SUCCESS")
+FlipForeverDB.settings.sendToAlt = false
+local off = MB:AltEnabled()
+FlipForeverDB.settings.sendToAlt = nil
+SEND_ALT = table.concat({ a1, n, a2, a3, tostring(ok), tostring(again), attached, picked, tostring(sentTo), printed[#printed] or "", tostring(off) }, "|")
+for k in pairs(chars) do chars[k] = nil end for k, v in pairs(saved) do chars[k] = v end
+FF:DB().sendAlt = nil
+C_Container, C_Item.GetItemInfoInstant, FF.Plan, FF.Progress = oldCont, oldInst, oldPlan, oldProg
+ClickSendMailItemButton, SendMail = nil, nil
+""")
+print("send to alt:", L("SEND_ALT"))
+assert L("SEND_ALT") == "Bank|15|Zed|Bank|true|false|12|12|Bank||cff33ff99FlipForever|r: Sent 12 stacks to Bank. Click again to send the rest (3).|false", L("SEND_ALT")
 assert L("MB_OPEN") == "3:700:3" and L("MB_LEFT") == 1 and "7s 0c and 3 items" in L("MB_MSG")
 assert "bags are full" in L("MB_FULL") and L("MB_FULL").endswith("left 1") and L("MB_OFF") is False
 
