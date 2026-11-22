@@ -1522,6 +1522,38 @@ if _root is not None:
     _i18n.set_language("enUS")
     _root.destroy()
 
+# the app follows the character you play: the one the game saved last, once per new character
+_cc = _sqlite3.connect(":memory:")
+_cc.row_factory = _sqlite3.Row
+_cc.executescript(_store.SCHEMA)
+_store.set_param(_cc, "Realm A - Horde", "chars", {"Alt": {"t": 100}, "Main": {"t": 300}})
+_store.set_param(_cc, "Realm B - Alliance", "chars", {"Other": {"t": 200}, "Broken": {"t": "x"}})
+_cc.execute("INSERT INTO scans VALUES (?,?,?,?)", ("Realm A - Horde", 1, "full", 0))
+_cc.execute("INSERT INTO scans VALUES (?,?,?,?)", ("Realm B - Alliance", 1, "full", 0))
+print("last played:", _engine.last_played(_cc))
+assert _engine.last_played(_cc) == ("Realm A - Horde", "Main", 300)
+
+
+class _FakeApp:
+    def __init__(self, con):
+        self.con, self.settings = con, _store.Settings()
+        self.settings.save = lambda: None
+
+
+_fa = _FakeApp(_cc)
+_fa.settings.realm, _fa.settings.character = "Realm B - Alliance", "Other"
+_sw1 = _gui.App._follow_played_character(_fa)
+_fa.settings.character = "Alt"                       # the player picks another one by hand
+_sw2 = _gui.App._follow_played_character(_fa)        # same character saved again: the pick stays
+_store.set_param(_cc, "Realm B - Alliance", "chars", {"Other": {"t": 400}})
+_sw3 = _gui.App._follow_played_character(_fa)        # now another character was played
+_fa.settings.auto_character = False
+_store.set_param(_cc, "Realm A - Horde", "chars", {"Main": {"t": 500}})
+_sw4 = _gui.App._follow_played_character(_fa)        # switched off
+print("follow played character:", _sw1, _sw2, _sw3, _sw4, "|", _fa.settings.realm, _fa.settings.character)
+assert (_sw1, _sw2, _sw3, _sw4) == ("Main", None, "Other", None)
+assert (_fa.settings.realm, _fa.settings.character) == ("Realm B - Alliance", "Other")
+
 # --- test harness: delayed timers wait for their time instead of being dropped (issue P9)
 lua.execute("""
 FIRED = 0

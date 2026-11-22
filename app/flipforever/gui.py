@@ -1036,6 +1036,8 @@ class App(tk.Tk):
         add("Auto-import when the game saves", "auto_import", "bool", hint="watches for /reload or logout")
         add("Auto-build the shopping list after a new scan", "auto_build", "bool",
             hint="then plays a sound and pops up: click Reload in game to load it")
+        add("Switch to the character I play", "auto_character", "bool",
+            hint="after each import, picks the character the game saved last")
         btns = ttk.Frame(f)
         btns.grid(row=row, column=0, columnspan=3, sticky="w", pady=(18, 0))
         ttk.Button(btns, text="Save settings", style="Accent.TButton", command=self.save_settings).pack(side="left")
@@ -1162,10 +1164,31 @@ class App(tk.Tk):
         if res["realms"] and (not self.settings.realm or self.settings.realm == demo.DEMO_REALM):
             self.settings.realm = res["realms"][0]
             self.settings.save()
+        switched = self._follow_played_character()
         self.refresh(commit_tuning=True)
+        if switched:
+            self.status(f"Switched to {switched}, the character you played last.")
         # a new scan arrived: build the shopping list straight away and tell the player
         if res["scans"] > 0 and self.settings.auto_build:
             self._auto_build()
+
+    def _follow_played_character(self):
+        """Switch realm and character to the one the game saved last, once per new character:
+        a character you pick yourself stays until you play another one. Returns its name or None."""
+        if not self.settings.auto_character:
+            return None
+        found = engine.last_played(self.con)
+        if not found or found[0] == demo.DEMO_REALM:
+            return None
+        realm, name, _ = found
+        key = engine.char_key(name, realm)
+        if key == self.settings.auto_char_seen:
+            return None
+        self.settings.auto_char_seen = key
+        changed = (self.settings.realm, self.settings.character) != (realm, name)
+        self.settings.realm, self.settings.character = realm, name
+        self.settings.save()
+        return name if changed else None
 
     def _auto_build(self):
         key = self._char_key()

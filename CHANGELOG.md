@@ -59,6 +59,10 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.3-beta.4] - 2026-11-22 (beta)
+### Added
+- App: switches to the character you play. After each import (the game saves on /reload and logout), the app picks the realm and character the game saved last. A character you pick yourself stays until you play another one. Switch: Settings, *Switch to the character I play* (on).
+
 ## [2.5.3-beta.3] - 2026-11-22 (beta)
 ### Fixed
 - Combat helper buffs: no more "Auras cannot be accessed when secret" errors at the end of a fight. Buffs are read safely, and while the game keeps them hidden the last known list is used.

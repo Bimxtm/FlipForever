@@ -126,6 +126,8 @@ class Settings:
     autotune: bool = True
     auto_import: bool = True
     auto_build: bool = True       # after importing a new scan: build the shopping list and notify
+    auto_character: bool = True   # after importing: switch to the character you played last
+    auto_char_seen: str = ""      # the last character switched to automatically ("Name @ Realm")
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True
     beta_updates: bool = False    # also offer beta versions (pre-releases) for testing
