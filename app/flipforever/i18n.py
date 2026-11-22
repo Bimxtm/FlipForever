@@ -239,7 +239,8 @@ _ROWS = {
 from .i18n_messages import ROWS as _MESSAGES  # noqa: E402  chat messages and status lines
 from .i18n_app import ROWS as _APP  # noqa: E402  desktop app pages
 from .i18n_252 import ROWS as _R252  # noqa: E402  texts added in the 2.5.2 betas
-for _en, _row in list(_MESSAGES.items()) + list(_APP.items()) + list(_R252.items()):
+from .i18n_270 import ROWS as _R270  # noqa: E402  texts added in the 2.5.3, 2.6.0 and 2.7.0 betas
+for _en, _row in list(_MESSAGES.items()) + list(_APP.items()) + list(_R252.items()) + list(_R270.items()):
     _ROWS.setdefault(_en, _row)
 
 _ORDER = [k for k in LANGUAGES if k != "enUS"]

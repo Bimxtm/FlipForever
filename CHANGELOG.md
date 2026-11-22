@@ -2,6 +2,19 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0] - 2026-11-22
+All 2.5.3, 2.6.0 and 2.7.0 betas in one release (see the beta entries below), plus:
+### Added
+- Talent overlay (2.6.0 betas): your chosen build on the Talents window with the next point marked, a panel with the talent order, the key talents and where your points should stand at levels 20 to 60, and `/ff talents`.
+- Quest helper (2.7.0 betas): learned quest spots for all your characters, quest pins on the world map and minimap, a chat line when a quest is ready to hand in, and `/ff quest` to point the arrow at the next spot.
+- Combat helper: learns the best spell order from your fights, gives advice after a fight, an emergency key, interrupts and cooldowns for elites, and anonymous shared learning that can be switched off.
+- Undercut fix: cancel and repost undercut auctions only where it pays after the deposit.
+- Advisor: the talent step says where each unspent point goes for your build.
+- App: switches to the character you played last after each import; a setting for sharing anonymous combat data.
+- Translations of every text added since 2.5.2 into all game languages.
+### Fixed
+- The waypoint arrow error when changing zones, errors from hidden auras and system chat text, and Locale.lua loading twice.
+
 ## [2.7.0-beta.11] - 2026-11-22 (beta, branch feature/quest-helper)
 ### Added
 - From 2.5.3 Beta 9: shared combat learning (anonymous summaries, merged into each release; warning once, can be switched off).

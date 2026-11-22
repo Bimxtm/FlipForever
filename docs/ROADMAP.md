@@ -1,12 +1,13 @@
 # Roadmap
 
 ## Ready for approval
-- **Talent builds on the Talents window (2.6.0 beta 6, branch feature/talent-overlay):** build talents marked in order on the game's Talents window, finished ones green, the next point gold; a panel beside it with the whole order, your ranks, the tree of each talent (click to open it), the point split, points left to spend, the build's role and how to play it; key-talent-only builds ordered by tier; `/ff talents` opens the window; hover a talent for its description and the build's pick. A warning flags points in trees the build leaves empty. The panel also shows where your points should stand at levels 20 to 60 and how far behind the order you are.
+- Nothing waiting.
 
-- **Quest helper (2.7.0 beta 2, branch feature/quest-helper, built on the talent branch):** learns quest spots from your play (giver, objective areas, hand-in) for all characters; `/ff quest` points the arrow at the next spot; quest pins on the world map and the minimap; a chat line when a quest is ready to hand in. Next: pins from the quest log, and the Advisor's quest steps using the learned spots.
+## Released in 2.7.0
+- **Talent builds on the Talents window** (from the 2.6.0 betas): build marked on the Talents window, next point gold, order panel, level bands, `/ff talents`.
+- **Quest helper** (from the 2.7.0 betas): learned quest spots, world map and minimap pins, `/ff quest`. Next: pins from the quest log, and the Advisor's quest steps using the learned spots.
 
 ## Planned
-- **Talent builds on the Talents window (2.6.0, owner request):** the chosen build shown right on the game's Talents window, next point highlighted, and the builds fleshed out further.
 - **Autopilot rework:** the auction house autopilot is off until it is reworked.
 
 ## Smaller improvements

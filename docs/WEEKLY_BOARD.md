@@ -16,7 +16,7 @@
 | Tue 25 - Thu 27 | Crafting profit finder; bug fixes first; weekly review on Thursday | 2.5.0 betas |
 
 ## Waiting for approval
-- 2.6.0 beta 5 (branch feature/talent-overlay, owner request): the chosen build on the Talents window, next point marked, order panel beside it with each talent's tree (click to open, hover for details), role, how to play and points to spend; key-talent builds ordered by tier; /ff talents. Kept off main until the owner has seen it.
+- Nothing waiting. The talent overlay and the quest helper are in main since 2.7.0.
 
 ## Open issues
 | # | Issue | Severity | Plan |
@@ -28,6 +28,7 @@
 | P8 | Gathering stats show "map 1411" until the addon has run once | Low | Names are saved at login; verify in game |
 
 ## Done this week
+- 2.7.0 stable (22 Nov): talent overlay and quest helper merged into main, all 2.5.3 betas, translations of every text added since 2.5.2.
 - 2.7.0 beta 2 (quest helper branch): quest spots on the minimap.
 - 2.7.0 beta 1 (quest helper branch): quest spots learned from play, /ff quest arrow, world map quest pins.
 - 2.6.0 beta 6 (talent branch): points per level band on the Talents panel.

@@ -1,3 +1,16 @@
+# FlipForever 2.7.0
+
+Everything from the 2.5.3, 2.6.0 and 2.7.0 test versions, now in every game language:
+
+- **Talents:** your build on the Talents window, the next point marked, where your points should stand at each level band, and `/ff talents`.
+- **Quests:** FlipForever learns quest spots as you play, shows them on the world map and minimap, and `/ff quest` points the arrow to the next one.
+- **Combat helper:** learns the best spell order from your fights, tells you what to do better after a fight, and has an emergency key. What it learns is shared anonymously so it gets better for everyone; you can switch that off.
+- **Auction house:** undercut auctions are cancelled and reposted where that pays after the deposit.
+- **Advisor:** tells you where to spend each talent point for your build.
+- **App:** follows the character you play.
+- **Fixes:** no more errors from the map arrow, hidden auras or system chat text.
+- **Settings:** every new feature has its own switch under Settings, Features.
+
 # FlipForever 2.7.0 Beta 11
 
 **The combat helper learns from all players.** What your combat helper learns now also helps everyone else: the app shares an anonymous summary (class, build, the spell orders it compared and how long its fights took; no names, no chat), and every new version starts from what worked best for all players. You can switch this off in game under Settings, Features ("Share anonymous combat data") or in the app's Settings. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 9.
