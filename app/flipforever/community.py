@@ -192,6 +192,46 @@ def owner_remove(item_id: str) -> None:
     _save(OWNER_SUGGESTIONS, [it for it in _load(OWNER_SUGGESTIONS, []) if it.get("id") != item_id])
 
 
+def owner_move(item_id: str, delta: int) -> None:
+    """Move a suggestion up (-1) or down (+1); the list order is the work order."""
+    items = _load(OWNER_SUGGESTIONS, [])
+    i = next((k for k, it in enumerate(items) if it.get("id") == item_id), None)
+    if i is None:
+        return
+    j = max(0, min(len(items) - 1, i + delta))
+    items.insert(j, items.pop(i))
+    _save(OWNER_SUGGESTIONS, items)
+
+
+def owner_focus(item_id: str) -> None:
+    """Toggle "focus first" on a suggestion; focused ones move to the top and are worked on first."""
+    items = _load(OWNER_SUGGESTIONS, [])
+    it = next((x for x in items if x.get("id") == item_id), None)
+    if not it:
+        return
+    it["focus"] = not it.get("focus")
+    items.remove(it)
+    n = sum(1 for x in items if x.get("focus"))
+    items.insert(n if it["focus"] else n, it)
+    _save(OWNER_SUGGESTIONS, items)
+
+
+BUG_FOCUS = store.DATA_DIR / "owner_bug_focus.json"   # report IDs of bugs to fix first, in order
+
+
+def owner_bug_focus() -> list:
+    return _load(BUG_FOCUS, [])
+
+
+def owner_bug_focus_toggle(r: str) -> None:
+    focus = owner_bug_focus()
+    if r in focus:
+        focus.remove(r)
+    elif r:
+        focus.append(r)
+    _save(BUG_FOCUS, focus)
+
+
 def owner_set_ticket(r: str, status: str, version: str = "") -> None:
     """A ticket's new status; the next status update publishes it on the Bug reports page."""
     if status not in STATUS or not r:

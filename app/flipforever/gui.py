@@ -499,7 +499,14 @@ class App(tk.Tk):
                        command=lambda: self._comm_decide(False)).pack(side="left", padx=6)
             ttk.Label(own, text="Suggestion list (worked from in this order)", style="H.TLabel").pack(anchor="w", pady=(8, 0))
             self.comm_owner = tree_page(own, ("id", "Status", "Source", "Date", "Suggestion"), (80, 130, 80, 90, 560))
-            ttk.Button(own, text="Remove selected", command=self._comm_owner_remove).pack(anchor="w", pady=4)
+            r4 = ttk.Frame(own)
+            r4.pack(fill="x", pady=4)
+            ttk.Button(r4, text="Focus first", command=lambda: self._comm_owner_sel(self.comm.owner_focus)).pack(side="left")
+            ttk.Button(r4, text="Move up", command=lambda: self._comm_owner_sel(lambda i: self.comm.owner_move(i, -1))).pack(side="left", padx=6)
+            ttk.Button(r4, text="Move down", command=lambda: self._comm_owner_sel(lambda i: self.comm.owner_move(i, 1))).pack(side="left")
+            ttk.Button(r4, text="Remove selected", command=self._comm_owner_remove).pack(side="left", padx=6)
+            ttk.Label(r4, text="Worked on from the top; without a focus the order is judged by importance.",
+                      style="Muted.TLabel").pack(side="left", padx=6)
             # ticket statuses: published on the Bug reports page with the next status update
             r3 = ttk.Frame(own)
             r3.pack(fill="x", pady=(8, 0))
@@ -511,6 +518,7 @@ class App(tk.Tk):
             self.comm_tversion = tk.StringVar()
             ttk.Entry(r3, textvariable=self.comm_tversion, width=14).pack(side="left", padx=6)
             ttk.Button(r3, text="Set", command=self._comm_set_ticket).pack(side="left")
+            ttk.Button(r3, text="Focus first", command=self._comm_bug_focus).pack(side="left", padx=6)
             self.comm_tickets = tree_page(own, ("Ticket", "Status", "From", "Version", "Date", "Report", "r"),
                                           (70, 150, 100, 90, 85, 520, 0))
             self.comm_tickets.configure(height=8)
@@ -561,6 +569,7 @@ class App(tk.Tk):
         if self.comm_owner is not None:
             set_to = {d.get("r"): d for d in c._load(c.OWNER_DECISIONS, []) if d.get("status")}
             self.comm_tickets.delete(*self.comm_tickets.get_children())
+            self._comm_feed = feed
             arch = c.owner_archive()
             # every bug report read so far: not ticketed yet on top, then the public tickets, newest first
             ticketed = {t.get("r") for t in feed.get("tickets", [])}
@@ -577,6 +586,15 @@ class App(tk.Tk):
                     t.get("id", ""), label, t.get("nick") or a.get("nick") or "anonymous",
                     t.get("from_version") or a.get("version", ""), t.get("reported", ""),
                     a.get("text") or t.get("title", ""), t.get("r", "")))
+            # focused bugs first, in the order they were focused
+            focus = c.owner_bug_focus()
+            rows = list(self.comm_tickets.get_children())
+            for n, r in enumerate(focus):
+                for iid in rows:
+                    v = self.comm_tickets.item(iid, "values")
+                    if str(v[6]) == r:
+                        self.comm_tickets.item(iid, values=(v[0], "FOCUS - " + v[1]) + tuple(v[2:]))
+                        self.comm_tickets.move(iid, "", n)
         waiting = [m for m in c.my_reports() if m.get("r") not in {t.get("r") for t in feed.get("tickets", [])}
                    and m.get("r") not in {s.get("r") for s in feed.get("suggestions", [])}]
         for m in reversed(waiting[-10:]):
@@ -615,7 +633,7 @@ class App(tk.Tk):
                                                       it.get("nick", "") or "anonymous", it.get("text", "")))
         self.comm_owner.delete(*self.comm_owner.get_children())
         for it in items:
-            self.comm_owner.insert("", "end", values=(it.get("id", ""), it.get("status", "open"), it.get("source", ""),
+            self.comm_owner.insert("", "end", values=(it.get("id", ""), ("FOCUS - " if it.get("focus") else "") + it.get("status", "open"), it.get("source", ""),
                                                       it.get("date", ""), it.get("text", "")))
 
     def _comm_decide(self, approve):
@@ -660,6 +678,21 @@ class App(tk.Tk):
         for sel in self.comm_tickets.selection():
             self.comm.owner_set_ticket(str(self.comm_tickets.item(sel, "values")[6]), status, self.comm_tversion.get())
         self._comm_refresh()
+
+    def _comm_bug_focus(self):
+        for sel in self.comm_tickets.selection():
+            self.comm.owner_bug_focus_toggle(str(self.comm_tickets.item(sel, "values")[6]))
+        self._comm_fill(getattr(self, "_comm_feed", {}))
+
+    def _comm_owner_sel(self, action):
+        sel = self.comm_owner.selection()
+        ids = [str(self.comm_owner.item(s, "values")[0]) for s in sel]
+        for i in ids:
+            action(i)
+        self._comm_fill_owner()
+        for iid in self.comm_owner.get_children():          # keep the moved item selected
+            if str(self.comm_owner.item(iid, "values")[0]) in ids:
+                self.comm_owner.selection_add(iid)
 
     def _comm_ticket_details(self):
         sel = self.comm_tickets.selection()
