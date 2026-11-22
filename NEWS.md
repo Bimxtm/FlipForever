@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 5
+
+**Undercut auctions are now fixed, not just reported.** At the auction house, press the FlipForever button and it checks each undercut auction live. Only where reposting really pays does it offer *CANCEL*: never when the cheaper ones should sell before yours ends, never below your floor, and never when the new deposit would eat the gain. Collect the cancelled items from the mailbox, press the button again, and they go back up just under the cheapest seller. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.3 Beta 4
 
 **The app follows the character you play.** Every time the game saves (on /reload or logout), the app switches to the realm and character you played last, with their budget and shopping list. Pick another character by hand and it stays until you play a different one. You can switch it off in the app's Settings.

@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.3-beta.5] - 2026-11-22 (beta)
+### Added
+- Undercut fix at the auction house: when your auctions are undercut, the FlipForever button now checks each one live and offers to cancel it (one key press each, as the game requires) only where reposting pays. An auction is kept when the cheaper listings should sell before it ends (from the item's sales per day), when it ends within the hour, when the new price would be below your floor, or when the repost would bring less than four times the new deposit and any cancel fee. A deposit is lost on a cancel and on an expiry alike, so an auction that no longer sells has already lost it; acting only costs the new deposit.
+- Cancelled items come back by mail. Collect them (Open all mail) and press the button at the auction house: they are posted again just under the cheapest real competitor, never below your floor.
+- Switch: *Undercut auctions: cancel and repost where it pays* in Settings, Features (on).
+
 ## [2.5.3-beta.4] - 2026-11-22 (beta)
 ### Added
 - App: switches to the character you play. After each import (the game saves on /reload and logout), the app picks the realm and character the game saved last. A character you pick yourself stays until you play another one. Switch: Settings, *Switch to the character I play* (on).

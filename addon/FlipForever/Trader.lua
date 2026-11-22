@@ -127,12 +127,14 @@ end)
 
 function T:OnResults(rows)
   if self.mode == "buy" then self:EvaluateBuy(rows)
-  elseif self.mode == "sell" then self:EvaluateSell(rows) end
+  elseif self.mode == "sell" then self:EvaluateSell(rows)
+  elseif self.mode == "undercut" then self:EvaluateUndercut(rows) end
 end
 
 function T:Advance()
   if self.mode == "buy" then self:NextBuyTarget()
-  elseif self.mode == "sell" then self:NextSellTarget() end
+  elseif self.mode == "sell" then self:NextSellTarget()
+  elseif self.mode == "undercut" then self:NextUndercutTarget() end
 end
 
 -- BUYING ------------------------------------------------------------------------------------
@@ -391,6 +393,16 @@ function T:BuildSellList()
       seen[id] = true
     end
   end
+  -- auctions cancelled because they were undercut: post them again (priced live, floor kept)
+  for id, r in pairs(self:Reposts()) do
+    if not seen[id] then
+      local rule = byId[id]
+      local normal = math.max(r.price or 0, rule and rule.normal or 0)
+      list[#list + 1] = { id = id, floor = rule and rule.floor or 0, normal = normal,
+                          ceil = math.max(normal * 2, rule and rule.ceil or 0), repost = true }
+      seen[id] = true
+    end
+  end
   for _, s in ipairs(sell) do
     if not seen[s.id] then list[#list + 1] = s seen[s.id] = true end
   end
@@ -449,6 +461,25 @@ function T:UndercutAnchor(rows)
   return others[skip + 1].unitPrice, skip > 0 and others[1].unitPrice or nil
 end
 
+-- The lowest price an item may be posted at: never a flip at a loss (what you paid + the AH cut)
+-- and never less than a merchant pays. Returns floor, cost, vendor price, cut.
+function T:FloorFor(id, rule)
+  local floor = rule and rule.floor or 0
+  local p = plan()
+  local cut = (p and p.cut) or 0.05
+  local cost = self:CostBasis(id)
+  if cost then floor = math.max(floor, math.ceil(cost * 1.02 / (1 - cut))) end
+  local vendor = FF:VendorPrice(id)
+  if vendor then floor = math.max(floor, math.ceil(vendor / (1 - cut))) end
+  return floor, cost, vendor, cut
+end
+
+function T:SellRule(id)
+  local p = plan()
+  for _, s in ipairs((p and p.sell) or {}) do if s.id == id then return s end end
+  return nil
+end
+
 function T:EvaluateSell(rows)
   local s = self.target
   local lowestOwn
@@ -469,16 +500,10 @@ function T:EvaluateSell(rows)
   if FlipForeverDB.settings.silverOnly and self.isCommodity then
     price = math.floor(price / 100) * 100
   end
-  -- never sell a flip at a loss: floor covers what you paid + the AH cut
-  local floor = s.floor or 0
-  local cut = plan().cut or 0.05
-  local cost = self:CostBasis(s.id)
-  if cost then floor = math.max(floor, math.ceil(cost * 1.02 / (1 - cut))) end
-  -- never take less than a merchant pays; and loot the market barely values above the vendor
-  -- price isn't worth the auction risk (an expired auction costs the deposit and the time)
-  local vendor = FF:VendorPrice(s.id)
+  local floor, cost, vendor, cut = self:FloorFor(s.id, s)
+  -- loot the market barely values above the vendor price isn't worth the auction risk
+  -- (an expired auction costs the deposit and the time)
   if vendor then
-    floor = math.max(floor, math.ceil(vendor / (1 - cut)))
     if not cost and price * (1 - cut) < vendor * 1.5 then
       FF:Print(FF:T("%s: the auction house pays barely more than a vendor (%s) - sell it to a merchant instead."):format(
         FF:ItemName(s.id), FF:Money(vendor)))
@@ -544,6 +569,7 @@ FF:On("AUCTION_HOUSE_AUCTION_CREATED", function()
   local p = T.pending
   FF:Log({ e = "post", id = p.id, name = FF:ItemName(p.id), q = p.qty, p = p.unit, dep = p.dep or 0, dur = durationSetting(p.id) })
   T.pending = nil
+  if not T:FindInBags(p.id) then T:Reposts()[p.id] = nil end   -- reposted in full
   -- non-commodity items post one stack at a time; keep going while more remain
   if not p.commodity and T:FindInBags(p.id) then
     T:Search(p.id)
@@ -575,6 +601,12 @@ end)
 
 FF:On("UI_ERROR_MESSAGE", function(_, msg)
   if issecretvalue and msg ~= nil and issecretvalue(msg) then msg = "?" end  -- hidden text
+  if T.state == "cancelling" then
+    FF:SetStatus(FF:T("Auction house error: ") .. tostring(msg))
+    T.pending, T.cancelToken = nil, nil
+    T:NextUndercutTarget()
+    return
+  end
   if T.state == "purchasing" or T.state == "posting" then
     FF:SetStatus(FF:T("Auction house error: ") .. tostring(msg))
     local id = T.target and T.target.id
@@ -587,12 +619,180 @@ FF:On("AUCTION_HOUSE_CLOSED", function()
   if T.mode then T:Stop("Auction house closed.") end
 end)
 
+-- UNDERCUT FIX ----------------------------------------------------------------------------------
+-- Your undercut auctions, checked live one by one. The deposit is lost on a cancel and on an
+-- expiry alike, so an auction that won't sell any more has lost it already; acting only costs the
+-- new deposit (and a cancel fee where the game charges one). An auction is cancelled only when:
+--   * the cheaper listings won't sell out before yours ends (sales per day x time left),
+--   * it runs for at least another hour (shorter ones come back by mail on their own soon),
+--   * the new price (just under the cheapest real competitor) stays above your floor, and
+--   * the repost brings clearly more than the new deposit and fee (at least 4x).
+-- Cancelled items come back by mail; collect them and the normal selling posts them at the new price.
+local UNDERCUT_COST_FACTOR = 4
+
+function T:UndercutOn() return FlipForeverDB.settings.undercutFix ~= false end
+
+-- returns act, reason, newPrice
+function T:UndercutDecision(u, anchor, cheaperQty, perDay, floor, cut, newDep, cancelCost)
+  if not anchor or anchor >= u.mine then return false, "cheapest" end
+  local hours = (u.timeLeft or 48 * 3600) / 3600
+  if hours < 1 then return false, "ends" end
+  local price = anchor - 1
+  if FlipForeverDB.settings.silverOnly and u.commodity then price = math.floor(price / 100) * 100 end
+  if price < (floor or 0) then return false, "floor", price end
+  local sellsFirst = perDay and perDay * hours / 24 or 0
+  if (cheaperQty or 0) <= sellsFirst then return false, "sells", price end
+  local costs = (newDep or 0) + (cancelCost or 0)
+  local income = price * (1 - (cut or 0.05)) * (u.qty or 1)
+  if income < costs * UNDERCUT_COST_FACTOR or income - costs <= 0 then return false, "deposit", price end
+  return true, "repost", price
+end
+
+-- the deposit a repost would cost: the game's own figure for commodities, else what you paid last time
+function T:RepostDeposit(u)
+  local d = durationSetting(u.id)
+  if AH and AH.CalculateCommodityDeposit then
+    local ok, dep = pcall(AH.CalculateCommodityDeposit, u.id, d, u.qty)
+    if ok and type(dep) == "number" then return dep end
+  end
+  local log = FF:DB().log
+  for i = #log, 1, -1 do
+    local e = log[i]
+    if e.e == "post" and e.id == u.id and e.dep and (e.q or 0) > 0 then
+      return math.ceil(e.dep / e.q * (u.qty or 1))
+    end
+  end
+  local vendor = FF:VendorPrice(u.id)
+  return vendor and math.ceil(vendor * (u.qty or 1) * 0.3) or 0
+end
+
+-- what to post again after the mail comes back: { [itemID] = { t, price } } per character
+function T:Reposts()
+  local db = FF:DB()
+  db.repost = db.repost or {}
+  local me = UnitName("player") or "?"
+  db.repost[me] = db.repost[me] or {}
+  local list, now = db.repost[me], time()
+  for id, r in pairs(list) do if now - (r.t or 0) > 3 * 86400 then list[id] = nil end end
+  return list
+end
+
+function T:StartUndercut(list)
+  self.mode, self.uidx, self.ulist, self.ufixed = "undercut", 0, list, 0
+  self:NextUndercutTarget()
+end
+
+function T:NextUndercutTarget()
+  while true do
+    self.uidx = (self.uidx or 0) + 1
+    local u = self.ulist and self.ulist[self.uidx]
+    if not u then
+      local n = self.ufixed or 0
+      self.ulist = nil
+      if FF.Auctions then FF.Auctions.undercut = {} end   -- handled for this visit
+      if n > 0 then
+        self:Stop(FF:T("%d undercut auction%s cancelled. Take them from the mailbox (Open all mail), then press the button here to post them at the new price."):format(n, FF:Plural(n)))
+      else
+        self:Stop(FF:T("Undercut auctions checked: none worth cancelling right now."))
+      end
+      return
+    end
+    if u.auctionID and u.id then
+      self.target = u
+      FF:SetStatus(FF:T("Checking %s..."):format(u.name or FF:ItemName(u.id)))
+      self:Search(u.id)
+      return
+    end
+  end
+end
+
+local KEEP = {
+  cheapest = "yours is the cheapest again",
+  ends = "it ends within the hour and comes back by mail",
+  floor = "the new price would be below your floor",
+  sells = "the cheaper ones should sell before yours ends",
+  deposit = "the repost would not pay for the new deposit",
+}
+
+function T:EvaluateUndercut(rows)
+  local u = self.target
+  u.commodity = self.isCommodity
+  local anchor = self:UndercutAnchor(rows)
+  local cheaper = 0
+  for _, r in ipairs(rows) do
+    if not owned(r) and r.unitPrice and r.unitPrice < u.mine then cheaper = cheaper + (r.quantity or 1) end
+  end
+  local floor, _, _, cut = self:FloorFor(u.id, self:SellRule(u.id))
+  local perDay = FF.Planner and FF.Planner.SellsPerDay and FF.Planner:SellsPerDay(u.id)
+  local dep = self:RepostDeposit(u)
+  local cancelCost = 0
+  if AH and AH.GetCancelCost then
+    local ok, c = pcall(AH.GetCancelCost, u.auctionID)
+    if ok and type(c) == "number" then cancelCost = c end
+  end
+  local act, why, price = self:UndercutDecision(u, anchor, cheaper, perDay, floor, cut, dep, cancelCost)
+  if act and AH and AH.CanCancelAuction then
+    local ok, can = pcall(AH.CanCancelAuction, u.auctionID)
+    if ok and can == false then act, why = false, "cheapest" end
+  end
+  local name = u.name or FF:ItemName(u.id)
+  if not act then
+    FF:Print(FF:T("%s: kept - %s."):format(name, FF:T(KEEP[why] or why)))
+    self:NextUndercutTarget()
+    return
+  end
+  self.pending = { id = u.id, auctionID = u.auctionID, qty = u.qty, unit = price, mine = u.mine, cost = dep + cancelCost }
+  self.state = "ready_cancel"
+  FF:SetStatus(FF:T("Cancel %d x %s (yours %s, now %s) and repost at %s - costs %s."):format(
+    u.qty or 1, name, FF:Money(u.mine), FF:Money(anchor), FF:Money(price), FF:Money(dep + cancelCost)))
+  self:Refresh()
+end
+
+function T:DoCancel()
+  local p = self.pending
+  self.state = "cancelling"
+  local ok, err = pcall(AH.CancelAuction, p.auctionID)
+  if not ok then
+    FF:SetStatus(FF:T("Cancel failed: ") .. tostring(err))
+    self.pending = nil
+    self:NextUndercutTarget()
+    return
+  end
+  local token = {}
+  self.cancelToken = token
+  C_Timer.After(6, function()
+    if self.cancelToken == token and self.state == "cancelling" then
+      FF:SetStatus(FF:T("No answer from the auction house, moving on."))
+      self.pending = nil
+      self:NextUndercutTarget()
+    end
+  end)
+end
+
+local function cancelDone()
+  if T.state ~= "cancelling" or not T.pending then return end
+  local p = T.pending
+  T.cancelToken, T.pending = nil, nil
+  FF:Log({ e = "cancel", id = p.id, name = FF:ItemName(p.id), q = p.qty, p = p.mine, np = p.unit })
+  T:Reposts()[p.id] = { t = time(), price = p.unit }
+  T.ufixed = (T.ufixed or 0) + 1
+  T:NextUndercutTarget()
+end
+pcall(FF.On, FF, "AUCTION_CANCELED", cancelDone)
+
 -- The one button / key --------------------------------------------------------------------------
 -- Must only be called from a click or key press.
 function T:Primary()
   local s = self.state
   if s == "idle" then
-    if (plan() and plan().buy and #plan().buy > 0) then self:StartBuying() else self:StartSelling() end
+    local under = FF.Auctions and FF.Auctions.undercut
+    if self:UndercutOn() and under and #under > 0 then
+      local copy = {}
+      for i, u in ipairs(under) do copy[i] = u end
+      self:StartUndercut(copy)
+    elseif (plan() and plan().buy and #plan().buy > 0) then self:StartBuying() else self:StartSelling() end
+  elseif s == "ready_cancel" then
+    self:DoCancel()
   elseif s == "ready_commodity" then
     local p = self.pending
     self.state = "quoting"
@@ -652,11 +852,13 @@ function T:ButtonText()
   if s == "ready_post" then return ("POST %d x %s"):format(p.qty, FF:ItemName(p.id)) end
   if s == "confirm_post" then return FF:T("CONFIRM POST") end
   if s == "posting" then return FF:T("Posting...") end
+  if s == "ready_cancel" then return ("CANCEL %d x %s"):format(p.qty or 1, FF:ItemName(p.id)) end
+  if s == "cancelling" then return FF:T("Cancelling...") end
   return s
 end
 
 function T:ButtonEnabled()
   local s = self.state
   return s == "idle" or s == "ready_commodity" or s == "confirm_commodity" or s == "ready_item"
-    or s == "ready_post" or s == "confirm_post"
+    or s == "ready_post" or s == "confirm_post" or s == "ready_cancel"
 end
