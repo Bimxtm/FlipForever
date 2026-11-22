@@ -1188,6 +1188,13 @@ class App(tk.Tk):
             row += 1
             return w
 
+        def section(title):
+            nonlocal row
+            ttk.Label(f, text=tr(title), foreground=ACCENT, font=("Segoe UI Semibold", 11)).grid(
+                row=row, column=0, columnspan=3, sticky="w", pady=(14 if row else 0, 2))
+            row += 1
+
+        section("Game and language")
         # language (all languages the game supports); saved right away, applied on restart
         ttk.Label(f, text=tr("Language")).grid(row=row, column=0, sticky="w", pady=5, padx=(0, 14))
         names = list(i18n.LANGUAGES.values())
@@ -1203,6 +1210,7 @@ class App(tk.Tk):
         self.acct_box = add("Account folder", "account", "combo", 30, store.find_accounts(self.settings.wow_path),
                             "under WTF\\Account (picked automatically)")
         self.path_box.bind("<<ComboboxSelected>>", lambda e: self._path_changed())
+        section("Auction house: buying")
         add("Gold budget per shopping list", "budget_gold", width=12, hint="gold")
         add("Minimum profit margin", "min_margin", width=12, hint="0.20 = 20% after the AH cut; the learner tunes around this")
         add("Must sell within (days)", "hold_days", width=12, hint="only buy as much as sells in this many days; slower items are skipped")
@@ -1213,14 +1221,17 @@ class App(tk.Tk):
         add("Max units per item", "max_units_per_item", width=12)
         add("Max items on a shopping list", "max_plan_items", width=12)
         add("Ignore items worth less than", "min_value_copper", width=12, hint="copper (100 = 1 silver)")
+        section("Auction house: selling")
         add("Auction duration", "duration", "combo", 10, ["1", "2", "3"], "1 = 12h, 2 = 24h, 3 = 48h")
         add("Also post my farmed loot", "sell_farmed", "bool", hint="items you didn't flip get posted at fair value (floor 75%)")
         add("Let it tune the margin itself", "autotune", "bool", hint="the self-improving part: tightens after losses, loosens when winning")
+        section("Automation")
         add("Auto-import when the game saves", "auto_import", "bool", hint="watches for /reload or logout")
         add("Auto-build the shopping list after a new scan", "auto_build", "bool",
             hint="then plays a sound and pops up: click Reload in game to load it")
         add("Switch to the character I play", "auto_character", "bool",
             hint="after each import, picks the character the game saved last")
+        section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
         add("Community page", "community", "bool", hint="updates, roadmap, bug reports and suggestions (loaded from GitHub)")
