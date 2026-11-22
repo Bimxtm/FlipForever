@@ -3036,7 +3036,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3273,6 +3273,39 @@ UnitName, FF.PriceOf, C_Map = oName, oPrice, oMap
 GetMerchantNumItems, GetMerchantItemInfo, GetMerchantItemLink = nil, nil, nil
 """)
 print("vendor resale:", L("VENDOR"))
+lua.execute("""
+-- auction session summary: log entries since the auction house opened, this character only; gold change
+local FF, S = FlipForever, FlipForever.Session
+local oMoney = GetMoney
+local gold = 500000
+GetMoney = function() return gold end
+Fire("AUCTION_HOUSE_SHOW")
+FF:Log({ e = "buy", id = 1, q = 10, p = 300 })
+FF:Log({ e = "buy", id = 2, q = 2, p = 1000 })
+FF:Log({ e = "post", id = 1, q = 10, p = 500 })
+FF:Log({ e = "sold", name = "x" })
+FF:Log({ e = "buy", id = 3, q = 5, p = 100, char = "Other" })
+FF:DB().log[#FF:DB().log].char = "Other"
+gold = 495000
+printed = {}
+Fire("AUCTION_HOUSE_CLOSED")
+local s1 = printed[#printed] or ""
+Fire("AUCTION_HOUSE_SHOW")
+printed = {}
+Fire("AUCTION_HOUSE_CLOSED")
+local quiet = #printed
+FlipForeverDB.settings.ahSummary = false
+Fire("AUCTION_HOUSE_SHOW")
+FF:Log({ e = "sold", name = "y" })
+printed = {}
+Fire("AUCTION_HOUSE_CLOSED")
+local off = #printed
+FlipForeverDB.settings.ahSummary = nil
+GetMoney = oMoney
+AHSUM = s1 .. "|" .. quiet .. "|" .. off
+""")
+print("ah summary:", L("AHSUM"))
+assert "bought 12 for" in L("AHSUM") and "posted 10 worth" in L("AHSUM") and "1 auction sold" in L("AHSUM") and "Gold: -" in L("AHSUM") and L("AHSUM").endswith("|0|0"), L("AHSUM")
 assert L("VENDOR").startswith("3|1000|0.4|") and L("VENDOR").endswith("|1|7500|true|true|0") and "1 item here can sell for more" in L("VENDOR"), L("VENDOR")
 assert L("SEND_ALT") == "Bank|15|Zed|Bank|true|false|12|12|Bank||cff33ff99FlipForever|r: Sent 12 stacks to Bank. Click again to send the rest (3).|false", L("SEND_ALT")
 assert L("MB_OPEN") == "3:700:3" and L("MB_LEFT") == 1 and "7s 0c and 3 items" in L("MB_MSG")

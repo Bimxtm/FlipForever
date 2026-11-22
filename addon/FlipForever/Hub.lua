@@ -630,6 +630,8 @@ local function build()
     "What a green, blue or purple weapon or armor piece gives when disenchanted, at your scanned prices. /ff disenchant lists items listed below that value and buys them at the auction house.")
   feature("vendorResale", "Vendor resale finder at merchants, /ff vendors", true, nil,
     "Merchants you visit are remembered with their spot. Their limited items that sell for clearly more on the auction house are named at the merchant; /ff vendors lists the best ones and pins them on the map.")
+  feature("ahSummary", "Summary when I close the auction house", true, nil,
+    "What you bought, posted and sold while the auction house was open, and how your gold changed, in one chat line.")
   feature("bestPostTime", "Show the hours my auctions sell best when posting", true, nil,
     "From your own sales: the 4-hour window of the day in which an item (or all your items) sold most. Shown when posting and in tooltips.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)
