@@ -710,6 +710,18 @@ local function makeFrame()
   settings:SetPoint("TOPRIGHT", -30, -10)
   settings:SetText(FF:T("Settings"))
   settings:SetScript("OnClick", function() FF.Hub:Show("settings") end)
+  -- shown while steps are pinned on the map (right-click a step)
+  f.clearPins = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+  f.clearPins:SetSize(80, 22)
+  f.clearPins:SetPoint("RIGHT", settings, "LEFT", -4, 0)
+  f.clearPins:SetText(FF:T("Clear pins"))
+  f.clearPins:SetScript("OnClick", function()
+    local QH = FF.QuestHelper
+    if QH then wipe(QH:PinStore()) QH:RefreshAll() end
+    FF:Print(FF:T("Map pins cleared."))
+    AD:Refresh()
+  end)
+  f.clearPins:Hide()
   local auto = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
   auto:SetSize(22, 22)
   auto:SetPoint("LEFT", refresh, "RIGHT", 10, 0)
@@ -811,11 +823,19 @@ function AD:Refresh()
     frame.scroll:Hide()
     frame.header:Show()
     frame.recs = recs
+    local QH = FF.QuestHelper
+    local pinsOn = QH and QH:PinsEnabled()
     for i, fs in ipairs(frame.rows) do
       local r = recs[i]
-      fs:SetText(r and r.text or "")
+      local t = r and r.target
+      local pinned = pinsOn and t and QH:IsPinned(t.mapID, t.x, t.y, t.label)
+      fs:SetText(r and ((pinned and "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_1:12|t " or "") .. r.text) or "")
       fs:Show()
     end
+  end
+  if frame.clearPins then
+    local QH = FF.QuestHelper
+    if QH and QH:PinsEnabled() and #QH:PinStore() > 0 then frame.clearPins:Show() else frame.clearPins:Hide() end
   end
 end
 

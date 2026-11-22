@@ -398,6 +398,18 @@ function QH:RefreshMinimap()
           p = CreateFrame("Frame", nil, Minimap)
           p.tex = p:CreateTexture(nil, "OVERLAY")
           p.tex:SetAllPoints(p)
+          -- hover: what the pin is (quest spot or pinned Advisor step)
+          if p.EnableMouse then p:EnableMouse(true) end
+          p:SetScript("OnEnter", function(self)
+            local s = self.spot
+            if not (GameTooltip and s) then return end
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(s.quest.title, 1, 0.82, 0)
+            GameTooltip:AddLine(s.label, 1, 1, 1, true)
+            GameTooltip:AddLine(s.kind == "advisor" and FF:T("Pinned from the Advisor.") or FF:T("Quest spot learned from your play."), 0.6, 0.6, 0.6, true)
+            GameTooltip:Show()
+          end)
+          p:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
           mmPins[used] = p
         end
         if p.SetFrameLevel and Minimap.GetFrameLevel then p:SetFrameLevel((Minimap:GetFrameLevel() or 1) + 6) end

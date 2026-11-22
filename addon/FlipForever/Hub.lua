@@ -448,15 +448,17 @@ local function build()
 
   -- Open --------------------------------------------------------------
   heading(pg, "Open", -6)
-  button(pg, "Advisor", 118, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -28)
-  f.gather = button(pg, "Gathering", 118, function()
+  button(pg, "Advisor", 86, function() FF.Advisor:Show() end):SetPoint("TOPLEFT", 16, -28)
+  f.gather = button(pg, "Gathering", 86, function()
     local ns = FF.gatherNS
     if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain()
     else FF:Print(FF:T("Gathering is off: the old Ore Farmer addon is still enabled, or this client gives no map positions.")) end
   end)
-  f.gather:SetPoint("TOPLEFT", 140, -28)
-  f.profs = button(pg, "Professions", 118, function() FF.Professions:Toggle() end)
-  f.profs:SetPoint("TOPLEFT", 264, -28)
+  f.gather:SetPoint("TOPLEFT", 106, -28)
+  f.profs = button(pg, "Professions", 86, function() FF.Professions:Toggle() end)
+  f.profs:SetPoint("TOPLEFT", 196, -28)
+  f.talents = button(pg, "Talents", 86, function() FF.Advisor:OpenTalents() end)
+  f.talents:SetPoint("TOPLEFT", 286, -28)
 
   -- Combat helper -------------------------------------------------------
   heading(pg, "Combat helper", -62)
