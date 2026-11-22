@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 4
+
+**The app follows the character you play.** Every time the game saves (on /reload or logout), the app switches to the realm and character you played last, with their budget and shopping list. Pick another character by hand and it stays until you play a different one. You can switch it off in the app's Settings.
+
 # FlipForever 2.5.3 Beta 3
 
 **Fewer error messages.** After a check of the error logs of all installed addons, FlipForever no longer shows "Auras cannot be accessed when secret" after a fight or a "secret string value" error from system chat messages, and the game no longer warns about a duplicate file at login. The other errors in the logs come from other addons, not from FlipForever.

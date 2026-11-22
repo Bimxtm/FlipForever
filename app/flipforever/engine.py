@@ -169,6 +169,21 @@ def characters(con, realm) -> dict[str, dict]:
     return chars
 
 
+def last_played(con) -> tuple[str, str, int] | None:
+    """The character the game saved most recently, over all realms: (realm, name, time) or None.
+    The addon stamps each character with the time it was last seen in game."""
+    best = None
+    for realm in realms(con):
+        for name, info in get_param(con, realm, "chars", {}).items():
+            try:
+                t = int((info or {}).get("t") or 0)
+            except (TypeError, ValueError):
+                continue
+            if t > 0 and (best is None or t > best[2]):
+                best = (realm, str(name), t)
+    return best
+
+
 def char_key(name: str, realm: str) -> str:
     return f"{name} @ {realm}"
 
