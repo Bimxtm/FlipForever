@@ -99,6 +99,16 @@ def latest(token: str = "", beta: bool = False) -> Release:
     return _release(data)
 
 
+def releases(token: str = "", beta: bool = False) -> list[Release]:
+    """Every installable release, newest first (betas only with beta=True), for going back to one."""
+    with _request(f"{API}/repos/{GITHUB_REPO}/releases?per_page=50", token) as r:
+        items = [d for d in json.load(r) if not d.get("draft") and (beta or not d.get("prerelease"))]
+    out = [_release(d) for d in items]
+    out = [r for r in out if r.zip_asset]
+    out.sort(key=lambda r: parse_version(r.version), reverse=True)
+    return out
+
+
 def _release(data: dict) -> Release:
     tag = data.get("tag_name") or ""
     assets = data.get("assets") or []

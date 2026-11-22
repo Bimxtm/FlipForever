@@ -375,6 +375,17 @@ class App(tk.Tk):
         e.pack(side="left", padx=6)
         e.bind("<FocusOut>", lambda _e: self._save_update_opts())
         ttk.Button(opts, text="Save", command=self._save_update_opts).pack(side="left")
+        # going back to an older version (switch: Settings, version_picker)
+        self._old_releases = []
+        if self.settings.version_picker:
+            pick = ttk.Frame(f)
+            pick.pack(fill="x", pady=(10, 0))
+            ttk.Label(pick, text="Use another version:", style="Muted.TLabel").pack(side="left")
+            self.ver_var = tk.StringVar(value="")
+            self.ver_box = ttk.Combobox(pick, textvariable=self.ver_var, values=[], state="readonly", width=22)
+            self.ver_box.pack(side="left", padx=6)
+            ttk.Button(pick, text="Load versions", command=self.load_versions).pack(side="left")
+            ttk.Button(pick, text="Install this version", command=self.install_version).pack(side="left", padx=8)
         panes = ttk.Frame(f)
         panes.pack(fill="both", expand=True, pady=(12, 0))
         panes.columnconfigure(0, weight=1)
@@ -675,6 +686,54 @@ class App(tk.Tk):
             self.upd_status.set(f"You're up to date ({VERSION}).")
             self.upd_install_btn.configure(state="disabled")
 
+    def load_versions(self):
+        self.upd_status.set("Loading the versions from GitHub...")
+        token, beta = self.settings.github_token, self.settings.beta_updates
+
+        def work():
+            try:
+                rels = updater.releases(token, beta=beta)
+                self.after(0, lambda: self._versions_loaded(rels, None))
+            except updater.UpdateError as e:
+                self.after(0, lambda: self._versions_loaded([], str(e)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _versions_loaded(self, rels, error):
+        if error:
+            self.upd_status.set(error)
+            return
+        self._old_releases = rels
+        labels = [f"{r.version}  ({r.published})" + ("  - yours" if r.version == VERSION else "") for r in rels]
+        self.ver_box["values"] = labels
+        if labels:
+            self.ver_box.current(0)
+        self.upd_status.set(f"{len(rels)} versions found. Pick one and click Install this version.")
+
+    def install_version(self):
+        i = self.ver_box.current() if hasattr(self, "ver_box") else -1
+        if i < 0 or i >= len(self._old_releases):
+            self.upd_status.set("Click Load versions first, then pick one.")
+            return
+        rel = self._old_releases[i]
+        if rel.version == VERSION:
+            self.upd_status.set(f"You already have {VERSION}.")
+            return
+        older = not updater.is_newer(rel.version)
+        msg = (f"Install FlipForever {rel.version}? You have {VERSION}. The app restarts and the addon is "
+               "replaced with the one from that version; your data stays.")
+        if older:
+            msg += ("\n\nOlder versions may miss features and fixes. Checking for updates at start is turned off, "
+                    "so the app stays on this version until you update again.")
+        if not messagebox.askyesno("FlipForever", msg):
+            return
+        if older:
+            self.settings.auto_check_updates = False
+            self.settings.addon_match_app = True
+            self.auto_upd_var.set(False)
+            self.settings.save()
+        self._release = rel
+        self.install_update()
+
     def install_update(self):
         rel = self._release
         if not rel:
@@ -710,9 +769,13 @@ class App(tk.Tk):
             addon = self.settings.addon_path()
             bundled = updater.bundled_addon_version()
             installed = updater.installed_addon_version(addon)
-            if installed and bundled and updater.is_newer(bundled, installed):
+            match = self.settings.addon_match_app   # after going back to an older version
+            if installed and bundled and (updater.is_newer(bundled, installed) or (match and bundled != installed)):
                 engine.install_addon(self.settings)
-                self.status(f"WoW addon updated {installed} -> {bundled}. Restart WoW (or /reload) to load it.")
+                self.status(f"WoW addon changed {installed} -> {bundled}. Restart WoW (or /reload) to load it.")
+            if match:
+                self.settings.addon_match_app = False
+                self.settings.save()
         except Exception:  # noqa: BLE001
             traceback.print_exc()
         # first start of the program: offer a desktop and Start menu shortcut (once)
@@ -1234,6 +1297,8 @@ class App(tk.Tk):
         section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
+        add("Choose an older version", "version_picker", "bool",
+            hint="About & updates: go back to an earlier release (applies after restarting the app)")
         add("Community page", "community", "bool", hint="updates, roadmap, bug reports and suggestions (loaded from GitHub)")
         add("Nickname for Top reporters", "nickname", width=24, hint="optional; empty = your reports stay anonymous")
         btns = ttk.Frame(f)

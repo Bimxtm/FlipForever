@@ -138,6 +138,8 @@ class Settings:
     blacklist: list = field(default_factory=list)
     auto_check_updates: bool = True
     beta_updates: bool = False    # also offer beta versions (pre-releases) for testing
+    version_picker: bool = True   # About & updates: choose and install an older version
+    addon_match_app: bool = False  # set when going back to an older version: the addon follows it once
     github_token: str = ""        # only needed while the GitHub repository is private (stays on this PC)
     character: str = ""           # selected character ("" = all characters)
     budgets: dict = field(default_factory=dict)   # "Name @ Realm - Faction" -> gold
