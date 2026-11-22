@@ -34,6 +34,14 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
 
+## [2.5.3-beta.3] - 2026-11-22 (beta)
+### Fixed
+- Combat helper buffs: no more "Auras cannot be accessed when secret" errors at the end of a fight. Buffs are read safely, and while the game keeps them hidden the last known list is used.
+- No more "Core.lua:282: attempt to index local 'msg' (a secret string value)" from system chat messages the game hides during fights. Auction house error messages are handled the same way.
+- The game no longer reports "Duplicate File Load Detected" for Locale.lua at login: the addon's file list named it twice.
+### Checked
+- The error logs of all installed addons (Swatter and FlipForever's own). Other FlipForever errors in them come from older versions and are already fixed (combat bar moved in a fight up to 2.6.0 Beta 1, waypoint arrow up to 2.7.0 Beta 2). The remaining errors come from other addons' own code and are not caused by FlipForever.
+
 ## [2.5.3-beta.2] - 2026-11-22 (beta)
 ### Changed
 - Advisor, talents: the step for unspent talent points now says where each point goes for your chosen build, with the talent, how many points and the tree (up to three in the line, the full list on hover). Builds that only name their key talents are filled lower tiers first, and a talent is only suggested once its tier is open. Points the build does not place yet are named as free. Clicking the step opens the Talents window.

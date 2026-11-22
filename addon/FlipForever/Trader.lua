@@ -574,6 +574,7 @@ FF:On("AUCTION_HOUSE_POST_ERROR", function()
 end)
 
 FF:On("UI_ERROR_MESSAGE", function(_, msg)
+  if issecretvalue and msg ~= nil and issecretvalue(msg) then msg = "?" end  -- hidden text
   if T.state == "purchasing" or T.state == "posting" then
     FF:SetStatus(FF:T("Auction house error: ") .. tostring(msg))
     local id = T.target and T.target.id

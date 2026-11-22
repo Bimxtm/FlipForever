@@ -278,7 +278,7 @@ local SOLD = formatToPattern(_G.ERR_AUCTION_SOLD_S)
 local EXPIRED = formatToPattern(_G.ERR_AUCTION_EXPIRED_S)
 
 FF:On("CHAT_MSG_SYSTEM", function(msg)
-  if not msg then return end
+  if type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end  -- hidden text (e.g. in fights)
   local name = SOLD and msg:match(SOLD)
   if name then
     FF:Log({ e = "sold", name = name, id = FF:IdFromName(name) })
