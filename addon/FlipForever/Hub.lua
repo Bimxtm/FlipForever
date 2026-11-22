@@ -636,6 +636,8 @@ local function build()
     "Set a daily or weekly profit goal with /ff goal day <gold> or /ff goal week <gold>; the Overview shows how far you are (sales after the cut minus buying).")
   feature("restock", "Restock reminders for crafted items I sell", true, nil,
     "When an item you craft and posted in the last two weeks is gone from the auction house and your bags, the auction house reminds you once a day to craft and post it again.")
+  feature("craftButton", "Profession planner: Craft button for the top recipe", true, function() if FF.Professions then pcall(FF.Professions.Refresh, FF.Professions) end end,
+    "Crafts the planner's top skill-up or profitable recipe the planned number of times (as many as your materials allow), with the profession window open.")
   feature("bestPostTime", "Show the hours my auctions sell best when posting", true, nil,
     "From your own sales: the 4-hour window of the day in which an item (or all your items) sold most. Shown when posting and in tooltips.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)

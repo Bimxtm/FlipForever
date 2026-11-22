@@ -13,6 +13,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - **Auction session summary:** when you close the auction house, one chat line sums up what you bought, posted and sold while it was open and how your gold changed. Switch in Settings, Features.
 - **Gold goals:** set a daily or weekly profit goal with `/ff goal day <gold>` or `/ff goal week <gold>`; the Overview shows how far you are. In the app, set the goals in Settings and see the progress on the Dashboard under Last 7 days. Switch in Settings, Features.
 - **Restock reminders for crafters:** when an item you craft and posted in the last two weeks is gone from the auction house and your bags, the auction house reminds you once a day to craft and post it again. Switch in Settings, Features.
+- **Craft button in the profession planner:** crafts the top skill-up or profitable recipe the planned number of times, as many as your materials allow, while that profession's window is open. Switch in Settings, Features.
 
 ## [2.7.1-beta.3] - 2026-11-22 (beta)
 ### Added

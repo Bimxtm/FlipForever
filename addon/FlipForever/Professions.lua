@@ -401,12 +401,87 @@ local function build()
   f.buy:SetPoint("BOTTOMLEFT", 14, 14)
   f.buy:SetText(FF:T("Buy missing mats at the AH"))
   f.buy:SetScript("OnClick", function() if P.mode == "profit" then P:QueueProfitMats() else P:QueueMats() end end)
+  -- Craft button (switch craftButton): crafts the top skill-up or profitable recipe the planned number of times
+  f.craft = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+  f.craft:SetSize(200, 24)
+  f.craft:SetPoint("BOTTOMRIGHT", -14, 14)
+  f.craft:SetScript("OnClick", function() P:CraftTop() end)
   f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   f.hint:SetPoint("BOTTOMLEFT", 14, 46)
   f.hint:SetPoint("RIGHT", -14, 0)
   f.hint:SetJustifyH("LEFT")
   f:Hide()
   return f
+end
+
+function P:CraftEnabled() return FlipForeverDB.settings.craftButton ~= false end
+
+-- the profession whose window is open right now (nil when none)
+function P:OpenProfession()
+  if not professionFrame() then return nil end
+  local TS = C_TradeSkillUI
+  local info = TS and TS.GetBaseProfessionInfo and TS.GetBaseProfessionInfo()
+  return info and plain(info.professionName)
+end
+
+-- what the Craft button makes: recipe, planned count, profession (top entry of the current mode)
+function P:CraftTarget()
+  if (self.mode or FlipForeverDB.settings.profMode) == "profit" then
+    local open = self:OpenProfession()
+    for _, e in ipairs(self:ProfitList()) do
+      if e.prof == open then return e.recipe, e.crafts, e.prof end
+    end
+    return nil
+  end
+  local recs = self:Plan(self.current or "")
+  local r = recs and recs[1]
+  if not r or r.learnable then return nil end
+  return r.recipe, r.crafts, self.current
+end
+
+-- how many you can make now from your bags (the game's count), capped at the plan
+function P:CraftCount(recipe, planned)
+  local TS = C_TradeSkillUI
+  local info = TS and TS.GetRecipeInfo and TS.GetRecipeInfo(recipe.id)
+  local can = info and plain(info.numAvailable) or 0
+  return math.min(planned or 1, can)
+end
+
+function P:CraftTop()
+  if not self:CraftEnabled() then return false end
+  local recipe, planned, prof = self:CraftTarget()
+  if not recipe then FF:Print(FF:T("Nothing to craft from the plan right now.")) return false end
+  if self:OpenProfession() ~= prof then
+    FF:Print(FF:T("Open your %s window to craft."):format(prof or "?")) return false
+  end
+  local n = self:CraftCount(recipe, planned)
+  if n <= 0 then
+    FF:Print(FF:T("You don't have the materials for %s - buy them first."):format(recipe.name)) return false
+  end
+  local TS = C_TradeSkillUI
+  if not (TS and TS.CraftRecipe) then return false end
+  TS.CraftRecipe(recipe.id, n)
+  FF:Print(FF:T("Crafting %dx %s."):format(n, recipe.name))
+  return true
+end
+
+function P:RefreshCraft()
+  local b = frame and frame.craft
+  if not b then return end
+  if not self:CraftEnabled() then b:Hide() return end
+  b:Show()
+  local recipe, planned, prof = self:CraftTarget()
+  if not recipe then
+    b:SetText(FF:T("Nothing to craft"))
+    b:SetEnabled(false)
+  elseif self:OpenProfession() ~= prof then
+    b:SetText(FF:T("Open %s to craft"):format(prof or "?"))
+    b:SetEnabled(false)
+  else
+    local n = self:CraftCount(recipe, planned)
+    b:SetText(FF:T("Craft %dx %s"):format(n, recipe.name))
+    b:SetEnabled(n > 0)
+  end
 end
 
 function P:Cycle(step)
@@ -476,7 +551,7 @@ function P:Refresh()
   if not (frame and frame:IsShown()) then return end
   frame.title:SetText(FF:T("|cff33ff99Flip|rForever Profession planner"))
   self.mode = self.mode or FlipForeverDB.settings.profMode or "skill"
-  if self.mode == "profit" then return self:RefreshProfit() end
+  if self.mode == "profit" then self:RefreshProfit() return self:RefreshCraft() end
   frame.h1:SetText(FF:T("Cheapest skill-ups"))
   frame.h2:SetText(FF:T("Materials for the top skill-up"))
   frame.mode:SetText(FF:T("Show profitable crafts"))
@@ -490,6 +565,7 @@ function P:Refresh()
     for _, fs in ipairs(frame.rows) do fs:SetText(FF:T("")) end
     for _, fs in ipairs(frame.mats) do fs:SetText(FF:T("")) end
     frame.hint:SetText(FF:T(""))
+    self:RefreshCraft()
     return
   end
   frame.prof:SetText(FF:T("%s  %d / %d  |cff888888(read %s)|r"):format(self.current, data.skill, data.max,
@@ -520,6 +596,7 @@ function P:Refresh()
     end
   end
   frame.hint:SetText(FF:T("Orange always gives a point; yellow about 75% and green about 25% until FlipForever has seen the real chance. Prices come from your scans; vendor goods count at about 4x their sell price."))
+  self:RefreshCraft()
 end
 
 function P:QueueMats()

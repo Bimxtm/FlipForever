@@ -3036,7 +3036,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3359,6 +3359,39 @@ FF:DB().restockSeen = nil
 P.Store, C_Item.GetItemCount = oStore, oCount
 """)
 print("restock:", L("RESTOCK"))
+lua.execute("""
+-- craft button: top skill-up (not a trainer recipe), capped by what the bags allow; profit mode only for the open profession
+local FF, P = FlipForever, FlipForever.Professions
+local oPlan, oProfit, oTS, oPF, oMode, oCur = P.Plan, P.ProfitList, C_TradeSkillUI, ProfessionsFrame, P.mode, P.current
+local made = {}
+local avail = 3
+ProfessionsFrame = { IsShown = function() return true end }
+C_TradeSkillUI = { GetBaseProfessionInfo = function() return { professionName = "Tailoring" } end,
+  GetRecipeInfo = function(id) return { numAvailable = avail } end,
+  CraftRecipe = function(id, n) made[#made + 1] = id .. "x" .. n end }
+P.Plan = function() return { { recipe = { id = 11, name = "Linen Bolt" }, crafts = 5 } }, {} end
+P.ProfitList = function() return { { recipe = { id = 21, name = "Fire Oil" }, crafts = 4, prof = "Alchemy" },
+                                   { recipe = { id = 22, name = "Silk Bag" }, crafts = 2, prof = "Tailoring" } } end
+P.mode, P.current = "skill", "Tailoring"
+local a = tostring(P:CraftTop())        -- 3 of 5 (materials)
+avail = 0
+printed = {}
+local b = tostring(P:CraftTop())        -- no materials
+local bmsg = printed[#printed] or ""
+avail = 9
+P.mode = "profit"
+local c = tostring(P:CraftTop())        -- Silk Bag: the open profession's best
+P.Plan = function() return { { recipe = { id = 12, name = "New" }, crafts = 1, learnable = true } }, {} end
+P.mode = "skill"
+local d = tostring(P:CraftTop())        -- trainer recipe: nothing to craft
+FlipForeverDB.settings.craftButton = false
+local e = tostring(P:CraftTop())
+FlipForeverDB.settings.craftButton = nil
+CRAFT = table.concat({ a, b, c, d, e, table.concat(made, ",") }, "|") .. "|" .. bmsg
+P.Plan, P.ProfitList, C_TradeSkillUI, ProfessionsFrame, P.mode, P.current = oPlan, oProfit, oTS, oPF, oMode, oCur
+""")
+print("craft button:", L("CRAFT"))
+assert L("CRAFT").startswith("true|false|true|false|false|11x3,22x2|") and "materials for Linen Bolt" in L("CRAFT"), L("CRAFT")
 assert L("RESTOCK").startswith("1|0|0|") and "item:501 is sold out (2 sold" in L("RESTOCK"), L("RESTOCK")
 assert L("GOALS") == ("  ·  goal |cffffd2000%|r of 50g|  ·  goal |cffffd20050%|r of 50g|  ·  goal |cffffd20012%|r of 200g|"
                       "  ·  goal |cff33ff99110%|r of 50g||nil"), L("GOALS")
