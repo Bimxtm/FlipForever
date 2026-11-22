@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.8] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 6: the combat helper learns from your fights per class and build, with notes after fights and `/ff combat report`.
+
 ## [2.7.0-beta.7] - 2026-11-22 (beta, branch feature/quest-helper)
 ### Added
 - From 2.5.3 Beta 5: the undercut fix (cancel and repost undercut auctions where it pays after the deposit).
@@ -66,6 +70,14 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - Talents window: your chosen Advisor build is shown right on the game's Talents window. Every talent of the build carries its place in the order, talents you have finished are marked green and the next point is marked gold.
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
+
+## [2.5.3-beta.6] - 2026-11-22 (beta)
+### Added
+- Combat helper learns from your fights, separately for each class, build and level band (shared by all your characters of that class). Every fight is recorded: casts, failed casts and why (out of range or sight, not enough mana/rage/energy, no combo points), time spent waiting between casts, time out of power, health lost, deaths and kills.
+- It compares small changes to the guide's order: two neighbouring steps swapped, and a spell that keeps failing for lack of power moved to the end. Each version gets at least 6 fights; then the one with the fastest kills (adjusted for the target's level), the least health lost and no deaths is used, with an occasional re-check so changes in gear and level are noticed. Fights against players are kept out of this.
+- After a fight it tells you what to do better when it matters (dying, waiting between casts, spells failing out of range, running out of power, losing most of your health), at most every 5 minutes.
+- `/ff combat report` (or `/ff fights`): recent fights, kills, deaths, average fight length, waiting time, spells that often fail, and the orders being compared.
+- Switches: *Combat helper: learn the best order from my fights* and *Combat helper: tell me after a fight what to do better* in Settings, Features (both on).
 
 ## [2.5.3-beta.5] - 2026-11-22 (beta)
 ### Added

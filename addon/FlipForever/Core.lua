@@ -485,6 +485,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.QuestHelper:Next()
   elseif cmd == "talents" or cmd == "talent" then
     FF.TalentOverlay:Open()
+  elseif cmd == "fights" or (cmd == "combat" and (rest == "report" or rest == "learn")) then
+    if FF.CombatLearn then FF.CombatLearn:Report() end
   elseif cmd == "combat" then
     FF.Combat:Toggle()
   elseif cmd == "combatkey" then

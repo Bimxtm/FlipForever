@@ -1,3 +1,7 @@
+# FlipForever 2.7.0 Beta 8
+
+**The combat helper learns from your fights.** It now keeps track of every fight for your class and build: what you cast, what failed and why, how long you waited between casts, when you ran out of mana, rage or energy, and how much health you lost. It tries small changes to the guide's order and keeps the one that kills fastest for you. After a fight it tells you what to do better when it matters, and `/ff combat report` shows everything it has learned. Both parts have a switch under Settings, Features. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 6.
+
 # FlipForever 2.7.0 Beta 7
 
 **Undercut auctions are now fixed, not just reported.** At the auction house, press the FlipForever button and it checks each undercut auction live. Only where reposting really pays does it offer *CANCEL*: never when the cheaper ones should sell before yours ends, never below your floor, and never when the new deposit would eat the gain. Collect the cancelled items from the mailbox, press the button again, and they go back up just under the cheapest seller. You can switch it off under Settings, Features. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 5.
@@ -51,6 +55,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 # FlipForever 2.6.0 Beta 1
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
+
+# FlipForever 2.5.3 Beta 6
+
+**The combat helper learns from your fights.** It now keeps track of every fight for your class and build: what you cast, what failed and why, how long you waited between casts, when you ran out of mana, rage or energy, and how much health you lost. It tries small changes to the guide's order and keeps the one that kills fastest for you. After a fight it tells you what to do better when it matters, and `/ff combat report` shows everything it has learned. Both parts have a switch under Settings, Features. PvP priorities follow in a later beta.
 
 # FlipForever 2.5.3 Beta 5
 
