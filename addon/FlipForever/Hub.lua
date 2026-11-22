@@ -570,41 +570,74 @@ local function build()
   f.profPanel:SetPoint("TOPLEFT", 14, -462)
 
   -- Features: one switch for everything that isn't covered above ------------
+  -- Features: one switch for everything that isn't covered above, in groups -----------------------
+  -- (the order here is the switch list in the tests)
   heading(pg, "Features", -664)
   f.features = {}
-  local function feature(key, label, y, default, after)
+  local fy = -684
+  local function group(label)
+    local fs = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    fs:SetPoint("TOPLEFT", 20, fy - 4)
+    fs:SetText("|cff33ff99" .. FF:T(label) .. "|r")
+    fy = fy - 20
+  end
+  local function feature(key, label, default, after, tip)
     local c = check(pg, label, function(self)
       FlipForeverDB.settings[key] = self:GetChecked() and true or false
       if after then after() end
     end)
-    c:SetPoint("TOPLEFT", 14, y)
+    c:SetPoint("TOPLEFT", 14, fy)
+    fy = fy - 24
     c.key, c.default = key, default
+    if tip and c.SetScript then
+      c:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine(FF:T(tip), 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      c:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
     f.features[#f.features + 1] = c
     return c
   end
-  feature("merchantStrip", "Sell junk strip under the merchant window", -684, true, function() if FF.Merchant then FF.Merchant:RefreshStrip() end end)
-  feature("autoJunk", "Always sell grey items at merchants", -708, false)
-  feature("autoRepair", "Always repair at merchants (your own gold)", -732, false)
-  feature("undercutCheck", "Check my auctions for undercuts at the auction house", -756, true)
-  feature("mailButton", "Collect auction gold button at the mailbox", -780, true)
-  feature("gearTooltip", "Gear upgrade line in item tooltips", -804, true)
-  feature("trainerReminder", "Advisor: remind me of new spells at my class trainer", -828, true)
-  feature("levelInfo", "Overview: XP per hour, time to level, rested XP", -852, true)
-  feature("threatWarning", "Combat helper: warn me about high threat", -876, true)
-  feature("mailOpenAll", "Open all mail button at the mailbox", -900, true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
-  feature("bagValue", "Overview: value of my bags, items worth posting", -924, true)
-  feature("nodeTimers", "Gathering: skip spots I gathered in the last 15 min", -948, true, function() local ns = FF.gatherNS if ns and ns.MarkDirty then ns.MarkDirty() end end)
-  feature("talentOverlay", "Show my build on the Talents window (next point marked)", -972, true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end)
-  feature("combatBuffs", "Combat helper: cast my missing buffs before a fight", -996, true, function() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end)
-  feature("undercutFix", "Undercut auctions: cancel and repost where it pays", -1020, true)
-  feature("questHelper", "Quest helper: learn quest spots, map pins, /ff quest", -1044, true, function() if FF.QuestHelper then FF.QuestHelper:RefreshMap() end end)
-  feature("combatLearn", "Combat helper: learn the best order from my fights", -1068, true, function() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end)
-  feature("combatTips", "Combat helper: tell me after a fight what to do better", -1092, true)
-  feature("combatGuide", "Combat helper: emergency key, interrupts, cooldowns for elites", -1116, true, function() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end)
-  feature("combatShare", "Share anonymous combat data to improve the helper", -1140, true)
-  feature("gearStats", "Gear finder: show the stat gains against what I wear", -1164, true)
-  feature("advisorPins", "Advisor: pin steps on the map and minimap (right-click a step)", -1188, true, function() if FF.QuestHelper then FF.QuestHelper:RefreshAll() end end)
-  feature("combatTutorial", "Combat helper: also test the orders from written class guides", -1212, true, function() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end)
+  local function combatApply() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end
+
+  group("Merchant")
+  feature("merchantStrip", "Sell junk strip under the merchant window", true, function() if FF.Merchant then FF.Merchant:RefreshStrip() end end)
+  feature("autoJunk", "Always sell grey items at merchants", false)
+  feature("autoRepair", "Always repair at merchants (your own gold)", false)
+  group("Auction house and mail")
+  feature("undercutCheck", "Check my auctions for undercuts at the auction house", true)
+  feature("undercutFix", "Undercut auctions: cancel and repost where it pays", true, nil,
+    "Only when the new price still earns more than the deposit you lose by cancelling.")
+  feature("mailButton", "Collect auction gold button at the mailbox", true)
+  feature("mailOpenAll", "Open all mail button at the mailbox", true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
+  group("Gathering and bags")
+  feature("nodeTimers", "Gathering: skip spots I gathered in the last 15 min", true, function() local ns = FF.gatherNS if ns and ns.MarkDirty then ns.MarkDirty() end end)
+  feature("bagValue", "Overview: value of my bags, items worth posting", true)
+  group("Advisor, quests and talents")
+  feature("trainerReminder", "Advisor: remind me of new spells at my class trainer", true)
+  feature("levelInfo", "Overview: XP per hour, time to level, rested XP", true)
+  feature("talentOverlay", "Show my build on the Talents window (next point marked)", true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end)
+  feature("questHelper", "Quest helper: learn quest spots, map pins, /ff quest", true, function() if FF.QuestHelper then FF.QuestHelper:RefreshMap() end end,
+    "FlipForever remembers where quest givers and objectives are as you play and shows them on the map and minimap.")
+  feature("advisorPins", "Advisor: pin steps on the map and minimap (right-click a step)", true, function() if FF.QuestHelper then FF.QuestHelper:RefreshAll() end end)
+  group("Combat helper")
+  feature("combatBuffs", "Combat helper: cast my missing buffs before a fight", true, combatApply)
+  feature("threatWarning", "Combat helper: warn me about high threat", true)
+  feature("combatLearn", "Combat helper: learn the best order from my fights", true, combatApply,
+    "Tries small changes to the spell order and keeps the one that kills fastest for you.")
+  feature("combatTips", "Combat helper: tell me after a fight what to do better", true)
+  feature("combatGuide", "Combat helper: emergency key, interrupts, cooldowns for elites", true, combatApply,
+    "Big cooldowns are kept for elites, rares, bosses and players.")
+  feature("combatTutorial", "Combat helper: also test the orders from written class guides", true, combatApply,
+    "The spell orders from WoW: Forever leveling guides are tested next to the helper's own.")
+  feature("combatShare", "Share anonymous combat data to improve the helper", true, nil,
+    "Only spell orders and fight times, no names. The desktop app sends them.")
+  group("Gear")
+  feature("gearTooltip", "Gear upgrade line in item tooltips", true)
+  feature("gearStats", "Gear finder: show the stat gains against what I wear", true)
+  pg:SetHeight(-fy + 16)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)
