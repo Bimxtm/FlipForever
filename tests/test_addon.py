@@ -1157,6 +1157,88 @@ print("undercut anchors:", (L("A1"), L("I1")), (L("A2"), L("I2")), (L("A3"), L("
 assert (L("A1"), L("I1")) == (100, 40) and (L("A2"), L("I2")) == (90, None) and (L("A3"), L("I3")) == (40, None)
 assert (L("A4"), L("I4")) == (100, None) and L("A5") == 30
 
+# --- combat helper learns from fights, per class / build / level band
+lua.execute("""
+local L = FlipForever.CombatLearn
+FlipForeverDB.combatLearn = nil
+FlipForeverDB.settings.combatLearn, FlipForeverDB.settings.combatTips = nil, nil
+L.Key = function() return "MAGE:test:11-39" end
+local base = { "Frostbolt", "Fire Blast", "Frost Nova", "Arcane Explosion" }
+-- every version gets its fights first, the guide's order included
+local seen = {}
+local function fightWith(variantSteps, dur, kill, died, hpLost)
+  L:Apply(base)
+  local name = L.current.variant
+  seen[name] = (seen[name] or 0) + 1
+  L:StartFight(100)
+  L.fight.hp0, L.fight.hpMin = 1, 1 - (hpLost or 0)
+  L:OnCast("Frostbolt", 101)
+  L:OnCast("Fire Blast", 102)
+  return L:EndFight(100 + dur, kill, died), name
+end
+L.lastTip = time()           -- no notes during the warm-up
+for i = 1, 40 do
+  -- "swap1" (Fire Blast first) kills fastest in this test
+  local name = L.current and L.current.variant
+  L:Apply(base)
+  name = L.current.variant
+  local dur = (name == "swap1") and 6 or 10
+  L:StartFight(100)
+  L:OnCast("Frostbolt", 101)
+  L:EndFight(100 + dur, true, false)
+end
+local vs = L:Store().bases[table.concat(base, ">")].variants
+LEARN_COUNTS = (vs.base and vs.base.n or 0) .. "/" .. (vs.swap1 and vs.swap1.n or 0) .. "/" .. (vs.swap2 and vs.swap2.n or 0) .. "/" .. (vs.swap3 and vs.swap3.n or 0)
+-- settled: the best version is used (no random pick)
+local oldRandom = math.random
+math.random = function() return 0.99 end
+local picked = L:Apply(base)
+math.random = oldRandom
+LEARN_PICK = L.current.variant .. ":" .. table.concat(picked, ",")
+-- a spell that keeps failing for lack of mana is tried later in the order
+local st = L:Store().spells
+st["Frost Nova"] = { cast = 4, fail = 8, power = 8 }
+local variants = L:Variants(base, L:Store())
+LEARN_LATER = variants["later:Frost Nova"] and table.concat(variants["later:Frost Nova"], ",") or "none"
+-- what to do better after a fight
+L:StartFight(200)
+L:OnCast("Frostbolt", 201)
+local rec, tip = L:EndFight(215, true, false)        -- nothing cast for 14 s: counted as 5 s of waiting (the end of a fight is capped)
+TIP_IDLE = tip
+L:StartFight(300)
+local rec2, tip2 = L:EndFight(310, false, true)
+TIP_DIED = tip2
+L:StartFight(400)
+L:OnCast("Frostbolt", 400.5)
+L.lastFailed = nil
+L:OnFail("Fireball", "range") L:OnFail("Fireball", "range") L:OnFail("Fireball", "range")
+L:OnCast("Frostbolt", 402) L:OnCast("Frostbolt", 404)
+local rec3, tip3 = L:EndFight(405, true, false)
+TIP_RANGE = tip3
+L:StartFight(500)
+local short = L:EndFight(501.5, true, false)
+SHORT_SKIPPED = short == nil
+printed = {}
+L:Report()
+LEARN_REPORT = table.concat(printed, " || ")
+-- learning switched off: the guide's order stays
+FlipForeverDB.settings.combatLearn = false
+LEARN_OFF = table.concat(L:Apply(base), ",")
+FlipForeverDB.settings.combatLearn = nil
+FlipForeverDB.combatLearn = nil
+L.Key = nil
+""")
+print("combat learning:", L("LEARN_COUNTS"), "| pick", L("LEARN_PICK"), "| later", L("LEARN_LATER"))
+print("  tips:", L("TIP_IDLE"), "|", L("TIP_DIED"), "|", L("TIP_RANGE"))
+print("  report:", L("LEARN_REPORT")[:300])
+_counts = [int(x) for x in L("LEARN_COUNTS").split("/")]
+assert all(c >= 6 for c in _counts), L("LEARN_COUNTS")
+assert L("LEARN_PICK") == "swap1:Fire Blast,Frostbolt,Frost Nova,Arcane Explosion", L("LEARN_PICK")
+assert L("LEARN_LATER") == "Frostbolt,Fire Blast,Arcane Explosion,Frost Nova"
+assert "waited 5 of 15 seconds" in L("TIP_IDLE") and "you died" in L("TIP_DIED") and "Fireball failed 3 times out of range" in L("TIP_RANGE")
+assert L("SHORT_SKIPPED") is True and "recent fights: 43, kills: 42, deaths: 1" in L("LEARN_REPORT") and "Orders being compared" in L("LEARN_REPORT")
+assert L("LEARN_OFF") == "Frostbolt,Fire Blast,Frost Nova,Arcane Explosion"
+
 # --- undercut fix: cancel and repost only where it pays after the deposit
 lua.execute("""
 local T = FlipForever.Trader
@@ -2613,7 +2695,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,combatLearn=true,combatTips=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

@@ -37,6 +37,7 @@ Advisor\Spells.lua
 Advisor\QuestStarts.lua
 Advisor\Advisor.lua
 Advisor\Combat.lua
+Advisor\CombatLearn.lua
 Advisor\Trainer.lua
 Advisor\TalentOverlay.lua
 Professions.lua

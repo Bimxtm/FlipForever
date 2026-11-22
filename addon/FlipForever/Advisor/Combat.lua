@@ -823,6 +823,11 @@ function C:Rebuild()
   self.buffs = self:MissingBuffs()
   self.buffSig = table.concat(self.buffs, ",")
   local steps, prefix = self:BuildSteps()
+  -- the order that worked best in your own fights (CombatLearn.lua; the guide's order until then)
+  if FF.CombatLearn then
+    local ok, learned = pcall(FF.CombatLearn.Apply, FF.CombatLearn, steps)
+    if ok and type(learned) == "table" then steps = learned end
+  end
   prefix = self:BuffLines() .. self:TargetPrefix() .. prefix
   -- tanks: a taunt early in every round (only if you know one)
   if self:IsTank() then
