@@ -225,6 +225,35 @@ function FF:UpdateChar()
   chars[name] = c
 end
 
+-- Best time to post (switch bestPostTime): the 4-hour window of the day in which your auctions of
+-- this item sold most (all items together when the item has fewer than 5 sales). Needs 5+ sales.
+function FF:BestPostHours(itemID)
+  if FlipForeverDB.settings.bestPostTime == false then return nil end
+  local function count(filter)
+    local hours, n = {}, 0
+    for _, e in ipairs(self:DB().log or {}) do
+      if e.e == "invoice" and e.t and (not filter or e.id == filter) then
+        local h = tonumber(date("%H", e.t)) or 0
+        hours[h] = (hours[h] or 0) + 1
+        n = n + 1
+      end
+    end
+    return hours, n
+  end
+  local hours, n = count(itemID)
+  local own = n >= 5
+  if not own then hours, n = count(nil) end
+  if n < 5 then return nil end
+  local bestStart, bestN = 0, -1
+  for h = 0, 23 do
+    local s = 0
+    for k = 0, 3 do s = s + (hours[(h + k) % 24] or 0) end
+    if s > bestN then bestStart, bestN = h, s end
+  end
+  return { from = bestStart, to = (bestStart + 4) % 24, share = bestN / n, own = own,
+    text = ("%02d:00-%02d:00%s"):format(bestStart, (bestStart + 4) % 24, own and "" or FF:T(" (all your sales)")) }
+end
+
 function FF:Log(entry)
   entry.t = entry.t or time()
   entry.char = UnitName("player")

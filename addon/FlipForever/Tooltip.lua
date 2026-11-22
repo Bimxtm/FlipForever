@@ -54,6 +54,10 @@ function TT:Lines(itemID)
     local b = entry.buy
     out[#out + 1] = { FF:T("  on your shopping list"), b.gap and FF:T("price checked live") or FF:T("max %s"):format(FF:Money(b.max)) }
   end
+  local best = FF.BestPostHours and FF:BestPostHours(itemID)
+  if best and best.own then
+    out[#out + 1] = { FF:T("  your sales peak"), best.text }
+  end
   if entry and entry.sell then
     out[#out + 1] = { FF:T("  you post at"), FF:T("%s (never below %s)"):format(FF:Money(entry.sell.normal), FF:Money(entry.sell.floor)) }
   end

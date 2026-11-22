@@ -500,6 +500,25 @@ assert L("DEV") == "2225,3875,8000,nil,nil"
 assert L("#DEL") == 3 and L("DEL[1].id") == 9003 and L("DEL[2].id") == 9001 and L("DEL[3].id") == 9002
 assert "disenchants for = ~" in L("DETIP") and "more than the item" in L("DETIP")
 lua.execute("C_Item.GetItemInfo = OLD_INFO; table.remove(FlipForever:DB().scans)")
+# --- best time to post: 6 sales of item 7777, 5 of them between 19:00 and 22:59
+lua.execute("""
+local log = FlipForever:DB().log
+BP_START = #log
+for _, h in ipairs({19, 20, 20, 21, 22, 9}) do
+  log[#log + 1] = { e = "invoice", id = 7777, q = 1, gross = 100, t = os.time({ year = 2026, month = 11, day = 20, hour = h, min = 10 }) }
+end
+local b = FlipForever:BestPostHours(7777)
+BP = b and (b.text .. "," .. tostring(b.own)) or "nil"
+FlipForeverDB.settings.bestPostTime = false
+BP_OFF = tostring(FlipForever:BestPostHours(7777))
+FlipForeverDB.settings.bestPostTime = nil
+BP_TIP = {}
+for _, l in ipairs(FlipForever.Tooltip:Lines(7777)) do BP_TIP[#BP_TIP + 1] = l[1] .. " = " .. l[2] end
+BP_TIP = table.concat(BP_TIP, " | ")
+while #log > BP_START do table.remove(log) end
+""")
+print("best post time:", L("BP"), "| off:", L("BP_OFF"), "| tooltip:", L("BP_TIP"))
+assert L("BP") == "19:00-23:00,true" and L("BP_OFF") == "nil" and "your sales peak = 19:00-23:00" in L("BP_TIP")
 # --- first-scan mode: price judged live from the listing ladder
 lua.execute("""
 FlipForever_Plan = { generated = 789, realm = "Testrealm - Horde", budget = 100000, cut = 0.05,
@@ -2985,7 +3004,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,bestPostTime=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

@@ -593,8 +593,10 @@ function T:EvaluateSell(rows)
   end
   self.pending = { id = s.id, loc = loc, qty = qty, unit = price, commodity = self.isCommodity }
   self.state = "ready_post"
+  local best = FF:BestPostHours(s.id)
   FF:SetStatus(FF:T("Post %d x %s at %s each%s."):format(qty, FF:ItemName(s.id), FF:Money(price),
-    lowestOther and (" (lowest other " .. FF:Money(lowestOther) .. ")") or " (no competition)"))
+    lowestOther and (" (lowest other " .. FF:Money(lowestOther) .. ")") or " (no competition)")
+    .. (best and (" " .. FF:T("Sells best %s.")):format(best.text) or ""))
   self:Refresh()
 end
 

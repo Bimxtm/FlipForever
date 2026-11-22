@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.4] - unreleased (beta)
+### Added
+- **Best time to post:** when posting, and in item tooltips, FlipForever shows the 4-hour window of the day in which your own auctions of that item sold most (all your sales together until the item has 5). Switch in Settings, Features.
+
 ## [2.7.1-beta.3] - 2026-11-22 (beta)
 ### Added
 - Combat helper: the spell orders from the WoW: Forever leveling guides on Warcraft Tavern are tested next to the helper's own order, and the one that kills faster for you is kept. Switch in Settings, Features.
