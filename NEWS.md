@@ -24,6 +24,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.3 Beta 8
+
+**The combat helper learns from itself.** It now only learns from the spells it cast itself (right after you press its key) and only from fights it did itself, not from the spells you cast by hand. `/ff combat report` shows how many fights that were.
+
 # FlipForever 2.5.3 Beta 7
 
 **The combat helper plays like the guides teach.** Using the WoW: Forever class guides, the combat helper now saves your big cooldowns for elites, rares and bosses, and gives you an emergency key (Shift + your combat key): it casts your first ready defensive spell and uses your best healthstone or healing potion. During a fight it tells you when to press it, when to interrupt a cast, when to slow a target that may run and when to switch to your wand. You can switch it off under Settings, Features.

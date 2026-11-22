@@ -1184,10 +1184,21 @@ for i = 1, 40 do
   name = L.current.variant
   local dur = (name == "swap1") and 6 or 10
   L:StartFight(100)
-  L:OnCast("Frostbolt", 101)
+  L:OnCast("Frostbolt", 101, true)      -- cast by the helper
   L:EndFight(100 + dur, true, false)
 end
 local vs = L:Store().bases[table.concat(base, ">")].variants
+-- a fight you did by hand teaches the helper nothing
+L:Apply(base)
+local manualVariant = L.current.variant
+local before = vs[manualVariant] and vs[manualVariant].n or 0
+L:StartFight(100)
+L:OnCast("Frostbolt", 101, false) L:OnCast("Fire Blast", 102, false) L:OnCast("Frostbolt", 103, true)
+local mrec = L:EndFight(110, true, false)
+LEARN_MANUAL = tostring(mrec.helper) .. ":" .. ((vs[manualVariant] and vs[manualVariant].n or 0) - before)
+-- a press of the helper's button marks the next cast as the helper's
+L:OnHelperPress(50)
+LEARN_PRESS = tostring(L:IsHelperCast(50.3)) .. "," .. tostring(L:IsHelperCast(51))
 LEARN_COUNTS = (vs.base and vs.base.n or 0) .. "/" .. (vs.swap1 and vs.swap1.n or 0) .. "/" .. (vs.swap2 and vs.swap2.n or 0) .. "/" .. (vs.swap3 and vs.swap3.n or 0)
 -- settled: the best version is used (no random pick)
 local oldRandom = math.random
@@ -1236,8 +1247,9 @@ assert all(c >= 6 for c in _counts), L("LEARN_COUNTS")
 assert L("LEARN_PICK") == "swap1:Fire Blast,Frostbolt,Frost Nova,Arcane Explosion", L("LEARN_PICK")
 assert L("LEARN_LATER") == "Frostbolt,Fire Blast,Arcane Explosion,Frost Nova"
 assert "waited 5 of 15 seconds" in L("TIP_IDLE") and "you died" in L("TIP_DIED") and "Fireball failed 3 times out of range" in L("TIP_RANGE")
-assert L("SHORT_SKIPPED") is True and "recent fights: 43, kills: 42, deaths: 1" in L("LEARN_REPORT") and "Orders being compared" in L("LEARN_REPORT")
+assert L("SHORT_SKIPPED") is True and "recent fights: 44, kills: 43, deaths: 1" in L("LEARN_REPORT") and "40 of 44" in L("LEARN_REPORT") and "Orders being compared" in L("LEARN_REPORT")
 assert L("LEARN_OFF") == "Frostbolt,Fire Blast,Frost Nova,Arcane Explosion"
+assert L("LEARN_MANUAL") == "false:0" and L("LEARN_PRESS") == "true,false", (L("LEARN_MANUAL"), L("LEARN_PRESS"))
 
 # --- combat guide: emergency key, interrupts, big cooldowns only for elites (WoW: Forever class guides)
 lua.execute("""
