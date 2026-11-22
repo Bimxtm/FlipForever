@@ -2,6 +2,19 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.3] - 2026-11-22 (beta)
+### Added
+- Combat helper: the spell orders from the WoW: Forever leveling guides on Warcraft Tavern are tested next to the helper's own order, and the one that kills faster for you is kept. Switch in Settings, Features.
+- `/ff help` lists every command, grouped.
+- FlipForever window: Talents button next to Advisor, Gathering and Professions.
+- Advisor: pinned steps are marked, and *Clear pins* removes all map pins. Minimap pins show what they are when you hover them.
+- A page on the game's rules and how FlipForever stays inside them (docs/RULES.md, linked from the README).
+### Changed
+- All FlipForever windows share one look: same frame, Escape closes them, and they remember where you put them.
+- Settings, Features: the switches are grouped (Merchant, Auction house and mail, Gathering and bags, Advisor, quests and talents, Combat helper, Gear), some with a short explanation on hover.
+- App Settings: grouped into sections.
+- Community page: a fuller roadmap.
+
 ## [2.7.1-beta.2] - 2026-11-22 (beta)
 ### Added
 - Report bugs and suggest ideas from the game: `/ff bug <text>`, `/ff suggest <text>` and a *Report a bug* button in the FlipForever window. The report keeps your version, class, level, zone and the last FlipForever errors; the app sends it after the next save and it shows up as a ticket on the Community page.

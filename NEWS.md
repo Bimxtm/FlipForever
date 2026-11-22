@@ -1,3 +1,10 @@
+# FlipForever 2.7.1 Beta 3
+
+- **Combat helper:** also tests the spell orders from written WoW: Forever class guides and keeps whatever kills faster for you.
+- **Tidier windows:** one look for every window, grouped settings in the game and the app, a Talents button, and `/ff help` with every command.
+- **Advisor pins:** pinned steps are marked, *Clear pins* removes them, minimap pins explain themselves.
+- **Fair play:** a new page on the game's rules and how FlipForever stays inside them.
+
 # FlipForever 2.7.1 Beta 2
 
 - **Report from the game:** `/ff bug <text>`, `/ff suggest <text>` or the *Report a bug* button. Your report becomes a ticket on the Community page, where you can follow its status.
