@@ -35,6 +35,8 @@
 
 
 
+
+- 2.5.3 beta 7 (owner request 22 Nov): combat helper part 2 from the WoW: Forever class guides (Skill Capped): big cooldowns for elites/bosses, emergency key, interrupt/slow/wand advice in fights.
 - 2.5.3 beta 6 (owner request 22 Nov): combat helper learns per class/build/level band from fights (order versions compared, notes after fights, /ff combat report). Next: PvP priorities from WoW: Forever PvP guides.
 - 2.5.3 beta 5 (owner request 22 Nov, top priority): undercut auctions are cancelled and reposted where it pays after the deposit, one key press each.
 - 2.5.3 beta 4 (owner suggestion 21 Nov 08:06): the app switches to the character you played last after each import.

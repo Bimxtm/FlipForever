@@ -1239,6 +1239,61 @@ assert "waited 5 of 15 seconds" in L("TIP_IDLE") and "you died" in L("TIP_DIED")
 assert L("SHORT_SKIPPED") is True and "recent fights: 43, kills: 42, deaths: 1" in L("LEARN_REPORT") and "Orders being compared" in L("LEARN_REPORT")
 assert L("LEARN_OFF") == "Frostbolt,Fire Blast,Frost Nova,Arcane Explosion"
 
+# --- combat guide: emergency key, interrupts, big cooldowns only for elites (WoW: Forever class guides)
+lua.execute("""
+local GD = FlipForever.CombatGuide
+local AD = FlipForever.Advisor
+local oldPlayer, oldKnown = AD.Player, AD.KnownSpells
+AD.Player = function() return { class = "WARRIOR", level = 40 } end
+local KNOWN = { ["Shield Wall"] = true, ["Retaliation"] = true, ["Pummel"] = true, ["Hamstring"] = true,
+                ["Recklessness"] = true, ["Mortal Strike"] = true, ["Heroic Strike"] = true }
+AD.KnownSpells = function() return KNOWN end
+FlipForeverDB.settings.combatGuide = nil
+local steps = { "Recklessness", "Mortal Strike", "Heroic Strike" }
+GUIDE_NORMAL = table.concat(GD:FilterSteps(steps, { class = "normal", level = 40 }), ",")
+GUIDE_ELITE = table.concat(GD:FilterSteps(steps, { class = "elite", level = 40 }), ",")
+GUIDE_HIGHER = table.concat(GD:FilterSteps(steps, { class = "normal", level = 44 }), ",")
+-- the emergency macro: defensives in the guide's order, then the best healthstone and potion carried
+local oldCount = C_Item and C_Item.GetItemCount
+C_Item = C_Item or {}
+local BAG = { [9421] = 1, [858] = 3, [13446] = 0 }
+C_Item.GetItemCount = function(id) return BAG[id] or 0 end
+GUIDE_MACRO, GUIDE_FIRST = GD:EmergencyMacro()
+-- advice during a fight
+local oldLock, oldHealth, oldMax, oldCast = InCombatLockdown, UnitHealth, UnitHealthMax, UnitCastingInfo
+InCombatLockdown = function() return true end
+GD.emergencyFirst, GD.emergencyLabel, GD.emergencyKey = "Shield Wall", "Shield Wall", "SHIFT-+"
+local HP = { player = 30, target = 100 }
+UnitHealth = function(u) return HP[u] or 100 end
+UnitHealthMax = function() return 100 end
+HINT_LOW = GD:Hint()
+HP.player = 90
+UnitCastingInfo = function(u) if u == "target" then return "Heal", nil, nil, nil, nil, nil, nil, false end end
+local oldExists, oldAttack = UnitExists, UnitCanAttack
+UnitExists = function() return true end
+UnitCanAttack = function() return true end
+HINT_KICK = GD:Hint()
+UnitCastingInfo = function() return nil end
+UnitChannelInfo = UnitChannelInfo or function() return nil end
+HINT_NONE = GD:Hint()
+FlipForeverDB.settings.combatGuide = false
+HINT_OFF = GD:Hint()
+GUIDE_OFF = table.concat(GD:FilterSteps(steps, { class = "normal", level = 40 }), ",")
+FlipForeverDB.settings.combatGuide = nil
+InCombatLockdown, UnitHealth, UnitHealthMax, UnitCastingInfo = oldLock, oldHealth, oldMax, oldCast
+UnitExists, UnitCanAttack = oldExists, oldAttack
+C_Item.GetItemCount = oldCount
+AD.Player, AD.KnownSpells = oldPlayer, oldKnown
+GD.emergencyFirst, GD.emergencyLabel, GD.emergencyKey = nil, nil, nil
+""")
+print("combat guide:", L("GUIDE_NORMAL"), "|", L("GUIDE_ELITE"), "|", L("GUIDE_HIGHER"), "| macro", repr(L("GUIDE_MACRO")))
+print("  hints:", L("HINT_LOW"), "|", L("HINT_KICK"), "|", L("HINT_NONE"), "|", L("HINT_OFF"))
+assert L("GUIDE_NORMAL") == "Mortal Strike,Heroic Strike" and L("GUIDE_ELITE") == "Recklessness,Mortal Strike,Heroic Strike"
+assert L("GUIDE_HIGHER") == "Recklessness,Mortal Strike,Heroic Strike" and L("GUIDE_OFF") == "Recklessness,Mortal Strike,Heroic Strike"
+assert L("GUIDE_MACRO") == "/cast Shield Wall\n/cast Retaliation\n/use item:9421\n/use item:858" and L("GUIDE_FIRST") == "Shield Wall"
+assert "Low health" in L("HINT_LOW") and "SHIFT-+" in L("HINT_LOW") and "Interrupt Heal: Pummel" in L("HINT_KICK")
+assert L("HINT_NONE") is None and L("HINT_OFF") is None
+
 # --- undercut fix: cancel and repost only where it pays after the deposit
 lua.execute("""
 local T = FlipForever.Trader
@@ -2012,12 +2067,18 @@ lua.execute("""
 local C = FlipForever.Combat
 BOUND = {}
 local oldSet = SetOverrideBindingClick
-SetOverrideBindingClick = function(owner, prio, key, button) BOUND[#BOUND + 1] = key end
+EBOUND = {}
+SetOverrideBindingClick = function(owner, prio, key, button)
+  if button == "FlipForeverEmergencyButton" then EBOUND[#EBOUND + 1] = key else BOUND[#BOUND + 1] = key end
+end
 FlipForeverDB.settings.combatKey = nil
 if not C:Enabled() then C:Toggle() end
 BOUND = {}
 C:Apply()
 KEYS_DEFAULT = table.concat(BOUND, ",")
+EKEYS = {}
+for _, k in ipairs(FlipForever.CombatGuide:Keys()) do EKEYS[#EKEYS + 1] = k end
+EKEYS = table.concat(EKEYS, ",")
 BOUND = {}
 C:SetKey("F")
 KEYS_OWN = table.concat(BOUND, ",")
@@ -2030,6 +2091,7 @@ C:Toggle()
 SetOverrideBindingClick = oldSet
 """)
 print("combat keys: default", L("KEYS_DEFAULT"), "| own", L("KEYS_OWN"), "| cleared", repr(L("KEYS_CLEARED")), "| stored", L("STORED"))
+assert L("EKEYS") == "SHIFT-+,SHIFT-NUMPADPLUS", L("EKEYS")   # emergency key: Shift + the combat key
 assert L("KEYS_DEFAULT") == "+,NUMPADPLUS" and L("KEYS_OWN") == "F" and L("KEYS_CLEARED") == "" and L("STORED") == "false"
 
 # --- per-character plans
@@ -2695,7 +2757,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,combatLearn=true,combatTips=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,combatLearn=true,combatTips=true,combatGuide=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
