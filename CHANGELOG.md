@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.11] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 9: shared combat learning (anonymous summaries, merged into each release; warning once, can be switched off).
+
 ## [2.7.0-beta.10] - 2026-11-22 (beta, branch feature/quest-helper)
 ### Changed
 - From 2.5.3 Beta 8: combat learning counts only the helper's own casts and fights; fix for the "you waited" note.
@@ -78,6 +82,12 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - Talents window: your chosen Advisor build is shown right on the game's Talents window. Every talent of the build carries its place in the order, talents you have finished are marked green and the next point is marked gold.
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
+
+## [2.5.3-beta.9] - 2026-11-22 (beta)
+### Added
+- Shared combat learning: what every player's combat helper learns now improves the helper for everyone. The app sends an anonymous summary (class, build and level band, the spell orders compared, fight counts, kills, fight time, deaths and health lost; no character, realm or account names, no chat) at most once a day, only when something changed. Each release starts from what worked across all players; your own fights still decide (the shared results count as at most 20 fights).
+- A warning says so the first time (in game and in the app). Switch it off in game under Settings, Features (*Share anonymous combat data*) or in the app's Settings.
+- Release builds merge the shared summaries into the addon (tools/merge_combat_learning.py, Advisor/CombatShared.lua).
 
 ## [2.5.3-beta.8] - 2026-11-22 (beta)
 ### Changed

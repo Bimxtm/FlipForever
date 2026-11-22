@@ -19,3 +19,8 @@ Thumbs.db
 desktop.ini
 
 tests/luapkg/
+
+# raw combat summaries from the #combat-data channel (install IDs); only the sums in tools/combat_shared.json are committed
+tools/combat_inbox/
+# the #combat-data webhook address (built into the app, never in the repository)
+app/flipforever/_webhook.py

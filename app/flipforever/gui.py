@@ -1038,6 +1038,8 @@ class App(tk.Tk):
             hint="then plays a sound and pops up: click Reload in game to load it")
         add("Switch to the character I play", "auto_character", "bool",
             hint="after each import, picks the character the game saved last")
+        add("Share anonymous combat data", "share_combat", "bool",
+            hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
         btns = ttk.Frame(f)
         btns.grid(row=row, column=0, columnspan=3, sticky="w", pady=(18, 0))
         ttk.Button(btns, text="Save settings", style="Accent.TButton", command=self.save_settings).pack(side="left")
@@ -1165,12 +1167,29 @@ class App(tk.Tk):
             self.settings.realm = res["realms"][0]
             self.settings.save()
         switched = self._follow_played_character()
+        self._share_combat(res.get("combat") or {}, res.get("combat_share", True))
         self.refresh(commit_tuning=True)
         if switched:
             self.status(f"Switched to {switched}, the character you played last.")
         # a new scan arrived: build the shopping list straight away and tell the player
         if res["scans"] > 0 and self.settings.auto_build:
             self._auto_build()
+
+    def _share_combat(self, learn, allowed_in_game):
+        """Send the combat helper's anonymous learning (share.py): warn once first, then in the background."""
+        from . import share
+        if not self.settings.share_combat or not allowed_in_game or not share.summarize(learn):
+            return
+        if not self.settings.share_warned:
+            self.settings.share_warned = True
+            self.settings.save()
+            try:
+                messagebox.showinfo("FlipForever", share.WARNING)
+            except tk.TclError:
+                pass
+            if not self.settings.share_combat:
+                return
+        threading.Thread(target=lambda: share.send(self.settings, learn, allowed_in_game), daemon=True).start()
 
     def _follow_played_character(self):
         """Switch realm and character to the one the game saved last, once per new character:

@@ -1,3 +1,7 @@
+# FlipForever 2.7.0 Beta 11
+
+**The combat helper learns from all players.** What your combat helper learns now also helps everyone else: the app shares an anonymous summary (class, build, the spell orders it compared and how long its fights took; no names, no chat), and every new version starts from what worked best for all players. You can switch this off in game under Settings, Features ("Share anonymous combat data") or in the app's Settings. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 9.
+
 # FlipForever 2.7.0 Beta 10
 
 **The combat helper learns from itself.** It now only learns from the spells it cast itself (right after you press its key) and only from fights it did itself, not from the spells you cast by hand. `/ff combat report` shows how many fights that were. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 8.
@@ -63,6 +67,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 # FlipForever 2.6.0 Beta 1
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
+
+# FlipForever 2.5.3 Beta 9
+
+**The combat helper learns from all players.** What your combat helper learns now also helps everyone else: the app shares an anonymous summary (class, build, the spell orders it compared and how long its fights took; no names, no chat), and every new version starts from what worked best for all players. You can switch this off in game under Settings, Features ("Share anonymous combat data") or in the app's Settings.
 
 # FlipForever 2.5.3 Beta 8
 
