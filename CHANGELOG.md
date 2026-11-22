@@ -6,6 +6,7 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 ### Added
 - **Best time to post:** when posting, and in item tooltips, FlipForever shows the 4-hour window of the day in which your own auctions of that item sold most (all your sales together until the item has 5). Switch in Settings, Features.
 - **Dungeon advisor:** of the dungeons around your level, the Advisor names the one with the most upgrades for your weak gear slots (for your class's armor), lists the drops when you hover it and points the arrow to the entrance when you click it. Switch in Settings, Features.
+- **Price chart in Deals (app):** select an item in the Deals tab to see its cheapest and typical price and the amount listed over the last 14 days below the list. Switch in the app's Settings (Price chart under Deals).
 
 ## [2.7.1-beta.3] - 2026-11-22 (beta)
 ### Added

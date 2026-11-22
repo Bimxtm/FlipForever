@@ -115,6 +115,7 @@ class Settings:
     hold_days: float = 2.0        # buy at most what you can sell in ~this many days
     min_sales_per_day: float = 3.0  # skip items the market buys fewer of per day
     min_sell_chance: float = 0.55   # skip items whose auctions sell less often than this
+    deal_chart: bool = True         # Deals: price and listed amount of the selected item over 14 days
     starter_mode: bool = True       # before there's history: deep markets, price checked live in game
     starter_min_listed: int = 50    # "deep market" = at least this many units listed
     max_units_per_item: int = 200

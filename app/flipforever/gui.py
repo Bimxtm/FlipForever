@@ -1206,9 +1206,38 @@ class App(tk.Tk):
         cols = ("Item", "Now", "7-day trend", "Fair value", "Max buy", "Profit/unit", "ROI", "Sells/day", "Sells in",
                 "Sell chance", "Buy qty", "Confidence", "Note")
         widths = (190, 85, 80, 85, 85, 85, 55, 70, 70, 80, 60, 80, 200)
+        # price chart of the selected item (switch deal_chart), below the list
+        self.deal_chart_box = ttk.Frame(self.tab_deals)
+        self.deal_chart_title = tk.StringVar(value="Select an item to see its price and listed amount over 14 days.")
+        ttk.Label(self.deal_chart_box, textvariable=self.deal_chart_title, style="Muted.TLabel").pack(anchor="w", pady=(6, 2))
+        self.deal_chart = tk.Canvas(self.deal_chart_box, bg=PANEL, highlightthickness=0, height=170)
+        self.deal_chart.pack(fill="x")
+        self._deal_chart_hist, self._deal_chart_marks = [], ()
+        self.deal_chart.bind("<Configure>", lambda e: self._draw_history(self.deal_chart, self._deal_chart_hist,
+                                                                        self._deal_chart_marks))
         frame, self.deal_tree = self._tree(self.tab_deals, cols, widths)
+        self.deal_chart_box.pack(side="bottom", fill="x")
         frame.pack(fill="both", expand=True)
         self.deal_tree.bind("<Double-1>", lambda e: self._show_item(self.deal_tree))
+        self.deal_tree.bind("<<TreeviewSelect>>", lambda e: self._update_deal_chart())
+
+    def _update_deal_chart(self):
+        """Deals: draw the selected item's last 14 days (cheapest, typical, listed amount) below the list."""
+        if not getattr(self.settings, "deal_chart", True):
+            self.deal_chart_box.pack_forget()
+            return
+        if not self.deal_chart_box.winfo_ismapped():
+            self.deal_chart_box.pack(side="bottom", fill="x", before=self.deal_tree.master)
+        sel = self.deal_tree.selection()
+        d = sel and getattr(self, "_deal_ids", {}).get(sel[0])
+        if not d:
+            self._deal_chart_hist, self._deal_chart_marks = [], ()
+            self.deal_chart_title.set("Select an item to see its price and listed amount over 14 days.")
+        else:
+            self._deal_chart_hist = engine.price_history(self.con, self.realm, d.id)
+            self._deal_chart_marks = tuple(x for x in ((d.max_buy, GOLD, "max buy"), (d.market, MUTED, "fair")) if x[0])
+            self.deal_chart_title.set(f"{d.name}: last 14 days (double-click for a larger chart)")
+        self._draw_history(self.deal_chart, self._deal_chart_hist, self._deal_chart_marks)
 
     def _fill_deals(self):
         rows = []
@@ -1242,6 +1271,7 @@ class App(tk.Tk):
                          "deal" if d.is_deal else ("bad" if not d.fast else "muted")))
         self._fill(self.deal_tree, rows)
         self._deal_ids = dict(zip(self.deal_tree.get_children(), shown))
+        self._update_deal_chart()
         margin = self.settings.min_margin * (self.learned.margin_factor if self.learned else 1)
         n_fast = sum(1 for d in self.deals if d.fast and not d.starter)
         n_start = sum(1 for d in self.deals if d.starter)
@@ -1301,37 +1331,54 @@ class App(tk.Tk):
         ttk.Label(win, text=header, style="H.TLabel", padding=10).pack(anchor="w")
         c = tk.Canvas(win, bg=PANEL, highlightthickness=0)
         c.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        c.bind("<Configure>", lambda e: self._draw_history(c, hist, marks))
 
-        def draw(_e=None):
-            c.delete("all")
-            w, h = c.winfo_width(), c.winfo_height()
-            if len(hist) < 2:
-                c.create_text(w / 2, h / 2, text="Not enough history yet.", fill=MUTED)
-                return
-            t0, t1 = hist[0][0], hist[-1][0]
-            vals = [p for row in hist for p in row[1:3] if p] + [m[0] for m in marks]
-            lo, hi = min(vals) * 0.9, max(vals) * 1.05
-            if hi <= lo:
-                hi = lo + 1
+    @staticmethod
+    def _draw_history(c, hist, marks):
+        """Draw price history rows (t, cheapest, typical, listed) with marker lines; listed amount as grey bars."""
+        c.delete("all")
+        w, h = c.winfo_width(), c.winfo_height()
+        if len(hist) < 2:
+            c.create_text(w / 2, h / 2, text="Not enough history yet.", fill=MUTED)
+            return
+        t0, t1 = hist[0][0], hist[-1][0]
+        vals = [p for row in hist for p in row[1:3] if p] + [m[0] for m in marks]
+        if not vals:
+            c.create_text(w / 2, h / 2, text="Not enough history yet.", fill=MUTED)
+            return
+        lo, hi = min(vals) * 0.9, max(vals) * 1.05
+        if hi <= lo:
+            hi = lo + 1
 
-            def xy(t, v):
-                return 60 + (t - t0) / max(1, t1 - t0) * (w - 80), 10 + (1 - (v - lo) / (hi - lo)) * (h - 40)
-            for v, col, label in marks:
-                _, y = xy(t0, v)
-                c.create_line(60, y, w - 20, y, fill=col, dash=(4, 3))
-                c.create_text(w - 22, y - 8, text=label, fill=col, anchor="e", font=("Segoe UI", 8))
-            for idx, col in ((2, "#6c8cff"), (1, ACCENT)):
-                line = []
-                for row in hist:
+        def xy(t, v):
+            return 60 + (t - t0) / max(1, t1 - t0) * (w - 80), 10 + (1 - (v - lo) / (hi - lo)) * (h - 40)
+        # listed amount: thin bars along the bottom third, own scale
+        qmax = max((row[3] or 0) for row in hist) if len(hist[0]) > 3 else 0
+        if qmax:
+            base = h - 30
+            for row in hist:
+                x, _ = xy(row[0], lo)
+                top = base - (row[3] or 0) / qmax * (h - 40) / 3
+                c.create_line(x, base, x, top, fill="#4a5060", width=3)
+            c.create_text(w - 22, base - (h - 40) / 3 - 6, text=f"listed (max {qmax:,})", fill=MUTED, anchor="e",
+                          font=("Segoe UI", 8))
+        for v, col, label in marks:
+            _, y = xy(t0, v)
+            c.create_line(60, y, w - 20, y, fill=col, dash=(4, 3))
+            c.create_text(w - 22, y - 8, text=label, fill=col, anchor="e", font=("Segoe UI", 8))
+        for idx, col in ((2, "#6c8cff"), (1, ACCENT)):
+            line = []
+            for row in hist:
+                if row[idx]:
                     line += xy(row[0], row[idx])
+            if len(line) >= 4:
                 c.create_line(line, fill=col, width=2)
-            for k in range(5):
-                v = lo + (hi - lo) * k / 4
-                _, y = xy(t0, v)
-                c.create_text(54, y, text=money(v, short=True), fill=MUTED, anchor="e", font=("Segoe UI", 8))
-            c.create_text(70, h - 14, text="green = cheapest listing   blue = typical (25th percentile)", fill=MUTED,
-                          anchor="w", font=("Segoe UI", 8))
-        c.bind("<Configure>", draw)
+        for k in range(5):
+            v = lo + (hi - lo) * k / 4
+            _, y = xy(t0, v)
+            c.create_text(54, y, text=money(v, short=True), fill=MUTED, anchor="e", font=("Segoe UI", 8))
+        c.create_text(70, h - 14, text="green = cheapest listing   blue = typical (25th percentile)   grey = amount listed",
+                      fill=MUTED, anchor="w", font=("Segoe UI", 8))
 
     # selling
     def _build_sell(self):
@@ -1421,6 +1468,8 @@ class App(tk.Tk):
         add("Must sell within (days)", "hold_days", width=12, hint="only buy as much as sells in this many days; slower items are skipped")
         add("Minimum market sales per day", "min_sales_per_day", width=12, hint="items the market buys fewer of are never bought")
         add("Minimum sell chance", "min_sell_chance", width=12, hint="0.55 = at least 55% of auctions must sell (learned from your sales)")
+        add("Price chart under Deals", "deal_chart", "bool",
+            hint="the selected item's cheapest and typical price and the amount listed over the last 14 days")
         add("First-scan mode", "starter_mode", "bool", hint="buy right after one scan: deep markets, price judged live in game")
         add("  deep market = units listed", "starter_min_listed", width=12, hint="only items with at least this many listed")
         add("Max units per item", "max_units_per_item", width=12)
