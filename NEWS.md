@@ -24,6 +24,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.3 Beta 4
+
+**The app follows the character you play.** Every time the game saves (on /reload or logout), the app switches to the realm and character you played last, with their budget and shopping list. Pick another character by hand and it stays until you play a different one. You can switch it off in the app's Settings.
+
 # FlipForever 2.5.3 Beta 3
 
 **Fewer error messages.** After a check of the error logs of all installed addons, FlipForever no longer shows "Auras cannot be accessed when secret" after a fight or a "secret string value" error from system chat messages, and the game no longer warns about a duplicate file at login. The other errors in the logs come from other addons, not from FlipForever.
