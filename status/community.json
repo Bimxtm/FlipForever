@@ -4,7 +4,7 @@
  "roadmap": [
   {"text": "Community page: bug reports, suggestions and the Top reporters board in the app", "status": "done", "version": "2.7.1-beta.2"},
   {"text": "Report bugs and suggest ideas from the game (/ff bug, /ff suggest)", "status": "done", "version": "2.7.1-beta.2"},
-  {"text": "Combat helper: more knowledge from written tutorials and videos", "status": "planned"},
+  {"text": "Combat helper: more knowledge from written tutorials and videos", "status": "in_progress"},
   {"text": "Gear finder: show the stat gains of each upgrade", "status": "done", "version": "2.7.1-beta.2"},
   {"text": "Advisor steps shown on the map", "status": "done", "version": "2.7.1-beta.2"},
   {"text": "A visual pass over the in-game windows", "status": "planned"},

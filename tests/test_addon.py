@@ -1211,6 +1211,16 @@ local st = L:Store().spells
 st["Frost Nova"] = { cast = 4, fail = 8, power = 8 }
 local variants = L:Variants(base, L:Store())
 LEARN_LATER = variants["later:Frost Nova"] and table.concat(variants["later:Frost Nova"], ",") or "none"
+-- the order from written guides is one more version (known spells only, no big cooldowns left out by the helper)
+local oldKnown = FlipForever.Advisor.KnownSpells
+FlipForever.Advisor.KnownSpells = function() return { ["Fireball"] = true, ["Fire Blast"] = true, ["Scorch"] = true, ["Combustion"] = true } end
+local fv = L:Variants({ "Fireball", "Fireball", "Fire Blast" }, L:Store(), "MAGE:fire:40-60")
+LEARN_GUIDE = fv.guide and table.concat(fv.guide, ",") or "none"
+FlipForeverDB.settings.combatTutorial = false
+fv = L:Variants({ "Fireball", "Fireball", "Fire Blast" }, L:Store(), "MAGE:fire:40-60")
+LEARN_GUIDE = LEARN_GUIDE .. "|" .. tostring(fv.guide == nil)
+FlipForeverDB.settings.combatTutorial = nil
+FlipForever.Advisor.KnownSpells = oldKnown
 -- what to do better after a fight
 L:StartFight(200)
 L:OnCast("Frostbolt", 201)
@@ -1245,6 +1255,7 @@ print("  report:", L("LEARN_REPORT")[:300])
 _counts = [int(x) for x in L("LEARN_COUNTS").split("/")]
 assert all(c >= 6 for c in _counts), L("LEARN_COUNTS")
 assert L("LEARN_PICK") == "swap1:Fire Blast,Frostbolt,Frost Nova,Arcane Explosion", L("LEARN_PICK")
+assert L("LEARN_GUIDE") == "Scorch,Fireball,Fire Blast,Fireball,Fireball|true", L("LEARN_GUIDE")
 assert L("LEARN_LATER") == "Frostbolt,Fire Blast,Arcane Explosion,Frost Nova"
 assert "waited 5 of 15 seconds" in L("TIP_IDLE") and "you died" in L("TIP_DIED") and "Fireball failed 3 times out of range" in L("TIP_RANGE")
 assert L("SHORT_SKIPPED") is True and "recent fights: 44, kills: 43, deaths: 1" in L("LEARN_REPORT") and "40 of 44" in L("LEARN_REPORT") and "Orders being compared" in L("LEARN_REPORT")
@@ -2845,7 +2856,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true,gearStats=true,advisorPins=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true,gearStats=true,advisorPins=true,combatTutorial=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

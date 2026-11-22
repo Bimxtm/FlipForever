@@ -55,7 +55,7 @@ end
 
 -- Versions of the order ---------------------------------------------------------------------------
 -- base: the guide's order (English names). Returns { name = steps } for the versions worth trying.
-function L:Variants(base, store)
+function L:Variants(base, store, key)
   local out = { base = base }
   local n = #base
   for i = 1, math.min(3, n - 1) do
@@ -79,6 +79,13 @@ function L:Variants(base, store)
     for _, s in ipairs(base) do if s ~= worst then v[#v + 1] = s end end
     v[#v + 1] = worst
     out["later:" .. worst] = v
+  end
+  -- the order from written class guides (CombatGuide.lua), tested like the others
+  local GD = FF.CombatGuide
+  if key and GD and GD.TutorialSteps and FlipForeverDB.settings.combatTutorial ~= false then
+    local okK, known = pcall(function() return FF.Advisor:KnownSpells() end)
+    local ok, v = pcall(GD.TutorialSteps, GD, key, base, okK and known or nil)
+    if ok and v then out.guide = v end
   end
   return out
 end
@@ -148,8 +155,8 @@ function L:Apply(steps)
   local sig = table.concat(steps, ">")
   store.bases[sig] = store.bases[sig] or { variants = {} }
   local bstore = store.bases[sig]
-  local variants = self:Variants(steps, store)
   local key = self:Key()
+  local variants = self:Variants(steps, store, key)
   local name, settled = self:Pick(variants, bstore, nil, key, sig)
   self.current = { key = key, sig = sig, variant = name }
   if settled and name ~= "base" and bstore.told ~= name and self:TipsOn() then

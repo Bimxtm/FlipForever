@@ -232,3 +232,80 @@ function GD:SetKey(key)
   C:Apply()
   return true
 end
+
+-- Orders from written leveling guides ----------------------------------------------------------------
+-- Part 3 of the combat helper: the single-target priorities from the WoW: Forever leveling guides on
+-- Warcraft Tavern (warcrafttavern.com/forever/guides, read 22 Nov 2026), turned into a repeating order
+-- per class and build (the "combat" key of the build). Spells that only fire after a proc, a dodge or
+-- below 20% health (Overpower, Revenge, Execute, Shadowburn, Ice Lance) are left out, and so are the
+-- big cooldowns (kept for targets that deserve them, see GD.CLASS). The combat learner tries this
+-- order as one more version next to the helper's own and keeps whichever kills faster for you.
+GD.TUTORIAL_SOURCE = "Warcraft Tavern, WoW: Forever leveling guides (22 Nov 2026)"
+GD.TUTORIAL = {
+  WARRIOR = {
+    arms = { "Battle Shout", "Rend", "Mortal Strike", { "Slam", "Heroic Strike" }, "Mortal Strike", "Heroic Strike" },
+    fury = { "Battle Shout", "Bloodthirst", "Whirlwind", "Heroic Strike", "Bloodthirst", "Heroic Strike" },
+    prot = { "Battle Shout", "Thunder Clap", "Shield Slam", "Rend", "Heroic Strike", "Shield Slam" },
+  },
+  PALADIN = {
+    default = { { "Seal of Command", "Seal of Righteousness" }, "Judgement", "Holy Strike", "Holy Strike", { "Seal of Command", "Seal of Righteousness" } },
+    prot = { { "Seal of Fury", "Seal of Righteousness" }, "Judgement", "Consecration", "Holy Strike", "Holy Strike" },
+    holy = { "Seal of Righteousness", "Holy Shock", "Judgement", "Consecration", "Holy Strike" },
+  },
+  HUNTER = {
+    bm = { "Serpent Sting", "Arcane Shot", { "Aimed Shot", "Arcane Shot" }, "Arcane Shot" },
+    mm = { "Serpent Sting", { "Sniper Shot", "Arcane Shot" }, "Arcane Shot", { "Aimed Shot", "Arcane Shot" } },
+    sv = { "Serpent Sting", "Arcane Shot", "Raptor Strike", { "Immolation Trap", "Raptor Strike" }, "Raptor Strike" },
+  },
+  ROGUE = {
+    combat = { "Sinister Strike", "Slice and Dice", { "Shank", "Sinister Strike" }, "Sinister Strike", "Sinister Strike", "Eviscerate" },
+    assa = { { "Mutilate", "Sinister Strike" }, "Slice and Dice", { "Shank", "Sinister Strike" }, { "Mutilate", "Sinister Strike" }, "Eviscerate" },
+    sub = { "Hemorrhage", { "Ghostly Strike", "Hemorrhage" }, "Slice and Dice", { "Shank", "Hemorrhage" }, "Hemorrhage", "Eviscerate" },
+    sub_bleed = { "Hemorrhage", "Slice and Dice", "Hemorrhage", { "Ghostly Strike", "Hemorrhage" }, "Hemorrhage", { "Rupture", "Eviscerate" } },
+  },
+  PRIEST = {
+    shadow = { "Shadow Word: Pain", "Mind Blast", { "Mind Flay", "Smite" }, { "Devouring Plague", "Mind Flay", "Smite" }, { "Mind Flay", "Smite" } },
+    default = { "Power Word: Shield", "Smite", "Shadow Word: Pain", { "Penance", "Smite" }, "Smite" },
+  },
+  SHAMAN = {
+    enh = { "Lightning Shield", "Flame Shock", { "Stormstrike", "Earth Shock" }, "Earth Shock", { "Stormstrike", "Earth Shock" } },
+    ele = { "Lightning Shield", { "Lava Burst", "Lightning Bolt" }, "Flame Shock", "Lightning Bolt", { "Lava Burst", "Lightning Bolt" }, "Lightning Bolt" },
+  },
+  MAGE = {
+    fire = { { "Scorch", "Fireball" }, "Fireball", "Fire Blast", "Fireball", "Fireball" },
+    arcane = { "Arcane Blast", "Arcane Blast", "Arcane Blast", { "Arcane Wrath", "Arcane Blast" }, "Fire Blast" },
+  },
+  WARLOCK = {
+    aff = { { "Bane of Agony", "Curse of Agony" }, "Corruption", "Immolate", "Siphon Life", { "Wrack", "Drain Life", "Shadow Bolt" }, { "Drain Life", "Shadow Bolt" } },
+    demo = { "Searing Pain", { "Bane of Agony", "Curse of Agony" }, "Corruption", "Immolate", "Searing Pain", { "Drain Life", "Shadow Bolt" } },
+    destro = { { "Curse of the Elements", "Bane of Agony", "Curse of Agony" }, "Immolate", { "Conflagrate", "Shadow Bolt" }, { "Incinerate", "Shadow Bolt" }, { "Incinerate", "Shadow Bolt" } },
+  },
+  DRUID = {
+    feral = { "Rake", "Claw", "Claw", "Claw", "Rip", "Claw", "Claw", "Claw", "Ferocious Bite" },
+    bear = { "Lacerate", "Demoralizing Roar", { "Primal Bite", "Maul" }, "Lacerate", "Maul" },
+    balance = { "Moonfire", { "Insect Swarm", "Wrath" }, { "Starfire", "Wrath" }, { "Starfire", "Wrath" }, "Wrath" },
+  },
+}
+
+-- the guide's order for this learner key ("CLASS:combat:band"), with only the spells you can use:
+-- ones in the helper's own order or that you know, never a big cooldown the helper left out.
+-- Returns nil when there is none or it is the same as the helper's order.
+function GD:TutorialSteps(key, base, known)
+  local class, combat = tostring(key or ""):match("^(%u+):([^:]+)")
+  local list = class and self.TUTORIAL[class] and self.TUTORIAL[class][combat]
+  if not list then return nil end
+  local inBase, big = {}, {}
+  for _, s in ipairs(base) do inBase[s] = true end
+  for _, s in ipairs((self.CLASS[class] or {}).big or {}) do big[s] = true end
+  local function usable(s) return inBase[s] or (known and known[s] and not big[s]) end
+  local out = {}
+  for _, step in ipairs(list) do
+    local pick
+    if type(step) == "table" then
+      for _, s in ipairs(step) do if usable(s) then pick = s break end end
+    elseif usable(step) then pick = step end
+    if pick then out[#out + 1] = pick end
+  end
+  if #out < 2 or table.concat(out, ">") == table.concat(base, ">") then return nil end
+  return out
+end
