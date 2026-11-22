@@ -209,6 +209,10 @@ local function buildGear(f)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetHyperlink(d.link)
       if d.pct then GameTooltip:AddLine(FF:T("Better than what you wear by %d%%"):format(math.floor(d.pct * 100 + 0.5)), 0.2, 1, 0.6) end
+      if FlipForeverDB.settings.gearStats ~= false and FF.Gear.StatDiffText then
+        local ok, diff = pcall(FF.Gear.StatDiffText, FF.Gear, d, 8)
+        if ok and diff ~= "" then GameTooltip:AddLine(FF:T("Compared with what you wear:") .. " " .. diff, 1, 1, 1, true) end
+      end
       GameTooltip:Show()
       -- what you wear in that slot, side by side (the game's own compare tooltips)
       if GameTooltip_ShowCompareItem then
@@ -618,6 +622,7 @@ local function build()
   feature("combatTips", "Combat helper: tell me after a fight what to do better", -1092, true)
   feature("combatGuide", "Combat helper: emergency key, interrupts, cooldowns for elites", -1116, true, function() if FF.Combat and FF.Combat:Enabled() then FF.Combat:Apply() end end)
   feature("combatShare", "Share anonymous combat data to improve the helper", -1140, true)
+  feature("gearStats", "Gear finder: show the stat gains against what I wear", -1164, true)
 
   local foot = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   foot:SetPoint("BOTTOMLEFT", 16, 14)

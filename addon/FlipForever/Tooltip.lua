@@ -51,7 +51,10 @@ function TT:Lines(itemID)
   end
   -- gear: is this better than what you wear? (same stat weights as the Gear tab)
   local up = FlipForeverDB.settings.gearTooltip ~= false and TT:Upgrade(itemID)
-  if up then out[#out + 1] = up end
+  if up then
+    out[#out + 1] = up
+    if up.diff and up.diff ~= "" then out[#out + 1] = { " ", up.diff } end
+  end
   return out
 end
 
@@ -63,7 +66,12 @@ function TT:Upgrade(itemID)
   if not (ok and type(r) == "table") then return nil end
   local slot = G.SLOT_NAMES and G.SLOT_NAMES[r.slot] or ""
   local gain = r.pct and ("+%d%%"):format(math.floor(r.pct * 100 + 0.5)) or ("+%.1f"):format(r.gain)
-  return { FF:T("  upgrade for you"), ("|cff33ff99%s|r %s"):format(gain, FF:T(slot)) }
+  local diff = ""
+  if FlipForeverDB.settings.gearStats ~= false and G.StatDiffText then
+    local okD, d = pcall(G.StatDiffText, G, r, 4)
+    diff = okD and d or ""
+  end
+  return { FF:T("  upgrade for you"), ("|cff33ff99%s|r %s"):format(gain, FF:T(slot)), diff = diff }
 end
 
 local function addTo(tooltip, itemID)

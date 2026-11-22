@@ -125,6 +125,48 @@ function G:EquippedScore(equipLoc, weights)
   return slotScore(slots[1]), slots[1]
 end
 
+-- Stat gains: what you win and lose against what you wear in that slot ("+5 Strength, -2 Spirit").
+-- Ordered by how much each stat matters for your class/build; armor and DPS only when they change.
+local STAT_ORDER = { "DPS", "STR", "AGI", "STA", "INT", "SPI", "AP", "SP", "CRIT", "HIT", "ARMOR" }
+local STAT_NAMES = { DPS = "DPS", STR = "Strength", AGI = "Agility", STA = "Stamina", INT = "Intellect", SPI = "Spirit",
+  AP = "Attack Power", SP = "Spell Power", CRIT = "Crit", HIT = "Hit", ARMOR = "Armor" }
+
+function G:StatDiff(r, weights)
+  if not (r and r.link and r.slot) then return {} end
+  weights = weights or self:Weights()
+  local new, old = itemStats(r.link) or {}, {}
+  local slots = r.equipLoc == "INVTYPE_2HWEAPON" and { 16, 17 } or { r.slot }
+  for _, s in ipairs(slots) do
+    local link = GetInventoryItemLink and GetInventoryItemLink("player", s)
+    for k, v in pairs(link and itemStats(link) or {}) do old[k] = (old[k] or 0) + (plain(v) or 0) end
+  end
+  local out = {}
+  for _, key in ipairs(STAT_ORDER) do
+    local d = (plain(new[S[key]]) or 0) - (old[S[key]] or 0)
+    if key == "DPS" then d = math.floor(d * 10 + 0.5) / 10 else d = math.floor(d + 0.5) end
+    if d ~= 0 then
+      out[#out + 1] = { key = key, diff = d, weight = weights[key] or 0, name = FF:T(STAT_NAMES[key]) }
+    end
+  end
+  table.sort(out, function(a, b)
+    if (a.weight > 0) ~= (b.weight > 0) then return a.weight > 0 end
+    return math.abs(a.diff * a.weight) > math.abs(b.diff * b.weight)
+  end)
+  return out
+end
+
+-- one line of text, gains green and losses red; stats your class doesn't use are grey
+function G:StatDiffText(r, max)
+  local parts = {}
+  for i, s in ipairs(self:StatDiff(r)) do
+    if i > (max or 6) then break end
+    local color = s.weight <= 0 and "|cff999999" or (s.diff > 0 and "|cff33ff99" or "|cffff5555")
+    local n = s.key == "DPS" and ("%+.1f"):format(s.diff) or ("%+d"):format(s.diff)
+    parts[#parts + 1] = color .. n .. " " .. s.name .. "|r"
+  end
+  return table.concat(parts, ", ")
+end
+
 -- Search -----------------------------------------------------------------------------------------------
 G.results, G.pending, G.running = {}, nil, false
 local BATCH = 150

@@ -1529,6 +1529,7 @@ FF.Gear:Search()
 RunTimers(5)
 GEAR = FF.Gear.results
 GEARSTEP = FF.Gear:TopStep()
+GEARDIFF = FF.Gear:StatDiffText(FF.Gear.results[2]) .. " || " .. FF.Gear:StatDiffText(FF.Gear.results[1])
 FF.Advisor:Refresh()
 local adv = FF.Advisor:CharStore().advisor
 GEARSAVED = adv and adv.gear and adv.gear[1] and adv.gear[1].name
@@ -1540,6 +1541,9 @@ print("gear upgrades:", [(r["name"], round(r["gain"], 1), r["price"]) for r in _
 assert [r["name"] for r in _g] == ["Heavy Claymore", "Scaled Chestguard"]
 assert abs(_g[0]["gain"] - 35) < 0.01 and abs(_g[1]["gain"] - 15.8) < 0.01
 assert "Heavy Claymore" in L("GEARSTEP") and L("GEARSAVED") == "Heavy Claymore"
+print("gear stat gains:", L("GEARDIFF"))
+assert "+7 Strength" in L("GEARDIFF") and "+8 Stamina" in L("GEARDIFF") and "+200 Armor" in L("GEARDIFF")
+assert "+10.0 DPS" in L("GEARDIFF") and "+5 Strength" in L("GEARDIFF")
 
 # --- 2.5.0: languages - every client language, chosen in the FlipForever window
 lua.execute("""
@@ -2841,7 +2845,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,mailButton=true,gearTooltip=true,trainerReminder=true,levelInfo=true,threatWarning=true,mailOpenAll=true,bagValue=true,nodeTimers=true,talentOverlay=true,combatBuffs=true,undercutFix=true,questHelper=true,combatLearn=true,combatTips=true,combatGuide=true,combatShare=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
