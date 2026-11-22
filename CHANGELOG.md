@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.3] - 2026-11-22 (beta, branch feature/quest-helper)
+### Fixed
+- The waypoint arrow fix from 2.5.3 Beta 1: no more "Arrow.lua:50: attempt to call a nil value" when changing zones with a pin on the world map.
+
 ## [2.7.0-beta.2] - 2026-11-21 (beta, branch feature/quest-helper)
 ### Added
 - Quest helper: known quest spots on your map also show on the minimap. Spots out of the minimap's range sit faded on its edge, in their direction. Follows a rotating minimap.

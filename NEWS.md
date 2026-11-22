@@ -1,3 +1,7 @@
+# FlipForever 2.7.0 Beta 3
+
+**Waypoint arrow fix.** Changing zones while a pin is set on the world map no longer shows the error "Arrow.lua:50: attempt to call a nil value". The arrow points to your map pin again. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 1.
+
 # FlipForever 2.7.0 Beta 2
 
 **Quest spots on the minimap.** The quest helper now also shows its known quest spots on the minimap. Spots further away sit faded on the minimap's edge, so you can see which way to go.
