@@ -1,15 +1,14 @@
 # Roadmap
 
 ## Ready for approval
-New ideas of our own wait in the app's Community, Developer page (Waiting for approval) and are only built once approved.
-- Leveling route guide and disenchant profits (from Proposed below), sent 22 Nov.
+- Nothing waiting.
 
 ## Released in 2.7.0
 - **Talent builds on the Talents window** (from the 2.6.0 betas): build marked on the Talents window, next point gold, order panel, level bands, `/ff talents`.
 - **Quest helper** (from the 2.7.0 betas): learned quest spots, world map and minimap pins, `/ff quest`. Next: pins from the quest log, and the Advisor's quest steps using the learned spots.
 
 ## In the 2.7.1 betas
-- **Community page** (beta 1): updates, roadmap, bug tickets, suggestions, Top reporters, private developer inbox.
+- **Community page** (beta 1): updates, roadmap, bug tickets, suggestions, Top reporters.
 - **Reports from the game** (beta 2): `/ff bug`, `/ff suggest`, Report a bug button; gear finder stat gains; Advisor steps pinned on the map.
 - **Beta 3:** the combat helper tests the spell orders from written class guides; UI and content pass (one window style, grouped Settings in game and app, `/ff help`, Talents button, Clear pins, minimap pin tooltips); Rules page in the app's Community; choose an older version; controller support (bindable combat, emergency and arrow actions, gamepad buttons in Set key, readable button names); quest log Pin on map button; Advisor class quests use their learned next spot; leveling route guide (approved suggestion).
 
