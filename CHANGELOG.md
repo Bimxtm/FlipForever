@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.7] - 2026-11-22 (beta, branch feature/quest-helper)
+### Added
+- From 2.5.3 Beta 5: the undercut fix (cancel and repost undercut auctions where it pays after the deposit).
+
 ## [2.7.0-beta.6] - 2026-11-22 (beta, branch feature/quest-helper)
 ### Added
 - From 2.5.3 Beta 4: the app switches to the character you played last after each import.
@@ -62,6 +66,12 @@ All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachan
 - Talents window: your chosen Advisor build is shown right on the game's Talents window. Every talent of the build carries its place in the order, talents you have finished are marked green and the next point is marked gold.
 - A panel beside the Talents window lists the whole talent order with your ranks, the build's point split next to yours, and which tree the next point goes into. Switch builds with the arrows at its top.
 - Settings: *Show my build on the Talents window* (on by default).
+
+## [2.5.3-beta.5] - 2026-11-22 (beta)
+### Added
+- Undercut fix at the auction house: when your auctions are undercut, the FlipForever button now checks each one live and offers to cancel it (one key press each, as the game requires) only where reposting pays. An auction is kept when the cheaper listings should sell before it ends (from the item's sales per day), when it ends within the hour, when the new price would be below your floor, or when the repost would bring less than four times the new deposit and any cancel fee. A deposit is lost on a cancel and on an expiry alike, so an auction that no longer sells has already lost it; acting only costs the new deposit.
+- Cancelled items come back by mail. Collect them (Open all mail) and press the button at the auction house: they are posted again just under the cheapest real competitor, never below your floor.
+- Switch: *Undercut auctions: cancel and repost where it pays* in Settings, Features (on).
 
 ## [2.5.3-beta.4] - 2026-11-22 (beta)
 ### Added
