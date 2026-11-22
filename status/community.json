@@ -125,6 +125,54 @@
   {
    "text": "Controller support",
    "status": "planned"
+  },
+  {
+   "r": "idea-20261122092639",
+   "text": "Leveling route guide: the next town or camp for your race and level in the Advisor, with the arrow",
+   "status": "in_progress",
+   "version": ""
+  },
+  {
+   "r": "43aa4f51",
+   "text": "Realized profit counts the buy price of every item sold, also across characters",
+   "status": "in_progress",
+   "version": ""
+  },
+  {
+   "r": "f95db9a5",
+   "text": "Auction buying keeps a gold reserve so a character is never drained",
+   "status": "in_progress",
+   "version": ""
+  },
+  {
+   "r": "a08d0832",
+   "text": "Auction flips favour items that sell fast (fewer cheaper listings ahead)",
+   "status": "in_progress",
+   "version": ""
+  },
+  {
+   "r": "854a154d",
+   "text": "Security review of updates and report sending",
+   "status": "in_progress",
+   "version": ""
+  },
+  {
+   "r": "6b772623",
+   "text": "Profession planner clean-up: no overlapping or cut-off lines, clearer wording",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122092640",
+   "text": "Disenchant and enchanting profits: disenchant value against auction price, and a buy-to-disenchant list",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "f52c0e3c",
+   "text": "Opt-in gold scoreboard: the most profitable FlipForever players",
+   "status": "planned",
+   "version": ""
   }
  ]
 }

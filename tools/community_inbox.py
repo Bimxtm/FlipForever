@@ -50,6 +50,48 @@ def save(path: pathlib.Path, data) -> None:
     path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def _public_status(status: str) -> tuple[str, str] | None:
+    s = (status or "open").strip().lower()
+    if s.startswith("shipped"):
+        return "shipped", s.replace("shipped in", "").replace("shipped", "").strip()
+    if s == "in progress":
+        return "in_progress", ""
+    if s == "open":
+        return "planned", ""
+    return None   # done (internal), declined and anything else stays private
+
+
+def sync_approved(feed: dict, owner_list: list) -> int:
+    """Approved suggestions show on the public Suggestions page with their status. Each item's
+    "public" text is used (a clean wording written for players); items marked "hidden" never show."""
+    pub = feed.setdefault("suggestions", [])
+    by_r = {s.get("r"): s for s in pub if s.get("r")}
+    changed = 0
+    for item in owner_list:
+        rid = item.get("id")
+        st = _public_status(item.get("status", ""))
+        if not rid or item.get("hidden") or st is None:
+            if rid in by_r:
+                pub.remove(by_r.pop(rid))
+                changed += 1
+            continue
+        text = (item.get("public") or item.get("text", "")).strip()
+        if text.startswith("Idea: "):
+            text = text[6:]
+        entry = {"r": rid, "text": text[:160], "status": st[0], "version": st[1]}
+        if item.get("nick"):
+            entry["nick"] = item["nick"]
+        old = by_r.get(rid)
+        if old is None:
+            pub.append(entry)
+            by_r[rid] = entry
+            changed += 1
+        elif any(old.get(k) != v for k, v in entry.items()):
+            old.update(entry)
+            changed += 1
+    return changed
+
+
 def main(argv=None) -> tuple[int, int]:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DEFAULT_DATA))
@@ -110,6 +152,7 @@ def main(argv=None) -> tuple[int, int]:
         elif t.get("status") == "reported":
             t["status"] = "confirmed" if dec.get("approve") else "not_reproducible"
             changed += 1
+    changed += sync_approved(feed, owner_list)
     if changed:
         feed["updated"] = time.strftime("%Y-%m-%d")
         save(FEED, feed)
