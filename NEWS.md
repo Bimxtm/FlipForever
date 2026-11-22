@@ -24,6 +24,10 @@ Also in this beta: the paladin fixes from 2.5.2 Beta 1. The combat helper casts 
 
 **Your build on the Talents window.** Open the game's Talents window and your chosen Advisor build is right there: every talent of the build shows its place in the order, finished ones are marked green and the next point is marked gold. A panel beside the window lists the whole order with your ranks and which tree the next point goes into. Switch builds with its arrows, or turn it off under Settings.
 
+# FlipForever 2.5.3 Beta 2
+
+**Where your talent points go.** When you have talent points to spend, the Advisor now tells you exactly where they go for your chosen build: which talents, how many points each and in which tree. Hover the step for the full list, click it to open the Talents window.
+
 # FlipForever 2.5.3 Beta 1
 
 **Waypoint arrow fix.** Changing zones while a pin is set on the world map no longer shows the error "Arrow.lua:50: attempt to call a nil value". The arrow points to your map pin again.
