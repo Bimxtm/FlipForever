@@ -2,6 +2,15 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.5.3-beta.7] - 2026-11-22 (beta)
+### Added
+- Combat helper plays like the WoW: Forever class guides teach (Skill Capped's WoW: Forever class guides, updated 19 Nov 2026; written for PvP, used here mainly against mobs and bosses):
+  - Big cooldowns (Recklessness, Adrenaline Rush, Arcane Power, Rapid Fire and so on) are saved for elites, rares, bosses, players and targets 3+ levels above you instead of being used on every normal mob.
+  - Emergency key: Shift + your combat key (or `/ff emergencykey KEY`), also a small button left of the big icon. It casts your first ready defensive spell in the guide's order (Shield Wall, Evasion, Divine Shield, Ice Barrier, Barkskin and so on) and uses the best healthstone and healing potion in your bags. The macro is prepared before each fight, as the game requires.
+  - During a fight, the line under the icons says when to press it (below 35% health), when to interrupt a cast and with what, when to slow a target that may run, and when to switch to the wand (casters below 12% mana). These thresholds are FlipForever's own starting values; the guides give none.
+  - After a death, the note now points to the emergency key.
+- Switch: *Combat helper: emergency key, interrupts, cooldowns for elites* in Settings, Features (on).
+
 ## [2.5.3-beta.6] - 2026-11-22 (beta)
 ### Added
 - Combat helper learns from your fights, separately for each class, build and level band (shared by all your characters of that class). Every fight is recorded: casts, failed casts and why (out of range or sight, not enough mana/rage/energy, no combo points), time spent waiting between casts, time out of power, health lost, deaths and kills.

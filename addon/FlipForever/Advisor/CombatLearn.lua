@@ -243,6 +243,11 @@ end
 -- one note on what to do better, the most important first (nil when the fight went fine)
 function L:Tip(rec, f)
   if rec.died then
+    local G = FF.CombatGuide
+    if G and G:On() and G.emergencyFirst then
+      return FF:T("Combat: you died. Press the emergency key%s below 35%% health - it casts %s and uses your healthstone or potion."):format(
+        G.emergencyKey and (" (" .. G.emergencyKey .. ")") or "", G.emergencyLabel or G.emergencyFirst)
+    end
     return FF:T("Combat: you died. Pull one enemy at a time, start with full health and use your defensive spells or a potion below 40% health.")
   end
   if rec.idle >= 4 and rec.idle / rec.dur > 0.25 then

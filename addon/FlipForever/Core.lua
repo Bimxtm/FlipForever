@@ -485,6 +485,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     if FF.CombatLearn then FF.CombatLearn:Report() end
   elseif cmd == "combat" then
     FF.Combat:Toggle()
+  elseif cmd == "emergencykey" then
+    if FF.CombatGuide then FF.CombatGuide:SetKey((rest ~= "" and rest ~= "clear") and rest:upper() or nil) end
   elseif cmd == "combatkey" then
     FF.Combat:SetKey(rest ~= "" and rest:upper() or nil)
   elseif cmd == "combatmode" then

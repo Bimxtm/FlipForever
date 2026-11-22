@@ -1,3 +1,7 @@
+# FlipForever 2.5.3 Beta 7
+
+**The combat helper plays like the guides teach.** Using the WoW: Forever class guides, the combat helper now saves your big cooldowns for elites, rares and bosses, and gives you an emergency key (Shift + your combat key): it casts your first ready defensive spell and uses your best healthstone or healing potion. During a fight it tells you when to press it, when to interrupt a cast, when to slow a target that may run and when to switch to your wand. You can switch it off under Settings, Features.
+
 # FlipForever 2.5.3 Beta 6
 
 **The combat helper learns from your fights.** It now keeps track of every fight for your class and build: what you cast, what failed and why, how long you waited between casts, when you ran out of mana, rage or energy, and how much health you lost. It tries small changes to the guide's order and keeps the one that kills fastest for you. After a fight it tells you what to do better when it matters, and `/ff combat report` shows everything it has learned. Both parts have a switch under Settings, Features. PvP priorities follow in a later beta.
