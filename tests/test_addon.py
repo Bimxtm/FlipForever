@@ -2655,6 +2655,30 @@ MERGED = (FlipForeverDB.realms[" - Horde"] == nil and #FF:DB().scans == before +
 """)
 print("record kept:", L("REC_KEPT"), "| empty realm key:", L("KEY_EMPTY"), "| merged:", L("MERGED"))
 assert L("REC_KEPT") is True and L("KEY_EMPTY") == "Testrealm - Horde" and L("MERGED") is True
+# --- characters on two realms: a new character on another realm never borrows the last realm while the name is empty
+lua.execute("""
+local FF = FlipForever
+local oldRealm, oldName = GetRealmName, UnitName
+local realmName, me = "PvP RP Realm", "Newbie"
+GetRealmName = function() return realmName end
+UnitName = function(u) if u == "player" then return me end return oldName(u) end
+local k1 = FF:RealmKey()                 -- Newbie seen on the PvP realm
+me, realmName = "Oldie", "Testrealm"
+FF:RealmKey()                            -- Oldie plays last, on the first realm
+realmName = ""
+local k2 = FF:RealmKey()                 -- Oldie, no name: his own realm
+me = "Newbie"
+local k3 = FF:RealmKey()                 -- Newbie, no name: the PvP realm, not the last one used
+me = "Fresh"
+local k4 = FF:RealmKey()                 -- never seen: held under " - Horde" until the name is known
+TWO_REALMS = table.concat({ k1, k2, k3, "[" .. k4 .. "]" }, "|")
+FlipForeverDB.charRealms["Newbie - Horde"], FlipForeverDB.charRealms["Oldie - Horde"] = nil, nil
+FlipForeverDB.realms["PvP RP Realm - Horde"] = nil
+GetRealmName, UnitName = oldRealm, oldName
+FF:RealmKey()
+""")
+print("two realms:", L("TWO_REALMS"))
+assert L("TWO_REALMS") == "PvP RP Realm - Horde|Testrealm - Horde|PvP RP Realm - Horde|[ - Horde]", L("TWO_REALMS")
 
 # --- your auctions: which listings the newest scan undercuts
 lua.execute("""

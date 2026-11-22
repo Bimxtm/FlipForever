@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.5] - unreleased (beta)
+### Fixed
+- With characters on more than one realm, a moment without a realm name at login could file a character's scans and trades under the realm you played last. The realm is now remembered per character.
+
 ## [2.7.1-beta.4] - 2026-11-23 (beta)
 ### Added
 - **Best time to post:** when posting, and in item tooltips, FlipForever shows the 4-hour window of the day in which your own auctions of that item sold most (all your sales together until the item has 5). Switch in Settings, Features.

@@ -51,6 +51,10 @@ def import_savedvars(con, path: Path) -> dict:
     for realm, r in (db.get("realms") or {}).items():
         if not isinstance(r, dict):
             continue
+        if str(realm).startswith(" - "):
+            # held by the addon while the game had no realm name yet; it moves to the real realm at the
+            # next login, so importing it here would show a nameless realm and count it twice later
+            continue
         summary["realms"].append(realm)
         names = r.get("names") or {}
         if isinstance(names, list):

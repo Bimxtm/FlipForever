@@ -127,21 +127,31 @@ function FF:RealmKey()
   local realm = GetRealmName and GetRealmName() or ""
   if realm == "" and GetNormalizedRealmName then realm = GetNormalizedRealmName() or "" end
   local db = FlipForeverDB
+  -- the realm is remembered per character: with characters on several realms, a moment without a
+  -- realm name must never file one character's scans and trades under another character's realm
+  local who = UnitName("player")
+  local charKey = who and (who .. " - " .. faction)
   if realm ~= "" then
-    if db then db.lastRealm = realm end
-  elseif db and db.lastRealm then
-    realm = db.lastRealm
+    if db then
+      db.lastRealm = realm
+      db.charRealms = db.charRealms or {}
+      if charKey then db.charRealms[charKey] = realm end
+    end
+  elseif db and charKey and db.charRealms and db.charRealms[charKey] then
+    realm = db.charRealms[charKey]
   else
+    -- a character already saved on exactly one realm of this faction
     local found
-    for key in pairs(db and db.realms or {}) do
-      local r = key:match("^(.+) %- " .. faction .. "$")
-      if r and r ~= "" then
-        if found and found ~= r then found = nil break end
-        found = r
+    for key, r in pairs(db and db.realms or {}) do
+      local name = key:match("^(.+) %- " .. faction .. "$")
+      if name and name ~= "" and who and type(r) == "table" and r.chars and r.chars[who] then
+        if found and found ~= name then found = nil break end
+        found = name
       end
     end
-    realm = found or "Unknown"
-    if db and found then db.lastRealm = found end
+    -- not known yet: saved under " - <faction>" and moved to the real realm at the next login (MergeEmptyRealm)
+    realm = found or ""
+    if db and found and charKey then db.charRealms = db.charRealms or {} db.charRealms[charKey] = found end
   end
   return realm .. " - " .. faction
 end
