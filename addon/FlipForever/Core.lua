@@ -536,6 +536,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Auto:SetEnabled(not FF.Auto:Enabled())
   elseif cmd == "key" then
     FF:SetActionKey(rest ~= "" and rest:upper() or nil)
+  elseif cmd == "disenchant" or cmd == "de" then
+    if FF.Disenchant then FF.Disenchant:Command() end
   elseif cmd == "reserve" then
     -- /ff reserve <percent> [min gold] | off
     local s = FlipForeverDB.settings
@@ -588,7 +590,7 @@ FF.HELP = {
   { "/ff", "open the FlipForever window (or click the gold coin on the minimap)" },
   { "Leveling", "guide (Advisor) | quest (arrow to the next quest spot) | talents | /ffway x y (arrow)" },
   { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
-  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | reset" },
+  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | disenchant (buy items worth more disenchanted) | reset" },
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },

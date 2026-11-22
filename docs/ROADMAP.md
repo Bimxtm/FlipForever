@@ -29,7 +29,7 @@ Players most often name Questie, Details!, Leatrix Plus, Auctionator, Bagnon, We
 ## Proposed
 - **(done in 2.7.0) Quest helper on the map** (Questie, the most downloaded Classic addon): quest objectives and turn-ins as map pins and in the waypoint arrow, built on our quest locations. Big: needs our own quest data. Branch feature/quest-helper.
 - **Leveling route guide** (RestedXP-style guides): a step-by-step route per race and level range inside the Advisor, with the waypoint arrow. Big: route data written from scratch. Branch feature/leveling-route.
-- **Disenchant and enchanting profits** (Enchantrix): what an item is worth disenchanted against its auction price, and a "buy to disenchant" list. Needs our own disenchant tables. Branch feature/disenchant.
+- **(done in 2.7.1-beta.3) Disenchant values** (Enchantrix): disenchant value in tooltips at your scanned prices, and `/ff disenchant` to buy items listed below that value.
 
 ## Done
 - 2.5.2 (betas): sell junk and repair, open all mail, time to level, bag value, trainer reminder, threat warning, combat helper buffs and paladin fixes, gathering node timers, 7-day price trend in the app, a switch for every feature; all in every game language.

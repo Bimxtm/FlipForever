@@ -15,6 +15,7 @@ Trader.lua
 Auctions.lua
 Auto.lua
 UI.lua
+Disenchant.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

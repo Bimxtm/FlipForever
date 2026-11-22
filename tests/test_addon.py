@@ -473,6 +473,33 @@ GetMoney = OLD_MONEY
 """)
 print("fast flips off:", L("FS"))
 assert L("FS") == "ready_commodity"
+# --- disenchant values: green armor ilvl 28 -> Soul Dust 75% x1.5, Greater Astral 20% x1.5, Large Glimmering 5%
+lua.execute("""
+OLD_INFO = C_Item.GetItemInfo
+DE_ITEMS = { [9001] = { 2, 28, 4 }, [9002] = { 2, 28, 2 }, [9003] = { 3, 33, 4 }, [9004] = { 1, 28, 4 }, [9005] = { 2, 28, 7 } }
+C_Item.GetItemInfo = function(id) local it = DE_ITEMS[id] if it then return "Item " .. id, "link", it[1], it[2], 1, "", "", 1, "", "", 1, it[3] end if OLD_INFO then return OLD_INFO(id) end end
+local db = FlipForever:DB()
+db.scans[#db.scans + 1] = { t = 9999999990, d = "11083:900:1000:50:5,11082:2900:3000:20:3,11084:3900:4000:10:2,11138:7900:8000:10:2,9001:500:1500:3:2,9002:3000:3500:1:1,9003:4000:9000:1:1" }
+DEV = {}
+for _, id in ipairs({9001, 9002, 9003, 9004, 9005}) do DEV[#DEV + 1] = tostring(FlipForever.Disenchant:Value(id)) end
+DEV = table.concat(DEV, ",")
+DEL = FlipForever.Disenchant:BuyList()
+DETIP = {}
+for _, l in ipairs(FlipForever.Tooltip:Lines(9001)) do DETIP[#DETIP + 1] = l[1] .. " = " .. l[2] end
+DETIP = table.concat(DETIP, " | ")
+FlipForeverDB.settings.disenchant = false
+DEOFF = FlipForever.Tooltip:Lines(9001)
+DEOFF = #DEOFF
+FlipForeverDB.settings.disenchant = nil
+""")
+# armor: 0.75*1.5*1000 + 0.2*1.5*3000 + 0.05*4000 = 1125+900+200 = 2225; weapon: 0.2*1.5*1000 + 0.75*1.5*3000 + 200 = 3875
+# blue ilvl 33: one Small Glowing Shard = 8000; white and non-gear: nothing
+print("disenchant values:", L("DEV"), "| buy list:", L("#DEL"), L("DEL[1] and DEL[1].id"), "| tooltip:", L("DETIP"), "| off:", L("DEOFF"))
+assert L("DEV") == "2225,3875,8000,nil,nil"
+# listed below value - 15%: 9003 (4000 < 6800), 9001 (500 < 1891), 9002 (3000 < 3293); biggest gain first
+assert L("#DEL") == 3 and L("DEL[1].id") == 9003 and L("DEL[2].id") == 9001 and L("DEL[3].id") == 9002
+assert "disenchants for = ~" in L("DETIP") and "more than the item" in L("DETIP")
+lua.execute("C_Item.GetItemInfo = OLD_INFO; table.remove(FlipForever:DB().scans)")
 # --- first-scan mode: price judged live from the listing ladder
 lua.execute("""
 FlipForever_Plan = { generated = 789, realm = "Testrealm - Horde", budget = 100000, cut = 0.05,
@@ -2958,7 +2985,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,disenchant=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

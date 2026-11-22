@@ -187,15 +187,16 @@ end
 
 -- Prices for other modules (Gathering, Advisor): typical unit price (25th percentile)
 -- from the newest scan that has the item. Parsed once per new scan.
-local priceCache, priceCacheKey = {}, nil
+local priceCache, minCache, priceCacheKey = {}, {}, nil
 local function rebuildPrices()
   local scans = FF:DB().scans
   local key = #scans .. ":" .. ((scans[#scans] or {}).t or 0)
   if key == priceCacheKey then return end
-  priceCacheKey, priceCache = key, {}
+  priceCacheKey, priceCache, minCache = key, {}, {}
   for i = 1, #scans do -- oldest first, so newer scans overwrite
-    for id, _, p25 in (scans[i].d or ""):gmatch("(%d+):(%d+):(%d+):%d+:%d+") do
+    for id, mn, p25 in (scans[i].d or ""):gmatch("(%d+):(%d+):(%d+):%d+:%d+") do
       priceCache[tonumber(id)] = tonumber(p25)
+      minCache[tonumber(id)] = tonumber(mn)
     end
   end
 end
@@ -204,6 +205,20 @@ function FF:PriceOf(id)
   if not FlipForeverDB then return nil end
   rebuildPrices()
   return priceCache[id]
+end
+
+-- lowest listed unit price in the newest scan that has the item
+function FF:MinPriceOf(id)
+  if not FlipForeverDB then return nil end
+  rebuildPrices()
+  return minCache[id]
+end
+
+-- every item with a scanned price: id -> typical price
+function FF:ScannedPrices()
+  if not FlipForeverDB then return {} end
+  rebuildPrices()
+  return priceCache
 end
 
 function FF:HasPrices()

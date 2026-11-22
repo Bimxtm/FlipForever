@@ -41,6 +41,14 @@ function TT:Lines(itemID)
     local speed = perDay >= 10 and FF:T("|cff33ff99fast|r") or perDay >= 3 and FF:T("|cffffd200ok|r") or FF:T("|cffff8800slow|r")
     out[#out + 1] = { FF:T("  sells on the AH"), FF:T("~%s/day (%s)"):format(perDay >= 10 and ("%d"):format(math.floor(perDay + 0.5)) or ("%.1f"):format(perDay), speed) }
   end
+  local DE = FF.Disenchant
+  if DE and DE:Enabled() then
+    local value = DE:Value(itemID)
+    if value then
+      local worth = price and (value > price and FF:T(" |cff33ff99(more than the item)|r") or FF:T(" |cff888888(less than the item)|r")) or ""
+      out[#out + 1] = { FF:T("  disenchants for"), "~" .. FF:Money(value) .. worth }
+    end
+  end
   local entry = planIndex()[itemID]
   if entry and entry.buy then
     local b = entry.buy

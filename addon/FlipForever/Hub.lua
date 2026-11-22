@@ -624,6 +624,8 @@ local function build()
     "Buying stops before your gold drops below the reserve and sizes purchases to what is left. Change it with /ff reserve <percent> <gold>.")
   feature("fastFlips", "Buying skips flips with too many cheaper listings ahead", true, nil,
     "Before buying, counts the units listed below your sell price and how fast the item sells; skips it when they would take more than twice the hold time to sell.")
+  feature("disenchant", "Disenchant values in tooltips, /ff disenchant buy list", true, nil,
+    "What a green, blue or purple weapon or armor piece gives when disenchanted, at your scanned prices. /ff disenchant lists items listed below that value and buys them at the auction house.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)
   feature("mailOpenAll", "Open all mail button at the mailbox", true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
   group("Gathering and bags")
