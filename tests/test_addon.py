@@ -1,4 +1,4 @@
-"""Addon tests: loads every addon file in a real Lua VM (lupa) with a mocked WoW API.
+﻿"""Addon tests: loads every addon file in a real Lua VM (lupa) with a mocked WoW API.
 Run: python tests/test_addon.py   (needs: pip install lupa)"""
 """Load the addon in a real Lua VM with a mocked WoW API and drive scan/buy/sell flows."""
 import pathlib
@@ -436,6 +436,43 @@ GetMoney = OLD_MONEY
 """)
 print("/ff reserve:", L("RS"))
 assert L("RS") == "true,0.3,500000"
+# --- fast flips: 300 cheaper units ahead of a 10/day item (5/day for us = 60 days) -> skipped
+lua.execute("""
+OLD_MONEY = GetMoney
+GetMoney = function() return 100000000 end
+FlipForever_Plan = { generated = 902, realm = "Testrealm - Horde", budget = 10000000, hold = 2,
+  buy = { {id=2589, max=500, qty=10, exp=1000, vol=10} }, sell = {} }
+COMMODITY[2589] = { {unitPrice=400, quantity=10}, {unitPrice=900, quantity=300}, {unitPrice=1000, quantity=50} }
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("slow queue:", T.state, "|", L("FlipForever.status"))
+assert T.state == "idle"
+lua.execute("""
+FlipForever_Plan.buy[1].vol = 400   -- 300 ahead at 200/day for us: 1.5 days, fine
+FlipForever_Plan.generated = 903
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+""")
+print("fast queue:", T.state, T.pending and T.pending.qty)
+assert T.state == "ready_commodity" and T.pending.qty == 10
+lua.execute("""
+FlipForever.Trader:Stop()
+FlipForever_Plan.buy[1].vol = 10
+FlipForever_Plan.generated = 904
+FlipForeverDB.settings.fastFlips = false
+FlipForever.Trader:StartBuying()
+RunTimers(1)
+Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
+FS = FlipForever.Trader.state
+FlipForever.Trader:Stop()
+FlipForeverDB.settings.fastFlips = nil
+GetMoney = OLD_MONEY
+""")
+print("fast flips off:", L("FS"))
+assert L("FS") == "ready_commodity"
 # --- first-scan mode: price judged live from the listing ladder
 lua.execute("""
 FlipForever_Plan = { generated = 789, realm = "Testrealm - Horde", budget = 100000, cut = 0.05,
@@ -2921,7 +2958,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,fastFlips=true,mailButton=true,mailOpenAll=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

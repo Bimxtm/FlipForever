@@ -234,6 +234,31 @@ function T:LimitFor(t, rows)
   return live, ref
 end
 
+-- Fast flips (switch fastFlips): units other sellers list below the price we'd sell at must sell
+-- before ours. Returns a reason to skip when that queue takes longer than twice the hold time
+-- (vol = units the market buys per day; we get about half), or is over 100 units with no speed known.
+function T:SlowQueue(t, rows, buying)
+  if self.custom or FlipForeverDB.settings.fastFlips == false then return nil end
+  local sellAt = t.liveExp or t.exp
+  if not sellAt then return nil end
+  local ahead = 0
+  for _, r in ipairs(rows) do
+    if r.unitPrice >= sellAt then break end
+    if not owned(r) then ahead = ahead + (r.quantity or 1) end
+  end
+  ahead = ahead - (buying or 0)
+  if ahead <= 0 then return nil end
+  local hold = (plan() and plan().hold) or 2
+  if t.vol and t.vol > 0 then
+    local days = ahead / (t.vol * 0.5)
+    if days > hold * 2 then
+      return FF:T("Skipped %s: %d cheaper units listed ahead (about %.1f days to sell through)."):format(FF:ItemName(t.id), ahead, days)
+    end
+  elseif ahead > 100 then
+    return FF:T("Skipped %s: %d cheaper units listed ahead."):format(FF:ItemName(t.id), ahead)
+  end
+end
+
 function T:EvaluateBuy(rows)
   local t = self.target
   local want = self:Remaining(t)
@@ -266,6 +291,11 @@ function T:EvaluateBuy(rows)
         if qty >= want then break end
       end
     end
+    local slow = qty > 0 and self:SlowQueue(t, rows, qty)
+    if slow then
+      FF:Print(slow)
+      qty = 0
+    end
     if qty > 0 then
       self.pending = { id = t.id, qty = qty, cost = cost }
       self.state = "ready_commodity"
@@ -279,6 +309,8 @@ function T:EvaluateBuy(rows)
     for _, r in ipairs(rows) do
       if r.unitPrice > limit then break end
       if not owned(r) and r.buyoutAmount <= money and (r.quantity or 1) <= want then
+        local slow = self:SlowQueue(t, rows, r.quantity or 1)
+        if slow then FF:Print(slow) break end
         self.pending = { id = t.id, auctionID = r.auctionID, buyout = r.buyoutAmount, qty = r.quantity or 1, unit = r.unitPrice }
         self.state = "ready_item"
         FF:SetStatus(FF:T("Deal: %s for %s (max %s)."):format(FF:ItemName(t.id), FF:Money(r.buyoutAmount), FF:Money(limit * (r.quantity or 1))))

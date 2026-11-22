@@ -622,6 +622,8 @@ local function build()
     "Only when the new price still earns more than the deposit you lose by cancelling.")
   feature("goldReserve", "Buying keeps a gold reserve (20% of my gold, at least 20g)", true, nil,
     "Buying stops before your gold drops below the reserve and sizes purchases to what is left. Change it with /ff reserve <percent> <gold>.")
+  feature("fastFlips", "Buying skips flips with too many cheaper listings ahead", true, nil,
+    "Before buying, counts the units listed below your sell price and how fast the item sells; skips it when they would take more than twice the hold time to sell.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)
   feature("mailOpenAll", "Open all mail button at the mailbox", true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
   group("Gathering and bags")

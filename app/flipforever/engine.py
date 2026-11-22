@@ -773,7 +773,7 @@ def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Lear
                 continue
             starters += 1
             buys.append({"id": d.id, "name": d.name, "gap": round(margin_base + 0.05, 3), "qty": qty,
-                         "max": int(max(m.cur_p25, m.market) * 1.5)})
+                         "max": int(max(m.cur_p25, m.market) * 1.5), "vol": round(m.vol_day, 1) if m.vol_day else None})
             continue
         if d.is_deal:
             qty = int(min(d.qty_cap, (budget - spent) // max(1, d.cur), per_item // max(1, d.max_buy)))
@@ -787,7 +787,8 @@ def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Lear
             qty = int(min(max(1, d.qty_cap // 2), per_item // max(1, d.max_buy)))
             if qty <= 0:
                 continue
-        buys.append({"id": d.id, "name": d.name, "max": d.max_buy, "qty": qty, "exp": d.expected_sale})
+        buys.append({"id": d.id, "name": d.name, "max": d.max_buy, "qty": qty, "exp": d.expected_sale,
+                     "vol": round(d.vol_day, 1) if d.vol_day else None})
 
     # sell list: everything you're holding from flips + (optionally) anything else with a market
     sells = []
