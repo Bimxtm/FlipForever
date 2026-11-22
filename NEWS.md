@@ -1,3 +1,7 @@
+# FlipForever 2.7.0 Beta 5
+
+**Fewer error messages.** The fixes from 2.5.3 Beta 3: no more "Auras cannot be accessed when secret" after a fight, no "secret string value" error from system chat messages, and no duplicate file warning at login. This beta also has the quest helper and the talent overlay.
+
 # FlipForever 2.7.0 Beta 4
 
 **Where your talent points go.** When you have talent points to spend, the Advisor now tells you exactly where they go for your chosen build: which talents, how many points each and in which tree. Hover the step for the full list, click it to open the Talents window with the build marked on it. This beta also has the quest helper, the talent overlay and everything from 2.5.3 Beta 2.

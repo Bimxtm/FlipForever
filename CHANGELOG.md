@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.0-beta.5] - 2026-11-22 (beta, branch feature/quest-helper)
+### Fixed
+- The fixes from 2.5.3 Beta 3: hidden auras and system chat text no longer cause errors, and Locale.lua is loaded once.
+
 ## [2.7.0-beta.4] - 2026-11-22 (beta, branch feature/quest-helper)
 ### Changed
 - The Advisor's talent step from 2.5.3 Beta 2: where each unspent point goes for the chosen build (talent, points, tree); clicking it opens the Talents window with the talent overlay.
