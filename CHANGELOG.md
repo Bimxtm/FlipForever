@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.7] - 2026-11-23 (beta, hotfix)
+### Fixed
+- WoW: Forever gives every realm the same name; PvP, RP and Hardcore realms only differ by their rules. FlipForever now reads those rules, so a character on RPPvP (or PvP, RP, Hardcore) gets its own realm with its own prices, trades and characters in the addon and the app. Your normal realm keeps its data as it is.
+
 ## [2.7.1-beta.6] - 2026-11-23 (beta, hotfix)
 ### Fixed
 - The Talents button and `/ff talents` said "The Talents window could not be opened" on WoW: Forever, whose Talents window has its own name. They now open it the way the game does (or through the Talents key), and the FlipForever build panel attaches to it.

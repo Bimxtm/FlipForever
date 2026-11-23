@@ -2685,13 +2685,17 @@ lua.execute("""
 local FF = FlipForever
 local oldRealm = GetRealmName
 GetRealmName = function() return "CAMWOW EU4 Realm 1 PvE" end
-GetNormalizedRealmName = function() return "RPPvP" end
+RegionalUniqueNamesEnabled = function() return true end
+Enum.GameRule = { PvPRuleset = 1, RPRuleset = 2, HardcoreRuleset = 3 }
+local active = { [1] = true, [2] = true }
+C_GameRules = { IsGameRuleActive = function(r) return active[r] or false end }
 NORM1 = FF:RealmKey()
-GetNormalizedRealmName = function() return "PvE" end
+active = {}
 NORM2 = FF:RealmKey()
-GetNormalizedRealmName = function() return "CAMWOWEU4Realm1PvE" end
+active = { [1] = true }
+RegionalUniqueNamesEnabled = function() return false end
 NORM3 = FF:RealmKey()
-GetNormalizedRealmName = nil
+RegionalUniqueNamesEnabled, C_GameRules, Enum.GameRule = nil, nil, nil
 GetRealmName = oldRealm
 FlipForeverDB.realms["RPPvP - Horde"], FlipForeverDB.realms["CAMWOW EU4 Realm 1 PvE - Horde"] = nil, nil
 FF:RealmKey()

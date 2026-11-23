@@ -1,3 +1,7 @@
+# FlipForever 2.7.1 Beta 7 (hotfix)
+
+- **PvP and RP realms:** characters on RPPvP, PvP, RP or Hardcore realms now get their own realm in the addon and the app (WoW: Forever gives all realms the same name).
+
 # FlipForever 2.7.1 Beta 6 (hotfix)
 
 - **Talents button fixed:** it opens WoW: Forever's Talents window again, with the build panel beside it.

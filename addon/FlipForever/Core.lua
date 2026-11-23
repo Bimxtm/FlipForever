@@ -125,16 +125,12 @@ end
 function FF:RealmKey()
   local faction = UnitFactionGroup("player") or "Neutral"
   local realm = GetRealmName and GetRealmName() or ""
-  local norm = GetNormalizedRealmName and GetNormalizedRealmName() or ""
-  if realm == "" then realm = norm end
-  -- On WoW: Forever, GetRealmName can keep the first realm's long name ("CAMWOW EU4 Realm 1 PvE")
-  -- after you switch realms, while the short name is right ("RPPvP"). When the long name doesn't
-  -- end with the short one, the short one is the realm you are on.
-  if norm ~= "" and realm ~= norm then
-    local flat = realm:gsub("[%s%-']", ""):lower()
-    local short = norm:gsub("[%s%-']", ""):lower()
-    if flat:sub(-#short) ~= short then realm = norm end
-  end
+  if realm == "" and GetNormalizedRealmName then realm = GetNormalizedRealmName() or "" end
+  -- WoW: Forever gives every realm the same name ("CAMWOW EU4 Realm 1 PvE"); the realms differ by
+  -- their rules (PvP, RP, Hardcore), each with its own auction house. Those get their own key
+  -- ("RPPvP - Horde"); the normal realm keeps its name, so its data stays where it is.
+  local rules = self:Ruleset()
+  if rules then realm = rules end
   local db = FlipForeverDB
   -- the realm is remembered per character: with characters on several realms, a moment without a
   -- realm name must never file one character's scans and trades under another character's realm
@@ -163,6 +159,28 @@ function FF:RealmKey()
     if db and found and charKey then db.charRealms = db.charRealms or {} db.charRealms[charKey] = found end
   end
   return realm .. " - " .. faction
+end
+
+-- The realm's rules on clients where realm names are shared ("RPPvP", "PvP", "RP", "Hardcore"),
+-- or nil for a normal realm and for clients without them
+function FF:Ruleset()
+  if not (type(RegionalUniqueNamesEnabled) == "function" and type(C_GameRules) == "table"
+          and type(C_GameRules.IsGameRuleActive) == "function" and type(Enum) == "table" and Enum.GameRule) then
+    return nil
+  end
+  local okR, regional = pcall(RegionalUniqueNamesEnabled)
+  if not (okR and regional) then return nil end
+  local function on(rule)
+    if rule == nil then return false end
+    local ok, v = pcall(C_GameRules.IsGameRuleActive, rule)
+    return ok and v and true or false
+  end
+  local pvp, rp = on(Enum.GameRule.PvPRuleset), on(Enum.GameRule.RPRuleset)
+  if pvp and rp then return "RPPvP" end
+  if pvp then return "PvP" end
+  if rp then return "RP" end
+  if on(Enum.GameRule.HardcoreRuleset) then return "Hardcore" end
+  return nil
 end
 
 -- data saved under an empty realm name (" - Horde") goes back to the real realm
