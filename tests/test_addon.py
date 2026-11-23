@@ -2679,6 +2679,24 @@ FF:RealmKey()
 """)
 print("two realms:", L("TWO_REALMS"))
 assert L("TWO_REALMS") == "PvP RP Realm - Horde|Testrealm - Horde|PvP RP Realm - Horde|[ - Horde]", L("TWO_REALMS")
+# --- WoW: Forever keeps the first realm's long name after a realm switch; the short name decides
+lua.execute("""
+local FF = FlipForever
+local oldRealm = GetRealmName
+GetRealmName = function() return "CAMWOW EU4 Realm 1 PvE" end
+GetNormalizedRealmName = function() return "RPPvP" end
+NORM1 = FF:RealmKey()
+GetNormalizedRealmName = function() return "PvE" end
+NORM2 = FF:RealmKey()
+GetNormalizedRealmName = function() return "CAMWOWEU4Realm1PvE" end
+NORM3 = FF:RealmKey()
+GetNormalizedRealmName = nil
+GetRealmName = oldRealm
+FlipForeverDB.realms["RPPvP - Horde"], FlipForeverDB.realms["CAMWOW EU4 Realm 1 PvE - Horde"] = nil, nil
+FF:RealmKey()
+""")
+print("short realm name:", L("NORM1"), "|", L("NORM2"), "|", L("NORM3"))
+assert L("NORM1") == "RPPvP - Horde" and L("NORM2") == "CAMWOW EU4 Realm 1 PvE - Horde" and L("NORM3") == "CAMWOW EU4 Realm 1 PvE - Horde"
 
 # --- your auctions: which listings the newest scan undercuts
 lua.execute("""

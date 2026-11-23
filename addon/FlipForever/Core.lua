@@ -125,7 +125,16 @@ end
 function FF:RealmKey()
   local faction = UnitFactionGroup("player") or "Neutral"
   local realm = GetRealmName and GetRealmName() or ""
-  if realm == "" and GetNormalizedRealmName then realm = GetNormalizedRealmName() or "" end
+  local norm = GetNormalizedRealmName and GetNormalizedRealmName() or ""
+  if realm == "" then realm = norm end
+  -- On WoW: Forever, GetRealmName can keep the first realm's long name ("CAMWOW EU4 Realm 1 PvE")
+  -- after you switch realms, while the short name is right ("RPPvP"). When the long name doesn't
+  -- end with the short one, the short one is the realm you are on.
+  if norm ~= "" and realm ~= norm then
+    local flat = realm:gsub("[%s%-']", ""):lower()
+    local short = norm:gsub("[%s%-']", ""):lower()
+    if flat:sub(-#short) ~= short then realm = norm end
+  end
   local db = FlipForeverDB
   -- the realm is remembered per character: with characters on several realms, a moment without a
   -- realm name must never file one character's scans and trades under another character's realm

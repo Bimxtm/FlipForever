@@ -170,8 +170,14 @@ def gathering(con, model: dict) -> dict:
 
 
 def realms(con) -> list[str]:
+    # a new realm shows as soon as a character logged in there, before its first scan or trade
     rows = con.execute("SELECT realm FROM scans UNION SELECT realm FROM events").fetchall()
-    return sorted({r[0] for r in rows})
+    found = {r[0] for r in rows}
+    try:
+        found |= {r[0] for r in con.execute("SELECT DISTINCT realm FROM params WHERE key='chars'")}
+    except Exception:
+        pass
+    return sorted(r for r in found if r and not str(r).startswith(" - "))
 
 
 def characters(con, realm) -> dict[str, dict]:

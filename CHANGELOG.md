@@ -2,6 +2,11 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.6] - unreleased (beta)
+### Fixed
+- On WoW: Forever, the game can keep reporting your first realm's name after you switch realms, so a character on another realm (for example RPPvP) was filed under the first one. FlipForever now checks the realm's short name and keeps each realm apart.
+- The app lists a new realm as soon as a character has logged in there, before its first scan or trade.
+
 ## [2.7.1-beta.5] - 2026-11-23 (beta)
 ### Added
 - **Talents by level:** for the build you chose, the panel beside the Talents window has a By level button that lists the talent to take at every level from 10 to 60 (your next point in gold, points you have in green; the mouse wheel scrolls). When the next talent sits in a tier that is still locked, the list names the points that open it. The Advisor shows the same plan in short ranges ("L10-14 Improved Frostbolt 5/5"). Change the build with the arrows on the panel. Switch in Settings, Features.
