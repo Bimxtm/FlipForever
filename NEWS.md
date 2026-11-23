@@ -1,3 +1,7 @@
+# FlipForever 2.7.1 Beta 11 (hotfix)
+
+- **App Settings scroll:** every setting and the Save settings button can be reached again, long hints wrap and nothing overlaps.
+
 # FlipForever 2.7.1 Beta 10 (hotfix)
 
 - **Talents level by level follow the guide:** the order no longer jumps ahead when a talent's tier is still locked; only the points that open the tier come first, then the guide's order goes on.

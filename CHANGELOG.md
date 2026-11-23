@@ -2,6 +2,10 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.11] - 2026-11-23 (beta, hotfix)
+### Fixed
+- The app's Settings page was cut off at the bottom, so the last section and the Save settings button could not be reached. The page now scrolls (scroll bar and mouse wheel), long hints wrap onto a second line, and the Browse button no longer covers its hint.
+
 ## [2.7.1-beta.10] - 2026-11-23 (beta, hotfix)
 ### Fixed
 - The talent order by level drifted from the guide once a talent's tier was still locked: later talents (even from other trees) were pulled forward, so for example Champion of the Light came at level 47 instead of 35 in the Method Retribution build. Now the guide's order stays; when its next talent needs more points in its tree, only the points that open that tier come first.
