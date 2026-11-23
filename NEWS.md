@@ -1,3 +1,8 @@
+# FlipForever 2.7.1 Beta 9 (hotfix)
+
+- **Gathering fixed:** it opens again when the old Ore Farmer addon is switched off, and says why when it can't.
+- **Cleaner windows:** Settings in one tidy column, a smaller main window, nothing overlapping, one look for every window, and a Window size option in Settings.
+
 # FlipForever 2.7.1 Beta 8 (hotfix)
 
 - **Talents on WoW: Forever:** FlipForever now reads WoW: Forever's talent trees, so the level-by-level order respects tiers (no Holy Shield at level 11), the build's talents are marked in the Talents window and the Advisor's talent tips work again.

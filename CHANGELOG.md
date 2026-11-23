@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.9] - 2026-11-23 (beta, hotfix)
+### Fixed
+- Gathering could say "Gathering is off" even with the old Ore Farmer addon switched off. It now only stays off when Ore Farmer really loads for the character you play; when Gathering can't open, the message says why, and opening it starts it if it hadn't started yet.
+### Changed
+- Cleaner windows: Settings is one column in clear sections (no more labels running into each other), the main window is smaller, the Advisor's Combat helper box no longer covers the last step, the build panel sits beside the Talents window instead of over its edge, and the Gathering windows have the same look as the others.
+- New Settings option Window size: all FlipForever windows at 80, 90, 100 or 110 % (90 % by default).
+
 ## [2.7.1-beta.8] - 2026-11-23 (beta, hotfix)
 ### Fixed
 - On WoW: Forever every talent showed "Not in this game version's talent trees" and the by-level order ignored tiers (for example Holy Shield at level 11). WoW: Forever builds its three trees with the newer talent system; FlipForever now reads it, so every talent in the by-level order waits until its tier is open (5 points per tier in that tree), the build's talents are marked in the Talents window and the Advisor's talent tips work again.
