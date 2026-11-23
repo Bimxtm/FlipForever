@@ -639,6 +639,8 @@ local function build()
   feature("trainerReminder", "Advisor: remind me of new spells at my class trainer", true)
   feature("levelInfo", "Overview: XP per hour, time to level, rested XP", true)
   feature("talentOverlay", "Show my build on the Talents window (next point marked)", true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end)
+  feature("talentLevels", "Talents: the talent to take at every level for my chosen build", true, function() if FF.TalentOverlay then FF.TalentOverlay:Refresh() end end,
+    "The Talents window panel gets a By level button (mouse wheel scrolls), and the Advisor lists the build level by level. Change the build with the arrows.")
   feature("questHelper", "Quest helper: learn quest spots, map pins, /ff quest", true, function() if FF.QuestHelper then FF.QuestHelper:RefreshMap() end end,
     "FlipForever remembers where quest givers and objectives are as you play and shows them on the map and minimap.")
   feature("advisorPins", "Advisor: pin steps on the map and minimap (right-click a step)", true, function() if FF.QuestHelper then FF.QuestHelper:RefreshAll() end end)

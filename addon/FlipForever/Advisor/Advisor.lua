@@ -859,6 +859,16 @@ local function detailsText(p, cd, build)
   else
     line("This guide shows its talents only as a picture - follow it on the guide's page.")
   end
+  -- the talent for every level of this build (Talents window: By level)
+  local TO = FF.TalentOverlay
+  if build.talents and TO and TO:LevelsEnabled() then
+    local ok, levels = pcall(function() return TO:LevelPlan(build, TO:Plan(build, p.level), p.level) end)
+    if ok and levels and #levels > 0 then
+      line(" ")
+      line("|cffffd200By level|r |cff888888(one point per level from 10)|r")
+      for _, l in ipairs(TO:LevelRanges(levels)) do line(l) end
+    end
+  end
   line(" ")
   line("|cffffd200Stats|r  " .. (build.stats or cd.stats))
   line("|cffffd200Professions|r  " .. table.concat(cd.professions, " + ") .. ". " .. cd.profNote)

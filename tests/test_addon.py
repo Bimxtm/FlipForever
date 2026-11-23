@@ -2895,6 +2895,41 @@ assert L("BEHIND") == 12   # level 25: 16 points due (3 in tree 1, 13 in tree 2)
 assert L("BAND_KEYONLY") and L("SHORT_N") == 2 and L("SHORT_LAST") == "30=15/0/0"
 assert L("BEHIND_OK") == 2
 
+# --- talent picker by level: the talent for every level of the chosen build
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local savedInfo, savedTALENTS = GetTalentInfo, TALENTS
+TIERS = { 1, 1, 2, 3, 5 }
+GetTalentInfo = function(tab, i) local t = TALENTS[i] return t[1], nil, TIERS[i], 1, t[2], t[3] end
+TALENTS = { {"Improved Frostbolt", 2, 5}, {"Precision", 0, 3}, {"Frostbite", 0, 3}, {"Ice Shards", 0, 3}, {"Ice Lance", 0, 1} }
+-- full order: 5 Improved Frostbolt, then Frostbite (tier 2), Ice Shards (tier 3, needs 10 points)
+local build = { talents = { {"Improved Frostbolt", 5}, {"Frostbite", 3}, {"Ice Shards", 3} } }
+local plan = TO:Plan(build, 14)
+local lv = TO:LevelPlan(build, plan, 14)
+local o = {}
+for _, e in ipairs(lv) do o[#o + 1] = e.level .. ":" .. e.name .. e.rank .. (e.filler and "f" or "") .. ":" .. e.state end
+LV = table.concat(o, ",")
+LV_N = #lv
+LV_RANGES = table.concat(TO:LevelRanges(lv), "|")
+-- the panel's By level view
+FlipForeverDB.settings.talentView = "levels"
+local savedBuild = FlipForever.Advisor.Build
+FlipForever.Advisor.Build = function() return build end
+local txt = TO:PanelText()
+LV_VIEW, LV_FIRST, LV_LINE1 = txt.view, txt.lines[1], txt.lines[2]
+FlipForeverDB.settings.talentLevels = false
+LV_OFF = TO:PanelText().view
+FlipForeverDB.settings.talentLevels, FlipForeverDB.settings.talentView = nil, nil
+FlipForever.Advisor.Build = savedBuild
+GetTalentInfo, TALENTS = savedInfo, savedTALENTS
+""")
+print("talents by level:", L("LV"))
+print("talent ranges:", L("LV_RANGES"))
+assert L("LV").startswith("10:Improved Frostbolt1:done,11:Improved Frostbolt2:done,12:Improved Frostbolt3:next,13:Improved Frostbolt4:todo,14:Improved Frostbolt5:todo,15:Frostbite1:todo"), L("LV")
+# Ice Shards (tier 3) needs 10 points in the tree: after 5 + 3 the 9th and 10th points are fillers (Precision)
+assert "18:Precision1f:todo,19:Precision2f:todo,20:Ice Shards1:todo" in L("LV"), L("LV")
+assert L("LV_N") == 13 and L("LV_RANGES").startswith("L10-14  Improved Frostbolt 5/5")
+assert L("LV_VIEW") == "levels" and "By level" in L("LV_FIRST") and "L10" in L("LV_LINE1") and L("LV_OFF") == "order"
 # --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
 lua.execute("""
 local TO = FlipForever.TalentOverlay
@@ -3060,7 +3095,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

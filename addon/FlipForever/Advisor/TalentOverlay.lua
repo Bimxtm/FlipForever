@@ -189,6 +189,108 @@ function TO:BandLines(build, plan, level)
   return first, second, behind
 end
 
+-- By level: the talent to take at every level from 10 to 60 for the chosen build -----------------
+function TO:LevelsEnabled()
+  return FlipForeverDB and FlipForeverDB.settings and FlipForeverDB.settings.talentLevels ~= false
+end
+
+-- Plays the build from an empty tree, one point per level: each level takes the first talent of
+-- the order that is below its target, allowed at that level and unlocked (5 points per tier in
+-- its tree). When the build's next talent sits in a tier that is still locked, the point goes
+-- into the lowest open talent of that tree that the build does not use ("filler").
+-- Returns a list of { level, name, rank, max, tab, index, treeName, filler, state } where
+-- state is "done" (you have that rank), "next" (the first one you don't) or "todo".
+TO.FIRST_LEVEL, TO.LAST_LEVEL = 10, 60
+function TO:LevelPlan(build, plan, level)
+  if not (build and plan and plan.steps) then return nil end
+  local where = self:Trees()
+  local steps = {}
+  for _, s in ipairs(plan.steps) do
+    if s.tab and s.target and s.target > 0 then steps[#steps + 1] = s end
+  end
+  if #steps == 0 then return nil end
+  local planned = {}
+  for _, s in ipairs(steps) do planned[s.name] = true end
+  local rank, spent = {}, {}
+  local function open(tab, tier) return (spent[tab] or 0) >= ((tier or 1) - 1) * 5 end
+  local function filler(tab)
+    local best, bestName
+    for name, w in pairs(where) do
+      if w.tab == tab and not planned[name] and (rank[name] or 0) < (w.max or 1) and open(tab, w.tier) then
+        if not best or w.tier < best.tier or (w.tier == best.tier and w.index < best.index) then best, bestName = w, name end
+      end
+    end
+    return best, bestName
+  end
+  local out = {}
+  for lvl = self.FIRST_LEVEL, self.LAST_LEVEL do
+    local pick, locked
+    for _, s in ipairs(steps) do
+      if (rank[s.name] or 0) < s.target and (s.minLevel or 0) <= lvl then
+        if open(s.tab, s.tier) then pick = s break end
+        locked = locked or s
+      end
+    end
+    local e
+    if pick then
+      rank[pick.name] = (rank[pick.name] or 0) + 1
+      local w = where[pick.name] or {}
+      e = { name = pick.name, tab = pick.tab, index = pick.index, max = w.max or pick.target, target = pick.target }
+    elseif locked then
+      local w, name = filler(locked.tab)
+      if not w then break end
+      rank[name] = (rank[name] or 0) + 1
+      e = { name = name, tab = w.tab, index = w.index, max = w.max, filler = true, forName = locked.name }
+    else
+      break   -- the build is complete (or waits for a level): the rest of the points are free
+    end
+    spent[e.tab] = (spent[e.tab] or 0) + 1
+    e.level, e.rank = lvl, rank[e.name]
+    e.treeName = plan.treeNames and plan.treeNames[e.tab]
+    local have = where[e.name] and where[e.name].rank or 0
+    e.cur = have
+    out[#out + 1] = e
+  end
+  local nextFound = false
+  for _, e in ipairs(out) do
+    if e.cur >= e.rank then e.state = "done"
+    elseif not nextFound then e.state, nextFound = "next", true
+    else e.state = "todo" end
+  end
+  return out
+end
+
+-- The same plan in short ranges for the Advisor window: "L10-14 Improved Frostbolt 5/5"
+function TO:LevelRanges(list)
+  local out = {}
+  for _, e in ipairs(list or {}) do
+    local last = out[#out]
+    if last and last.name == e.name and last.to == e.level - 1 then
+      last.to, last.rank = e.level, e.rank
+    else
+      out[#out + 1] = { from = e.level, to = e.level, name = e.name, rank = e.rank, max = e.max, filler = e.filler, tree = e.treeName }
+    end
+  end
+  local lines = {}
+  for _, r in ipairs(out) do
+    local lv = r.from == r.to and ("L%d"):format(r.from) or ("L%d-%d"):format(r.from, r.to)
+    lines[#lines + 1] = ("%s  %s %d/%d%s"):format(lv, r.name, r.rank, r.max or r.rank,
+      r.filler and (" " .. GREY .. FF:T("(filler)") .. "|r") or (r.tree and (" " .. GREY .. r.tree .. "|r") or ""))
+  end
+  return lines
+end
+
+-- one line of the by-level list: "L12  Frostbite 2/3  Frost"
+function TO:LevelLine(e, level)
+  local color = (e.state == "done" and GREEN) or (e.state == "next" and GOLD) or (e.filler and GREY) or WHITE
+  local text = ("%sL%d  %s %d/%d|r"):format(color, e.level, e.name, e.rank, e.max or e.rank)
+  if e.filler then text = text .. " " .. GREY .. FF:T("(opens the tier for %s)"):format(e.forName) .. "|r"
+  elseif e.treeName then text = text .. " " .. GREY .. e.treeName .. "|r" end
+  if e.state == "next" then text = text .. " " .. GOLD .. FF:T("next") .. "|r" end
+  if level and e.level > level and e.state ~= "done" then text = text:gsub("^|cff%x%x%x%x%x%x", GREY) end
+  return text
+end
+
 -- the build's role in plain words
 local ROLES = { dps = "Damage", tank = "Tank", healer = "Healer", pvp = "PvP", leveling = "Leveling" }
 function TO:RoleLine(build)
@@ -256,7 +358,7 @@ function TO:Mark(button) return marks[button] end
 function TO:TooltipLine(s)
   if not s then return nil end
   local state = ({ done = FF:T("done"), next = FF:T("next"), level = s.minLevel and FF:T("from level %d"):format(s.minLevel) or nil })[s.state]
-  local line = FF:T("FlipForever build: pick %d"):format(s.order)
+  local line = s.level and FF:T("FlipForever build: level %d"):format(s.level) or FF:T("FlipForever build: pick %d"):format(s.order)
   if s.target then line = line .. (" - %d/%d"):format(s.cur or 0, s.target) end
   if state then line = line .. " - " .. state end
   return line
@@ -348,11 +450,18 @@ function TO:Panel(parent)
     b:SetSize(24, 20)
     b:SetPoint("TOPRIGHT", x, -6)
     b:SetText(text)
-    b:SetScript("OnClick", function() AD:CycleBuild(step) TO:Refresh() end)
+    b:SetScript("OnClick", function() TO.levelOffset = nil AD:CycleBuild(step) TO:Refresh() end)
     return b
   end
   panel.prev = arrow("<", -1, -36)
   panel.next = arrow(">", 1, -10)
+  -- switch between the talent order and the talent for every level
+  panel.view = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  panel.view:SetSize(64, 20)
+  panel.view:SetPoint("TOPRIGHT", -62, -6)
+  panel.view:SetScript("OnClick", function() TO:SetView(TO:View() == "levels" and "order" or "levels") end)
+  if panel.EnableMouseWheel then panel:EnableMouseWheel(true) end
+  panel:SetScript("OnMouseWheel", function(_, delta) TO:ScrollLevels(delta) end)
   panel.build = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   panel.build:SetPoint("TOPLEFT", 12, -30)
   panel.build:SetPoint("RIGHT", -12, 0)
@@ -405,6 +514,25 @@ function TO:Panel(parent)
   return panel
 end
 
+-- "order" (the build's talent order) or "levels" (the talent for every level); remembered
+function TO:View()
+  local s = FlipForeverDB and FlipForeverDB.settings
+  return (s and s.talentView) or "order"
+end
+
+function TO:SetView(view)
+  if FlipForeverDB and FlipForeverDB.settings then FlipForeverDB.settings.talentView = view end
+  self.levelOffset = nil
+  self:Refresh()
+end
+
+-- mouse wheel over the by-level list: a few levels up or down
+function TO:ScrollLevels(delta)
+  if self:View() ~= "levels" then return end
+  self.levelOffset = math.max(1, (self.levelOffset or self.lastFirst or 1) - (delta or 0) * 3)
+  self:Refresh()
+end
+
 -- Text of the panel (kept apart from the frame so it can be tested): title, points, lines, note.
 function TO:PanelText(p)
   p = p or AD:Player()
@@ -433,6 +561,32 @@ function TO:PanelText(p)
     out.steps[#out.lines] = s
   end
   if #plan.steps == 0 then out.lines[#out.lines + 1] = FF:T("This guide shows its talents only as a picture - follow it on the guide's page.") end
+  -- By level view (button on the panel, mouse wheel scrolls): one line per level, the list
+  -- opens a few levels before your next point
+  out.levels = self:LevelsEnabled() and self:LevelPlan(build, plan, p.level) or nil
+  out.view = (out.levels and self:View() == "levels") and "levels" or "order"
+  if out.view == "levels" then
+    local list = out.levels
+    local first = 1
+    for i, e in ipairs(list) do if e.state == "next" then first = i break end end
+    if first == 1 and list[#list] and list[#list].state == "done" then first = #list end
+    first = math.max(1, first - 3)
+    if self.levelOffset then first = self.levelOffset end
+    first = math.max(1, math.min(first, #list - (MAX_LINES - 2)))
+    self.lastFirst, out.levelFirst = first, first
+    out.lines = { GOLD .. FF:T("By level: %s"):format(build.name) .. "|r" }
+    out.tabs, out.steps = {}, {}
+    for i = first, #list do
+      local e = list[i]
+      out.lines[#out.lines + 1] = self:LevelLine(e, p.level)
+      out.tabs[#out.lines] = e.tab
+      out.steps[#out.lines] = { name = e.name, tab = e.tab, index = e.index, treeName = e.treeName, order = e.level,
+                                cur = e.cur, target = e.rank, state = e.state, level = e.level }
+    end
+    if #list < (self.LAST_LEVEL - self.FIRST_LEVEL + 1) then
+      out.lines[#out.lines + 1] = GREY .. FF:T("L%d+  free points: the build is complete"):format(self.FIRST_LEVEL + #list) .. "|r"
+    end
+  end
   local nextStep
   for _, s in ipairs(plan.steps) do if s.state == "next" then nextStep = s break end end
   if nextStep and nextStep.needPoints and nextStep.needPoints > 0 then
@@ -467,6 +621,8 @@ function TO:Refresh()
   self:Decorate(text.plan or { steps = {} })
   local pn = self:Panel(f)
   pn.build:SetText(text.build or "")
+  pn.view:SetText(text.view == "levels" and FF:T("Order") or FF:T("By level"))
+  if text.levels then pn.view:Show() else pn.view:Hide() end
   pn.points:SetText(text.points or "")
   pn.role:SetText(text.role or "")
   pn.bands1:SetText(text.bands1 or "")

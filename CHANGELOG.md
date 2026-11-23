@@ -3,6 +3,13 @@
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
 ## [2.7.1-beta.5] - unreleased (beta)
+### Added
+- **Talents by level:** for the build you chose, the panel beside the Talents window has a By level button that lists the talent to take at every level from 10 to 60 (your next point in gold, points you have in green; the mouse wheel scrolls). When the next talent sits in a tier that is still locked, the list names the points that open it. The Advisor shows the same plan in short ranges ("L10-14 Improved Frostbolt 5/5"). Change the build with the arrows on the panel. Switch in Settings, Features.
+
+### Changed
+- Less clutter: the addon's Settings tab no longer repeats the Advisor, Gathering, Professions and Talents buttons (all four are on the Overview) or the Reload button; the app's sidebar has two pages fewer (How to use is in About & updates, Development is under Community).
+- Smaller download: the app leaves out parts of Python it never uses.
+
 ### Fixed
 - With characters on more than one realm, a moment without a realm name at login could file a character's scans and trades under the realm you played last. The realm is now remembered per character.
 
