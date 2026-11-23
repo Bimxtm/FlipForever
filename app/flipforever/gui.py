@@ -1419,7 +1419,24 @@ class App(tk.Tk):
 
     # settings
     def _build_settings(self):
-        f = self.tab_set
+        # the page scrolls (scroll bar and mouse wheel), so every section and the Save button
+        # stay reachable in a small window
+        outer = self.tab_set
+        canvas = tk.Canvas(outer, bg=BG, highlightthickness=0)
+        sb = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        f = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=f, anchor="nw")
+        f.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        def wheel(e):
+            if canvas.yview() != (0.0, 1.0):
+                canvas.yview_scroll(int(-e.delta / 120) or (-1 if e.delta > 0 else 1), "units")
+        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", wheel))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+        self.settings_canvas = canvas
         self.vars = {}
         row = 0
 
@@ -1438,7 +1455,8 @@ class App(tk.Tk):
                 w = ttk.Entry(f, textvariable=v, width=width)
             w.grid(row=row, column=1, sticky="w")
             if hint:
-                ttk.Label(f, text=tr(hint), style="Muted.TLabel").grid(row=row, column=2, sticky="w", padx=12)
+                ttk.Label(f, text=tr(hint), style="Muted.TLabel", wraplength=320, justify="left").grid(
+                    row=row, column=2, sticky="w", padx=12)
             self.vars[key] = (v, kind)
             row += 1
             return w
@@ -1460,8 +1478,11 @@ class App(tk.Tk):
             row=row, column=2, sticky="w", padx=12)
         lang_box.bind("<<ComboboxSelected>>", lambda e: self._language_changed())
         row += 1
-        self.path_box = add("WoW Forever folder", "wow_path", "combo", 60, store.find_wow_installs(), "the _forever_ folder")
-        ttk.Button(f, text="Browse...", command=self._browse).grid(row=row - 1, column=2, sticky="w", padx=12)
+        self.path_box = add("WoW Forever folder", "wow_path", "combo", 60, store.find_wow_installs())
+        browse = ttk.Frame(f)
+        browse.grid(row=row - 1, column=2, sticky="w", padx=12)
+        ttk.Button(browse, text="Browse...", command=self._browse).pack(side="left")
+        ttk.Label(browse, text=tr("the _forever_ folder"), style="Muted.TLabel").pack(side="left", padx=(10, 0))
         self.acct_box = add("Account folder", "account", "combo", 30, store.find_accounts(self.settings.wow_path),
                             "under WTF\\Account (picked automatically)")
         self.path_box.bind("<<ComboboxSelected>>", lambda e: self._path_changed())
