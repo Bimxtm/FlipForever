@@ -357,13 +357,31 @@ function TO:LevelPlan(build, plan, level)
     end
     return best, bestName
   end
+  -- the guide's order stays: when its next talent is still locked, only later talents of the
+  -- same tree (they open the tier too) or filler points in that tree come first; talents of
+  -- other trees wait, unless that tree has nothing left to open the tier with
+  local function wanted(s, lvl) return (rank[s.name] or 0) < s.target and (s.minLevel or 0) <= lvl end
   local out = {}
   for lvl = self.FIRST_LEVEL, self.LAST_LEVEL do
     local pick, locked
     for _, s in ipairs(steps) do
-      if (rank[s.name] or 0) < s.target and (s.minLevel or 0) <= lvl then
-        if open(s.tab, s.tier) then pick = s break end
-        locked = locked or s
+      if wanted(s, lvl) then
+        if open(s.tab, s.tier) then pick = s else locked = s end
+        break
+      end
+    end
+    if locked then
+      for _, s in ipairs(steps) do
+        if s ~= locked and s.tab == locked.tab and wanted(s, lvl) and open(s.tab, s.tier) then pick = s break end
+      end
+    end
+    local fw, fname
+    if locked and not pick then
+      fw, fname = filler(locked.tab)
+      if not fw then
+        for _, s in ipairs(steps) do
+          if wanted(s, lvl) and open(s.tab, s.tier) then pick = s break end
+        end
       end
     end
     local e
@@ -371,11 +389,9 @@ function TO:LevelPlan(build, plan, level)
       rank[pick.name] = (rank[pick.name] or 0) + 1
       local w = where[pick.name] or {}
       e = { name = pick.name, tab = pick.tab, index = pick.index, max = w.max or pick.target, target = pick.target }
-    elseif locked then
-      local w, name = filler(locked.tab)
-      if not w then break end
-      rank[name] = (rank[name] or 0) + 1
-      e = { name = name, tab = w.tab, index = w.index, max = w.max, filler = true, forName = locked.name }
+    elseif fw then
+      rank[fname] = (rank[fname] or 0) + 1
+      e = { name = fname, tab = fw.tab, index = fw.index, max = fw.max, filler = true, forName = locked.name }
     else
       break   -- the build is complete (or waits for a level): the rest of the points are free
     end

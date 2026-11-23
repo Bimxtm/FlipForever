@@ -3061,6 +3061,13 @@ for _, b in ipairs(FlipForever.Guide.CLASSES.PALADIN.builds) do
   end
   orders[#orders + 1] = b.id .. ": " .. table.concat(o, ", ")
 end
+-- the guide's order stays: Method Retribution takes one filler point at 34, then Champion of the Light
+local ret
+for _, b in ipairs(FlipForever.Guide.CLASSES.PALADIN.builds) do if b.id == "ret" then ret = b end end
+local lv = TO:LevelPlan(ret, TO:Plan(ret, 60), 60) or {}
+local at = {}
+for _, e in ipairs(lv) do at[e.level] = e.name .. (e.filler and "*" or "") end
+PAL_RET = (at[33] or "") .. "|" .. (at[34] or "") .. "|" .. (at[35] or "") .. "|" .. (at[40] or "") .. "|" .. (at[41] or "")
 TO.Trees = savedTrees
 PAL_BAD, PAL_MISSING, PAL_ORDERS = table.concat(bad, ", "), table.concat(missing, ", "), table.concat(orders, "\\n")
 """)
@@ -3068,6 +3075,7 @@ print("Forever Paladin level orders:\n" + L("PAL_ORDERS"))
 print("not in Forever's trees:", L("PAL_MISSING"))
 assert L("PAL_BAD") == "", L("PAL_BAD")
 assert L("PAL_MISSING") == "", L("PAL_MISSING")
+assert L("PAL_RET") == "Unyielding Faith|Deflection*|Champion of the Light|Unsealed Wrath|Divine Strength", L("PAL_RET")
 
 # --- GUI cleanup: one window size for every FlipForever window (Settings, Window size)
 lua.execute("""
