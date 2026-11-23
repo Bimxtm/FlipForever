@@ -2,8 +2,9 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
-## [2.7.1-beta.6] - unreleased (beta)
+## [2.7.1-beta.6] - 2026-11-23 (beta, hotfix)
 ### Fixed
+- The Talents button and `/ff talents` said "The Talents window could not be opened" on WoW: Forever, whose Talents window has its own name. They now open it the way the game does (or through the Talents key), and the FlipForever build panel attaches to it.
 - On WoW: Forever, the game can keep reporting your first realm's name after you switch realms, so a character on another realm (for example RPPvP) was filed under the first one. FlipForever now checks the realm's short name and keeps each realm apart.
 - The app lists a new realm as soon as a character has logged in there, before its first scan or trade.
 

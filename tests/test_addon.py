@@ -175,6 +175,7 @@ end
 function CreateFrame(kind, name, parent, template)
   local f = newFrame()
   if name then _G[name] = f end
+  if parent then f.GetParent = function() return parent end end
   return f
 end
 UIParent = newFrame()
@@ -2865,6 +2866,32 @@ ToggleTalentFrame, LoadAddOn = nil, nil
 GetTalentTabInfo = SAVED_TABINFO
 UnitClass = SAVED_CLASS
 """)
+lua.execute("""
+-- WoW: Forever: no ToggleTalentFrame and an own window name; the Talents key binding opens it
+local TO = FlipForever.TalentOverlay
+UnitClass = function() return "Mage", "MAGE" end
+local savedTF = _G.TalentFrame
+_G.TalentFrame = nil
+FOREVER_FRAME = CreateFrame("Frame", "ForeverTalentsFrame", UIParent)
+BOUND = nil
+RunBinding = function(b) BOUND = b FOREVER_FRAME.shown = true end
+TO3_OPEN = TO:Open()
+TO3_BOUND = BOUND
+TO3_FOUND = TO.foundName
+TO3_PANEL = FlipForeverTalentPanel and FlipForeverTalentPanel:IsShown()
+RunBinding = nil
+printed = {}
+FOREVER_FRAME.shown = false
+TO.foundName = nil
+_G.ForeverTalentsFrame = nil
+TO3_FAIL = TO:Open()
+TO3_MSG = printed[#printed] or ""
+_G.TalentFrame = savedTF
+UnitClass = SAVED_CLASS
+""")
+print("forever talents:", L("TO3_OPEN"), L("TO3_BOUND"), L("TO3_FOUND"), L("TO3_PANEL"), "|", L("TO3_FAIL"), repr(L("TO3_MSG")))
+assert L("TO3_OPEN") is True and L("TO3_BOUND") == "TOGGLETALENTS" and L("TO3_FOUND") == "ForeverTalentsFrame" and L("TO3_PANEL")
+assert L("TO3_FAIL") is False and "press your Talents key" in L("TO3_MSG")
 print("talent panel line:", repr(L("TO2_LINE")), "| points:", repr(L("TO2_POINTS")), "| role:", L("TO2_ROLE"))
 print("talents command:", L("TO2_OPEN"), L("TO2_TOGGLED"), L("TO2_OPENLOW"), L("TO2_LOW"), repr(L("TO2_LOWMSG")), L("TO2_SLASH"))
 assert L("TO2_LINE").endswith(" |cff888888Frost|r")

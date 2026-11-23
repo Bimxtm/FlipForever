@@ -1,3 +1,8 @@
+# FlipForever 2.7.1 Beta 6 (hotfix)
+
+- **Talents button fixed:** it opens WoW: Forever's Talents window again, with the build panel beside it.
+- **Realms kept apart:** characters on a second realm (for example RPPvP) get their own realm in the addon and the app.
+
 # FlipForever 2.7.1 Beta 5
 
 - **Talents by level:** for the build you choose, the Talents window lists the talent to take at every level from 10 to 60, with your next point marked. The Advisor shows the same plan in short ranges.

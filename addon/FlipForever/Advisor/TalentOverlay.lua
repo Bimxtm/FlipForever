@@ -320,13 +320,33 @@ function TO:StepText(s)
 end
 
 -- The game's Talents window and its talent buttons (names differ between client versions) -------
-local FRAME_NAMES = { "PlayerTalentFrame", "TalentFrame" }
+local FRAME_NAMES = { "PlayerTalentFrame", "TalentFrame", "ClassTalentFrame", "PlayerSpellsFrame" }
+local TALENT_ADDONS = { "Blizzard_TalentUI", "Blizzard_ClassTalentUI", "Blizzard_PlayerSpells" }
 
 function TO:GameFrame()
   for _, n in ipairs(FRAME_NAMES) do
     local f = _G[n]
     if type(f) == "table" then return f, n end
   end
+  if self.foundName and type(_G[self.foundName]) == "table" then return _G[self.foundName], self.foundName end
+end
+
+-- WoW: Forever's own Talents window has its own name: look for a top-level frame called
+-- "...Talent...Frame" (the shown one first) and remember it
+function TO:FindFrame()
+  local best, bestName
+  for name, obj in pairs(_G) do
+    if type(name) == "string" and type(obj) == "table" and name:find("Talent") and name:find("Frame$")
+       and not name:find("^FlipForever") and type(obj.GetObjectType) == "function" then
+      local okP, parent = pcall(obj.GetParent, obj)
+      if okP and parent == UIParent then
+        local shown = obj.IsShown and obj:IsShown()
+        if not best or (shown and not best.shown) then best, bestName = { shown = shown }, name end
+      end
+    end
+  end
+  self.foundName = bestName
+  return bestName and _G[bestName], bestName
 end
 
 function TO:SelectedTab(f)
@@ -682,16 +702,35 @@ function TO:Open()
   local ok, level = pcall(UnitLevel, "player")
   if ok and tonumber(level) and tonumber(level) < 10 then FF:Print(FF:T("Talents start at level 10.")) return false end
   local load = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
-  if not self:GameFrame() and load then pcall(load, "Blizzard_TalentUI") end
-  self:Hook()
-  if type(ToggleTalentFrame) == "function" then
-    ToggleTalentFrame()
-  else
-    local f = self:GameFrame()
-    if not f then FF:Print(FF:T("The Talents window could not be opened.")) return false end
-    if f:IsShown() then HideUIPanel(f) else ShowUIPanel(f) end
+  if not self:GameFrame() and load then
+    for _, a in ipairs(TALENT_ADDONS) do pcall(load, a) end
   end
-  return true
+  self:Hook()
+  -- the game's own ways first (they differ between clients), then the frame itself, then the
+  -- Talents key binding, which every client has
+  local util = type(PlayerSpellsUtil) == "table" and PlayerSpellsUtil.ToggleClassTalentOrSpecFrame
+  for _, fn in ipairs({ ToggleTalentFrame, util, ToggleClassTalentFrame, TogglePlayerSpellsFrame }) do
+    if type(fn) == "function" and pcall(fn) then self:AfterOpen() return true end
+  end
+  local f = self:GameFrame()
+  if f and ShowUIPanel then
+    if f:IsShown() then HideUIPanel(f) else ShowUIPanel(f) end
+    self:AfterOpen()
+    return true
+  end
+  if type(RunBinding) == "function" and pcall(RunBinding, "TOGGLETALENTS") then
+    self:AfterOpen()
+    return true
+  end
+  FF:Print(FF:T("The Talents window could not be opened - press your Talents key (N)."))
+  return false
+end
+
+-- after opening: find the window if its name is new to us, hook it and show the panel
+function TO:AfterOpen()
+  if not self:GameFrame() then self:FindFrame() end
+  self:Hook()
+  self:Refresh()
 end
 
 -- Hooks: the Talents window is load-on-demand -----------------------------------------------------
@@ -711,9 +750,15 @@ function TO:Hook()
 end
 
 FF:On("ADDON_LOADED", function(name)
-  if name == "Blizzard_TalentUI" then TO:Hook() TO:Refresh() end
+  if type(name) == "string" and (name:find("Talent") or name:find("PlayerSpells")) then
+    if not TO:GameFrame() then TO:FindFrame() end
+    TO:Hook() TO:Refresh()
+  end
 end)
-FF:On("PLAYER_LOGIN", function() TO:Hook() end)
+FF:On("PLAYER_LOGIN", function()
+  if not TO:GameFrame() then pcall(TO.FindFrame, TO) end
+  TO:Hook()
+end)
 for _, ev in ipairs({ "CHARACTER_POINTS_CHANGED", "PLAYER_TALENT_UPDATE", "PLAYER_LEVEL_UP" }) do
   FF:On(ev, function() if hooked then TO:Refresh() end end)
 end
