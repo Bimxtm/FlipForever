@@ -263,6 +263,66 @@
    "text": "Craft button in the profession planner: craft the top recipe the planned number of times",
    "status": "shipped",
    "version": "2.7.1-beta.4"
+  },
+  {
+   "r": "6bea9c13",
+   "text": "Less clutter in the addon and the app, and a smaller download",
+   "status": "shipped",
+   "version": "2.7.1-beta.5"
+  },
+  {
+   "r": "idea-20261122223114-3",
+   "text": "Realm overview in the app: profit, gold and characters per realm side by side",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223114-2",
+   "text": "Enemy player alert on PvP realms while gathering or questing",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223114",
+   "text": "New realm head start: rough price estimates from your other realm until the new one is scanned",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223717-4",
+   "text": "Weekly report in the app: best and worst flips, fastest sellers, what to stop buying",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223717",
+   "text": "Profession cooldowns for all your characters",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223717-2",
+   "text": "Expiry saver: better options for items that keep expiring",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223114-4",
+   "text": "Quiet chat option for role-play realms",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "idea-20261122223717-3",
+   "text": "Crafting cost in item tooltips",
+   "status": "planned",
+   "version": ""
+  },
+  {
+   "r": "talentlevels-20261123",
+   "text": "Talents by level: the talent to take at every level for the build you choose",
+   "status": "shipped",
+   "version": "2.7.1-beta.5"
   }
  ],
  "scores": []

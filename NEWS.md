@@ -1,3 +1,10 @@
+# FlipForever 2.7.1 Beta 5
+
+- **Talents by level:** for the build you choose, the Talents window lists the talent to take at every level from 10 to 60, with your next point marked. The Advisor shows the same plan in short ranges.
+- **Less clutter:** fewer repeated buttons in the addon's Settings and two pages fewer in the app's sidebar (How to use is now in About & updates, Development under Community).
+- **Smaller download** of the app.
+- **Fix:** characters on more than one realm keep their scans and trades apart.
+
 # FlipForever 2.7.1 Beta 4
 
 - **Dungeon advisor:** the Advisor names the dungeon around your level with the most upgrades for your weak gear slots, lists the drops and points the arrow to the entrance.

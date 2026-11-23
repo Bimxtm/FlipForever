@@ -2,7 +2,7 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
-## [2.7.1-beta.5] - unreleased (beta)
+## [2.7.1-beta.5] - 2026-11-23 (beta)
 ### Added
 - **Talents by level:** for the build you chose, the panel beside the Talents window has a By level button that lists the talent to take at every level from 10 to 60 (your next point in gold, points you have in green; the mouse wheel scrolls). When the next talent sits in a tier that is still locked, the list names the points that open it. The Advisor shows the same plan in short ranges ("L10-14 Improved Frostbolt 5/5"). Change the build with the arrows on the panel. Switch in Settings, Features.
 
