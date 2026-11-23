@@ -1105,7 +1105,7 @@ class App(tk.Tk):
         left = ttk.Frame(mid)
         left.pack(side="left", fill="both", expand=True)
         ttk.Label(left, text="Profit over time", style="H.TLabel").pack(anchor="w")
-        self.chart = tk.Canvas(left, bg=PANEL, highlightthickness=0, height=300)
+        self.chart = tk.Canvas(left, bg=PANEL, highlightthickness=0, height=180)   # grows with the window
         self.chart.pack(fill="both", expand=True, pady=(6, 0))
         self.chart.bind("<Configure>", lambda e: self._draw_chart())
         # profit per character (shown when more than one character trades)
@@ -1114,6 +1114,15 @@ class App(tk.Tk):
         frame, self.char_tree = self._tree(self.char_frame, ("Character", "Realized profit", "Last 7 days", "Stock (cost)", "Sales", "Bought"),
                                            (180, 120, 110, 110, 70, 80), height=4)
         frame.pack(fill="x")
+        # every realm side by side (shown with two or more realms); double-click a row to switch
+        self.realm_frame = ttk.Frame(left)
+        ttk.Label(self.realm_frame, text="Realm overview", style="H.TLabel").pack(anchor="w", pady=(12, 0))
+        ttk.Label(self.realm_frame, text="Double-click a realm to switch to it.", style="Muted.TLabel").pack(anchor="w", pady=(0, 4))
+        frame, self.realm_tree = self._tree(self.realm_frame, ("Realm", "Characters", "Gold", "Realized profit", "Last 7 days",
+                                                               "Stock (cost)", "Last scan"),
+                                            (270, 70, 90, 105, 95, 95, 80), height=3)
+        frame.pack(fill="x")
+        self.realm_tree.bind("<Double-1>", lambda e: self._realm_overview_switch())
         right = ttk.Frame(mid, width=360)
         right.pack(side="left", fill="y", padx=(14, 0))
         right.pack_propagate(False)
@@ -1139,6 +1148,31 @@ class App(tk.Tk):
              (r["char"].lower(), r["realized"], r["week"], r["held_cost"], r["sold"], r["bought"]),
              "deal" if r["realized"] > 0 else "bad" if r["realized"] < 0 else None)
             for r in rows])
+
+    def _fill_realm_overview(self):
+        """Realm overview on the Dashboard: only with the switch on and two or more realms."""
+        rows = engine.realm_overview(self.con) if self.settings.realm_overview else []
+        if len(rows) < 2:
+            self.realm_frame.pack_forget()
+            return
+        self.realm_frame.pack(fill="x")
+        self._fill(self.realm_tree, [
+            ((r["realm"] + ("  (shown)" if r["realm"] == self.realm else ""), r["chars"], money(r["gold"], True),
+              money(r["realized"], True), money(r["week"], True), money(r["held_cost"], True),
+              ago(r["last_scan"]) if r["last_scan"] else "never"),
+             (r["realm"].lower(), r["chars"], r["gold"], r["realized"], r["week"], r["held_cost"], r["last_scan"] or 0),
+             "deal" if r["realized"] > 0 else "bad" if r["realized"] < 0 else None)
+            for r in rows])
+
+    def _realm_overview_switch(self):
+        sel = self.realm_tree.selection()
+        if not sel:
+            return
+        realm = str(self.realm_tree.item(sel[0], "values")[0]).replace("  (shown)", "")
+        if realm and realm != self.realm and realm in (self.realm_box["values"] or ()):
+            self.realm_var.set(realm)
+            self._realm_changed()
+            self.status(f"Switched to {realm}.")
 
     def _draw_chart(self):
         c = self.chart
@@ -1511,6 +1545,8 @@ class App(tk.Tk):
             hint="then plays a sound and pops up: click Reload in game to load it")
         add("Switch to the character I play", "auto_character", "bool",
             hint="after each import, picks the character the game saved last")
+        add("Realm overview", "realm_overview", "bool",
+            hint="Dashboard: all your realms side by side (gold, profit, stock, last scan); double-click one to switch")
         section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
@@ -1931,6 +1967,7 @@ class App(tk.Tk):
         self.cards["tracked"].set(f"{s['tracked']:,}")
         self._draw_chart()
         self._fill_char_profit(realm)
+        self._fill_realm_overview()
         self._fill_steps(installed, s)
         self._fill_deals()
         self._fill_top_deals()

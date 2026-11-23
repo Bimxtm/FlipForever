@@ -960,6 +960,28 @@ def profit_by_char(con, realm) -> list[dict]:
     return out
 
 
+def realm_overview(con) -> list[dict]:
+    """Every realm side by side: characters, their gold, realized profit, last 7 days, stock at
+    cost and the last scan. Each realm's numbers come only from that realm's own data."""
+    out = []
+    for realm in realms(con):
+        chars = characters(con, realm)
+        gold = 0
+        for info in chars.values():
+            try:
+                gold += int((info or {}).get("money") or 0)
+            except (TypeError, ValueError):
+                pass
+        rows = profit_by_char(con, realm)
+        scan = last_scan(con, realm)
+        out.append({
+            "realm": realm, "chars": len(chars), "gold": gold,
+            "realized": sum(r["realized"] for r in rows), "week": sum(r["week"] for r in rows),
+            "held_cost": sum(r["held_cost"] for r in rows), "last_scan": scan["t"] if scan else None,
+        })
+    return out
+
+
 # ============================================================== dashboard numbers
 def goal_text(today: int, week: int, day_gold: int, week_gold: int) -> str:
     """Gold goals (settings goal_day_gold / goal_week_gold, 0 = off): progress as one line, empty when none set."""

@@ -131,6 +131,7 @@ class Settings:
     auto_build: bool = True       # after importing a new scan: build the shopping list and notify
     auto_character: bool = True   # after importing: switch to the character you played last
     auto_char_seen: str = ""      # the last character switched to automatically ("Name @ Realm")
+    realm_overview: bool = True   # Dashboard: every realm side by side (with 2+ realms); double-click switches
     share_combat: bool = True     # share the combat helper's anonymous learning (share.py)
     share_warned: bool = False    # the warning about it was shown once
     share_id: str = ""            # random install ID for the shared summaries (not linked to anything)
