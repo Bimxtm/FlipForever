@@ -194,8 +194,16 @@ function AD:Talents()
         end
       end
     end
+  elseif FF.TalentOverlay then
+    -- trait-style trees (WoW: Forever)
+    for name, w in pairs((FF.TalentOverlay:Trees())) do
+      ranks[name] = { rank = w.rank, max = w.max }
+      ok = true
+    end
+    local q = FF.TalentOverlay:TraitUnspent()
+    if q then unspent = q end
   end
-  if UnitCharacterPoints then
+  if unspent == nil and UnitCharacterPoints then
     local okp, pts = pcall(UnitCharacterPoints, "player")
     if okp and type(pts) == "number" then unspent = pts end
   end
@@ -227,9 +235,13 @@ end
 -- Returns { { name, add, tree, cur, target }, ... }, points left over (or nil without talent data).
 function AD:SpendPlan(build, points, level)
   if not (build and build.talents and points and points > 0) then return nil end
-  if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return nil end
   local where, spent, names = {}, {}, {}
-  local okT, tabs = pcall(GetNumTalentTabs)
+  local okT, tabs = false, 0
+  if GetNumTalentTabs and GetNumTalents and GetTalentInfo then
+    okT, tabs = pcall(GetNumTalentTabs)
+  elseif FF.TalentOverlay then
+    where, spent, names = FF.TalentOverlay:Trees()   -- trait-style trees (WoW: Forever)
+  end
   for tab = 1, (okT and tonumber(tabs) or 0) do
     spent[tab] = 0
     if GetTalentTabInfo then

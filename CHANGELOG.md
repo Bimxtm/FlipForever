@@ -2,6 +2,12 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.8] - 2026-11-23 (beta, hotfix)
+### Fixed
+- On WoW: Forever every talent showed "Not in this game version's talent trees" and the by-level order ignored tiers (for example Holy Shield at level 11). WoW: Forever builds its three trees with the newer talent system; FlipForever now reads it, so every talent in the by-level order waits until its tier is open (5 points per tier in that tree), the build's talents are marked in the Talents window and the Advisor's talent tips work again.
+- Paladin builds no longer list talents that WoW: Forever doesn't have (One-Handed Weapon Specialization, Improved Seal of Fury, Voice of Truth).
+- The Talents panel shows the build name on one line.
+
 ## [2.7.1-beta.7] - 2026-11-23 (beta, hotfix)
 ### Fixed
 - WoW: Forever gives every realm the same name; PvP, RP and Hardcore realms only differ by their rules. FlipForever now reads those rules, so a character on RPPvP (or PvP, RP, Hardcore) gets its own realm with its own prices, trades and characters in the addon and the app. Your normal realm keeps its data as it is.

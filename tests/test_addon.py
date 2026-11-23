@@ -2979,6 +2979,95 @@ assert L("LV").startswith("10:Improved Frostbolt1:done,11:Improved Frostbolt2:do
 assert "18:Precision1f:todo,19:Precision2f:todo,20:Ice Shards1:todo" in L("LV"), L("LV")
 assert L("LV_N") == 13 and L("LV_RANGES").startswith("L10-14  Improved Frostbolt 5/5")
 assert L("LV_VIEW") == "levels" and "By level" in L("LV_FIRST") and "L10" in L("LV_LINE1") and L("LV_OFF") == "order"
+
+# --- WoW: Forever: the three trees come from the trait system (no classic talent functions)
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local sv = { GetNumTalentTabs, GetNumTalents, GetTalentInfo, GetTalentTabInfo, C_Traits, C_ClassTalents, GetSpellInfo }
+GetNumTalentTabs, GetNumTalents, GetTalentInfo, GetTalentTabInfo = nil, nil, nil, nil
+-- three trees side by side, 7 rows each; every row has one 5-rank talent, Holy Shield sits in row 7
+local NODES, nodeIDs = {}, {}
+local function add(id, x, y, name, rank, max)
+  NODES[id] = { ID = id, posX = x, posY = y, ranksPurchased = rank, maxRanks = max, entryIDs = { id }, isVisible = true, name = name }
+  nodeIDs[#nodeIDs + 1] = id
+end
+for tree = 1, 3 do
+  for row = 1, 7 do
+    local id = tree * 100 + row
+    local name = (tree == 2 and row == 7) and "Holy Shield" or (tree == 2 and row == 1) and "Redoubt" or ("T" .. tree .. "R" .. row)
+    add(id, tree * 4000 + (row % 2) * 600, 1500 + row * 600, name, (tree == 2 and row == 1) and 2 or 0, (name == "Holy Shield") and 1 or 5)
+  end
+end
+NODES[9999] = { ID = 9999, posX = 6000, posY = 900, subTreeID = 5, entryIDs = { 9999 }, name = "Hero" }
+nodeIDs[#nodeIDs + 1] = 9999
+C_ClassTalents = { GetActiveConfigID = function() return 77 end }
+C_Traits = {
+  GetConfigInfo = function() return { treeIDs = { 790 } } end,
+  GetTreeNodes = function() return nodeIDs end,
+  GetNodeInfo = function(_, id) return NODES[id] end,
+  GetEntryInfo = function(_, id) return { definitionID = id } end,
+  GetDefinitionInfo = function(id) return { spellID = 20000 + id } end,
+  GetTreeCurrencyInfo = function() return { { quantity = 3 } } end,
+}
+GetSpellInfo = function(id) local n = NODES[id - 20000] return n and n.name end
+local where, spent = TO:Trees()
+local hs, rd = where["Holy Shield"], where["Redoubt"]
+TT_HS = hs.tab .. ":" .. hs.tier .. ":" .. hs.max .. ":" .. hs.spellID
+TT_RD = rd.tab .. ":" .. rd.tier .. ":" .. rd.rank .. ":" .. spent[2]
+TT_HERO = where["Hero"] == nil
+local build = { keyOnly = true, talents = { {"Holy Shield", 1}, {"Redoubt", 5} } }
+local plan = TO:Plan(build, 11)
+local lv = TO:LevelPlan(build, plan, 11)
+TT_HSLEVEL = 0
+for _, e in ipairs(lv) do if e.name == "Holy Shield" then TT_HSLEVEL = e.level end end
+TT_STEP = plan.steps[1].name .. ":" .. plan.steps[1].state
+local ranks, unspent = FlipForever.Advisor:Talents()
+TT_RANKS = ranks and ranks["Redoubt"].rank .. ":" .. tostring(unspent)
+local sp = FlipForever.Advisor:SpendPlan(build, 3, 11)
+TT_SPEND = sp and sp[1] and sp[1].name or "none"
+GetNumTalentTabs, GetNumTalents, GetTalentInfo, GetTalentTabInfo, C_Traits, C_ClassTalents, GetSpellInfo = (table.unpack or unpack)(sv)
+""")
+print("trait trees:", L("TT_HS"), L("TT_RD"), "Holy Shield at", L("TT_HSLEVEL"), L("TT_STEP"), L("TT_RANKS"), L("TT_SPEND"))
+assert L("TT_HS") == "2:7:1:20207" and L("TT_RD") == "2:1:2:2" and L("TT_HERO")
+# Holy Shield (row 7) needs 30 points in its tree: not before level 40
+assert L("TT_HSLEVEL") >= 40, L("TT_HSLEVEL")
+assert L("TT_STEP") == "Redoubt:next" and L("TT_RANKS") == "2:3" and L("TT_SPEND") == "Redoubt", (L("TT_STEP"), L("TT_SPEND"))
+
+# --- every Paladin build's level order on WoW: Forever's real trees (read in game 23 Nov 2026):
+# each point goes into a tier that is already open (5 points per tier in that tree)
+lua.execute("""
+local TO = FlipForever.TalentOverlay
+local FOREVER_PALADIN = { {1,1,"Spiritual Focus",5}, {1,1,"Divine Strength",5}, {1,2,"Healing Light",3}, {1,2,"Reverence",2}, {1,2,"Improved Seals",5}, {1,2,"Purifying Power",2}, {1,3,"Divine Favor",1}, {1,3,"Illumination",5}, {1,3,"Holy Conduit",2}, {1,4,"Divine Precision",2}, {1,4,"Infusion of Light",2}, {1,4,"Oath of Light",1}, {1,5,"Consecrated Ground",2}, {1,5,"Holy Shock",1}, {1,5,"Boundless Light",2}, {1,6,"Holy Power",5}, {1,7,"Light's Vigil",1}, {2,1,"Divine Intellect",5}, {2,1,"Redoubt",5}, {2,2,"Precision",3}, {2,2,"Guardian's Favor",2}, {2,2,"Sacred Duty",2}, {2,3,"Templar's Bulwark",1}, {2,3,"Improved Hammer of Justice",3}, {2,3,"Shield Specialization",2}, {2,3,"Toughness",5}, {2,4,"Swift Judgement",1}, {2,4,"Improved Righteous Fury",3}, {2,4,"Anticipation",5}, {2,5,"Stoicism",2}, {2,5,"Holy Shield",1}, {2,5,"Reckoning",5}, {2,6,"Iron Creed",3}, {2,7,"Shieldsworn",1}, {3,1,"Deflection",5}, {3,1,"Benediction",5}, {3,2,"Improved Judgement",2}, {3,2,"Conviction",3}, {3,2,"Sanctified Judgement",3}, {3,3,"Vindication",3}, {3,3,"Unyielding Faith",2}, {3,3,"Seal of Command",1}, {3,3,"Pursuit of Justice",2}, {3,4,"Eye for an Eye",2}, {3,4,"Sacred Arbiter",1}, {3,4,"Two-Handed Weapon Specialization",3}, {3,5,"Turn Evil",2}, {3,5,"Repentance",1}, {3,5,"Vengeance",3}, {3,6,"Champion of the Light",5}, {3,7,"Unsealed Wrath",1} }
+local savedTrees = TO.Trees
+TO.Trees = function()
+  local where, spent, idx = {}, { 0, 0, 0 }, {}
+  for _, t in ipairs(FOREVER_PALADIN) do
+    idx[t[1]] = (idx[t[1]] or 0) + 1
+    where[t[3]] = { tab = t[1], tier = t[2], index = idx[t[1]], rank = 0, max = t[4] }
+  end
+  return where, spent, {}
+end
+local where = TO:Trees()
+local bad, missing, orders = {}, {}, {}
+for _, b in ipairs(FlipForever.Guide.CLASSES.PALADIN.builds) do
+  for _, t in ipairs(b.talents or {}) do if not where[t[1]] then missing[#missing + 1] = b.id .. ":" .. t[1] end end
+  local lv = TO:LevelPlan(b, TO:Plan(b, 60), 60) or {}
+  local inTree, o = { 0, 0, 0 }, {}
+  for _, e in ipairs(lv) do
+    local w = where[e.name]
+    if not w or inTree[w.tab] < (w.tier - 1) * 5 then bad[#bad + 1] = b.id .. ":" .. e.level .. ":" .. e.name end
+    if w then inTree[w.tab] = inTree[w.tab] + 1 end
+    o[#o + 1] = e.level .. " " .. e.name .. (e.filler and "*" or "")
+  end
+  orders[#orders + 1] = b.id .. ": " .. table.concat(o, ", ")
+end
+TO.Trees = savedTrees
+PAL_BAD, PAL_MISSING, PAL_ORDERS = table.concat(bad, ", "), table.concat(missing, ", "), table.concat(orders, "\\n")
+""")
+print("Forever Paladin level orders:\n" + L("PAL_ORDERS"))
+print("not in Forever's trees:", L("PAL_MISSING"))
+assert L("PAL_BAD") == "", L("PAL_BAD")
+assert L("PAL_MISSING") == "", L("PAL_MISSING")
 # --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
 lua.execute("""
 local TO = FlipForever.TalentOverlay

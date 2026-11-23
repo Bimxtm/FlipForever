@@ -1,3 +1,7 @@
+# FlipForever 2.7.1 Beta 8 (hotfix)
+
+- **Talents on WoW: Forever:** FlipForever now reads WoW: Forever's talent trees, so the level-by-level order respects tiers (no Holy Shield at level 11), the build's talents are marked in the Talents window and the Advisor's talent tips work again.
+
 # FlipForever 2.7.1 Beta 7 (hotfix)
 
 - **PvP and RP realms:** characters on RPPvP, PvP, RP or Hardcore realms now get their own realm in the addon and the app (WoW: Forever gives all realms the same name).

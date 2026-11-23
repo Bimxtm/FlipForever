@@ -16,7 +16,7 @@ end
 -- points spent per tree.
 function TO:Trees()
   local where, spent, names = {}, {}, {}
-  if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return where, spent, names end
+  if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return self:TraitTrees() end
   local okTabs, tabs = pcall(GetNumTalentTabs)
   for tab = 1, (okTabs and tabs or 0) do
     spent[tab] = 0
@@ -35,6 +35,140 @@ function TO:Trees()
     end
   end
   return where, spent, names
+end
+
+-- WoW: Forever draws the three classic trees with the newer trait system (C_Traits, one config
+-- holding all three trees side by side). Same result as above: the tree comes from the node's
+-- column group (or its own tree ID), the tier from its row within that tree, and each talent
+-- also gets its nodeID and spellID for marking buttons and tooltips.
+local function call(fn, ...)
+  if type(fn) ~= "function" then return nil end
+  local ok, a = pcall(fn, ...)
+  if ok then return a end
+end
+
+function TO:TraitConfig()
+  if not (C_Traits and C_ClassTalents) then return nil end
+  local configID = call(C_ClassTalents.GetActiveConfigID)
+  if not configID then return nil end
+  local info = call(C_Traits.GetConfigInfo, configID)
+  return configID, info and info.treeIDs or {}
+end
+
+local function spellName(spellID)
+  if not spellID then return nil end
+  if C_Spell and C_Spell.GetSpellName then
+    local n = call(C_Spell.GetSpellName, spellID)
+    if type(n) == "string" then return n end
+  end
+  if GetSpellInfo then
+    local n = call(GetSpellInfo, spellID)
+    if type(n) == "string" then return n end
+    if type(n) == "table" then return n.name end
+  end
+end
+
+-- Splits sorted distinct values into groups at the (count - 1) widest gaps.
+local function groups(values, count)
+  local sorted, seen = {}, {}
+  for _, v in ipairs(values) do if not seen[v] then seen[v] = true sorted[#sorted + 1] = v end end
+  table.sort(sorted)
+  local gaps = {}
+  for i = 2, #sorted do gaps[#gaps + 1] = { at = i, size = sorted[i] - sorted[i - 1] } end
+  table.sort(gaps, function(a, b) return a.size > b.size end)
+  local cuts = {}
+  for i = 1, math.min(count - 1, #gaps) do cuts[#cuts + 1] = sorted[gaps[i].at] end
+  table.sort(cuts)
+  return function(v)
+    local g = 1
+    for _, c in ipairs(cuts) do if v >= c then g = g + 1 end end
+    return g
+  end
+end
+
+function TO:TraitTrees()
+  local where, spent, names = {}, {}, {}
+  local configID, treeIDs = self:TraitConfig()
+  if not (configID and treeIDs and treeIDs[1]) then return where, spent, names end
+  local nodes = {}
+  for t, treeID in ipairs(treeIDs) do
+    for _, nodeID in ipairs(call(C_Traits.GetTreeNodes, treeID) or {}) do
+      local n = call(C_Traits.GetNodeInfo, configID, nodeID)
+      -- hero talents (subTreeID) and hidden nodes are not part of the three trees
+      if n and n.ID and n.ID ~= 0 and n.isVisible ~= false and not n.subTreeID and n.posX and n.posY then
+        local entries = {}
+        for _, entryID in ipairs(n.entryIDs or {}) do
+          local e = call(C_Traits.GetEntryInfo, configID, entryID)
+          local d = e and e.definitionID and call(C_Traits.GetDefinitionInfo, e.definitionID)
+          local name = d and ((type(d.overrideName) == "string" and d.overrideName ~= "" and d.overrideName) or spellName(d.spellID))
+          if name then entries[#entries + 1] = { name = name, spellID = d.spellID, entryID = entryID } end
+        end
+        if entries[1] then
+          nodes[#nodes + 1] = { n = n, tree = t, entries = entries }
+        end
+      end
+    end
+  end
+  if not nodes[1] then return where, spent, names end
+  -- which of the three trees: own tree IDs when the client has them, else the column groups
+  local tabOf
+  if #treeIDs >= 3 then
+    tabOf = function(x) return x.tree end
+  else
+    local xs = {}
+    for _, x in ipairs(nodes) do xs[#xs + 1] = x.n.posX end
+    local g = groups(xs, 3)
+    tabOf = function(x) return g(x.n.posX) end
+  end
+  local rows = {}
+  for _, x in ipairs(nodes) do
+    x.tab = tabOf(x)
+    rows[x.tab] = rows[x.tab] or {}
+    rows[x.tab][#rows[x.tab] + 1] = x.n.posY
+  end
+  local rowOf = {}
+  for tab, ys in pairs(rows) do
+    local sorted, seen = {}, {}
+    for _, y in ipairs(ys) do if not seen[y] then seen[y] = true sorted[#sorted + 1] = y end end
+    table.sort(sorted)
+    rowOf[tab] = {}
+    for i, y in ipairs(sorted) do rowOf[tab][y] = i end
+  end
+  table.sort(nodes, function(a, b)
+    if a.tab ~= b.tab then return a.tab < b.tab end
+    if a.n.posY ~= b.n.posY then return a.n.posY < b.n.posY end
+    return a.n.posX < b.n.posX
+  end)
+  local index = {}
+  for _, x in ipairs(nodes) do
+    local tab, n = x.tab, x.n
+    spent[tab] = spent[tab] or 0
+    index[tab] = (index[tab] or 0) + 1
+    local rank = tonumber(n.ranksPurchased) or tonumber(n.currentRank) or 0
+    spent[tab] = spent[tab] + rank
+    for _, e in ipairs(x.entries) do
+      -- a choice node counts only for the picked talent
+      local picked = #x.entries == 1 or (n.activeEntry and n.activeEntry.entryID == e.entryID)
+      where[e.name] = { tab = tab, index = index[tab], tier = rowOf[tab][n.posY] or 1,
+        rank = picked and rank or 0, max = tonumber(n.maxRanks) or 1, nodeID = n.ID, spellID = e.spellID }
+    end
+  end
+  for tab in pairs(spent) do
+    if GetSpecializationInfo then
+      local ok, _, name = pcall(GetSpecializationInfo, tab)
+      if ok and type(name) == "string" then names[tab] = name end
+    end
+  end
+  return where, spent, names
+end
+
+-- Unspent talent points on the trait system (nil when the client has none).
+function TO:TraitUnspent()
+  local configID, treeIDs = self:TraitConfig()
+  if not (configID and treeIDs and treeIDs[1]) then return nil end
+  local c = call(C_Traits.GetTreeCurrencyInfo, configID, treeIDs[1], false)
+  local q = c and c[1] and tonumber(c[1].quantity)
+  return q
 end
 
 -- The build as an ordered plan: one entry per talent with its state.
@@ -370,6 +504,27 @@ function TO:Buttons(frameName)
   return list
 end
 
+-- the talent buttons of a trait-style window: list of { button, nodeID, name }
+function TO:TraitButtons(f)
+  local list = {}
+  local function walk(frame, depth)
+    if depth > 5 or #list >= 200 or type(frame) ~= "table" or type(frame.GetChildren) ~= "function" then return end
+    local ok, kids = pcall(function() return { frame:GetChildren() } end)
+    if not ok then return end
+    for _, c in ipairs(kids) do
+      local nodeID = (type(c.GetNodeID) == "function" and call(c.GetNodeID, c)) or rawget(c, "nodeID")
+      local name = type(c.GetName) == "function" and call(c.GetName, c) or nil
+      if type(nodeID) == "number" or (type(name) == "string" and rawget(c, "StateBorder")) then
+        list[#list + 1] = { button = c, nodeID = type(nodeID) == "number" and nodeID or nil, name = name }
+      else
+        walk(c, depth + 1)
+      end
+    end
+  end
+  walk(f, 1)
+  return list
+end
+
 -- our marks, kept apart from the game's buttons
 local marks = setmetatable({}, { __mode = "k" })
 function TO:Mark(button) return marks[button] end
@@ -422,7 +577,24 @@ function TO:Decorate(plan)
     if s.tab == tab and s.index then byIndex[s.index] = s end
   end
   local marked = 0
-  for _, e in ipairs(self:Buttons(fname)) do
+  local buttons = self:Buttons(fname)
+  if not buttons[1] then
+    -- trait-style window (WoW: Forever): all three trees at once, buttons known by node or name
+    buttons = self:TraitButtons(f)
+    local where, byNode, byName = self:Trees(), {}, {}
+    for _, s in ipairs(plan.steps) do
+      local w = where[s.name]
+      if w and w.nodeID then byNode[w.nodeID] = s end
+      byName[s.name] = s
+    end
+    byIndex = {}
+    for i, e in ipairs(buttons) do
+      local s = (e.nodeID and byNode[e.nodeID]) or (e.name and byName[e.name])
+      if s then byIndex[i] = s end
+      e.index = i
+    end
+  end
+  for _, e in ipairs(buttons) do
     local s = self:Enabled() and byIndex[e.index]
     if s then
       local m = marker(e.button)
@@ -640,7 +812,36 @@ function TO:Refresh()
     return
   end
   local text = self:PanelText()
-  if next((self:Trees())) == nil then pcall(self.Probe, self, f, select(2, self:GameFrame())) end
+  local trees = self:Trees()
+  if next(trees) == nil then pcall(self.Probe, self, f, select(2, self:GameFrame()))
+  elseif not self.checked and FlipForeverDB and not (GetNumTalentTabs and GetTalentInfo) then
+    -- once per session on trait-style clients: how the trees were read (tree, tier, rank)
+    self.checked = true
+    local out = {}
+    for name, w in pairs(trees) do
+      out[#out + 1] = ("%d.%02d.%02d %s %d/%d"):format(w.tab, w.tier, w.index, name, w.rank, w.max)
+    end
+    table.sort(out)
+    -- every build of this class: its level order (level tree.tier name) and names not in the trees
+    local builds = {}
+    local class = UnitClass and select(2, UnitClass("player"))
+    local cd =FF.Guide and FF.Guide.CLASSES and FF.Guide.CLASSES[class or ""]
+    for _, b in ipairs(cd and cd.builds or {}) do
+      local okP, plan = pcall(self.Plan, self, b, 60)
+      local okL, lv = false, nil
+      if okP then okL, lv = pcall(self.LevelPlan, self, b, plan, 60) end
+      local order, missing = {}, {}
+      for _, e in ipairs(okL and lv or {}) do
+        local w = trees[e.name]
+        order[#order + 1] = ("%d %d.%d %s%s"):format(e.level, e.tab or 0, w and w.tier or 0, e.name, e.filler and "*" or "")
+      end
+      for _, t in ipairs(b.talents or {}) do if not trees[t[1]] then missing[#missing + 1] = t[1] end end
+      builds[b.id or b.name or "?"] = { order = table.concat(order, ", "), missing = table.concat(missing, ", ") }
+    end
+    local chk =type(FlipForeverDB.talentCheck) == "table" and FlipForeverDB.talentCheck.byClass and FlipForeverDB.talentCheck or { byClass = {} }
+    chk.byClass[class or "?"] = { t = time and time() or 0, talents = out, buttons = #self:TraitButtons(f), builds = builds }
+    FlipForeverDB.talentCheck = chk
+  end
   self:Decorate(text.plan or { steps = {} })
   local pn = self:Panel(f)
   pn.build:SetText(text.build or "")
@@ -671,6 +872,10 @@ function TO:RowTooltip(row)
   local described = false
   if s.tab and s.index and GameTooltip.SetTalent then
     described = pcall(GameTooltip.SetTalent, GameTooltip, s.tab, s.index)
+  end
+  if not described and GameTooltip.SetSpellByID then
+    local w = (self:Trees())[s.name]
+    if w and w.spellID then described = pcall(GameTooltip.SetSpellByID, GameTooltip, w.spellID) end
   end
   if not described then GameTooltip:AddLine(s.name, 1, 1, 1) end
   if s.treeName then GameTooltip:AddLine(s.treeName, 0.6, 0.6, 0.6) end
