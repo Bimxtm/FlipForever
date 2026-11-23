@@ -3068,6 +3068,21 @@ print("Forever Paladin level orders:\n" + L("PAL_ORDERS"))
 print("not in Forever's trees:", L("PAL_MISSING"))
 assert L("PAL_BAD") == "", L("PAL_BAD")
 assert L("PAL_MISSING") == "", L("PAL_MISSING")
+
+# --- GUI cleanup: one window size for every FlipForever window (Settings, Window size)
+lua.execute("""
+local FF = FlipForever
+FlipForeverDB.settings.windowScale = nil
+WS_DEFAULT = FF:WindowScale()
+FF.Hub:Show("settings")
+local seen = {}
+for i = 1, 4 do FF.Hub:NextScale() seen[#seen + 1] = FF:WindowScale() end
+WS_CYCLE = table.concat(seen, ",")
+WS_N = #FF.windows
+FlipForeverDB.settings.windowScale = nil
+""")
+print("window size:", L("WS_DEFAULT"), L("WS_CYCLE"), L("WS_N"))
+assert L("WS_DEFAULT") == 0.9 and L("WS_CYCLE") == "1.0,1.1,0.8,0.9" and L("WS_N") >= 1, L("WS_CYCLE")
 # --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
 lua.execute("""
 local TO = FlipForever.TalentOverlay

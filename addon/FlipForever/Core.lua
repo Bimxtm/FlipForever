@@ -884,10 +884,26 @@ end)
 -- opts: pos (settings key), strata, alpha, default ({ point, x, y } to place it now), escape, close
 FF.WINDOW_BACKDROP = { bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
   tile = true, tileSize = 16, edgeSize = 14, insets = { left = 4, right = 4, top = 4, bottom = 4 } }
+-- Window size for every FlipForever window (Settings, Window size): 80% to 110%, default 90%.
+FF.WINDOW_SCALES = { 0.8, 0.9, 1.0, 1.1 }
+FF.windows = {}
+function FF:WindowScale()
+  local s = FlipForeverDB and FlipForeverDB.settings and tonumber(FlipForeverDB.settings.windowScale)
+  return (s and s >= 0.5 and s <= 1.5) and s or 0.9
+end
+function FF:SetWindowScale(s)
+  FlipForeverDB.settings.windowScale = s
+  for _, w in ipairs(self.windows) do if w.SetScale then w:SetScale(s) end end
+end
+
 function FF:Window(name, width, height, opts)
   opts = opts or {}
   local f = CreateFrame("Frame", name, opts.parent or UIParent, "BackdropTemplate")
   f:SetSize(width, height)
+  if not opts.parent and f.SetScale then
+    f:SetScale(FF:WindowScale())
+    FF.windows[#FF.windows + 1] = f
+  end
   f:SetFrameStrata(opts.strata or "MEDIUM")
   f:SetClampedToScreen(true)
   if f.SetBackdrop then

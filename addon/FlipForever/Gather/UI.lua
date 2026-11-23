@@ -14,6 +14,18 @@ local GOLD = { 0.88, 0.63, 0.25 }
 -- Small widget helpers
 ---------------------------------------------------------------------------
 local function skin(f, alpha)
+  -- the same window style as every other FlipForever window (Core.lua FF:Window), same size setting
+  local FF = FlipForever
+  if FF and FF.WINDOW_BACKDROP and f.SetBackdrop then
+    f:SetBackdrop(FF.WINDOW_BACKDROP)
+    f:SetBackdropColor(0.05, 0.06, 0.08, alpha or 0.96)
+    f:SetBackdropBorderColor(0.2, 0.8, 0.5, 1)
+    if FF.windows and f.SetScale then
+      f:SetScale(FF:WindowScale())
+      FF.windows[#FF.windows + 1] = f
+    end
+    return
+  end
   local edge = f:CreateTexture(nil, "BACKGROUND", nil, -2)
   edge:SetPoint("TOPLEFT", -1, 1)
   edge:SetPoint("BOTTOMRIGHT", 1, -1)
@@ -589,7 +601,7 @@ local function selectPage(key)
 end
 
 local function buildMain()
-  main = CreateFrame("Frame", "OreFarmerMain", UIParent)
+  main = CreateFrame("Frame", "OreFarmerMain", UIParent, "BackdropTemplate")
   main:SetSize(PAGE_W + 24, PAGE_H + 80)
   main:SetFrameStrata("HIGH")
   main:SetToplevel(true)
@@ -670,7 +682,7 @@ end
 local TRACK_LINES = 5
 
 local function buildTracker()
-  tracker = CreateFrame("Frame", "OreFarmerPanel", UIParent)
+  tracker = CreateFrame("Frame", "OreFarmerPanel", UIParent, "BackdropTemplate")
   tracker:SetSize(250, 30 + TRACK_LINES * 14 + 10)
   tracker:SetFrameStrata("MEDIUM")
   restorePos(tracker, "panelPos", { "TOPRIGHT", UIParent, "TOPRIGHT", -200, -220 })

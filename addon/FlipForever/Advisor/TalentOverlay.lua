@@ -237,6 +237,7 @@ function TO:PointsLine(build, plan)
   if #mine > 0 then parts[#parts + 1] = FF:T("yours %s"):format(table.concat(mine, "/")) end
   local ok, unspent = pcall(UnitCharacterPoints or function() return 0 end, "player")
   unspent = ok and tonumber(unspent) or 0
+  if unspent == 0 and not UnitCharacterPoints then unspent = self:TraitUnspent() or 0 end
   if unspent > 0 then parts[#parts + 1] = GOLD .. FF:T("%d to spend"):format(unspent) .. "|r" end
   return table.concat(parts, " - ")
 end
@@ -627,7 +628,16 @@ function TO:Panel(parent)
   if panel then return panel end
   panel = CreateFrame("Frame", "FlipForeverTalentPanel", parent or UIParent, "BackdropTemplate")
   panel:SetSize(240, 518)
-  panel:SetPoint("TOPLEFT", parent or UIParent, "TOPRIGHT", -30, -12)
+  if panel.SetClampedToScreen then panel:SetClampedToScreen(true) end
+  -- beside the Talents window, never on top of it: right side, or left when the screen ends there
+  local p = parent or UIParent
+  local right = p.GetRight and p:GetRight()
+  local screen = UIParent.GetRight and UIParent:GetRight()
+  if right and screen and right + 244 > screen then
+    panel:SetPoint("TOPRIGHT", p, "TOPLEFT", -2, -12)
+  else
+    panel:SetPoint("TOPLEFT", p, "TOPRIGHT", 2, -12)
+  end
   -- same look as the other FlipForever windows (Core.lua FF:Window), attached to the Talents window
   if panel.SetBackdrop then
     panel:SetBackdrop(FF.WINDOW_BACKDROP)
@@ -742,6 +752,7 @@ function TO:PanelText(p)
   -- more points short than you have left to spend: some went elsewhere
   local ok, unspent = pcall(UnitCharacterPoints or function() return 0 end, "player")
   unspent = ok and tonumber(unspent) or 0
+  if unspent == 0 and not UnitCharacterPoints then unspent = self:TraitUnspent() or 0 end
   if behind and behind > unspent then
     out.behind = "|cffff8800" .. FF:T("%d point%s behind the order for your level."):format(behind - unspent, FF:Plural(behind - unspent)) .. "|r"
   end

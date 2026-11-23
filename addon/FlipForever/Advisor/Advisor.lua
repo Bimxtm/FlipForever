@@ -836,9 +836,10 @@ local function makeFrame()
   auto.text:SetText(FF:T("Pop up on level-up"))
   auto:SetScript("OnClick", function(self) FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false end)
   f.auto = auto
+  auto:Hide()   -- the same switch is in Settings (Advisor); one place is enough
   local combat = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
   combat:SetSize(22, 22)
-  combat:SetPoint("BOTTOMRIGHT", -120, 36)
+  combat:SetPoint("LEFT", refresh, "RIGHT", 10, 0)
   combat.text = combat:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   combat.text:SetPoint("LEFT", combat, "RIGHT", 2, 0)
   combat.text:SetText(FF:T("Combat helper"))

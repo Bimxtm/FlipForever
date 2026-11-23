@@ -19,8 +19,11 @@ end
 local function check(parent, label, onClick)
   local c = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
   c:SetSize(24, 24)
-  c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   c.text:SetPoint("LEFT", c, "RIGHT", 2, 0)
+  c.text:SetJustifyH("LEFT")
+  if c.text.SetWordWrap then c.text:SetWordWrap(false) end
+  c.text:SetWidth(310)
   c.text:SetText(FF:T(label))
   c:SetScript("OnClick", onClick)
   return c
@@ -426,7 +429,7 @@ end
 
 -- The window ----------------------------------------------------------------------------------------
 local function build()
-  local f = FF:Window("FlipForeverHub", 400, 776, { pos = "hubPos", default = { "CENTER", -200, 40 } })
+  local f = FF:Window("FlipForeverHub", 400, 600, { pos = "hubPos", default = { "CENTER", -200, 40 } })
 
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOPLEFT", 16, -14)
@@ -459,121 +462,125 @@ local function build()
   end
 
   -- (the Advisor, Gathering, Professions and Talents buttons are on the Overview)
+  -- Settings: one column, top to bottom, so nothing overlaps whatever the language
+  local fy = -6
+  local function section(label)
+    heading(pg, label, fy - 4)
+    fy = fy - 26
+  end
+  local function row(c, h)
+    c:SetPoint("TOPLEFT", 14, fy)
+    fy = fy - (h or 22)
+    return c
+  end
+  local function note(text)
+    local fs = pg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    fs:SetPoint("TOPLEFT", 20, fy - 2)
+    fs:SetPoint("RIGHT", pg, "RIGHT", -16, 0)
+    fs:SetJustifyH("LEFT")
+    if text then fs:SetText(FF:T(text)) end
+    fy = fy - 28
+    return fs
+  end
+  -- a label on the left, a button (and an optional second one) on the right
+  local function keyRow(onSet, onClear)
+    local fs = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    fs:SetPoint("TOPLEFT", 20, fy - 6)
+    fs:SetWidth(180)
+    fs:SetJustifyH("LEFT")
+    local set = button(pg, "Set key", 80, onSet)
+    set:SetPoint("TOPLEFT", 206, fy)
+    if onClear then button(pg, "Clear", 70, onClear):SetPoint("TOPLEFT", 290, fy) end
+    fy = fy - 28
+    return fs, set
+  end
+
+  -- Window size: every FlipForever window
+  section("Window size")
+  f.scaleLabel, f.scaleBtn = keyRow(function() H:NextScale() end)
+  f.scaleBtn:SetText(FF:T("Size"))
+
   -- Combat helper -------------------------------------------------------
-  heading(pg, "Combat helper", -6)
-  f.combat = check(pg, "Show the combat helper", function() FF.Combat:Toggle() end)
-  f.combat:SetPoint("TOPLEFT", 14, -26)
-  f.combatMode = check(pg, "Blizzard's assistant decides", function() FF.Combat:ToggleBlizzard() end)
-  f.combatMode:SetPoint("TOPLEFT", 14, -50)
-  f.autoTarget = check(pg, "Auto-target", function(self) FF.Combat:SetAutoTarget(self:GetChecked()) end)
-  f.autoTarget:SetPoint("TOPLEFT", 230, -26)
-  f.tank = check(pg, "Tank mode", function(self) FF.Combat:SetTank(self:GetChecked()) end)
-  f.tank:SetPoint("TOPLEFT", 310, -26)
-  f.smart = check(pg, "Wait for cooldowns", function(self)
+  section("Combat helper")
+  f.combat = row(check(pg, "Show the combat helper", function() FF.Combat:Toggle() end))
+  f.combatMode = row(check(pg, "Blizzard's assistant decides", function() FF.Combat:ToggleBlizzard() end))
+  f.autoTarget = row(check(pg, "Auto-target", function(self) FF.Combat:SetAutoTarget(self:GetChecked()) end))
+  f.tank = row(check(pg, "Tank mode", function(self) FF.Combat:SetTank(self:GetChecked()) end))
+  f.smart = row(check(pg, "Wait for cooldowns", function(self)
     FlipForeverDB.settings.combatSmart = self:GetChecked() and true or false
     FF.Combat:Rebuild()
-  end)
-  f.smart:SetPoint("TOPLEFT", 230, -50)
-  f.combatKeyText = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  f.combatKeyText:SetPoint("TOPLEFT", 20, -82)
-  f.combatKeyButton = button(pg, "Set key", 80, function()
+  end))
+  f.combatKeyText, f.combatKeyButton = keyRow(function()
     startCapture("the combat helper", function(k) FF.Combat:SetKey(k) end)
-  end)
-  f.combatKeyButton:SetPoint("TOPLEFT", 206, -78)
-  button(pg, "Clear", 70, function() FF.Combat:SetKey(nil) end):SetPoint("TOPLEFT", 290, -78)
-  local cHint = pg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  cHint:SetPoint("TOPLEFT", 20, -104)
-  cHint:SetPoint("RIGHT", -16, 0)
-  cHint:SetJustifyH("LEFT")
-  cHint:SetText(FF:T("Auto-target: nearest enemy when you have none. Tank: click an ally, then the key hits what's on them."))
+  end, function() FF.Combat:SetKey(nil) end)
+  note("Auto-target: nearest enemy when you have none. Tank: click an ally, then the key hits what's on them.")
 
   -- Auction house -------------------------------------------------------
-  heading(pg, "Auction house", -130)
-  f.auto = check(pg, "Autopilot: check my list every minute, scan every 30 min", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end)
-  f.auto:SetPoint("TOPLEFT", 14, -150)
-  f.ahKeyText = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  f.ahKeyText:SetPoint("TOPLEFT", 20, -182)
-  f.ahKeyButton = button(pg, "Set key", 80, function()
-    startCapture("the auction house button", function(k) FF:SetActionKey(k) end)
-  end)
-  f.ahKeyButton:SetPoint("TOPLEFT", 206, -178)
-  button(pg, "Clear", 70, function() FF:SetActionKey(nil) end):SetPoint("TOPLEFT", 290, -178)
-  button(pg, "Check the whole list again", 178, function() FF:ResetProgress() end):SetPoint("TOPLEFT", 16, -206)
-  f.planText = pg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  f.planText:SetPoint("TOPLEFT", 20, -234)
-  f.planText:SetPoint("RIGHT", -16, 0)
-  f.planText:SetJustifyH("LEFT")
-
-  -- Advisor -------------------------------------------------------------
-  heading(pg, "Advisor", -262)
-  f.popup = check(pg, "Pop up my next steps on level-up", function(self)
-    FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false
-  end)
-  f.popup:SetPoint("TOPLEFT", 14, -282)
-  f.pauseScan = check(pg, "Otherwise: alert + pause autopilot until Reload", function(self)
+  section("Auction house")
+  f.auto = row(check(pg, "Autopilot: check my list every minute, scan every 30 min", function() FF.Auto:SetEnabled(not FF.Auto:Enabled()) end))
+  f.livePlan = row(check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
+    FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
+  end))
+  f.pauseScan = row(check(pg, "Otherwise: alert + pause autopilot until Reload", function(self)
     FlipForeverDB.settings.reloadAfterScan = self:GetChecked() and true or false
-  end)
-  f.pauseScan:SetPoint("TOPLEFT", 14, -450)
-  -- language: click to go through every language the game supports ("Game language" follows the client)
-  f.langLabel = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  f.langLabel:SetPoint("TOPLEFT", 20, -484)
-  f.lang = button(pg, "Language", 178, function() H:NextLanguage() end)
-  f.lang:SetPoint("TOPLEFT", 206, -478)
-  f.vendorFlips = check(pg, "Vendor flips: buy below merchant price, sell at merchants", function(self)
+  end))
+  f.vendorFlips = row(check(pg, "Vendor flips: buy below merchant price, sell at merchants", function(self)
     FlipForeverDB.settings.vendorFlips = self:GetChecked() and true or false
     FlipForeverDB.settings.autoVendor = FlipForeverDB.settings.vendorFlips
-  end)
-  f.vendorFlips:SetPoint("TOPLEFT", 14, -504)
-  f.arrow = check(pg, "Waypoint arrow (map pin, /ffway x y, next gathering stop)", function(self)
+  end))
+  f.autoDuration = row(check(pg, "Auction length by sell speed (fast: 12 h, slow: 48 h)", function(self)
+    FlipForeverDB.settings.autoDuration = self:GetChecked() and true or false
+  end))
+  f.gearAlert = row(check(pg, "Alert me when a scan finds a new gear upgrade", function(self)
+    FlipForeverDB.settings.gearAlert = self:GetChecked() and true or false
+  end))
+  f.tips = row(check(pg, "Prices in item tooltips", function(self)
+    FlipForeverDB.settings.tooltips = self:GetChecked() and true or false
+  end))
+  f.ahKeyText, f.ahKeyButton = keyRow(function()
+    startCapture("the auction house button", function(k) FF:SetActionKey(k) end)
+  end, function() FF:SetActionKey(nil) end)
+  row(button(pg, "Check the whole list again", 178, function() FF:ResetProgress() end), 26)
+  f.planText = note()
+
+  -- Advisor -------------------------------------------------------------
+  section("Advisor")
+  f.popup = row(check(pg, "Pop up my next steps on level-up", function(self)
+    FlipForeverDB.settings.advisorPopup = self:GetChecked() and true or false
+  end))
+  f.arrow = row(check(pg, "Waypoint arrow (map pin, /ffway x y, next gathering stop)", function(self)
     FlipForeverDB.settings.arrow = self:GetChecked() and true or false
     FF.Arrow:Refresh()
-  end)
-  f.arrow:SetPoint("TOPLEFT", 14, -528)
-  f.autoDuration = check(pg, "Auction length by sell speed (fast: 12 h, slow: 48 h)", function(self)
-    FlipForeverDB.settings.autoDuration = self:GetChecked() and true or false
-  end)
-  f.autoDuration:SetPoint("TOPLEFT", 14, -552)
-  f.gearAlert = check(pg, "Alert me when a scan finds a new gear upgrade", function(self)
-    FlipForeverDB.settings.gearAlert = self:GetChecked() and true or false
-  end)
-  f.gearAlert:SetPoint("TOPLEFT", 14, -576)
-  f.livePlan = check(pg, "After a scan: rebuild my shopping list in game (no reload)", function(self)
-    FlipForeverDB.settings.livePlanning = self:GetChecked() and true or false
-  end)
-  f.livePlan:SetPoint("TOPLEFT", 14, -426)
-  f.tips = check(pg, "Prices in item tooltips", function(self)
-    FlipForeverDB.settings.tooltips = self:GetChecked() and true or false
-  end)
-  f.tips:SetPoint("TOPLEFT", 206, -282)
+  end))
+  -- language: click to go through every language the game supports ("Game language" follows the client)
+  f.langLabel = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.langLabel:SetPoint("TOPLEFT", 20, fy - 6)
+  f.lang = button(pg, "Language", 154, function() H:NextLanguage() end)
+  f.lang:SetPoint("TOPLEFT", 206, fy)
+  fy = fy - 28
 
   -- Buttons on screen ---------------------------------------------------
-  heading(pg, "Buttons on screen", -314)
-  f.mm = check(pg, "FlipForever minimap button", function(self)
+  section("Buttons on screen")
+  f.mm = row(check(pg, "FlipForever minimap button", function(self)
     FlipForeverDB.settings.hideMinimap = not self:GetChecked()
     H:ApplyMinimap()
-  end)
-  f.mm:SetPoint("TOPLEFT", 14, -334)
-  f.oreMM = check(pg, "Gathering (ore) minimap button", function(self)
+  end))
+  f.oreMM = row(check(pg, "Gathering (ore) minimap button", function(self)
     local ns = FF.gatherNS
     if ns and ns.SetMinimapButtonShown and ns.db then ns.SetMinimapButtonShown(self:GetChecked()) end
-  end)
-  f.oreMM:SetPoint("TOPLEFT", 14, -358)
-  f.tracker = check(pg, "Gathering tracker (next stop, live gold)", function(self)
+  end))
+  f.tracker = row(check(pg, "Gathering tracker (next stop, live gold)", function(self)
     local ns = FF.gatherNS
     if ns and ns.SetTrackerShown and ns.db then ns.SetTrackerShown(self:GetChecked()) end
-  end)
-  f.tracker:SetPoint("TOPLEFT", 14, -382)
-  f.profPanel = check(pg, "Planner next to profession windows", function(self)
+  end))
+  f.profPanel = row(check(pg, "Planner next to profession windows", function(self)
     FlipForeverDB.settings.profPanel = self:GetChecked() and true or false
-  end)
-  f.profPanel:SetPoint("TOPLEFT", 14, -406)
+  end))
 
-  -- Features: one switch for everything that isn't covered above ------------
   -- Features: one switch for everything that isn't covered above, in groups -----------------------
   -- (the order here is the switch list in the tests)
-  heading(pg, "Features", -608)
+  section("Features")
   f.features = {}
-  local fy = -628
   local function group(label)
     local fs = pg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     fs:SetPoint("TOPLEFT", 20, fy - 4)
@@ -585,8 +592,7 @@ local function build()
       FlipForeverDB.settings[key] = self:GetChecked() and true or false
       if after then after() end
     end)
-    c:SetPoint("TOPLEFT", 14, fy)
-    fy = fy - 24
+    row(c)
     c.key, c.default = key, default
     if tip and c.SetScript then
       c:SetScript("OnEnter", function(self)
@@ -710,6 +716,7 @@ function H:Refresh()
   frame.pauseScan:SetChecked(s.reloadAfterScan ~= false)
   frame.livePlan:SetChecked(s.livePlanning ~= false)
   frame.langLabel:SetText(FF:T("Language") .. ":")
+  frame.scaleLabel:SetText(FF:T("All FlipForever windows: %d%%"):format(math.floor(FF:WindowScale() * 100 + 0.5)))
   frame.lang:SetText(H:LanguageName(s.language))
   frame.vendorFlips:SetChecked(s.vendorFlips ~= false)
   frame.arrow:SetChecked(s.arrow ~= false)
@@ -729,6 +736,17 @@ function H:Refresh()
     frame.oreMM:SetChecked(ns.db.minimapButton ~= false)
     frame.tracker:SetChecked(ns.db.panelShown ~= false)
   end
+end
+
+-- Settings, Window size: 80 -> 90 -> 100 -> 110 -> 80 %
+function H:NextScale()
+  local cur, list = FF:WindowScale(), FF.WINDOW_SCALES
+  local nextScale = list[1]
+  for i, s in ipairs(list) do
+    if math.abs(s - cur) < 0.01 then nextScale = list[i % #list + 1] break end
+  end
+  FF:SetWindowScale(nextScale)
+  H:Refresh()
 end
 
 function H:Toggle()
