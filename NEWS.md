@@ -1,3 +1,7 @@
+# FlipForever 2.7.1 Beta 10 (hotfix)
+
+- **Talents level by level follow the guide:** the order no longer jumps ahead when a talent's tier is still locked; only the points that open the tier come first, then the guide's order goes on.
+
 # FlipForever 2.7.1 Beta 9 (hotfix)
 
 - **Gathering fixed:** it opens again when the old Ore Farmer addon is switched off, and says why when it can't.
