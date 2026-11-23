@@ -3082,6 +3082,26 @@ WS_N = #FF.windows
 FlipForeverDB.settings.windowScale = nil
 """)
 print("window size:", L("WS_DEFAULT"), L("WS_CYCLE"), L("WS_N"))
+# --- Gathering: Ore Farmer switched off for this character (but on for another) doesn't turn Gathering off
+lua.execute("""
+local ns = FlipForever.gatherNS
+local sv = { C_AddOns, GetAddOnInfo, GetAddOnEnableState }
+C_AddOns = { GetAddOnEnableState = function() return 1 end,
+  GetAddOnInfo = function(n) return n, n, "", false, "DISABLED" end }
+GO_OFF = ns.OreFarmerOn()
+C_AddOns.GetAddOnInfo = function(n) return n, n, "", true, nil end
+GO_ON = ns.OreFarmerOn()
+C_AddOns.GetAddOnInfo = function(n) return nil, nil, nil, false, "MISSING" end
+GO_MISSING = ns.OreFarmerOn()
+C_AddOns, GetAddOnInfo, GetAddOnEnableState = sv[1], sv[2], sv[3]
+local saved = ns.skipGather
+ns.skipGather = true
+GO_MSG = FlipForever:GatherOffReason()
+ns.skipGather = saved
+GO_READY = tostring(FlipForever:GatherOffReason())
+""")
+print("gathering guard:", L("GO_OFF"), L("GO_ON"), L("GO_MISSING"), L("GO_READY"))
+assert L("GO_OFF") is False and L("GO_ON") is True and L("GO_MISSING") is False and "Ore Farmer" in L("GO_MSG")
 assert L("WS_DEFAULT") == 0.9 and L("WS_CYCLE") == "1.0,1.1,0.8,0.9" and L("WS_N") >= 1, L("WS_CYCLE")
 # --- talent overlay beta 3: key-talent builds ordered by tier, next point reachable; click a line to open its tree
 lua.execute("""

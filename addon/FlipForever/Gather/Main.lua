@@ -514,6 +514,13 @@ function handlers.SKILL_LINES_CHANGED()
   ns.MarkDirty() -- you may be able to gather more now
 end
 
+-- start now if the load event was missed (opening Gathering calls this)
+function ns.Start()
+  if ns.db or ns.disabled then return ns.db ~= nil end
+  ns.Safe("start", handlers.ADDON_LOADED, addonName)
+  return ns.db ~= nil
+end
+
 frame:SetScript("OnEvent", function(_, event, ...)
   if ns.disabled then return end
   if event ~= "ADDON_LOADED" and not ns.db then return end

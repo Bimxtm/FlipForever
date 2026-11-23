@@ -597,7 +597,8 @@ SlashCmdList.FLIPFOREVER = function(msg)
     FF.Combat:ToggleBlizzard()
   elseif cmd == "gather" or cmd == "ore" then
     local ns = FF.gatherNS
-    if ns and ns.ToggleMain and not ns.skipGather then ns.ToggleMain() else FF:Print(FF:T("Gathering is off (the old Ore Farmer addon is still enabled).")) end
+    if ns and not ns.db and not ns.skipGather and ns.Start then ns.Start() end
+    if ns and ns.ToggleMain and not ns.skipGather and ns.db then ns.ToggleMain() else FF:Print(FF:GatherOffReason() or FF:T("Gathering didn't load.")) end
   elseif cmd == "auto" then
     FF.Auto:SetEnabled(not FF.Auto:Enabled())
   elseif cmd == "key" then
