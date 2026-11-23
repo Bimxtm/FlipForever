@@ -486,6 +486,8 @@ function TO:Panel(parent)
   panel.build:SetPoint("TOPLEFT", 12, -30)
   panel.build:SetPoint("RIGHT", -12, 0)
   panel.build:SetJustifyH("LEFT")
+  -- one line: long build names are cut instead of running over the lines below
+  if panel.build.SetWordWrap then panel.build:SetWordWrap(false) end
   panel.points = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   panel.points:SetPoint("TOPLEFT", 12, -48)
   panel.points:SetPoint("RIGHT", -12, 0)
@@ -638,6 +640,7 @@ function TO:Refresh()
     return
   end
   local text = self:PanelText()
+  if next((self:Trees())) == nil then pcall(self.Probe, self, f, select(2, self:GameFrame())) end
   self:Decorate(text.plan or { steps = {} })
   local pn = self:Panel(f)
   pn.build:SetText(text.build or "")
@@ -724,6 +727,69 @@ function TO:Open()
   end
   FF:Print(FF:T("The Talents window could not be opened - press your Talents key (N)."))
   return false
+end
+
+-- What this client offers for talents, saved once per session in FlipForeverDB.talentProbe when
+-- the classic talent functions return nothing (WoW: Forever has its own Talents window). Read
+-- from the SavedVariables to learn how to read this client's talents.
+function TO:Probe(frame, frameName)
+  if self.probed or not FlipForeverDB then return end
+  self.probed = true
+  local function dump(...)
+    local n, out = select("#", ...), {}
+    for i = 1, math.min(n, 16) do out[i] = tostring((select(i, ...))) end
+    return table.concat(out, " | ")
+  end
+  local function call(fn, ...)
+    if type(fn) ~= "function" then return "missing" end
+    return dump(pcall(fn, ...))
+  end
+  local p = { t = time and time() or 0, frame = frameName }
+  p.numTabs = call(GetNumTalentTabs)
+  p.tabInfo1 = call(GetTalentTabInfo, 1)
+  p.numTalents1 = call(GetNumTalents, 1)
+  p.info11 = call(GetTalentInfo, 1, 1)
+  p.info11g = call(GetTalentInfo, 1, 1, false, false, 1)
+  p.group = call(GetActiveTalentGroup)
+  local fns, tabs = {}, {}
+  local names = {}
+  for name in pairs(_G) do if type(name) == "string" then names[#names + 1] = name end end
+  for _, name in ipairs(names) do
+    local v = rawget(_G, name)
+    if type(name) == "string" and name:find("Talent") then
+      if type(v) == "function" and #fns < 80 then fns[#fns + 1] = name end
+    end
+    if type(name) == "string" and name:find("^C_") and type(v) == "table" and #tabs < 80 then
+      local keys = {}
+      for k, f in pairs(v) do if type(k) == "string" and k:find("Talent") then keys[#keys + 1] = k end end
+      if #keys > 0 or name:find("Talent") or name:find("Trait") or name:find("Spec") then
+        table.sort(keys)
+        tabs[#tabs + 1] = name .. ": " .. table.concat(keys, ",", 1, math.min(#keys, 20))
+      end
+    end
+  end
+  table.sort(fns) table.sort(tabs)
+  p.functions, p.tables = fns, tabs
+  -- the window's children two levels down: name, type, ID (talent buttons show up here)
+  local kids = {}
+  local function walk(f, depth, path)
+    if depth > 3 or #kids >= 60 or type(f) ~= "table" or type(f.GetChildren) ~= "function" then return end
+    local okC, list = pcall(function() return { f:GetChildren() } end)
+    if not okC then return end
+    for i, c in ipairs(list) do
+      local okN, nm = pcall(c.GetName, c)
+      local okT, ty = pcall(c.GetObjectType, c)
+      local id = (type(c.GetID) == "function") and select(2, pcall(c.GetID, c)) or nil
+      local keys = {}
+      for k, v in pairs(c) do if type(k) == "string" and type(v) ~= "function" and #keys < 8 then keys[#keys + 1] = k end end
+      kids[#kids + 1] = ("%s%d %s %s id=%s keys=%s"):format(path, i, tostring(okN and nm), tostring(okT and ty), tostring(id), table.concat(keys, ","))
+      walk(c, depth + 1, path .. i .. ".")
+      if #kids >= 60 then return end
+    end
+  end
+  walk(frame, 1, "")
+  p.children = kids
+  FlipForeverDB.talentProbe = p
 end
 
 -- after opening: find the window if its name is new to us, hook it and show the panel
