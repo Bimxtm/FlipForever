@@ -647,6 +647,12 @@ function T:EvaluateSell(rows)
   else
     qty = stack
   end
+  -- expired twice in a row: a merchant or disenchanting may pay as much (switch expirySaver)
+  if FF.ExpirySaver and FF.ExpirySaver:Enabled() then
+    local dep = self:Deposit({ id = s.id, loc = loc, qty = qty, commodity = self.isCommodity })
+    local ok, hold = pcall(FF.ExpirySaver.Check, FF.ExpirySaver, s.id, price, qty, dep, cut)
+    if ok and hold then self:NextSellTarget() return end
+  end
   self.pending = { id = s.id, loc = loc, qty = qty, unit = price, commodity = self.isCommodity }
   self.state = "ready_post"
   local best = FF:BestPostHours(s.id)

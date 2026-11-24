@@ -20,6 +20,7 @@ VendorResale.lua
 Session.lua
 Restock.lua
 EnemyAlert.lua
+ExpirySaver.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

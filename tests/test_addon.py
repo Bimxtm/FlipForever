@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3723,6 +3723,45 @@ for k, v in pairs(keep) do if chars[k] then chars[k].cooldowns = v end end
 C_TradeSkillUI, UnitName = oTS, oName
 """)
 print("cooldowns:", L("CDL"))
+lua.execute("""
+-- expiry saver: 2 expiries since the last sale -> compare with merchant / disenchant before posting
+local FF, X, D = FlipForever, FlipForever.ExpirySaver, FlipForever.Disenchant
+local oV, oDV, oDE, oName = FF.VendorPrice, D.Value, D.Enabled, FF.ItemName
+local VEND, DEV = { [801] = 900 }, { [801] = 3000 }
+FF.VendorPrice = function(_, id) return VEND[id] end
+D.Value = function(_, id) return DEV[id] end
+D.Enabled = function() return true end
+FF.ItemName = function(_, id) return "item:" .. id end
+local log = FF:DB().log
+local saved = {} for i, e in ipairs(log) do saved[i] = e end for k in pairs(log) do log[k] = nil end
+FF:Log({ e = "expired", id = 801 })
+FF:Log({ e = "sold", id = 801 })
+FF:Log({ e = "expired", id = 801 })
+local r = { X:Streak(801) }
+FF:Log({ e = "expired", name = "item:801" })   -- id unknown: matched by name
+r[#r + 1] = X:Streak(801)
+printed = {}
+r[#r + 1] = tostring(X:Check(801, 2500, 1, 100, 0.05))   -- net ~2275 < DE 3000 -> hold
+r[#r + 1] = (printed[1] or ""):find("Disenchanting gives") and "de" or "?"
+printed = {}
+r[#r + 1] = tostring(X:Check(801, 5000, 1, 100, 0.05))   -- net 4650 > 3000 -> post, with a note
+r[#r + 1] = (printed[1] or ""):find("posting it at") and "note" or "?"
+DEV[801] = nil
+r[#r + 1] = tostring(X:Check(801, 1000, 1, 100, 0.05))   -- net 850 < merchant 900 -> hold
+local tl = X:TooltipLines(801)
+r[#r + 1] = (tl[1] and tl[1][1]:find("expired 2 times") and tl[1][2]) or "?"
+FlipForeverDB.settings.expirySaver = false
+r[#r + 1] = tostring(X:Check(801, 1000, 1, 100, 0.05)) .. "/" .. #X:TooltipLines(801)
+FlipForeverDB.settings.expirySaver = nil
+r[#r + 1] = X:Streak(802)
+EXPS = table.concat(r, "#")
+for k in pairs(log) do log[k] = nil end for i, e in ipairs(saved) do log[i] = e end
+FF.VendorPrice, D.Value, D.Enabled, FF.ItemName = oV, oDV, oDE, oName
+""")
+print("expiry saver:", L("EXPS"))
+_x = L("EXPS").split("#")
+assert _x[:7] == ["1", "2", "true", "de", "false", "note", "true"], _x
+assert "merchant" in _x[7] and _x[8] == "false/0" and _x[9] == "0", _x
 _c = L("CDL").split("#")
 assert _c[0] == "Cdone:Mooncloth:ready,Cdone:Transmute:wait,Cdtwo:Mooncloth:wait", _c
 assert _c[1].startswith("Cooldowns: Mooncloth |cff33ff99ready|r (Cdone)") and "Transmute 2 h (Cdone)" in _c[1] and "Mooncloth 3 days (Cdtwo)" in _c[1], _c

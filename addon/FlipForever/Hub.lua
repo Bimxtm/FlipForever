@@ -635,7 +635,9 @@ local function build()
     "Auction buying counts your free bag slots (profession bags not counted) and stops while a few stay free. Change how many with /ff bags <slots>.")
   feature("fastFlips", "Buying skips flips with too many cheaper listings ahead", true, nil,
     "Before buying, counts the units listed below your sell price and how fast the item sells; skips it when they would take more than twice the hold time to sell.")
-  feature("disenchant", "Disenchant values in tooltips, /ff disenchant buy list", true, nil,
+  feature("expirySaver", "Expiry saver: items that expired twice go to a merchant or disenchanting", true, nil,
+    "Before posting an item whose auctions expired twice or more in a row, FlipForever compares the auction (after cut and deposit) with what a merchant pays and what disenchanting gives, and holds it with a tip when those pay as much. Tooltips show the streak.")
+  feature("disenchant","Disenchant values in tooltips, /ff disenchant buy list", true, nil,
     "What a green, blue or purple weapon or armor piece gives when disenchanted, at your scanned prices. /ff disenchant lists items listed below that value and buys them at the auction house.")
   feature("vendorResale", "Vendor resale finder at merchants, /ff vendors", true, nil,
     "Merchants you visit are remembered with their spot. Their limited items that sell for clearly more on the auction house are named at the merchant; /ff vendors lists the best ones and pins them on the map.")

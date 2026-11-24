@@ -44,6 +44,10 @@ function TT:Lines(itemID)
       out[#out + 1] = { FF:T("  |cffff8800from %s, until you scan here|r"):format(realm or "?"), "" }
     end
   end
+  if FF.ExpirySaver then
+    local ok, lines = pcall(FF.ExpirySaver.TooltipLines, FF.ExpirySaver, itemID)
+    for _, l in ipairs(ok and lines or {}) do out[#out + 1] = l end
+  end
   local perDay = FF.Planner and FF.Planner:SellsPerDay(itemID)
   if perDay then
     local speed = perDay >= 10 and FF:T("|cff33ff99fast|r") or perDay >= 3 and FF:T("|cffffd200ok|r") or FF:T("|cffff8800slow|r")
