@@ -148,6 +148,8 @@ local function buildOverview(f)
   pg.level = text(pg, "GameFontHighlightSmall", 20, -440, 360)
   -- bag value: merchant and auction value of your bags; hover for what's worth posting
   pg.bags = text(pg, "GameFontHighlightSmall", 20, -458, 360)
+  -- profession cooldowns of every character on this realm (Settings: Features)
+  pg.cooldowns = text(pg, "GameFontHighlightSmall", 20, -476, 360)
   pg.bagsHover = CreateFrame("Button", nil, pg)
   pg.bagsHover:SetPoint("TOPLEFT", 16, -454)
   pg.bagsHover:SetSize(368, 18)
@@ -391,6 +393,7 @@ function H:RefreshOverview()
   pg.autopilot:SetChecked(FF.Auto:Enabled())
   pg.level:SetText(FF.Leveling and FF.Leveling:Line() or "")
   pg.bags:SetText(FF.BagValue and FF.BagValue:Line() or "")
+  pg.cooldowns:SetText(FF.Cooldowns and FF.Cooldowns:Line() or "")
 end
 
 -- Language ---------------------------------------------------------------------------------------
@@ -644,7 +647,9 @@ local function build()
     "When an item you craft and posted in the last two weeks is gone from the auction house and your bags, the auction house reminds you once a day to craft and post it again.")
   feature("craftButton", "Profession planner: Craft button for the top recipe", true, function() if FF.Professions then pcall(FF.Professions.Refresh, FF.Professions) end end,
     "Crafts the planner's top skill-up or profitable recipe the planned number of times (as many as your materials allow), with the profession window open.")
-  feature("bestPostTime", "Show the hours my auctions sell best when posting", true, nil,
+  feature("profCooldowns", "Overview: profession cooldowns of all my characters", true, function() H:Refresh() end,
+    "Transmutes, Mooncloth and other crafts with a cooldown are read when you open the profession window; the Overview and the app show when each is ready again on every character.")
+  feature("bestPostTime","Show the hours my auctions sell best when posting", true, nil,
     "From your own sales: the 4-hour window of the day in which an item (or all your items) sold most. Shown when posting and in tooltips.")
   feature("headStart", "New realm: estimate prices from my other realm until I scan", true, function() if FF.Professions then pcall(FF.Professions.Refresh, FF.Professions) end end,
     "On a realm without scans yet, tooltips and the profession planner show prices from your other realm (same faction first), marked as estimates. Buying waits for this realm's own scans.")

@@ -68,6 +68,12 @@ def import_savedvars(con, path: Path) -> dict:
             for cname, info in chars.items():
                 if isinstance(info, dict):
                     known[str(cname)] = {k: info.get(k) for k in ("money", "level", "class", "race", "t", "build", "advisor")}
+                    cds = info.get("cooldowns")
+                    if isinstance(cds, (dict, list)):
+                        vals = cds.values() if isinstance(cds, dict) else cds
+                        known[str(cname)]["cooldowns"] = [
+                            {"name": str(e.get("name")), "ready": int(e.get("ready") or 0)}
+                            for e in vals if isinstance(e, dict) and e.get("name") and e.get("ready")]
             set_param(con, realm, "chars", known)
         for sc in _as_list(r.get("scans")):
             try:
@@ -979,6 +985,18 @@ def realm_overview(con) -> list[dict]:
             "realized": sum(r["realized"] for r in rows), "week": sum(r["week"] for r in rows),
             "held_cost": sum(r["held_cost"] for r in rows), "last_scan": scan["t"] if scan else None,
         })
+    return out
+
+
+def profession_cooldowns(con) -> list[dict]:
+    """Profession cooldowns (transmutes, Mooncloth...) of every character on every realm, soonest
+    first, as the addon read them when a profession window was open."""
+    out = []
+    for realm in realms(con):
+        for cname, info in get_param(con, realm, "chars", {}).items():
+            for e in (info or {}).get("cooldowns") or []:
+                out.append({"realm": realm, "char": cname, "name": e["name"], "ready": int(e["ready"])})
+    out.sort(key=lambda e: (e["ready"], e["char"], e["name"]))
     return out
 
 

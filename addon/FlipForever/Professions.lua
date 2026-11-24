@@ -62,6 +62,7 @@ function P:Capture()
   self:LearnThresholds(self:Store()[name], recipes, skill)
   self:Store()[name] = { skill = skill, max = plain(info.maxSkillLevel) or 0, t = time(), recipes = recipes }
   self.current = name
+  if FF.Cooldowns then pcall(FF.Cooldowns.Read, FF.Cooldowns, recipes) end
   return name
 end
 

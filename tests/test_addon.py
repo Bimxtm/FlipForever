@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3695,6 +3695,38 @@ R["NewRealm - Alliance"], R["Old - Alliance"], R["Other - Horde"] = nil, nil, ni
 FF.RealmKey = oKey
 """)
 print("head start:", L("HEAD"))
+lua.execute("""
+-- profession cooldowns: transmutes merged into one entry, known crafts kept when ready, all characters listed
+local FF, C = FlipForever, FlipForever.Cooldowns
+local oTS, oName = C_TradeSkillUI, UnitName
+local CD = { [17187] = 7200, [11479] = 7200, [18560] = 0, [3275] = 0 }
+C_TradeSkillUI = { GetRecipeCooldown = function(id) return CD[id] end }
+local chars = FF:DB().chars
+local keep = {}
+for k, v in pairs(chars) do keep[k] = v.cooldowns end
+UnitName = function() return "Cdone" end
+local recipes = { { id = 17187, name = "Transmute: Arcanite", learned = true }, { id = 11479, name = "Transmute: Iron to Gold", learned = true },
+  { id = 18560, name = "Mooncloth", learned = true }, { id = 3275, name = "Linen Bandage", learned = true },
+  { id = 99, name = "Transmute: Unlearned", learned = false } }
+C:Read(recipes)
+UnitName = function() return "Cdtwo" end
+CD[18560] = 3 * 86400
+C:Read({ recipes[3] })
+local r = {}
+for _, e in ipairs(C:List()) do r[#r + 1] = e.char .. ":" .. e.name .. ":" .. (e.ready - time() > 60 and "wait" or "ready") end
+CDL = table.concat(r, ",") .. "#" .. C:Line()
+FlipForeverDB.settings.profCooldowns = false
+CDL = CDL .. "#" .. C:Line()
+FlipForeverDB.settings.profCooldowns = nil
+chars.Cdone, chars.Cdtwo = nil, nil
+for k, v in pairs(keep) do if chars[k] then chars[k].cooldowns = v end end
+C_TradeSkillUI, UnitName = oTS, oName
+""")
+print("cooldowns:", L("CDL"))
+_c = L("CDL").split("#")
+assert _c[0] == "Cdone:Mooncloth:ready,Cdone:Transmute:wait,Cdtwo:Mooncloth:wait", _c
+assert _c[1].startswith("Cooldowns: Mooncloth |cff33ff99ready|r (Cdone)") and "Transmute 2 h (Cdone)" in _c[1] and "Mooncloth 3 days (Cdtwo)" in _c[1], _c
+assert _c[2] == "", _c
 _h = L("HEAD").split("#")
 assert _h[0] == "300@Old - Alliance" and _h[1] == "300/true" and _h[2] == "300/estimate", _h
 assert "estimate" in _h[3] and "from Old - Alliance" in _h[3] and _h[4] == "note", _h

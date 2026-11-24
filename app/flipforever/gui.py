@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 import os
 import re
 import subprocess
@@ -1131,6 +1132,11 @@ class App(tk.Tk):
         frame, self.week_tree = self._tree(self.week_frame, ("Group", "Item", "This week", "Detail"),
                                            (110, 220, 100, 300), height=6)
         frame.pack(fill="x")
+        # profession cooldowns of every character (shown when the addon has read any)
+        self.cd_frame = ttk.Frame(left)
+        ttk.Label(self.cd_frame, text="Profession cooldowns", style="H.TLabel").pack(anchor="w", pady=(12, 4))
+        frame, self.cd_tree = self._tree(self.cd_frame, ("Character", "Cooldown", "Ready"), (300, 220, 160), height=3)
+        frame.pack(fill="x")
         right = ttk.Frame(mid, width=360)
         right.pack(side="left", fill="y", padx=(14, 0))
         right.pack_propagate(False)
@@ -1201,6 +1207,31 @@ class App(tk.Tk):
         for w in rep["stop"]:
             add("Stop buying", w, money(w["profit"], True) if w["profit"] else "", w["why"], "bad")
         self._fill(self.week_tree, rows)
+
+    def _fill_cooldowns(self):
+        """Profession cooldowns on the Dashboard (switch prof_cooldowns), every character on every realm."""
+        self.cd_frame.pack_forget()
+        rows = engine.profession_cooldowns(self.con) if self.settings.prof_cooldowns else []
+        if not rows:
+            return
+        self.cd_frame.pack(fill="x")   # packed last: below the realm overview and weekly report
+        many = len({r["realm"] for r in rows}) > 1
+        now = time.time()
+
+        def when(t):
+            left = t - now
+            if left <= 0:
+                return "ready"
+            if left < 3600:
+                return f"in {math.ceil(left / 60)} min"
+            if left < 48 * 3600:
+                return f"in {math.ceil(left / 3600)} h"
+            return f"in {round(left / 86400)} days"
+
+        self._fill(self.cd_tree, [
+            ((r["char"] + (f"  ({r['realm']})" if many else ""), r["name"], when(r["ready"])),
+             (r["char"].lower(), r["name"].lower(), r["ready"]), "deal" if r["ready"] <= now else None)
+            for r in rows])
 
     def _realm_overview_switch(self):
         sel = self.realm_tree.selection()
@@ -1587,6 +1618,8 @@ class App(tk.Tk):
             hint="Dashboard: all your realms side by side (gold, profit, stock, last scan); double-click one to switch")
         add("Weekly report", "weekly_report", "bool",
             hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
+        add("Profession cooldowns", "prof_cooldowns", "bool",
+            hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
         section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
@@ -2009,6 +2042,7 @@ class App(tk.Tk):
         self._fill_char_profit(realm)
         self._fill_realm_overview()
         self._fill_weekly_report()
+        self._fill_cooldowns()
         self._fill_steps(installed, s)
         self._fill_deals()
         self._fill_top_deals()

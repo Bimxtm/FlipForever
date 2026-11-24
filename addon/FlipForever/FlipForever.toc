@@ -51,6 +51,7 @@ Advisor\CombatGuide.lua
 Advisor\Trainer.lua
 Advisor\TalentOverlay.lua
 Professions.lua
+Cooldowns.lua
 GearFinder.lua
 Arrow.lua
 
