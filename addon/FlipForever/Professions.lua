@@ -151,6 +151,32 @@ function P:ItemValue(id)
   return vendorSell(id) or 0
 end
 
+-- Crafting cost for tooltips (switch craftCostTooltip) -------------------------------------------------
+-- What one item costs to make from a recipe this character knows, materials at scanned prices
+-- (vendor goods ~4x their sell price). Returns cost, recipe name, profession, and true when a
+-- material has no price (the cost is then a lower bound). nil when no known recipe makes it.
+function P:CraftCostOf(itemID)
+  if not itemID or FlipForeverDB.settings.craftCostTooltip == false then return nil end
+  local best
+  for prof, data in pairs(self:Store()) do
+    for _, r in ipairs(data.recipes or {}) do
+      if r.learned and r.out == itemID and #r.mats > 0 then
+        local cost, unknown = 0, false
+        for _, m in ipairs(r.mats) do
+          local unit, how = self:UnitCost(m[1])
+          if unit and how ~= "crafted" then cost = cost + unit * m[2] else unknown = true end
+        end
+        cost = math.floor(cost / (r.outQty or 1) + 0.5)
+        if not best or (best.unknown and not unknown) or (best.unknown == unknown and cost < best.cost) then
+          best = { cost = cost, name = r.name, prof = prof, unknown = unknown }
+        end
+      end
+    end
+  end
+  if not best or best.cost <= 0 then return nil end
+  return best.cost, best.name, best.prof, best.unknown
+end
+
 -- Plan ------------------------------------------------------------------------------------------------
 function P:Plan(profName)
   local data = self:Store()[profName]

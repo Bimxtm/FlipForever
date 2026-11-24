@@ -44,6 +44,20 @@ function TT:Lines(itemID)
       out[#out + 1] = { FF:T("  |cffff8800from %s, until you scan here|r"):format(realm or "?"), "" }
     end
   end
+  -- things you can craft: what the materials cost (switch craftCostTooltip)
+  if FF.Professions and FF.Professions.CraftCostOf then
+    local ok, cost, _, _, unknown = pcall(FF.Professions.CraftCostOf, FF.Professions, itemID)
+    if ok and cost then
+      local text = (unknown and ">" or "") .. FF:Money(cost)
+      local worth = price or FF:EstimateOf(itemID)
+      if worth then
+        local net = math.floor(worth * 0.95) - cost
+        if net > 0 and not unknown then text = text .. FF:T(" |cff33ff99(%s profit)|r"):format(FF:Money(net))
+        elseif net <= 0 then text = text .. FF:T(" |cffff8800(cheaper to buy)|r") end
+      end
+      out[#out + 1] = { FF:T("  crafting cost"), text }
+    end
+  end
   if FF.ExpirySaver then
     local ok, lines = pcall(FF.ExpirySaver.TooltipLines, FF.ExpirySaver, itemID)
     for _, l in ipairs(ok and lines or {}) do out[#out + 1] = l end

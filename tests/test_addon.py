@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4146,4 +4146,38 @@ for name in ("CLICK FlipForeverCombatButton:LeftButton", "CLICK FlipForeverEmerg
              "FLIPFOREVER_NEXT_SPOT", "FLIPFOREVER_ARROW_CLEAR"):
     assert f'name="{name}"' in xml, name
 assert "QuestHelper:NextSpot()" in xml and "Arrow:SetManual()" in xml
+lua.execute("""
+-- crafting cost in tooltips: a known recipe makes the item -> material cost next to the price
+local FF, P, TT = FlipForever, FlipForever.Professions, FlipForever.Tooltip
+local oStore, oPrice, oEst = P.Store, FF.PriceOf, FF.EstimateOf
+local PR = { [2589] = 100, [2996] = 2000 }
+FF.PriceOf = function(_, id) return PR[id] end
+FF.EstimateOf = function() return nil end
+P.Store = function() return { Tailoring = { recipes = {
+  { id = 1, name = "Bolt of Linen Cloth", learned = true, out = 2996, outQty = 1, mats = { { 2589, 2 } } },
+  { id = 2, name = "Linen Bag", learned = true, out = 4238, outQty = 1, mats = { { 2996, 3 }, { 9999, 1 } } },
+  { id = 3, name = "Unlearned", learned = false, out = 2997, mats = { { 2589, 1 } } } } } } end
+local r = {}
+local c, name, prof, unk = P:CraftCostOf(2996)
+r[#r + 1] = table.concat({ c, name, prof, tostring(unk) }, ",")
+c, name, prof, unk = P:CraftCostOf(4238)
+r[#r + 1] = c .. "," .. tostring(unk)
+r[#r + 1] = tostring(P:CraftCostOf(2997))
+local function line(id)
+  for _, l in ipairs(TT:Lines(id)) do if l[1]:find("crafting cost") then return l[2] end end
+  return "none"
+end
+r[#r + 1] = line(2996)
+PR[2996] = 150
+r[#r + 1] = line(2996)
+FlipForeverDB.settings.craftCostTooltip = false
+r[#r + 1] = line(2996)
+FlipForeverDB.settings.craftCostTooltip = nil
+CRAFTTT = table.concat(r, "#")
+P.Store, FF.PriceOf, FF.EstimateOf = oStore, oPrice, oEst
+""")
+print("craft cost tooltip:", L("CRAFTTT"))
+assert L("CRAFTTT").split("#")[:3] == ["200,Bolt of Linen Cloth,Tailoring,false", "6000,true", "nil"], L("CRAFTTT")
+assert "profit" in L("CRAFTTT").split("#")[3] and "cheaper to buy" in L("CRAFTTT").split("#")[4], L("CRAFTTT")
+assert L("CRAFTTT").split("#")[5] == "none", L("CRAFTTT")
 print("ALL ADDON TESTS PASSED")
