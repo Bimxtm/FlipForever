@@ -9,6 +9,7 @@
 
 Core.lua
 Locale.lua
+QuietChat.lua
 ShoppingList.lua
 Scan.lua
 Trader.lua

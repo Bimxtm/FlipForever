@@ -55,7 +55,7 @@ function A:Check(unit, targeting)
   else
     line = FF:T("Enemy player nearby: %s (%s)."):format(name, what)
   end
-  FF:Print("|cffff4040" .. line .. "|r")
+  FF:Loud("|cffff4040" .. line .. "|r")
   if t - lastSound >= SOUND_GAP and PlaySound then
     lastSound = t
     local kit = SOUNDKIT and SOUNDKIT.RAID_WARNING or 8959

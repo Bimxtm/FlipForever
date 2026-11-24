@@ -81,7 +81,7 @@ function FF:Alert(text, soundKit)
     pcall(RaidNotice_AddMessage, RaidWarningFrame, text, color)
   end
   if FlashClientIcon then pcall(FlashClientIcon) end
-  FF:Print("|cffffd200" .. text .. "|r")
+  (FF.Loud or FF.Print)(FF, "|cffffd200" .. text .. "|r")
 end
 
 -- Scan results -----------------------------------------------------------------------

@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3759,6 +3759,47 @@ for k in pairs(log) do log[k] = nil end for i, e in ipairs(saved) do log[i] = e 
 FF.VendorPrice, D.Value, D.Enabled, FF.ItemName = oV, oDV, oDE, oName
 """)
 print("expiry saver:", L("EXPS"))
+lua.execute("""
+-- quiet chat: RP realm -> lines kept (or sent to the FlipForever tab); /ff answers and alerts still print
+local FF, Q = FlipForever, FlipForever.QuietChat
+local oRules, oInfo, oN = FF.Ruleset, GetChatWindowInfo, NUM_CHAT_WINDOWS
+local r = {}
+Q.log, Q.told = {}, nil
+FF.Ruleset = function() return nil end
+printed = {}
+FF:Print("normal realm")
+r[#r + 1] = #printed
+FF.Ruleset = function() return "RPPvP" end
+printed = {}
+FF:Print("kept one")
+FF:Print("kept two")
+r[#r + 1] = #printed .. "/" .. #Q.log                       -- one notice, two kept
+printed = {}
+FF:Loud("alert")
+SlashCmdList.FLIPFOREVER("reserve")                          -- own command: answers in chat
+r[#r + 1] = #printed
+printed = {}
+SlashCmdList.FLIPFOREVER("log")
+r[#r + 1] = (printed[#printed] or ""):find("kept two") and "log" or "?"
+local tab = { got = {} }
+function tab:AddMessage(t) self.got[#self.got + 1] = t end
+NUM_CHAT_WINDOWS = 2
+GetChatWindowInfo = function(i) return i == 2 and "FlipForever" or "General" end
+ChatFrame2 = tab
+printed = {}
+FF:Print("to the tab")
+r[#r + 1] = #printed .. "/" .. #tab.got
+FlipForeverDB.settings.quietChat = false
+printed = {}
+FF:Print("switched off")
+r[#r + 1] = #printed
+FlipForeverDB.settings.quietChat = nil
+QUIET = table.concat(r, "#")
+FF.Ruleset, GetChatWindowInfo, NUM_CHAT_WINDOWS, ChatFrame2 = oRules, oInfo, oN, nil
+Q.log, Q.told = {}, nil
+""")
+print("quiet chat:", L("QUIET"))
+assert L("QUIET") == "1#1/2#2#log#0/1#1", L("QUIET")
 _x = L("EXPS").split("#")
 assert _x[:7] == ["1", "2", "true", "de", "false", "note", "true"], _x
 assert "merchant" in _x[7] and _x[8] == "false/0" and _x[9] == "0", _x

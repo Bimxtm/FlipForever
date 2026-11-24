@@ -24,7 +24,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
   for _, fn in ipairs(list) do
     local ok, err = pcall(fn, ...)
     if not ok then
-      FF:Print(FF:T("|cffff5555error in ") .. event .. ":|r " .. tostring(err))
+      (FF.Loud or FF.Print)(FF, FF:T("|cffff5555error in ") .. event .. ":|r " .. tostring(err))
       FF:RecordError(event, err)
     end
   end
@@ -672,6 +672,7 @@ FF.HELP = {
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },
+  { "Chat", "log (messages kept by quiet chat on RP realms) | chattab (a FlipForever chat tab)" },
 }
 function FF:Help()
   FF:Print(FF:T("Commands (type /ff and the word):"))
