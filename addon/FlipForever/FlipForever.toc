@@ -19,6 +19,7 @@ Disenchant.lua
 VendorResale.lua
 Session.lua
 Restock.lua
+EnemyAlert.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

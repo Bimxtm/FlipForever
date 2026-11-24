@@ -3276,7 +3276,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3599,6 +3599,50 @@ FF:DB().restockSeen = nil
 P.Store, C_Item.GetItemCount = oStore, oCount
 """)
 print("restock:", L("RESTOCK"))
+lua.execute("""
+-- enemy player alert: enemy players who can attack you, once per player and minute, quiet inside
+local FF, A = FlipForever, FlipForever.EnemyAlert
+local G = _G
+local keep = {}
+for _, k in ipairs({ "UnitExists", "UnitIsPlayer", "UnitIsDeadOrGhost", "UnitCanAttack", "UnitIsEnemy",
+  "UnitName", "UnitLevel", "UnitClass", "UnitIsUnit", "IsInInstance", "GetTime", "PlaySound" }) do keep[k] = G[k] end
+local U = { nameplate1 = { name = "Gruk", lvl = 24, class = "Warrior", enemy = true, attack = true },
+  nameplate2 = { name = "Ally", lvl = 20, class = "Mage", enemy = false, attack = false },
+  nameplate3 = { name = "Calm", lvl = -1, class = "Rogue", enemy = true, attack = false } }
+local clock, inside, sounds = 100, false, 0
+G.UnitExists = function(u) return U[u] ~= nil end
+G.UnitIsPlayer = function(u) return U[u] ~= nil end
+G.UnitIsDeadOrGhost = function() return false end
+G.UnitCanAttack = function(u) return U[u] and U[u].attack end
+G.UnitIsEnemy = function(_, u) return U[u] and U[u].enemy end
+G.UnitName = function(u) return U[u] and U[u].name end
+G.UnitLevel = function(u) return U[u] and U[u].lvl end
+G.UnitClass = function(u) return U[u] and U[u].class end
+G.UnitIsUnit = function() return false end
+G.IsInInstance = function() return inside end
+G.GetTime = function() return clock end
+G.PlaySound = function() sounds = sounds + 1 end
+A:Reset()
+local r = {}
+r[#r + 1] = A:Check("nameplate1") or "-"          -- line + sound
+r[#r + 1] = A:Check("nameplate1") or "-"          -- same minute: quiet
+r[#r + 1] = A:Check("nameplate1", true) or "-"    -- targets you: line, no sound (10 s gap)
+r[#r + 1] = A:Check("nameplate2") or "-"          -- same faction
+r[#r + 1] = A:Check("nameplate3") or "-"          -- not flagged, can't attack
+clock = 200
+inside = true
+r[#r + 1] = A:Check("nameplate1") or "-"          -- dungeon/battleground: quiet
+inside = false
+FlipForeverDB.settings.enemyAlert = false
+r[#r + 1] = A:Check("nameplate1") or "-"          -- switched off
+FlipForeverDB.settings.enemyAlert = nil
+r[#r + 1] = A:Check("nameplate1") or "-"          -- a minute later: again
+ENEMY = table.concat(r, "#") .. "#" .. sounds
+for k, v in pairs(keep) do G[k] = v end
+A:Reset()
+""")
+print("enemy alert:", L("ENEMY"))
+assert L("ENEMY") == "Enemy player nearby: Gruk (level 24 Warrior).#-#Enemy player Gruk (level 24 Warrior) is targeting you!#-#-#-#-#Enemy player nearby: Gruk (level 24 Warrior).#2", L("ENEMY")
 lua.execute("""
 -- craft button: top skill-up (not a trainer recipe), capped by what the bags allow; profit mode only for the open profession
 local FF, P = FlipForever, FlipForever.Professions
