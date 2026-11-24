@@ -162,12 +162,32 @@ end
 
 -- Gold reserve (switch goldReserve): buying keeps a share of the gold you had when the run started
 -- (reservePct, default 20%) and never less than reserveMin (default 20 gold), so a character is never drained.
+-- The minimum never takes more than half of your gold, so a character with little gold can still buy.
 function T:Reserve(money)
   local s = FlipForeverDB.settings
   if s.goldReserve == false then return 0 end
+  money = money or 0
   local pct = tonumber(s.reservePct) or 0.20
-  local min = tonumber(s.reserveMin) or 200000
-  return math.max(math.floor((money or 0) * pct), min)
+  local min = math.min(tonumber(s.reserveMin) or 200000, math.floor(money / 2))
+  return math.max(math.floor(money * pct), min)
+end
+
+-- Settings window buttons: step through common reserve shares and minimums
+local PCT_STEPS = { 0, 0.05, 0.10, 0.20, 0.30, 0.50 }
+local MIN_STEPS = { 0, 1000, 5000, 10000, 50000, 100000, 200000, 500000, 1000000 } -- 0, 10s, 50s, 1g ... 100g
+local function nextStep(list, cur)
+  for i, v in ipairs(list) do if v > cur + 1e-9 then return v end end
+  return list[1]
+end
+function T:NextReservePct()
+  local s = FlipForeverDB.settings
+  s.reservePct = nextStep(PCT_STEPS, tonumber(s.reservePct) or 0.20)
+  return s.reservePct
+end
+function T:NextReserveMin()
+  local s = FlipForeverDB.settings
+  s.reserveMin = nextStep(MIN_STEPS, tonumber(s.reserveMin) or 200000)
+  return s.reserveMin
 end
 
 -- gold this run may still spend: your gold minus the reserve

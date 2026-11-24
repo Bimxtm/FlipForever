@@ -1,3 +1,8 @@
+# FlipForever 2.7.1 Beta 12 (hotfix)
+
+- **Gold reserve fits small purses:** the 20 gold minimum never takes more than half your gold, so characters with little gold can buy again. Set the share and minimum (down to silver) with the new buttons in the addon's Settings window, or /ff reserve 10 50s.
+- **Enemy player alert (PvP realms):** a sound and a chat line when an enemy player who can attack you is near or targets you. Own switch.
+- **Realm overview in the app:** every realm side by side on the Dashboard, double-click to switch. Own switch.
 # FlipForever 2.7.1 Beta 11 (hotfix)
 
 - **App Settings scroll:** every setting and the Save settings button can be reached again, long hints wrap and nothing overlaps.

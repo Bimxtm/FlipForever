@@ -491,15 +491,25 @@ local function build()
     fs:SetJustifyH("LEFT")
     local set = button(pg, "Set key", 80, onSet)
     set:SetPoint("TOPLEFT", 206, fy)
-    if onClear then button(pg, "Clear", 70, onClear):SetPoint("TOPLEFT", 290, fy) end
+    local clear
+    if onClear then clear = button(pg, "Clear", 70, onClear) clear:SetPoint("TOPLEFT", 290, fy) end
     fy = fy - 28
-    return fs, set
+    return fs, set, clear
   end
 
   -- Window size: every FlipForever window
   section("Window size")
   f.scaleLabel, f.scaleBtn = keyRow(function() H:NextScale() end)
   f.scaleBtn:SetText(FF:T("Size"))
+
+  -- Gold reserve: what auction buying always leaves on the character (also /ff reserve)
+  section("Gold reserve")
+  local pctBtn, minBtn
+  f.reserveLabel, pctBtn, minBtn = keyRow(function() FF.Trader:NextReservePct() H:Refresh() end,
+    function() FF.Trader:NextReserveMin() H:Refresh() end)
+  pctBtn:SetText(FF:T("Share"))
+  minBtn:SetText(FF:T("Minimum"))
+  note("Buying keeps this share of your gold, at least the minimum (never more than half your gold). Turn it off under Features.")
 
   -- Combat helper -------------------------------------------------------
   section("Combat helper")
@@ -617,7 +627,7 @@ local function build()
   feature("undercutFix", "Undercut auctions: cancel and repost where it pays", true, nil,
     "Only when the new price still earns more than the deposit you lose by cancelling.")
   feature("goldReserve", "Buying keeps a gold reserve (20% of my gold, at least 20g)", true, nil,
-    "Buying stops before your gold drops below the reserve and sizes purchases to what is left. Change it with /ff reserve <percent> <gold>.")
+    "Buying stops before your gold drops below the reserve and sizes purchases to what is left. The minimum never takes more than half your gold. Change it under Gold reserve above or with /ff reserve <percent> <gold>.")
   feature("bagSpace", "Buying stops before my bags are full (keeps 2 slots free)", true, nil,
     "Auction buying counts your free bag slots (profession bags not counted) and stops while a few stay free. Change how many with /ff bags <slots>.")
   feature("fastFlips", "Buying skips flips with too many cheaper listings ahead", true, nil,
@@ -720,6 +730,12 @@ function H:Refresh()
   frame.livePlan:SetChecked(s.livePlanning ~= false)
   frame.langLabel:SetText(FF:T("Language") .. ":")
   frame.scaleLabel:SetText(FF:T("All FlipForever windows: %d%%"):format(math.floor(FF:WindowScale() * 100 + 0.5)))
+  if s.goldReserve == false then
+    frame.reserveLabel:SetText(FF:T("Gold reserve: off"))
+  else
+    frame.reserveLabel:SetText(FF:T("Keep %d%%, at least %s"):format(math.floor((tonumber(s.reservePct) or 0.20) * 100 + 0.5),
+      FF:Money(tonumber(s.reserveMin) or 200000)))
+  end
   frame.lang:SetText(H:LanguageName(s.language))
   frame.vendorFlips:SetChecked(s.vendorFlips ~= false)
   frame.arrow:SetChecked(s.arrow ~= false)

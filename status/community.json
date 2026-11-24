@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23",
+ "updated": "2026-11-24",
  "developers": [
   "Alix"
  ],
@@ -273,14 +273,14 @@
   {
    "r": "idea-20261122223114-3",
    "text": "Realm overview in the app: profit, gold and characters per realm side by side",
-   "status": "planned",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.12"
   },
   {
    "r": "idea-20261122223114-2",
    "text": "Enemy player alert on PvP realms while gathering or questing",
-   "status": "planned",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.12"
   },
   {
    "r": "idea-20261122223114",

@@ -2,6 +2,13 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.12] - 2026-11-24 (beta, hotfix)
+### Fixed
+- The gold reserve's 20 gold minimum stopped all buying on characters with less gold. The minimum now never takes more than half of your gold.
+### Added
+- Gold reserve in the addon's Settings window: Share and Minimum buttons set how much gold buying always leaves; the minimum goes down to silver (10s, 50s). /ff reserve also takes silver, e.g. /ff reserve 10 50s.
+- Enemy player alert on PvP realms: a sound and a chat line when a player of the other faction who can attack you shows up nearby or targets you, in the open world only. Own switch in Settings, Features.
+- Realm overview in the app: with characters on two or more realms, the Dashboard shows every realm side by side (gold, realized profit, last 7 days, stock, last scan); double-click a realm to switch to it. Own switch in Settings.
 ## [2.7.1-beta.11] - 2026-11-23 (beta, hotfix)
 ### Fixed
 - The app's Settings page was cut off at the bottom, so the last section and the Save settings button could not be reached. The page now scrolls (scroll bar and mouse wheel), long hints wrap onto a second line, and the Browse button no longer covers its hint.

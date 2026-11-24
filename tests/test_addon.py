@@ -402,7 +402,7 @@ assert T.state == "idle"
 # --- gold reserve: 20% of the gold at the start, never below 20g; purchases sized to what is left
 lua.execute("""
 OLD_MONEY = GetMoney
-GetMoney = function() return 300000 end   -- 30g: reserve = max(6g, 20g) = 20g, 10g spendable
+GetMoney = function() return 300000 end   -- 30g: reserve = max(6g, min(20g, half = 15g)) = 15g, 15g spendable
 FlipForever_Plan = { generated = 901, realm = "Testrealm - Horde", budget = 10000000,
   buy = { {id=2589, max=6000, qty=50, exp=8000} }, sell = {} }
 COMMODITY[2589] = { {unitPrice=4000, quantity=40} }
@@ -411,9 +411,26 @@ RunTimers(1)
 Fire("COMMODITY_SEARCH_RESULTS_UPDATED", 2589)
 """)
 print("reserve:", T.state, T.pending and T.pending.qty, L("FlipForever.Trader.reserve"))
-assert T.state == "ready_commodity" and T.pending.qty == 25 and L("FlipForever.Trader.reserve") == 200000
+assert T.state == "ready_commodity" and T.pending.qty == 37 and L("FlipForever.Trader.reserve") == 150000
 lua.execute("""
-GetMoney = function() return 200500 end
+local T = FlipForever.Trader
+-- little gold: the 20g minimum never takes more than half; 0.9g -> 0.45g kept; bigger gold: 20% wins
+RSMALL = T:Reserve(9000) .. "," .. T:Reserve(2000000) .. "," .. T:Reserve(0)
+-- Settings buttons step through shares and minimums and wrap around
+local s = FlipForeverDB.settings
+local p1, p2 = T:NextReservePct(), T:NextReservePct()
+s.reservePct = 0.5
+local p3 = T:NextReservePct()
+local m1 = T:NextReserveMin()
+s.reserveMin = 1000000
+local m2 = T:NextReserveMin()
+RSTEP = p1 .. "," .. p2 .. "," .. p3 .. "," .. m1 .. "," .. m2
+s.reservePct, s.reserveMin = nil, nil
+""")
+print("reserve small/steps:", L("RSMALL"), L("RSTEP"))
+assert L("RSMALL") == "4500,400000,0" and L("RSTEP") == "0.3,0.5,0,500000,0", (L("RSMALL"), L("RSTEP"))
+lua.execute("""
+GetMoney = function() return 150500 end
 FlipForever.Trader.state = "idle"
 FlipForever.Trader:EvaluateBuy(COMMODITY[2589])
 """)
@@ -432,11 +449,17 @@ lua.execute("""
 FlipForever.Trader:Stop()
 SlashCmdList.FLIPFOREVER("reserve 30 50")
 RS = tostring(FlipForeverDB.settings.goldReserve) .. "," .. FlipForeverDB.settings.reservePct .. "," .. FlipForeverDB.settings.reserveMin
+SlashCmdList.FLIPFOREVER("reserve 10 50s")
+RS = RS .. "|" .. FlipForeverDB.settings.reserveMin
+SlashCmdList.FLIPFOREVER("reserve 10 1.5")
+RS = RS .. "|" .. FlipForeverDB.settings.reserveMin
+FlipForever.Trader:NextReserveMin()
+RS = RS .. "|" .. FlipForeverDB.settings.reserveMin
 FlipForeverDB.settings.goldReserve, FlipForeverDB.settings.reservePct, FlipForeverDB.settings.reserveMin = nil, nil, nil
 GetMoney = OLD_MONEY
 """)
 print("/ff reserve:", L("RS"))
-assert L("RS") == "true,0.3,500000"
+assert L("RS") == "true,0.3,500000|5000|15000|50000", L("RS")
 # --- bag space: 3 free slots, 2 kept -> one stack of 20; 2 free -> stops; switch off -> no limit; /ff bags
 lua.execute("""
 OLD_MONEY, OLD_FREE, OLD_INFO = GetMoney, C_Container.GetContainerNumFreeSlots, C_Item.GetItemInfo

@@ -620,17 +620,19 @@ SlashCmdList.FLIPFOREVER = function(msg)
     if rest == "off" then
       s.goldReserve = false
     else
-      local pct, min = rest:match("^(%d+)%%?%s*(%d*)")
+      -- minimum: gold (20, 1.5, 20g) or silver (50s)
+      local pct, min = rest:match("^(%d+)%%?%s*(%S*)")
       if pct then
         s.goldReserve = true
         s.reservePct = math.min(90, tonumber(pct)) / 100
-        if min ~= "" then s.reserveMin = tonumber(min) * 10000 end
+        local num, unit = min:lower():match("^(%d*%.?%d+)([gs]?)$")
+        if num then s.reserveMin = math.floor(tonumber(num) * (unit == "s" and 100 or 10000) + 0.5) end
       end
     end
     if s.goldReserve == false then
       FF:Print(FF:T("Gold reserve is off: buying may spend all your gold."))
     else
-      FF:Print(FF:T("Gold reserve: buying keeps %d%% of your gold, at least %s. Change: /ff reserve <percent> <gold>, or off."):format(
+      FF:Print(FF:T("Gold reserve: buying keeps %d%% of your gold, at least %s. Change: /ff reserve <percent> <gold, or silver like 50s>, or off."):format(
         math.floor((tonumber(s.reservePct) or 0.20) * 100 + 0.5), FF:Money(tonumber(s.reserveMin) or 200000)))
     end
   elseif cmd == "reset" then
