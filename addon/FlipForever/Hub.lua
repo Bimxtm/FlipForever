@@ -646,6 +646,8 @@ local function build()
     "Crafts the planner's top skill-up or profitable recipe the planned number of times (as many as your materials allow), with the profession window open.")
   feature("bestPostTime", "Show the hours my auctions sell best when posting", true, nil,
     "From your own sales: the 4-hour window of the day in which an item (or all your items) sold most. Shown when posting and in tooltips.")
+  feature("headStart", "New realm: estimate prices from my other realm until I scan", true, function() if FF.Professions then pcall(FF.Professions.Refresh, FF.Professions) end end,
+    "On a realm without scans yet, tooltips and the profession planner show prices from your other realm (same faction first), marked as estimates. Buying waits for this realm's own scans.")
   feature("mailButton", "Collect auction gold button at the mailbox", true)
   feature("mailOpenAll", "Open all mail button at the mailbox", true, function() if FF.Mailbox then FF.Mailbox:Refresh() end end)
   feature("sendToAlt", "Send to alt button at the mailbox (materials and flip stock)", true, function() if FF.Mailbox then FF.Mailbox:RefreshAlt() end end)

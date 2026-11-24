@@ -225,6 +225,55 @@ function FF:HasPrices()
   return FlipForeverDB ~= nil and #FF:DB().scans > 0
 end
 
+-- New realm head start (switch headStart): until this realm has its own scans, tooltips and the
+-- profession planner show prices from your other realm (same faction first, newest scan) as rough
+-- estimates, always marked. Buying never uses them: it waits for this realm's own scans.
+local estCache, estKey, estRealm = {}, nil, nil
+function FF:HeadStartOn()
+  return FlipForeverDB ~= nil and FlipForeverDB.settings.headStart ~= false
+end
+local function rebuildEstimates()
+  local mine = FF:RealmKey()
+  local faction = mine:match(" %- (%a+)$")
+  local best, bestScore
+  for key, r in pairs(FlipForeverDB.realms or {}) do
+    if key ~= mine and type(r) == "table" and type(r.scans) == "table" and #r.scans > 0 then
+      local score = (r.scans[#r.scans].t or 0) + ((faction and key:match(" %- (%a+)$") == faction) and 1e11 or 0)
+      if not bestScore or score > bestScore then best, bestScore = key, score end
+    end
+  end
+  local k = (best or "") .. ":" .. (best and #FlipForeverDB.realms[best].scans or 0) .. ":" .. (bestScore or 0)
+  if k == estKey then return end
+  estKey, estCache, estRealm = k, {}, best
+  if not best then return end
+  for _, s in ipairs(FlipForeverDB.realms[best].scans) do -- oldest first, newer overwrite
+    for id, p25 in (s.d or ""):gmatch("(%d+):%d+:(%d+):%d+:%d+") do estCache[tonumber(id)] = tonumber(p25) end
+  end
+end
+
+-- the other realm's price for an item while this realm has no scans (nil otherwise), and that realm
+function FF:EstimateOf(id)
+  if not self:HeadStartOn() or self:HasPrices() then return nil end
+  rebuildEstimates()
+  return estCache[id], estRealm
+end
+
+-- the realm the estimates come from right now (nil when none are used)
+function FF:EstimateRealm()
+  if not self:HeadStartOn() or self:HasPrices() then return nil end
+  rebuildEstimates()
+  return estRealm
+end
+
+-- price for planning: this realm's scans, else the estimate. Second value true for an estimate.
+function FF:PlanPriceOf(id)
+  local p = self:PriceOf(id)
+  if p then return p, false end
+  local e = self:EstimateOf(id)
+  if e then return e, true end
+  return nil
+end
+
 -- how old the newest scan is; prices older than 6 hours are flagged
 function FF:ScanAgeLine()
   local scans = FF:DB().scans

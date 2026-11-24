@@ -127,15 +127,25 @@ function P:UnitCost(id)
   if p then return p, "ah" end
   -- something you make yourself (e.g. Bolt of Linen Cloth): what its own materials cost
   if self.craftCost and self.craftCost[id] then return self.craftCost[id], "crafted" end
+  -- new realm without scans: the other realm's price (never bought from: buy lists take "ah" only)
+  local e = FF:EstimateOf(id)
+  if e then return e, "estimate" end
   local sell = vendorSell(id)
   if sell then return sell * 4, "vendor" end
   return nil, nil
 end
 
+-- marks the planner while its prices are estimates from another realm ("" otherwise)
+function P:EstimateNote()
+  local realm = FF:EstimateRealm()
+  if not realm then return "" end
+  return "  " .. FF:T("|cffff8800(estimates from %s until you scan here)|r"):format(realm)
+end
+
 -- what the result is worth to you: auction price after the 5% cut, else its vendor price
 function P:ItemValue(id)
   if not id then return 0 end
-  local p = FF:PriceOf(id)
+  local p = FF:PlanPriceOf(id)
   if p then return math.floor(p * 0.95) end
   return vendorSell(id) or 0
 end
@@ -151,7 +161,7 @@ function P:Plan(profName)
     if r.learned and r.out and not FF:PriceOf(r.out) and #r.mats > 0 then
       local cost, ok = 0, true
       for _, m in ipairs(r.mats) do
-        local unit = FF:PriceOf(m[1])
+        local unit = FF:PlanPriceOf(m[1])
         if unit then cost = cost + unit * m[2] else ok = false end
       end
       if ok then self.craftCost[r.out] = cost / (r.outQty or 1) end
@@ -211,7 +221,7 @@ function P:ProfitList(profName)
     if data then
       self:Plan(prof) -- fills craftCost / craftRecipe for things you make yourself
       for _, r in ipairs(data.recipes) do
-        local price = r.learned and r.out and #r.mats > 0 and FF:PriceOf(r.out)
+        local price = r.learned and r.out and #r.mats > 0 and FF:PlanPriceOf(r.out)
         if price and not seen[r.id] then
           seen[r.id] = true
           local cost, unknown = 0, false
@@ -508,8 +518,8 @@ function P:RefreshProfit()
   frame.mode:SetText(FF:T("Show skill-ups"))
   frame.buy:SetText(FF:T("Buy mats for the top craft"))
   local list = self:ProfitList()
-  frame.prof:SetText(#list > 0 and FF:T("%d profitable craft%s across your professions"):format(#list, FF:Plural(#list))
-    or "No profitable fast-selling crafts right now.")
+  frame.prof:SetText((#list > 0 and FF:T("%d profitable craft%s across your professions"):format(#list, FF:Plural(#list))
+    or "No profitable fast-selling crafts right now.") .. P:EstimateNote())
   for i, fs in ipairs(frame.rows) do
     local e = list[i]
     if e then
@@ -569,7 +579,7 @@ function P:Refresh()
     return
   end
   frame.prof:SetText(FF:T("%s  %d / %d  |cff888888(read %s)|r"):format(self.current, data.skill, data.max,
-    date("%H:%M", data.t)))
+    date("%H:%M", data.t)) .. P:EstimateNote())
   for i, fs in ipairs(frame.rows) do
     local r = recs[i]
     if r then

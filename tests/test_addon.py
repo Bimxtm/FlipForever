@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3665,6 +3665,40 @@ for k, v in pairs(keep) do G[k] = v end
 A:Reset()
 """)
 print("enemy alert:", L("ENEMY"))
+lua.execute("""
+-- new realm head start: no scans here -> the other realm's price (same faction first), marked; never bought
+local FF, P = FlipForever, FlipForever.Professions
+local oKey = FF.RealmKey
+FF.RealmKey = function() return "NewRealm - Alliance" end
+local R = FlipForeverDB.realms
+R["NewRealm - Alliance"] = nil
+R["Old - Alliance"] = { scans = { { t = 10, d = "77701:100:300:1:1" } } }
+R["Other - Horde"] = { scans = { { t = 9e9, d = "77701:100:800:1:1" } } }
+local r = {}
+local e, realm = FF:EstimateOf(77701)
+r[#r + 1] = tostring(e) .. "@" .. tostring(realm)
+local pp, est = FF:PlanPriceOf(77701)
+r[#r + 1] = pp .. "/" .. tostring(est)
+local u, src = P:UnitCost(77701)
+r[#r + 1] = u .. "/" .. src
+local tip = {}
+for _, l in ipairs(FF.Tooltip:Lines(77701)) do tip[#tip + 1] = l[1] .. "=" .. l[2] end
+r[#r + 1] = table.concat(tip, ";")
+r[#r + 1] = P:EstimateNote() ~= "" and "note" or "nonote"
+FlipForeverDB.settings.headStart = false
+r[#r + 1] = tostring(FF:EstimateOf(77701)) .. "/" .. P:EstimateNote()
+FlipForeverDB.settings.headStart = nil
+FF:DB().scans[1] = { t = 20, d = "1:1:1:1:1" }   -- own scan arrived: estimates stop
+r[#r + 1] = tostring(FF:EstimateOf(77701)) .. "/" .. tostring(FF:PlanPriceOf(77701))
+HEAD = table.concat(r, "#")
+R["NewRealm - Alliance"], R["Old - Alliance"], R["Other - Horde"] = nil, nil, nil
+FF.RealmKey = oKey
+""")
+print("head start:", L("HEAD"))
+_h = L("HEAD").split("#")
+assert _h[0] == "300@Old - Alliance" and _h[1] == "300/true" and _h[2] == "300/estimate", _h
+assert "estimate" in _h[3] and "from Old - Alliance" in _h[3] and _h[4] == "note", _h
+assert _h[5] == "nil/" and _h[6] == "nil/nil", _h
 assert L("ENEMY") == "Enemy player nearby: Gruk (level 24 Warrior).#-#Enemy player Gruk (level 24 Warrior) is targeting you!#-#-#-#-#Enemy player nearby: Gruk (level 24 Warrior).#2", L("ENEMY")
 lua.execute("""
 -- craft button: top skill-up (not a trainer recipe), capped by what the bags allow; profit mode only for the open profession

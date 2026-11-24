@@ -35,7 +35,15 @@ function TT:Lines(itemID)
   local out = {}
   if not itemID then return out end
   local price = FF:PriceOf(itemID)
-  if price then out[#out + 1] = { FF:T("|cff33ff99FlipForever|r typical price"), FF:Money(price) } end
+  if price then out[#out + 1] = { FF:T("|cff33ff99FlipForever|r typical price"), FF:Money(price) }
+  else
+    -- new realm without scans yet: the other realm's price, clearly marked (switch headStart)
+    local est, realm = FF:EstimateOf(itemID)
+    if est then
+      out[#out + 1] = { FF:T("|cff33ff99FlipForever|r estimate"), "~" .. FF:Money(est) }
+      out[#out + 1] = { FF:T("  |cffff8800from %s, until you scan here|r"):format(realm or "?"), "" }
+    end
+  end
   local perDay = FF.Planner and FF.Planner:SellsPerDay(itemID)
   if perDay then
     local speed = perDay >= 10 and FF:T("|cff33ff99fast|r") or perDay >= 3 and FF:T("|cffffd200ok|r") or FF:T("|cffff8800slow|r")
