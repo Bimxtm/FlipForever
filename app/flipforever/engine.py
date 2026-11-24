@@ -982,6 +982,47 @@ def realm_overview(con) -> list[dict]:
     return out
 
 
+def weekly_report(ledger: Ledger, learned: Learned | None = None, now=None, n=3) -> dict:
+    """The last 7 days of flips: best and worst items by profit (sales minus cost and lost deposits),
+    what sold fastest (median time from posting to sale) and what to stop buying (losing this week,
+    expiring again and again, or paused by the learner)."""
+    now = now or time.time()
+    since = now - 7 * DAY
+    week = []
+    for led in ledger.items.values():
+        outs = [o for o in led.flip_outcomes if o[0] >= since]
+        if not outs:
+            continue
+        sales = sum(1 for o in outs if o[2] > 0)
+        week.append({"id": led.id, "name": led.name, "profit": sum(o[1] for o in outs), "sales": sales,
+                     "expired": sum(1 for o in outs if o[2] == 0 and o[1] < 0),
+                     "streak": led.last_expired_streak, "days": led.days_to_sell[-10:]})
+    best = sorted((w for w in week if w["profit"] > 0), key=lambda w: -w["profit"])[:n]
+    worst = sorted((w for w in week if w["profit"] < 0), key=lambda w: w["profit"])[:n]
+    fast = []
+    for w in week:
+        if w["sales"] and w["days"]:
+            fast.append(dict(w, median_days=statistics.median(w["days"])))
+    fast.sort(key=lambda w: w["median_days"])
+    stop, seen = [], set()
+    for w in sorted(week, key=lambda w: w["profit"]):
+        why = None
+        if w["streak"] >= 2:
+            why = f"expired {w['streak']} times in a row"
+        elif w["profit"] < 0 and w["expired"] >= max(1, w["sales"]):
+            why = f"lost {money(-w['profit'], True)} this week, expires more than it sells"
+        if why:
+            stop.append({"id": w["id"], "name": w["name"], "profit": w["profit"], "why": why})
+            seen.add(w["id"])
+    paused = (learned.paused if learned else {}) or {}
+    names = {led.id: led.name for led in ledger.items.values()}
+    for iid, reason in paused.items():
+        if iid not in seen and iid in names:
+            stop.append({"id": iid, "name": names[iid], "profit": 0, "why": f"paused: {reason}"})
+    return {"profit": sum(w["profit"] for w in week), "sales": sum(w["sales"] for w in week),
+            "items": len(week), "best": best, "worst": worst, "fastest": fast[:n], "stop": stop[:n]}
+
+
 # ============================================================== dashboard numbers
 def goal_text(today: int, week: int, day_gold: int, week_gold: int) -> str:
     """Gold goals (settings goal_day_gold / goal_week_gold, 0 = off): progress as one line, empty when none set."""

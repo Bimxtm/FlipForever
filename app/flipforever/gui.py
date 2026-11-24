@@ -1123,6 +1123,14 @@ class App(tk.Tk):
                                             (270, 70, 90, 105, 95, 95, 80), height=3)
         frame.pack(fill="x")
         self.realm_tree.bind("<Double-1>", lambda e: self._realm_overview_switch())
+        # weekly report: best and worst flips of the last 7 days, fastest sellers, what to stop buying
+        self.week_frame = ttk.Frame(left)
+        ttk.Label(self.week_frame, text="Weekly report", style="H.TLabel").pack(anchor="w", pady=(12, 0))
+        self.week_var = tk.StringVar()
+        ttk.Label(self.week_frame, textvariable=self.week_var, style="Muted.TLabel").pack(anchor="w", pady=(0, 4))
+        frame, self.week_tree = self._tree(self.week_frame, ("Group", "Item", "This week", "Detail"),
+                                           (110, 220, 100, 300), height=6)
+        frame.pack(fill="x")
         right = ttk.Frame(mid, width=360)
         right.pack(side="left", fill="y", padx=(14, 0))
         right.pack_propagate(False)
@@ -1163,6 +1171,36 @@ class App(tk.Tk):
              (r["realm"].lower(), r["chars"], r["gold"], r["realized"], r["week"], r["held_cost"], r["last_scan"] or 0),
              "deal" if r["realized"] > 0 else "bad" if r["realized"] < 0 else None)
             for r in rows])
+
+    def _fill_weekly_report(self):
+        """Weekly report on the Dashboard (switch weekly_report), from the shown character's ledger."""
+        self.week_frame.pack_forget()
+        if not self.settings.weekly_report or not getattr(self, "ledger", None):
+            return
+        rep = engine.weekly_report(self.ledger, getattr(self, "learned", None))
+        if not rep["items"]:
+            return
+        self.week_frame.pack(fill="x")   # packed last: always below the realm overview
+        sign = "+" if rep["profit"] >= 0 else "-"
+        self.week_var.set(f"Last 7 days: {sign}{money(abs(rep['profit']), True)} from {rep['sales']} sale"
+                          f"{'' if rep['sales'] == 1 else 's'} across {rep['items']} item{'' if rep['items'] == 1 else 's'}.")
+        rows, i = [], 0
+
+        def add(group, w, result, detail, tag):
+            nonlocal i
+            i += 1
+            rows.append(((group, w["name"], result, detail), (i, w["name"].lower(), w.get("profit", 0), detail), tag))
+
+        for w in rep["best"]:
+            add("Best", w, money(w["profit"], True), f"{w['sales']} sold", "deal")
+        for w in rep["worst"]:
+            add("Worst", w, "-" + money(-w["profit"], True), f"{w['sales']} sold, {w['expired']} expired", "bad")
+        for w in rep["fastest"]:
+            d = w["median_days"]
+            add("Sold fastest", w, f"{w['sales']} sold", f"usually sells in {d * 24:.0f} h" if d < 1 else f"usually sells in {d:.1f} days", None)
+        for w in rep["stop"]:
+            add("Stop buying", w, money(w["profit"], True) if w["profit"] else "", w["why"], "bad")
+        self._fill(self.week_tree, rows)
 
     def _realm_overview_switch(self):
         sel = self.realm_tree.selection()
@@ -1547,6 +1585,8 @@ class App(tk.Tk):
             hint="after each import, picks the character the game saved last")
         add("Realm overview", "realm_overview", "bool",
             hint="Dashboard: all your realms side by side (gold, profit, stock, last scan); double-click one to switch")
+        add("Weekly report", "weekly_report", "bool",
+            hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
         section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
@@ -1968,6 +2008,7 @@ class App(tk.Tk):
         self._draw_chart()
         self._fill_char_profit(realm)
         self._fill_realm_overview()
+        self._fill_weekly_report()
         self._fill_steps(installed, s)
         self._fill_deals()
         self._fill_top_deals()
