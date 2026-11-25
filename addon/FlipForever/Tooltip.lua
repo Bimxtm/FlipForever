@@ -67,6 +67,11 @@ function TT:Lines(itemID)
     local ok, lines = pcall(FF.ExpirySaver.TooltipLines, FF.ExpirySaver, itemID)
     for _, l in ipairs(ok and lines or {}) do out[#out + 1] = l end
   end
+  -- at the auction house: what posting one costs in deposit for 12, 24 and 48 hours (switch depositTooltip)
+  if #out > 0 and TT:AHOpen() then   -- only for items FlipForever knows something about
+    local ok, l = pcall(TT.DepositLine, TT, itemID)
+    if ok and l then out[#out + 1] = l end
+  end
   local perDay = FF.Planner and FF.Planner:SellsPerDay(itemID)
   if perDay then
     local speed = perDay >= 10 and FF:T("|cff33ff99fast|r") or perDay >= 3 and FF:T("|cffffd200ok|r") or FF:T("|cffff8800slow|r")
@@ -99,6 +104,53 @@ function TT:Lines(itemID)
     if up.diff and up.diff ~= "" then out[#out + 1] = { " ", up.diff } end
   end
   return out
+end
+
+-- Deposit in tooltips ----------------------------------------------------------------------
+local ahShown = false
+FF:On("AUCTION_HOUSE_SHOW", function() ahShown = true end)
+FF:On("AUCTION_HOUSE_CLOSED", function() ahShown = false end)
+
+function TT:AHOpen()
+  if AuctionHouseFrame and AuctionHouseFrame.IsShown then return AuctionHouseFrame:IsShown() and true or false end
+  return ahShown
+end
+
+function TT:DepositEnabled() return FlipForeverDB ~= nil and FlipForeverDB.settings.depositTooltip ~= false end
+
+local MULT = { 1, 2, 4 }   -- the deposit doubles with each longer duration (12h, 24h, 48h)
+
+-- deposit for one unit per duration: your own last posting of it, else the game's figure for
+-- commodities, else the usual 15% of the merchant price per 12 hours. Returns {d12, d24, d48}, source
+function TT:Deposits(itemID)
+  local log = FF:DB().log or {}
+  for i = #log, 1, -1 do
+    local e = log[i]
+    if e.e == "post" and e.id == itemID and (e.dep or 0) > 0 and (e.q or 0) > 0 then
+      local base = e.dep / e.q / (MULT[e.dur or 2] or 2)
+      return { math.ceil(base), math.ceil(base * 2), math.ceil(base * 4) }, "own"
+    end
+  end
+  local AH = C_AuctionHouse
+  if AH and AH.CalculateCommodityDeposit then
+    local out = {}
+    for d = 1, 3 do
+      local ok, dep = pcall(AH.CalculateCommodityDeposit, itemID, d, 1)
+      if ok and type(dep) == "number" and dep > 0 then out[d] = dep end
+    end
+    if out[1] and out[2] and out[3] then return out, "game" end
+  end
+  local vendor = FF:VendorPrice(itemID)
+  if not vendor or vendor <= 0 then return nil end
+  local base = vendor * 0.15
+  return { math.ceil(base), math.ceil(base * 2), math.ceil(base * 4) }, "vendor"
+end
+
+function TT:DepositLine(itemID)
+  if not self:DepositEnabled() then return nil end
+  local d = self:Deposits(itemID)
+  if not d then return nil end
+  return { FF:T("  deposit 12/24/48h (each)"), ("%s / %s / %s"):format(FF:Money(d[1]), FF:Money(d[2]), FF:Money(d[3])) }
 end
 
 function TT:Upgrade(itemID)

@@ -3330,7 +3330,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4316,4 +4316,32 @@ ac = L("ALTC").split("#")
 assert ac[0] == "2:Mainy20:Alty3" and ac[1] == "  you have 23|Mainy 20 (bank 5), Alty 3 (mail 3)", ac
 assert ac[2] == "nil" and ac[3] == "nil" and ac[4].startswith("Mainy 20"), ac
 assert ac[5].startswith("3|") and "Mainy: 20 (bags 15, bank 5)" in ac[5], ac
+
+# deposit in tooltips (switch depositTooltip): only at the auction house; own posts first, else the usual rate
+lua.execute("""
+local FF, TT = FlipForever, FlipForever.Tooltip
+local r = {}
+local function dep() for _, x in ipairs(TT:Lines(2589)) do if x[1]:find("deposit") then return x[2] end end return "none" end
+local oldAH, oldVP, oldCAH = TT.AHOpen, FF.VendorPrice, C_AuctionHouse
+TT.AHOpen = function() return false end
+r[#r + 1] = dep()                                   -- closed: nothing
+TT.AHOpen = function() return true end
+C_AuctionHouse = nil
+FF.VendorPrice = function(_, id) return 100 end
+local d, src = TT:Deposits(987654)
+r[#r + 1] = d[1] .. "," .. d[2] .. "," .. d[3] .. "," .. src
+local log = FF:DB().log
+log[#log + 1] = { e = "post", id = 987654, q = 4, dep = 160, dur = 2 }
+d, src = TT:Deposits(987654)
+r[#r + 1] = d[1] .. "," .. d[2] .. "," .. d[3] .. "," .. src
+table.remove(log)
+r[#r + 1] = dep() ~= "none" and "line" or "noline"
+FlipForeverDB.settings.depositTooltip = false
+r[#r + 1] = dep()
+FlipForeverDB.settings.depositTooltip = nil
+TT.AHOpen, FF.VendorPrice, C_AuctionHouse = oldAH, oldVP, oldCAH
+DEPT = table.concat(r, "#")
+""")
+print("deposit tooltip:", L("DEPT"))
+assert L("DEPT") == "none#15,30,60,vendor#20,40,80,own#line#none", L("DEPT")
 print("ALL ADDON TESTS PASSED")
