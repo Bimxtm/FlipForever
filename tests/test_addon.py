@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4272,6 +4272,10 @@ FlipForeverDB.settings.altCounts = nil
 local found = "none"
 for _, x in ipairs(FF.Tooltip:Lines(2589)) do if x[1]:find("you have") then found = x[2] end end
 r[#r + 1] = found
+FF:DB().names[2589] = "Linen Cloth"
+printed = {}
+SlashCmdList.FLIPFOREVER("find linen cloth")
+r[#r + 1] = #printed .. "|" .. tostring(printed[2])
 ALTC = table.concat(r, "#")
 chars.Mainy, chars.Alty = nil, nil
 for k, v in pairs(chars) do v.items = saved[k] end
@@ -4280,4 +4284,5 @@ print("alt counts:", L("ALTC"))
 ac = L("ALTC").split("#")
 assert ac[0] == "2:Mainy20:Alty3" and ac[1] == "  you have 23|Mainy 20 (bank 5), Alty 3 (mail 3)", ac
 assert ac[2] == "nil" and ac[3] == "nil" and ac[4].startswith("Mainy 20"), ac
+assert ac[5].startswith("3|") and "Mainy: 20 (bags 15, bank 5)" in ac[5], ac
 print("ALL ADDON TESTS PASSED")

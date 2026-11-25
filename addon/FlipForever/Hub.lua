@@ -657,6 +657,8 @@ local function build()
     "Transmutes, Mooncloth and other crafts with a cooldown are read when you open the profession window; the Overview and the app show when each is ready again on every character.")
   feature("altCounts", "Item tooltips: how many my characters hold (bags, bank, mail)", true, nil,
     "Per character on this realm, from its bags, its bank (read when you open it) and its mailbox (read when you look at it).")
+  feature("findItem", "/ff find <item>: which of my characters hold an item", true, nil,
+    "Lists every character on this realm that holds the item, with bags, bank and mail, as last seen by the item counts.")
   feature("craftCostTooltip", "Crafting cost in item tooltips for things I can craft", true, nil,
     "For items one of your professions on this character can make: what the materials cost at scanned prices, next to the auction price. Open the profession window once so its recipes are known.")
   feature("bestPostTime","Show the hours my auctions sell best when posting", true, nil,

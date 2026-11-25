@@ -135,3 +135,42 @@ end)
 FF:On("PLAYER_LOGOUT", function()
   if A:Enabled() then pcall(A.ReadBags, A) end
 end)
+
+-- /ff find <item> (switch findItem): which characters hold it, and where
+function A:FindEnabled() return FlipForeverDB ~= nil and FlipForeverDB.settings.findItem ~= false end
+
+function A:Find(text)
+  local W = FF.WatchList
+  local id = W and W:ItemOf(text)
+  if not id then
+    FF:Print(FF:T("Use /ff find <item>: shift-click the item, or type its name or ID."))
+    return nil
+  end
+  local list = self:Counts(id)
+  if #list == 0 then
+    FF:Print(FF:T("None of your characters on this realm holds %s (bags, bank and mail as last seen)."):format(FF:ItemName(id)))
+    return list
+  end
+  FF:Print(FF:T("%s on your characters:"):format(FF:ItemName(id)))
+  for _, e in ipairs(list) do
+    local where = {}
+    if e.bags > 0 then where[#where + 1] = FF:T("bags %d"):format(e.bags) end
+    if e.bank > 0 then where[#where + 1] = FF:T("bank %d"):format(e.bank) end
+    if e.mail > 0 then where[#where + 1] = FF:T("mail %d"):format(e.mail) end
+    FF:Print(("  %s: %d (%s)"):format(e.name, e.total, table.concat(where, ", ")))
+  end
+  return list
+end
+
+local baseSlash = SlashCmdList.FLIPFOREVER
+SlashCmdList.FLIPFOREVER = function(msg)
+  local cmd, rest = (msg or ""):match("^(%S*)%s*(.-)%s*$")
+  if (cmd or ""):lower() == "find" and A:FindEnabled() then
+    FF.inSlash = true
+    local ok, err = pcall(A.Find, A, rest)
+    FF.inSlash = false
+    if not ok then error(err, 0) end
+    return
+  end
+  return baseSlash(msg)
+end
