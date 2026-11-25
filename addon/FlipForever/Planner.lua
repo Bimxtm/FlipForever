@@ -17,7 +17,7 @@ local FULL = { full = true, ["full-browse"] = true }
 local DEFAULTS = {
   min_margin = 0.20, ah_cut = 0.05, deposit_pct = 0.015, hold_days = 2.0, min_sales_per_day = 3.0,
   min_sell_chance = 0.55, starter_mode = true, starter_min_listed = 50, max_units_per_item = 200,
-  max_plan_items = 40, min_value_copper = 50, min_scans = 3, duration = 2, sell_farmed = true,
+  max_plan_items = 40, min_value_copper = 50, min_scans = 3, duration = 2, sell_farmed = true, flood_warning = true,
 }
 
 local floor, sqrt, exp = math.floor, math.sqrt, math.exp
@@ -135,8 +135,15 @@ function P:MarketModel(scans, now)
     local volDay = nil
     if span >= 6 * 3600 then volDay = 0.7 * drops / (span / DAY) end
     local last = pts[#pts]
+    -- usual amount listed before the latest snapshot (market flood warning)
+    local usual = nil
+    if #pts >= 5 then
+      local q = {}
+      for i = 1, #pts - 1 do q[i] = pts[i].qty end
+      usual = median(q)
+    end
     out[id] = { id = id, market = market, cur_min = last.min, cur_p25 = last.p25, cur_qty = last.qty, cur_t = last.t,
-      nscans = #pts, days_seen = ndays, volatility = vol, vol_day = volDay, trend = trend }
+      nscans = #pts, days_seen = ndays, volatility = vol, vol_day = volDay, trend = trend, usual_qty = usual }
   end
   return out
 end
@@ -148,6 +155,17 @@ local function liquidityPrior(m)
   local p = 0.25 + 0.6 * (1 - exp(-v / 10.0))
   if m.days_seen < 2 then p = p * 0.8 end
   return clamp(p, 0.15, 0.85)
+end
+
+-- Market flood warning (app setting flood_warning + addon switch floodWarning): far more listed
+-- than usual, so prices tend to drop while the extra stock clears. Same rule as engine.Market.flooded.
+function P:FloodOn(s)
+  return (s == nil or s.flood_warning ~= false) and FlipForeverDB ~= nil and FlipForeverDB.settings.floodWarning ~= false
+end
+
+function P:Flooded(m)
+  local u = m and m.usual_qty
+  return u ~= nil and m.cur_qty >= 3 * u and m.cur_qty - u >= 20
 end
 
 -- What the app learned, with safe defaults ----------------------------------------------------
@@ -186,6 +204,7 @@ function P:Recommend(model, c, now, nameOf)
   local marginBase = s.min_margin * c.mf
   local cut = s.ah_cut
   local deals = {}
+  local floodOn = self:FloodOn(s)
   for id, m in pairs(model) do
     if not (c.black[id] or c.paused[id]) then
       if m.nscans < s.min_scans or m.vol_day == nil then
@@ -214,7 +233,8 @@ function P:Recommend(model, c, now, nameOf)
           local slow = (m.vol_day < s.min_sales_per_day) or (p < s.min_sell_chance) or (ownDays ~= nil and ownDays > s.hold_days)
           local fast = not slow
           local stale = now - m.cur_t > 8 * 3600
-          local isDeal = fast and (not stale) and m.cur_min <= maxBuy and qtyCap > 0
+          local flood = floodOn and self:Flooded(m)
+          local isDeal = fast and (not stale) and (not flood) and m.cur_min <= maxBuy and qtyCap > 0
           local profitUnit = trunc(net - m.cur_min)
           local dataConf = math.min(1.0, m.nscans / 10) * math.min(1.0, m.days_seen / 3)
           local confidence = math.max(0.05, dataConf * (1 - math.min(0.8, m.volatility * 1.5)) * (0.5 + p / 2))
@@ -229,7 +249,7 @@ function P:Recommend(model, c, now, nameOf)
           end
           deals[#deals + 1] = { id = id, name = nameOf(id), cur = m.cur_min, expected = trunc(expected), max_buy = maxBuy,
             qty_cap = math.max(0, qtyCap), confidence = confidence, score = score, is_deal = isDeal, fast = fast,
-            starter = false }
+            starter = false, flood = flood or nil, listed = m.cur_qty, usual = m.usual_qty }
         end
       end
     end
@@ -250,10 +270,14 @@ function P:BuildPlan(deals, model, c, nameOf, heldSells)
   local budget = trunc((tonumber(s.budget) or 0) * 10000 * 0.85)
   local perItem = math.max(1, trunc(budget * 0.40))
   local marginBase = s.min_margin * c.mf
-  local buys, spent, starters = {}, 0, 0
+  local buys, spent, starters, flooded = {}, 0, 0, {}
   for _, d in ipairs(deals) do
     if #buys >= s.max_plan_items then break end
-    if d.qty_cap > 0 and d.fast then
+    if d.flood then
+      if d.fast and d.qty_cap > 0 and #flooded < 10 then
+        flooded[#flooded + 1] = { id = d.id, name = d.name, listed = d.listed, usual = trunc(d.usual or 0) }
+      end
+    elseif d.qty_cap > 0 and d.fast then
       if d.starter then
         if starters < idiv(s.max_plan_items, 2) then
           local m = model[d.id]
@@ -299,7 +323,7 @@ function P:BuildPlan(deals, model, c, nameOf, heldSells)
       sells[#sells + 1] = { id = m.id, name = nameOf(m.id), floor = trunc(normal * 0.75), normal = normal, ceil = trunc(normal * 1.6) }
     end
   end
-  return { budget = budget, cut = s.ah_cut, duration = s.duration, buy = buys, sell = sells }, spent
+  return { budget = budget, cut = s.ah_cut, duration = s.duration, buy = buys, sell = sells, flooded = flooded }, spent
 end
 
 -- Units this character bought in game since the app's list was made (not in the app's numbers yet)
@@ -435,6 +459,20 @@ function P:Rebuild()
   plan.ctx = ctx
   FF.livePlan = plan
   return plan
+end
+
+-- Market flood warning: name the items left off the buy list because far more is listed than usual
+function P:FloodNote(plan)
+  local f = plan and plan.flooded
+  if not (f and #f > 0) then return nil end
+  local parts = {}
+  for i = 1, math.min(5, #f) do
+    parts[i] = ("%s (%d listed, usually ~%d)"):format(f[i].name or ("item " .. f[i].id), f[i].listed or 0, f[i].usual or 0)
+  end
+  local more = #f > 5 and (" +%d more"):format(#f - 5) or ""
+  local text = FF:T("Market flooded, not buying until it clears: %s"):format(table.concat(parts, ", ") .. more)
+  FF:Print(text)
+  return text
 end
 
 -- At login: if there's a scan newer than the app's list, plan from it right away

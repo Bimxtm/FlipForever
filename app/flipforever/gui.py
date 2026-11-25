@@ -1600,6 +1600,8 @@ class App(tk.Tk):
         add("Minimum sell chance", "min_sell_chance", width=12, hint="0.55 = at least 55% of auctions must sell (learned from your sales)")
         add("Price chart under Deals", "deal_chart", "bool",
             hint="the selected item's cheapest and typical price and the amount listed over the last 14 days")
+        add("Market flood warning", "flood_warning", "bool",
+            hint="items listed at 3x their usual amount or more are marked on Deals and left off the buy list until it clears")
         add("First-scan mode", "starter_mode", "bool", hint="buy right after one scan: deep markets, price judged live in game")
         add("  deep market = units listed", "starter_min_listed", width=12, hint="only items with at least this many listed")
         add("Max units per item", "max_units_per_item", width=12)

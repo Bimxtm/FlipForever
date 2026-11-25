@@ -831,6 +831,7 @@ function FF:ScanFinished(items)
       self:Alert(("Shopping list updated from the new scan: %d to buy, %d to sell."):format(#live.buy, #live.sell),
         SOUNDKIT and SOUNDKIT.READY_CHECK)
     end
+    if self.Planner.FloodNote then self.Planner:FloodNote(live) end
     if self.UI then self.UI:Refresh() end
     return
   end

@@ -1238,6 +1238,37 @@ for a, b in zip(_py["buy"], _lbuy):
     assert a["qty"] == b["qty"], (a, b)
 assert _lp.budget == _py["budget"] and len(_lp.sell) == len(_py["sell"])
 print("in-game planner matches the app:", len(_lbuy), "buys,", len(_lp.sell), "sells")
+# market flood warning: the first bought item suddenly listed at 5x its usual amount is left off both lists
+_fid = _py["buy"][0]["id"]
+_ft = NOW - 300
+_fl = []
+for _s in _scans:
+    _fl.append(dict(_s))
+_lastrow = _con.execute("SELECT min, p25, qty, n FROM prices WHERE realm=? AND id=? ORDER BY t DESC LIMIT 1", (_realm, _fid)).fetchone()
+_usual = _model[_fid].usual_qty or _model[_fid].cur_qty
+_fq = int(max(_usual * 5, _usual + 40))
+_con.execute("INSERT INTO prices (realm, id, t, min, p25, qty, n, full) VALUES (?,?,?,?,?,?,?,1)",
+             (_realm, _fid, _ft, _lastrow[0], _lastrow[1], _fq, _lastrow[3]))
+_fl.append({"t": _ft, "src": "full", "n": 1, "d": f"{_fid}:{_lastrow[0]}:{_lastrow[1]}:{_fq}:{_lastrow[3]}"})
+_fmodel = _engine.market_model(_con, _realm, NOW)
+assert _fmodel[_fid].flooded, (_fmodel[_fid].cur_qty, _fmodel[_fid].usual_qty)
+_fdeals = _engine.recommend(_set, _fmodel, _learned, _all, _names, now=NOW, holder=_mine)
+_fpy, _ = _engine.build_plan(_set, _fdeals, _fmodel, _learned, _mine, _names, _realm)
+_fd = next(d for d in _fdeals if d.id == _fid)
+assert _fd.flood and not _fd.is_deal and "flooded" in _fd.reason and _fid not in [b["id"] for b in _fpy["buy"]]
+lua.execute("PY_FSCANS = " + _luaio.to_lua(_fl))
+lua.execute(f"""
+FLUA = FlipForever.Planner:Compute(PY_FSCANS, PY_CTX, {NOW}, function(id) return "item " .. id end, PY_HELD, {{}})
+FNOTE = FlipForever.Planner:FloodNote(FLUA)
+FlipForeverDB.settings.floodWarning = false
+FOFF = FlipForever.Planner:Compute(PY_FSCANS, PY_CTX, {NOW}, function(id) return "item " .. id end, PY_HELD, {{}})
+FlipForeverDB.settings.floodWarning = nil
+""")
+_flb = [L(f"FLUA.buy[{i}].id") for i in range(1, len(L("FLUA").buy) + 1)]
+print("flood warning:", _fd.reason, "|", L("FNOTE"))
+assert _fid not in _flb and [b["id"] for b in _fpy["buy"]] == _flb, (_flb, _fpy["buy"])
+assert "Market flooded" in L("FNOTE") and _fid in [L(f"FOFF.buy[{i}].id") for i in range(1, len(L("FOFF").buy) + 1)]
+_con.execute("DELETE FROM prices WHERE realm=? AND id=? AND t=?", (_realm, _fid, _ft))
 # scans are parsed once: a second rebuild parses nothing, a new scan only itself
 lua.execute(f"""
 local P = FlipForever.Planner
@@ -3299,7 +3330,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 

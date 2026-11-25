@@ -643,6 +643,8 @@ local function build()
     "Merchants you visit are remembered with their spot. Their limited items that sell for clearly more on the auction house are named at the merchant; /ff vendors lists the best ones and pins them on the map.")
   feature("watchList", "Watch list: alert when a watched item is listed cheap (/ff watch)", true, nil,
     "/ff watch <item> <price> adds an item. During scans and while you browse the auction house, a chat line and a sound when it is listed at or below your price. Nothing is bought for you.")
+  feature("floodWarning", "Market flood warning: skip items listed far above their usual amount", true, function() if FF.Planner then pcall(FF.Planner.Rebuild, FF.Planner) end end,
+    "When a scan finds an item listed at 3 times its usual amount or more, prices tend to drop while the extra stock clears. The item is left off the buy list and named in chat until it clears.")
   feature("ahSummary", "Summary when I close the auction house", true, nil,
     "What you bought, posted and sold while the auction house was open, and how your gold changed, in one chat line.")
   feature("loginRecap", "Login recap: my auctions that ended while I was away", true, nil,

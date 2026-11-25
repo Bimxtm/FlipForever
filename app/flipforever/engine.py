@@ -231,6 +231,12 @@ class Market:
     volatility: float      # median abs deviation / median of minimum prices
     vol_day: float | None  # estimated units sold per day (from listing drops between full scans)
     trend: float           # last-3-day median vs 14-day median (-0.1 = 10% cheaper lately)
+    usual_qty: float | None = None  # median amount listed before the latest snapshot (4+ snapshots)
+
+    @property
+    def flooded(self) -> bool:
+        """Far more listed than usual: prices tend to drop while the extra stock clears."""
+        return self.usual_qty is not None and self.cur_qty >= 3 * self.usual_qty and self.cur_qty - self.usual_qty >= 20
 
 
 def _weighted_median(values, weights):
@@ -273,8 +279,9 @@ def market_model(con, realm, now=None) -> dict[int, Market]:
         # listings vanish when they sell OR get cancelled/expire; count ~70% as real sales
         vol_day = 0.7 * drops / (span / DAY) if span >= 6 * 3600 else None
         last = pts[-1]
+        usual = statistics.median(p[4] for p in pts[:-1]) if len(pts) >= 5 else None
         out[iid] = Market(iid, market, last[2], last[3], last[4], last[1], len(pts),
-                          len({p[1] // DAY for p in pts}), vol, vol_day, trend)
+                          len({p[1] // DAY for p in pts}), vol, vol_day, trend, usual)
     return out
 
 
@@ -600,6 +607,7 @@ class Deal:
     est_days: float | None = None  # expected days until what we'd buy is sold
     own_days: float | None = None  # your real average time to sell this item
     starter: bool = False          # no history yet: the addon judges the price live
+    flood: bool = False            # far more listed than usual: not bought until it clears
 
 
 def _starter(settings: Settings, m: Market, learned: Learned, ledger: Ledger, names: dict) -> Deal | None:
@@ -678,7 +686,8 @@ def recommend(settings: Settings, model: dict, learned: Learned, ledger: Ledger,
             slow_reason = f"slow for you (avg {own_days:.1f} days)"
         fast = not slow_reason
         stale = now - m.cur_t > 8 * 3600
-        is_deal = fast and (not stale) and m.cur_min <= max_buy and qty_cap > 0
+        flood = bool(getattr(settings, "flood_warning", True) and m.flooded)
+        is_deal = fast and (not stale) and (not flood) and m.cur_min <= max_buy and qty_cap > 0
         profit_unit = int(net - m.cur_min)
         roi = profit_unit / m.cur_min if m.cur_min else 0.0
         data_conf = min(1.0, m.nscans / 10) * min(1.0, m.days_seen / 3)
@@ -688,6 +697,8 @@ def recommend(settings: Settings, model: dict, learned: Learned, ledger: Ledger,
             reason = slow_reason
         elif stale:
             reason = "price data is old - rescan"
+        elif flood:
+            reason = f"market flooded: {m.cur_qty:,} listed, usually ~{int(m.usual_qty):,} - wait until it clears"
         elif m.cur_min > max_buy:
             reason = "no deal right now (watching)"
         elif qty_cap <= 0:
@@ -700,7 +711,7 @@ def recommend(settings: Settings, model: dict, learned: Learned, ledger: Ledger,
             score = max(0, net - max_buy) * vol * confidence * speed * 0.1
         deals.append(Deal(iid, names.get(iid, f"item {iid}"), m.cur_min, int(m.market), int(expected), max_buy,
                           profit_unit, roi, p, m.vol_day, max(0, qty_cap), confidence, score, is_deal, held, reason,
-                          fast, est_days, own_days))
+                          fast, est_days, own_days, False, flood))
     deals.sort(key=lambda d: (not d.is_deal, not d.fast, d.starter, -d.score, d.id))
     return deals
 
@@ -725,7 +736,7 @@ def filter_deals(deals: list[Deal], only_deals=False, fast_only=False, min_profi
 
 PLANNER_SETTINGS = ("min_margin", "ah_cut", "deposit_pct", "hold_days", "min_sales_per_day", "min_sell_chance",
                     "starter_mode", "starter_min_listed", "max_units_per_item", "max_plan_items",
-                    "min_value_copper", "min_scans", "duration", "sell_farmed")
+                    "min_value_copper", "min_scans", "duration", "sell_farmed", "flood_warning")
 
 
 def planner_context(settings: Settings, learned: Learned, ledger: Ledger, holder: Ledger,
@@ -776,7 +787,7 @@ def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Lear
     for d in deals:
         if len(buys) >= settings.max_plan_items:
             break
-        if d.qty_cap <= 0 or not d.fast:      # never buy anything that doesn't sell fast
+        if d.qty_cap <= 0 or not d.fast or d.flood:   # never buy anything that doesn't sell fast
             continue
         if d.starter:
             if starters >= settings.max_plan_items // 2:
