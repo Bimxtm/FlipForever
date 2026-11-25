@@ -99,6 +99,11 @@ function TT:Lines(itemID)
   if okS and above then
     out[#out + 1] = { FF:T("  |cff33ff99sell now|r"), FF:T("listed %d%% above usual"):format(math.floor(above * 100 + 0.5)) }
   end
+  -- falling price warning (switch fallingPrice): you hold it and its price dropped lately
+  local okF, trend = pcall(function() return not above and FF.Planner and FF.Planner:Falling(itemID) end)
+  if okF and trend then
+    out[#out + 1] = { FF:T("  |cffff8800price falling|r"), FF:T("-%d%% in 3 days, sell soon"):format(math.floor(-trend * 100 + 0.5)) }
+  end
   if entry and entry.sell then
     out[#out + 1] = { FF:T("  you post at"), FF:T("%s (never below %s)"):format(FF:Money(entry.sell.normal), FF:Money(entry.sell.floor)) }
   end

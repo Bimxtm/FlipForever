@@ -647,6 +647,8 @@ local function build()
     "When a scan finds an item listed at 3 times its usual amount or more, prices tend to drop while the extra stock clears. The item is left off the buy list and named in chat until it clears.")
   feature("sellNow", "Sell-now signal for items I hold priced well above usual", true, nil,
     "When a fresh scan shows the cheapest listing of an item you hold 25% or more above its usual price, its tooltip says so and the auction house names it in chat when you open it.")
+  feature("fallingPrice", "Falling price warning for items I hold", true, nil,
+    "When an item you hold has been 15% or more cheaper over the last 3 days than over the last 2 weeks, its tooltip says so, so you can sell before it drops further.")
   feature("depositTooltip", "Item tooltips at the auction house: deposit for 12, 24 and 48 hours", true, nil,
     "While the auction house is open, item tooltips show what posting one costs in deposit for each duration: from your own last posting of it, else the game's figure or the usual rate.")
   feature("ahSummary", "Summary when I close the auction house", true, nil,

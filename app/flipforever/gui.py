@@ -1632,6 +1632,8 @@ class App(tk.Tk):
             hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
         add("Aging stock", "aging_stock", "bool",
             hint="Inventory: items you have held for over a week, today's price against what you paid")
+        add("Falling price warning", "falling_warning", "bool",
+            hint="Inventory: marks items you hold whose price in the last 3 days is 15% or more below the 14-day price")
         add("Sell-now signal", "sell_now", "bool",
             hint="Inventory: marks items you hold whose cheapest listing is 25% or more above their usual price")
         add("Export to CSV", "csv_export", "bool",
@@ -2106,6 +2108,8 @@ class App(tk.Tk):
         rows, held = [], []
         # sell-now signal (switch sell_now): held items whose cheapest listing is well above usual
         hot = engine.sell_now(self.ledger, self.model) if getattr(self.settings, "sell_now", True) else {}
+        # falling price warning (switch falling_warning): held items whose price dropped lately
+        falling = engine.falling_prices(self.ledger, self.model) if getattr(self.settings, "falling_warning", True) else {}
         for iid, led in self.ledger.items.items():
             if led.held <= 0:
                 continue
@@ -2120,10 +2124,12 @@ class App(tk.Tk):
             age = (time.time() - led.inventory[0][3]) / 86400 if led.inventory else 0
             slow = age > self.settings.hold_days * 2
             name = led.name + (f"  - SELL NOW (+{hot[iid]:.0%})" if iid in hot else "")
+            if iid in falling and iid not in hot:
+                name += f"  - price falling ({falling[iid]:.0%} in 3 days)"
             rows.append(((name, led.held, f"{age:.1f}" + (" (slow!)" if slow else ""), money(cost), money(fair),
                           money(floor), money(target), money(unreal, True), led.last_expired_streak),
                          (led.name.lower(), led.held, age, cost, fair, floor, target, unreal, led.last_expired_streak),
-                         "deal" if iid in hot else ("bad" if unreal < 0 or slow else None)))
+                         "deal" if iid in hot else ("bad" if unreal < 0 or slow or iid in falling else None)))
             held.append((iid, led.name, cost, floor, fair))
         self._fill(self.sell_tree, rows)
         self._sell_ids = dict(zip(self.sell_tree.get_children(), held))

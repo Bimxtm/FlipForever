@@ -487,6 +487,19 @@ function P:SellNow(id, now)
   return nil
 end
 
+-- Falling price warning (switch fallingPrice, same rule as engine.falling_prices): a held item whose
+-- last-3-day price is 15% or more below its 14-day price (5+ scans on 2+ days). Returns the trend or nil.
+P.FALLING_TREND = -0.15
+function P:FallingOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.fallingPrice ~= false end
+
+function P:Falling(id)
+  if not (id and self:FallingOn()) or not heldIds()[id] then return nil end
+  local m = self:Model()[id]
+  if not m or (m.nscans or 0) < 5 or (m.days_seen or 0) < 2 or not m.trend then return nil end
+  if m.trend <= self.FALLING_TREND then return m.trend end
+  return nil
+end
+
 -- every held item with the signal, best first: { {id, name, above} }
 function P:SellNowList(now)
   local out = {}

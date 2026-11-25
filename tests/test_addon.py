@@ -3340,7 +3340,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4404,4 +4404,32 @@ for _led in _sl.items.values():
     _led.inventory.append([3, 80, None, NOW - 3600])
 _hot = _engine.sell_now(_sl, _sm, now=NOW)
 assert list(_hot) == [1] and abs(_hot[1] - 0.4) < 1e-9, _hot
+
+# falling price warning (switch fallingPrice / app falling_warning): held, 5+ scans on 2+ days, trend <= -15%
+_sm[1].trend, _sm[2].trend = -0.2, -0.05
+_fall = _engine.falling_prices(_sl, _sm)
+assert list(_fall) == [1], _fall
+_sm[1].nscans = 3
+assert _engine.falling_prices(_sl, _sm) == {}
+lua.execute("""
+local FF, P = FlipForever, FlipForever.Planner
+local oldModel, oldPlan = P.Model, FF.Plan
+P.Model = function() return {
+  [601] = { market = 100, cur_min = 80, cur_t = 0, nscans = 6, days_seen = 3, trend = -0.2 },
+  [602] = { market = 100, cur_min = 95, cur_t = 0, nscans = 6, days_seen = 3, trend = -0.05 },
+  [603] = { market = 100, cur_min = 80, cur_t = 0, nscans = 6, days_seen = 3, trend = -0.3 },
+} end
+FF.Plan = function() return { sell = { { id = 601, held = true }, { id = 602, held = true }, { id = 603 } } } end
+local r = { tostring(P:Falling(601)), tostring(P:Falling(602)), tostring(P:Falling(603)) }
+local tip = "none"
+for _, x in ipairs(FF.Tooltip:Lines(601)) do if x[1]:find("price falling") then tip = x[2] end end
+r[#r + 1] = tip
+FlipForeverDB.settings.fallingPrice = false
+r[#r + 1] = tostring(P:Falling(601))
+FlipForeverDB.settings.fallingPrice = nil
+P.Model, FF.Plan = oldModel, oldPlan
+FALLN = table.concat(r, "#")
+""")
+print("falling price:", L("FALLN"))
+assert L("FALLN") == "-0.2#nil#nil#-20% in 3 days, sell soon#nil", L("FALLN")
 print("ALL ADDON TESTS PASSED")

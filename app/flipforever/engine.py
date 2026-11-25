@@ -1095,6 +1095,22 @@ def sell_now(ledger: Ledger, model: dict, now=None, factor=SELL_NOW_FACTOR) -> d
     return out
 
 
+FALLING_TREND = -0.15    # last 3 days at least 15% below the 14-day price
+
+
+def falling_prices(ledger: Ledger, model: dict, threshold=FALLING_TREND) -> dict[int, float]:
+    """Falling price warning: items you hold whose price over the last 3 days is clearly below their
+    14-day price (5+ scans on 2+ days), so selling soon beats waiting. {item id: trend (-0.2 = 20% down)}."""
+    out = {}
+    for iid, led in ledger.items.items():
+        m = model.get(iid) if model and isinstance(iid, int) else None
+        if led.held <= 0 or not m or m.nscans < 5 or m.days_seen < 2:
+            continue
+        if m.trend <= threshold:
+            out[iid] = m.trend
+    return out
+
+
 def _gold(copper):
     """Copper as gold for spreadsheets (12.3456 = 12g 34s 56c); empty when unknown."""
     return "" if copper is None else f"{copper / 10000:.4f}"
