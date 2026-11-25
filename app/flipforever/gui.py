@@ -1493,6 +1493,9 @@ class App(tk.Tk):
                   wraplength=1000).pack(anchor="w", pady=(0, 2))
         ttk.Label(self.tab_sell, text="Double-click an item for its price history, with your cost and floor.",
                   style="Muted.TLabel").pack(anchor="w", pady=(0, 8))
+        self.aging_info = tk.StringVar()
+        self.aging_label = ttk.Label(self.tab_sell, textvariable=self.aging_info, wraplength=1000)
+        self.aging_label.pack(anchor="w", pady=(0, 6))
         cols = ("Item", "Holding", "Days held", "Avg cost", "Fair value", "Floor", "Target price", "Unrealized", "Expired in a row")
         widths = (230, 70, 80, 95, 95, 95, 100, 105, 115)
         frame, self.sell_tree = self._tree(self.tab_sell, cols, widths)
@@ -1620,6 +1623,8 @@ class App(tk.Tk):
             hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
         add("Profession cooldowns", "prof_cooldowns", "bool",
             hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
+        add("Aging stock", "aging_stock", "bool",
+            hint="Inventory: items you have held for over a week, today's price against what you paid")
         section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
@@ -2108,6 +2113,25 @@ class App(tk.Tk):
             held.append((iid, led.name, cost, floor, fair))
         self._fill(self.sell_tree, rows)
         self._sell_ids = dict(zip(self.sell_tree.get_children(), held))
+        self._fill_aging()
+
+    def _fill_aging(self):
+        """Aging stock line on the Inventory tab (switch aging_stock): items held over a week."""
+        if not getattr(self.settings, "aging_stock", True):
+            self.aging_info.set("")
+            return
+        rows, tot = engine.aging_stock(self.ledger, self.model, ah_cut=self.settings.ah_cut)
+        if not rows:
+            self.aging_info.set("Aging stock: nothing held for over a week.")
+            return
+        diff = tot["worth"] - tot["paid"]
+        oldest = ", ".join(f"{r['name']} ({r['age']:.0f} d, "
+                           + (f"now {money(r['now'])} vs paid {money(r['paid'])}" if r["now"] else "no price yet")
+                           + ")" for r in rows[:3])
+        unknown = f" ({tot['unknown']} without a price yet)" if tot["unknown"] else ""
+        self.aging_info.set(f"Aging stock: {tot['items']} items held over a week, paid {money(tot['paid'])}, "
+                            f"worth {money(tot['worth'])} after the cut today ({money(diff, True)}){unknown}. "
+                            f"Oldest: {oldest}. Sell these or take them to a merchant.")
 
     def _fill_hist(self):
         rows = []

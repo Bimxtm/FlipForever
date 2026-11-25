@@ -1000,6 +1000,31 @@ def profession_cooldowns(con) -> list[dict]:
     return out
 
 
+def aging_stock(ledger, model, now=None, days=7.0, ah_cut=0.05):
+    """Items held longer than `days` (oldest lot): today's price against what you paid.
+    Returns (rows, totals). rows: dicts with id, name, held, age, paid (per unit), now (fair
+    price per unit, 0 if unknown), change (now after the cut vs paid, per unit). Oldest first."""
+    now = now or time.time()
+    rows = []
+    for iid, led in ledger.items.items():
+        if led.held <= 0 or not led.inventory:
+            continue
+        age = (now - led.inventory[0][3]) / 86400
+        if age <= days:
+            continue
+        paid = led.held_cost / led.held
+        m = model.get(iid) if model else None
+        price = m.market if m else 0
+        change = price * (1 - ah_cut) - paid if price else 0
+        rows.append({"id": iid, "name": led.name, "held": led.held, "age": age, "paid": paid,
+                     "now": price, "change": change})
+    rows.sort(key=lambda r: -r["age"])
+    totals = {"items": len(rows), "units": sum(r["held"] for r in rows),
+              "paid": sum(r["paid"] * r["held"] for r in rows),
+              "worth": sum(r["now"] * (1 - ah_cut) * r["held"] for r in rows if r["now"]),
+              "unknown": sum(1 for r in rows if not r["now"])}
+    return rows, totals
+
 def weekly_report(ledger: Ledger, learned: Learned | None = None, now=None, n=3) -> dict:
     """The last 7 days of flips: best and worst items by profit (sales minus cost and lost deposits),
     what sold fastest (median time from posting to sale) and what to stop buying (losing this week,

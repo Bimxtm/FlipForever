@@ -132,6 +132,7 @@ class Settings:
     auto_character: bool = True   # after importing: switch to the character you played last
     auto_char_seen: str = ""      # the last character switched to automatically ("Name @ Realm")
     realm_overview: bool = True   # Dashboard: every realm side by side (with 2+ realms); double-click switches
+    aging_stock: bool = True      # Inventory tab: items held over a week, today's price against what you paid
     weekly_report: bool = True    # Dashboard: best/worst flips of the week, fastest sellers, what to stop buying
     prof_cooldowns: bool = True   # Dashboard: profession cooldowns (transmutes...) of every character
     share_combat: bool = True     # share the combat helper's anonymous learning (share.py)
