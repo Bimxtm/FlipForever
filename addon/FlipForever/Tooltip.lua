@@ -94,6 +94,11 @@ function TT:Lines(itemID)
   if best and best.own then
     out[#out + 1] = { FF:T("  your sales peak"), best.text }
   end
+  -- sell-now signal (switch sellNow): you hold it and it is listed well above usual right now
+  local okS, above = pcall(function() return FF.Planner and FF.Planner:SellNow(itemID) end)
+  if okS and above then
+    out[#out + 1] = { FF:T("  |cff33ff99sell now|r"), FF:T("listed %d%% above usual"):format(math.floor(above * 100 + 0.5)) }
+  end
   if entry and entry.sell then
     out[#out + 1] = { FF:T("  you post at"), FF:T("%s (never below %s)"):format(FF:Money(entry.sell.normal), FF:Money(entry.sell.floor)) }
   end

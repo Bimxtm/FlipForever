@@ -1632,6 +1632,8 @@ class App(tk.Tk):
             hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
         add("Aging stock", "aging_stock", "bool",
             hint="Inventory: items you have held for over a week, today's price against what you paid")
+        add("Sell-now signal", "sell_now", "bool",
+            hint="Inventory: marks items you hold whose cheapest listing is 25% or more above their usual price")
         add("Export to CSV", "csv_export", "bool",
             hint="Inventory: a button that saves trades, inventory and the weekly report as CSV files for a spreadsheet")
         section("Community and sharing")
@@ -2102,6 +2104,8 @@ class App(tk.Tk):
 
     def _fill_sell(self):
         rows, held = [], []
+        # sell-now signal (switch sell_now): held items whose cheapest listing is well above usual
+        hot = engine.sell_now(self.ledger, self.model) if getattr(self.settings, "sell_now", True) else {}
         for iid, led in self.ledger.items.items():
             if led.held <= 0:
                 continue
@@ -2115,10 +2119,11 @@ class App(tk.Tk):
             unreal = (fair * (1 - self.settings.ah_cut) - cost) * led.held if fair else 0
             age = (time.time() - led.inventory[0][3]) / 86400 if led.inventory else 0
             slow = age > self.settings.hold_days * 2
-            rows.append(((led.name, led.held, f"{age:.1f}" + (" (slow!)" if slow else ""), money(cost), money(fair),
+            name = led.name + (f"  - SELL NOW (+{hot[iid]:.0%})" if iid in hot else "")
+            rows.append(((name, led.held, f"{age:.1f}" + (" (slow!)" if slow else ""), money(cost), money(fair),
                           money(floor), money(target), money(unreal, True), led.last_expired_streak),
                          (led.name.lower(), led.held, age, cost, fair, floor, target, unreal, led.last_expired_streak),
-                         "bad" if unreal < 0 or slow else None))
+                         "deal" if iid in hot else ("bad" if unreal < 0 or slow else None)))
             held.append((iid, led.name, cost, floor, fair))
         self._fill(self.sell_tree, rows)
         self._sell_ids = dict(zip(self.sell_tree.get_children(), held))

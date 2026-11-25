@@ -461,6 +461,58 @@ function P:Rebuild()
   return plan
 end
 
+-- Sell-now signal (switch sellNow, same rule as engine.sell_now): items you hold whose cheapest
+-- listing in a fresh scan (last 8 hours) is 25% or more above their usual price.
+P.SELL_NOW_FACTOR, P.SELL_NOW_FRESH = 1.25, 8 * 3600
+
+function P:SellNowOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.sellNow ~= false end
+
+local function heldIds()
+  local ids = {}
+  local plan = FF:Plan()
+  for _, e in ipairs(plan and plan.sell or {}) do
+    if e.held then ids[tonumber(e.id) or 0] = e.name or true end
+  end
+  for id in pairs(numKeys(plan and plan.ctx and plan.ctx.held)) do ids[id] = ids[id] or true end
+  return ids
+end
+
+-- how much above usual (0.3 = 30%) when this held item should be sold now, else nil
+function P:SellNow(id, now)
+  if not (id and self:SellNowOn()) or not heldIds()[id] then return nil end
+  local m = self:Model()[id]
+  now = now or time()
+  if not m or m.market <= 0 or now - m.cur_t > self.SELL_NOW_FRESH then return nil end
+  if m.cur_min >= self.SELL_NOW_FACTOR * m.market then return m.cur_min / m.market - 1 end
+  return nil
+end
+
+-- every held item with the signal, best first: { {id, name, above} }
+function P:SellNowList(now)
+  local out = {}
+  if not self:SellNowOn() then return out end
+  for id, name in pairs(heldIds()) do
+    local above = self:SellNow(id, now)
+    if above then out[#out + 1] = { id = id, name = type(name) == "string" and name or FF:ItemName(id), above = above } end
+  end
+  table.sort(out, function(a, b) if a.above ~= b.above then return a.above > b.above end return a.id < b.id end)
+  return out
+end
+
+-- one chat line at the auction house
+function P:SellNowNote(now)
+  local list = self:SellNowList(now)
+  if #list == 0 then return nil end
+  local parts = {}
+  for i = 1, math.min(5, #list) do parts[i] = ("%s (+%d%%)"):format(list[i].name, math.floor(list[i].above * 100 + 0.5)) end
+  local more = #list > 5 and (" +%d more"):format(#list - 5) or ""
+  local text = FF:T("Sell now, priced well above usual: %s"):format(table.concat(parts, ", ") .. more)
+  FF:Print(text)
+  return text
+end
+
+FF:On("AUCTION_HOUSE_SHOW", function() C_Timer.After(1, function() pcall(P.SellNowNote, P) end) end)
+
 -- Market flood warning: name the items left off the buy list because far more is listed than usual
 function P:FloodNote(plan)
   local f = plan and plan.flooded

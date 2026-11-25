@@ -1077,6 +1077,24 @@ def weekly_report(ledger: Ledger, learned: Learned | None = None, now=None, n=3)
             "items": len(week), "best": best, "worst": worst, "fastest": fast[:n], "stop": stop[:n]}
 
 
+SELL_NOW_FACTOR = 1.25   # cheapest listing at least 25% above the usual price
+SELL_NOW_FRESH = 8 * 3600
+
+
+def sell_now(ledger: Ledger, model: dict, now=None, factor=SELL_NOW_FACTOR) -> dict[int, float]:
+    """Sell-now signal: items you hold whose cheapest listing in a fresh scan (last 8 hours) is
+    clearly above their usual price, so posting now earns more than usual. {item id: how much above (0.3 = 30%)}."""
+    now = now or time.time()
+    out = {}
+    for iid, led in ledger.items.items():
+        m = model.get(iid) if model and isinstance(iid, int) else None
+        if led.held <= 0 or not m or m.market <= 0 or now - m.cur_t > SELL_NOW_FRESH:
+            continue
+        if m.cur_min >= factor * m.market:
+            out[iid] = m.cur_min / m.market - 1
+    return out
+
+
 def _gold(copper):
     """Copper as gold for spreadsheets (12.3456 = 12g 34s 56c); empty when unknown."""
     return "" if copper is None else f"{copper / 10000:.4f}"

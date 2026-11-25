@@ -3340,7 +3340,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4367,4 +4367,41 @@ DEPT = table.concat(r, "#")
 """)
 print("deposit tooltip:", L("DEPT"))
 assert L("DEPT") == "none#15,30,60,vendor#20,40,80,own#line#none", L("DEPT")
+
+# sell-now signal (switch sellNow / app sell_now): held items whose cheapest listing is 25%+ above usual
+lua.execute("""
+local FF, P = FlipForever, FlipForever.Planner
+local oldModel, oldPlan = P.Model, FF.Plan
+local T = time()
+P.Model = function() return {
+  [501] = { market = 100, cur_min = 140, cur_t = T - 60 },        -- held, 40% above: sell now
+  [502] = { market = 100, cur_min = 110, cur_t = T - 60 },        -- held, only 10% above
+  [503] = { market = 100, cur_min = 200, cur_t = T - 60 },        -- not held
+  [504] = { market = 100, cur_min = 200, cur_t = T - 9 * 3600 },  -- held, old scan
+} end
+FF.Plan = function() return { sell = { { id = 501, name = "Hot", held = true }, { id = 502, name = "Calm", held = true },
+  { id = 503, name = "Market" }, { id = 504, name = "Old", held = true } } } end
+local r = {}
+for _, id in ipairs({ 501, 502, 503, 504 }) do r[#r + 1] = tostring(P:SellNow(id, T)) end
+r[#r + 1] = tostring(P:SellNowNote(T))
+local tip = "none"
+for _, x in ipairs(FF.Tooltip:Lines(501)) do if x[1]:find("sell now") then tip = x[2] end end
+r[#r + 1] = tip
+FlipForeverDB.settings.sellNow = false
+r[#r + 1] = tostring(P:SellNow(501, T)) .. "," .. #P:SellNowList(T)
+FlipForeverDB.settings.sellNow = nil
+P.Model, FF.Plan = oldModel, oldPlan
+SELLN = table.concat(r, "#")
+""")
+print("sell now:", L("SELLN"))
+_sn = L("SELLN").split("#")
+assert abs(float(_sn[0]) - 0.4) < 1e-9 and _sn[1:4] == ["nil", "nil", "nil"], _sn
+assert "Hot (+40%)" in _sn[4] and "Calm" not in _sn[4] and _sn[5] == "listed 40% above usual" and _sn[6] == "nil,0", _sn
+_sm = {1: _engine.Market(1, 100, 140, 140, 10, int(NOW) - 60, 5, 2, 0.1, 1.0, 0.0),
+       2: _engine.Market(2, 100, 110, 110, 10, int(NOW) - 60, 5, 2, 0.1, 1.0, 0.0)}
+_sl = _engine.Ledger({1: _engine.ItemLedger(1, "Hot"), 2: _engine.ItemLedger(2, "Calm")}, [], [])
+for _led in _sl.items.values():
+    _led.inventory.append([3, 80, None, NOW - 3600])
+_hot = _engine.sell_now(_sl, _sm, now=NOW)
+assert list(_hot) == [1] and abs(_hot[1] - 0.4) < 1e-9, _hot
 print("ALL ADDON TESTS PASSED")
