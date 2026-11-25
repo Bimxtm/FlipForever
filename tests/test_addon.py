@@ -3340,7 +3340,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -3947,9 +3947,22 @@ NT_WAIT = math.floor(ns.NodeWait(route.pts[1].node, T))
 FlipForeverDB.settings.nodeTimers = false
 NT_OFF = ns.NodeWait(route.pts[1].node, T)
 FlipForeverDB.settings.nodeTimers = nil
+-- risky spots: an enemy alert 2 minutes ago right next to spot 3 makes it wait 8 more minutes
+local EA = FlipForever.EnemyAlert
+local oldSpots = EA.spots
+EA.spots = { { map = 1, x = 0.91, y = 0.90, t = T - 120 }, { map = 2, x = 0.50, y = 0.50, t = T - 10 } }
+local r2, w2, s2 = ns.RouteTimers(route, T)
+RS_TIMERS = r2 .. ":" .. w2 .. ":" .. math.floor(s2)
+RS_WAIT = math.floor(ns.RiskWait(route.pts[3], route, T))
+RS_OLD = ns.RiskWait(route.pts[3], route, T + 600)
+FlipForeverDB.settings.riskySpots = false
+RS_OFF = ns.RiskWait(route.pts[3], route, T)
+FlipForeverDB.settings.riskySpots = nil
+EA.spots = oldSpots
 """)
-print("node timers:", L("NT_TIMERS"), L("NT_WAIT"), L("NT_OFF"))
+print("node timers:", L("NT_TIMERS"), L("NT_WAIT"), L("NT_OFF"), "| risky spots:", L("RS_TIMERS"), L("RS_WAIT"), L("RS_OLD"), L("RS_OFF"))
 assert L("NT_TIMERS") == "2:1:840" and L("NT_WAIT") == 840 and L("NT_OFF") == 0
+assert L("RS_TIMERS") == "1:2:480" and L("RS_WAIT") == 480 and L("RS_OLD") == 0 and L("RS_OFF") == 0
 assert L("BV_NUMS") == "900:1654:1:1" and "1 worth posting" in L("BV_LINE") and "Item1 x20" in L("BV_TIP") and L("BV_OFF") == ""
 
 # --- quest helper: learns the giver, objective spots and the hand-in; arrow and map pins

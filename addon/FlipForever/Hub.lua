@@ -674,6 +674,8 @@ local function build()
   feature("sendToAlt", "Send to alt button at the mailbox (materials and flip stock)", true, function() if FF.Mailbox then FF.Mailbox:RefreshAlt() end end)
   group("Gathering and bags")
   feature("nodeTimers", "Gathering: skip spots I gathered in the last 15 min", true, function() local ns = FF.gatherNS if ns and ns.MarkDirty then ns.MarkDirty() end end)
+  feature("riskySpots", "Gathering (PvP realms): skip spots near recent enemy players for 10 min", true, nil,
+    "When the enemy player alert goes off, spots within about 100 yards of where you stood are skipped by the next stop for 10 minutes, like a spot that isn't back yet.")
   feature("quietChat", "RP realms: keep FlipForever's messages out of the shared chat", true, nil,
     "On RP realms, FlipForever's chat lines go to a chat tab named FlipForever (/ff chattab makes it) or are kept for /ff log. Answers to your /ff commands, alerts and errors still show.")
   feature("enemyAlert","PvP: sound and chat line when an enemy player is near or targets me", true, nil,

@@ -265,11 +265,41 @@ function ns.NodeWait(node, now)
   return math.max(0, ns.RESPAWN_SECONDS - ((now or time()) - node.lastMined))
 end
 
+-- Risky spots (PvP realms, switch riskySpots): spots near where the enemy player alert went off
+-- in the last 10 minutes are skipped by the next stop, like a spot that isn't back yet.
+ns.RISK_SECONDS = 10 * 60
+ns.RISK_YARDS = 100
+
+function ns.RiskOn()
+  return not (FlipForeverDB and FlipForeverDB.settings and FlipForeverDB.settings.riskySpots == false)
+end
+
+-- seconds until this route point is out of the danger window (0 = safe)
+function ns.RiskWait(p, r, now)
+  local EA = FlipForever and FlipForever.EnemyAlert
+  if not (ns.RiskOn() and EA and EA.spots and p and r and r.mapID) then return 0 end
+  now = now or time()
+  local wait = 0
+  for _, s in ipairs(EA.spots) do
+    local age = now - s.t
+    if s.map == r.mapID and age >= 0 and age < ns.RISK_SECONDS
+        and ns.Yards(p.x, p.y, s.x, s.y, r.W, r.H) <= ns.RISK_YARDS then
+      wait = math.max(wait, ns.RISK_SECONDS - age)
+    end
+  end
+  return wait
+end
+
+-- a route point's wait: node timer or recent enemy players, whichever is longer
+function ns.SpotWait(p, r, now)
+  return math.max(ns.NodeWait(p and p.node, now), ns.RiskWait(p, r, now))
+end
+
 -- the loop's spots: how many are ready, how many still waiting, and the shortest wait
 function ns.RouteTimers(r, now)
   local ready, waiting, soonest = 0, 0, nil
   for _, p in ipairs(r and r.pts or {}) do
-    local w = ns.NodeWait(p.node, now)
+    local w = ns.SpotWait(p, r, now)
     if w <= 0 then ready = ready + 1 else
       waiting = waiting + 1
       if not soonest or w < soonest then soonest = w end
@@ -289,7 +319,7 @@ local function updateNextStop(mapID, px, py)
   local now = time()
   -- with every spot still waiting, fall back to the plain loop order
   local anyReady = ns.RouteTimers(r, now) > 0
-  local function ready(k) return not anyReady or ns.NodeWait(r.pts[r.order[k]].node, now) <= 0 end
+  local function ready(k) return not anyReady or ns.SpotWait(r.pts[r.order[k]], r, now) <= 0 end
   if st.route ~= r or not st.pos or not r.order[st.pos] then
     local best, bd
     for k = 1, n do
