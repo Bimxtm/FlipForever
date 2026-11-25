@@ -334,6 +334,7 @@ local function ingestRow(row)
   local ks = key.itemID .. ":" .. (key.itemLevel or 0) .. ":" .. (key.itemSuffix or 0)
   if not Scan.browse[ks] then Scan.browseCount = Scan.browseCount + 1 end
   Scan.browse[ks] = { id = key.itemID, min = row.minPrice, qty = row.totalQuantity or 1 }
+  if FF.WatchList then pcall(FF.WatchList.Seen, FF.WatchList, key.itemID, row.minPrice) end
 end
 
 function Scan:FlushBrowse(src)

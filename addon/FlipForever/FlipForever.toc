@@ -23,6 +23,7 @@ Restock.lua
 EnemyAlert.lua
 ExpirySaver.lua
 LoginRecap.lua
+WatchList.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

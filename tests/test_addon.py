@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4216,4 +4216,37 @@ print("login recap:", L("LRECAP"))
 lr = L("LRECAP").split("#")
 assert lr[0] == "1,200" and "1 of your auctions ended" in lr[1] and "new mail" in lr[1] and "30 h" in lr[1], lr
 assert lr[2] == "nil" and lr[3] == "nil", lr
+lua.execute("""
+-- watch list: /ff watch adds, scans and browse rows alert once per 10 min at or below the price
+local FF, W = FlipForever, FlipForever.WatchList
+local list = W:List()
+for k in pairs(list) do list[k] = nil end
+W:Reset()
+FF:DB().names[2589] = "Linen Cloth"
+local r = {}
+r[#r + 1] = table.concat({ W:ParseMoney("2g"), W:ParseMoney("1.5"), W:ParseMoney("50s"), W:ParseMoney("1g50s"), tostring(W:ParseMoney("x")) }, ",")
+printed = {}
+SlashCmdList.FLIPFOREVER("watch linen cloth 50s")
+r[#r + 1] = tostring(list[2589])
+SlashCmdList.FLIPFOREVER("watch |cffffffff|Hitem:2592::::|h[Wool Cloth]|h|r 1g")
+r[#r + 1] = tostring(list[2592])
+r[#r + 1] = tostring(W:Seen(2589, 6000, 100))                 -- above the price
+r[#r + 1] = (W:Seen(2589, 4000, 100) or "nil"):find("Linen Cloth is listed at") and "alert" or "?"
+r[#r + 1] = tostring(W:Seen(2589, 3000, 200))                 -- within 10 min
+FF:AddScan("full", { [2592] = { min = 9000, p25 = 9000, qty = 5, n = 1 } })
+r[#r + 1] = W.lastScanHit or "scan"
+printed = {}
+FF:AddScan("full", { [2589] = { min = 100, p25 = 100, qty = 5, n = 1 } }) -- still quiet for 2589 (GetTime based)
+SlashCmdList.FLIPFOREVER("watch remove 2592")
+r[#r + 1] = tostring(list[2592])
+FlipForeverDB.settings.watchList = false
+r[#r + 1] = tostring(W:Seen(2589, 1, 99999))
+FlipForeverDB.settings.watchList = nil
+WATCHL = table.concat(r, "#")
+for k in pairs(list) do list[k] = nil end
+""")
+print("watch list:", L("WATCHL"))
+wl = L("WATCHL").split("#")
+assert wl[0] == "20000,15000,5000,15000,nil" and wl[1] == "5000" and wl[2] == "10000", wl
+assert wl[3] == "nil" and wl[4] == "alert" and wl[5] == "nil" and wl[7] == "nil" and wl[8] == "nil", wl
 print("ALL ADDON TESTS PASSED")

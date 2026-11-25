@@ -641,6 +641,8 @@ local function build()
     "What a green, blue or purple weapon or armor piece gives when disenchanted, at your scanned prices. /ff disenchant lists items listed below that value and buys them at the auction house.")
   feature("vendorResale", "Vendor resale finder at merchants, /ff vendors", true, nil,
     "Merchants you visit are remembered with their spot. Their limited items that sell for clearly more on the auction house are named at the merchant; /ff vendors lists the best ones and pins them on the map.")
+  feature("watchList", "Watch list: alert when a watched item is listed cheap (/ff watch)", true, nil,
+    "/ff watch <item> <price> adds an item. During scans and while you browse the auction house, a chat line and a sound when it is listed at or below your price. Nothing is bought for you.")
   feature("ahSummary", "Summary when I close the auction house", true, nil,
     "What you bought, posted and sold while the auction house was open, and how your gold changed, in one chat line.")
   feature("loginRecap", "Login recap: my auctions that ended while I was away", true, nil,
