@@ -4413,6 +4413,11 @@ _fall = _engine.falling_prices(_sl, _sm)
 assert list(_fall) == [1], _fall
 _sm[1].nscans = 3
 assert _engine.falling_prices(_sl, _sm) == {}
+# rising markets (app setting rising_markets): +15% in 3 days, 3+ sales a day, 5+ scans on 2+ days
+_rm = {i: _engine.Market(i, 1000, 1000, 1000, 10, int(NOW), 6, 3, 0.1, v, tr)
+       for i, v, tr in ((11, 5.0, 0.30), (12, 5.0, 0.20), (13, 1.0, 0.50), (14, 5.0, 0.05))}
+_rise = _engine.rising_markets(_rm, {11: "Up30", 12: "Up20"})
+assert [r["name"] for r in _rise] == ["Up30", "Up20"] and _rise[0]["price"] == 1300, _rise
 lua.execute("""
 local FF, P = FlipForever, FlipForever.Planner
 local oldModel, oldPlan = P.Model, FF.Plan

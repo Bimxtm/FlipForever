@@ -133,7 +133,8 @@ class Settings:
     auto_char_seen: str = ""      # the last character switched to automatically ("Name @ Realm")
     realm_overview: bool = True   # Dashboard: every realm side by side (with 2+ realms); double-click switches
     aging_stock: bool = True      # Inventory tab: items held over a week, today's price against what you paid
-    best_day: bool = True         # Deals + price chart: the weekday an item was cheapest over the last 4 weeks
+    rising_markets: bool = True   # Dashboard: items whose price went up most in the last 3 days (with sales)
+    best_day: bool = True        # Deals + price chart: the weekday an item was cheapest over the last 4 weeks
     falling_warning: bool = True # Inventory tab: held items whose price dropped clearly in the last 3 days
     sell_now: bool = True        # Inventory tab: held items whose cheapest listing is well above usual
     csv_export: bool = True      # Inventory tab: Export to CSV button (trades, inventory, weekly report)

@@ -1140,6 +1140,22 @@ def falling_prices(ledger: Ledger, model: dict, threshold=FALLING_TREND) -> dict
     return out
 
 
+def rising_markets(model: dict, names: dict | None = None, n=5, min_trend=0.15, min_sales=3.0,
+                   min_value=50) -> list[dict]:
+    """Rising markets: items whose last-3-day price is at least 15% above their 14-day price, with real
+    sales (3+ a day) and 5+ scans on 2+ days. Biggest rise first. [{id, name, trend, price, vol}]."""
+    names = names or {}
+    out = []
+    for iid, m in (model or {}).items():
+        if m.nscans < 5 or m.days_seen < 2 or (m.vol_day or 0) < min_sales or m.market < min_value:
+            continue
+        if m.trend >= min_trend:
+            out.append({"id": iid, "name": names.get(iid, f"item {iid}"), "trend": m.trend,
+                        "price": int(m.market * (1 + m.trend)), "vol": m.vol_day})
+    out.sort(key=lambda r: (-r["trend"], r["id"]))
+    return out[:n]
+
+
 def _gold(copper):
     """Copper as gold for spreadsheets (12.3456 = 12g 34s 56c); empty when unknown."""
     return "" if copper is None else f"{copper / 10000:.4f}"

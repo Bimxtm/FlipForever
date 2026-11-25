@@ -1125,6 +1125,12 @@ class App(tk.Tk):
         frame.pack(fill="x")
         self.realm_tree.bind("<Double-1>", lambda e: self._realm_overview_switch())
         # weekly report: best and worst flips of the last 7 days, fastest sellers, what to stop buying
+        # rising markets (switch rising_markets): items whose price went up most in the last 3 days
+        self.rise_frame = ttk.Frame(left)
+        ttk.Label(self.rise_frame, text="Rising markets", style="H.TLabel").pack(anchor="w", pady=(12, 0))
+        self.rise_var = tk.StringVar()
+        ttk.Label(self.rise_frame, textvariable=self.rise_var, style="Muted.TLabel", wraplength=700,
+                  justify="left").pack(anchor="w", pady=(0, 4))
         self.week_frame = ttk.Frame(left)
         ttk.Label(self.week_frame, text="Weekly report", style="H.TLabel").pack(anchor="w", pady=(12, 0))
         self.week_var = tk.StringVar()
@@ -1177,6 +1183,19 @@ class App(tk.Tk):
              (r["realm"].lower(), r["chars"], r["gold"], r["realized"], r["week"], r["held_cost"], r["last_scan"] or 0),
              "deal" if r["realized"] > 0 else "bad" if r["realized"] < 0 else None)
             for r in rows])
+
+    def _fill_rising(self):
+        """Rising markets on the Dashboard (switch rising_markets): ideas for what to post or craft now."""
+        self.rise_frame.pack_forget()
+        if not getattr(self.settings, "rising_markets", True) or not getattr(self, "model", None):
+            return
+        rows = engine.rising_markets(self.model, engine.item_names(self.con, self.realm),
+                                     min_value=self.settings.min_value_copper)
+        if not rows:
+            return
+        self.rise_frame.pack(fill="x")   # packed last: below the weekly report
+        self.rise_var.set("Up most in the last 3 days (good to post or craft now): " + ", ".join(
+            f"{r['name']} +{r['trend']:.0%} ({money(r['price'])}, ~{r['vol']:.0f}/day)" for r in rows) + ".")
 
     def _fill_weekly_report(self):
         """Weekly report on the Dashboard (switch weekly_report), from the shown character's ledger."""
@@ -1633,6 +1652,8 @@ class App(tk.Tk):
             hint="Dashboard: all your realms side by side (gold, profit, stock, last scan); double-click one to switch")
         add("Weekly report", "weekly_report", "bool",
             hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
+        add("Rising markets", "rising_markets", "bool",
+            hint="Dashboard: items whose price went up 15% or more in the last 3 days, with real sales, as ideas to post or craft")
         add("Profession cooldowns", "prof_cooldowns", "bool",
             hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
         add("Aging stock", "aging_stock", "bool",
@@ -2067,6 +2088,7 @@ class App(tk.Tk):
         self._fill_char_profit(realm)
         self._fill_realm_overview()
         self._fill_weekly_report()
+        self._fill_rising()
         self._fill_cooldowns()
         self._fill_steps(installed, s)
         self._fill_deals()
