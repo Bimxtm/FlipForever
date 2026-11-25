@@ -1491,8 +1491,13 @@ class App(tk.Tk):
         ttk.Label(self.tab_sell, text="Items you bought with FlipForever and still hold. The addon never posts below "
                   "the floor; the floor slowly drops if an item keeps expiring.", style="Muted.TLabel",
                   wraplength=1000).pack(anchor="w", pady=(0, 2))
-        ttk.Label(self.tab_sell, text="Double-click an item for its price history, with your cost and floor.",
-                  style="Muted.TLabel").pack(anchor="w", pady=(0, 8))
+        hint_row = ttk.Frame(self.tab_sell)
+        hint_row.pack(fill="x", pady=(0, 8))
+        ttk.Label(hint_row, text="Double-click an item for its price history, with your cost and floor.",
+                  style="Muted.TLabel").pack(side="left")
+        # CSV export (switch csv_export): trades, inventory and the weekly report for a spreadsheet
+        self.csv_button = ttk.Button(hint_row, text="Export to CSV", command=self._export_csv)
+        self.csv_button.pack(side="right")
         self.aging_info = tk.StringVar()
         self.aging_label = ttk.Label(self.tab_sell, textvariable=self.aging_info, wraplength=1000)
         self.aging_label.pack(anchor="w", pady=(0, 6))
@@ -1627,6 +1632,8 @@ class App(tk.Tk):
             hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
         add("Aging stock", "aging_stock", "bool",
             hint="Inventory: items you have held for over a week, today's price against what you paid")
+        add("Export to CSV", "csv_export", "bool",
+            hint="Inventory: a button that saves trades, inventory and the weekly report as CSV files for a spreadsheet")
         section("Community and sharing")
         add("Share anonymous combat data", "share_combat", "bool",
             hint="class, build, spell orders and fight times (no names) improve the combat helper for everyone")
@@ -2117,8 +2124,26 @@ class App(tk.Tk):
         self._sell_ids = dict(zip(self.sell_tree.get_children(), held))
         self._fill_aging()
 
+    def _export_csv(self):
+        """Write trades.csv, inventory.csv and weekly_report.csv into a folder the player picks."""
+        folder = filedialog.askdirectory(title="Pick a folder for the CSV files")
+        if not folder:
+            return
+        try:
+            paths = engine.export_csv(folder, self.ledger, self.model, getattr(self, "learned", None),
+                                      ah_cut=self.settings.ah_cut)
+        except OSError as e:
+            messagebox.showerror("FlipForever", f"Could not write the CSV files: {e}")
+            return
+        self.status_var.set(f"Exported {len(paths)} CSV files to {folder}.")
+
     def _fill_aging(self):
         """Aging stock line on the Inventory tab (switch aging_stock): items held over a week."""
+        if getattr(self.settings, "csv_export", True):
+            if not self.csv_button.winfo_ismapped():
+                self.csv_button.pack(side="right")
+        else:
+            self.csv_button.pack_forget()
         if not getattr(self.settings, "aging_stock", True):
             self.aging_info.set("")
             return

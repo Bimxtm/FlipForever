@@ -1269,6 +1269,16 @@ print("flood warning:", _fd.reason, "|", L("FNOTE"))
 assert _fid not in _flb and [b["id"] for b in _fpy["buy"]] == _flb, (_flb, _fpy["buy"])
 assert "Market flooded" in L("FNOTE") and _fid in [L(f"FOFF.buy[{i}].id") for i in range(1, len(L("FOFF").buy) + 1)]
 _con.execute("DELETE FROM prices WHERE realm=? AND id=? AND t=?", (_realm, _fid, _ft))
+# CSV export (app setting csv_export): trades, inventory and the weekly report
+import csv as _csv, tempfile as _tempfile  # noqa: E402,E401
+with _tempfile.TemporaryDirectory() as _tmp:
+    _paths = _engine.export_csv(_tmp, _all, _model, _learned, now=NOW)
+    _csvs = {p.name: list(_csv.reader(open(p, encoding="utf-8-sig"))) for p in _paths}
+print("csv export:", {k: len(v) - 1 for k, v in _csvs.items()})
+assert sorted(_csvs) == ["inventory.csv", "trades.csv", "weekly_report.csv"]
+assert len(_csvs["trades.csv"]) - 1 == len(_all.trades) and _csvs["trades.csv"][0][0] == "date"
+assert len(_csvs["inventory.csv"]) - 1 == sum(1 for led in _all.items.values() if led.held > 0)
+assert _csvs["weekly_report.csv"][1][0] == "total"
 # scans are parsed once: a second rebuild parses nothing, a new scan only itself
 lua.execute(f"""
 local P = FlipForever.Planner

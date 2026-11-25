@@ -1077,6 +1077,53 @@ def weekly_report(ledger: Ledger, learned: Learned | None = None, now=None, n=3)
             "items": len(week), "best": best, "worst": worst, "fastest": fast[:n], "stop": stop[:n]}
 
 
+def _gold(copper):
+    """Copper as gold for spreadsheets (12.3456 = 12g 34s 56c); empty when unknown."""
+    return "" if copper is None else f"{copper / 10000:.4f}"
+
+
+def export_csv(folder, ledger: Ledger, model: dict | None = None, learned: Learned | None = None,
+               ah_cut: float = 0.05, now=None) -> list[Path]:
+    """Trades, inventory and the weekly report as three CSV files (UTF-8 with BOM so Excel reads
+    item names right). Money in gold with 4 decimals. Returns the written paths."""
+    import csv
+    now = now or time.time()
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    out = []
+
+    def write(name, header, rows):
+        p = folder / name
+        with open(p, "w", newline="", encoding="utf-8-sig") as f:
+            w = csv.writer(f)
+            w.writerow(header)
+            w.writerows(rows)
+        out.append(p)
+
+    write("trades.csv", ["date", "action", "item", "quantity", "unit price (gold)", "profit (gold)", "character"],
+          [(time.strftime("%Y-%m-%d %H:%M", time.localtime(t)), what, name, "" if q is None else q, _gold(p),
+            _gold(profit), char or "") for t, what, name, q, p, profit, char in ledger.trades])
+    inv = []
+    for iid, led in sorted(ledger.items.items(), key=lambda kv: kv[1].name.lower()):
+        if led.held <= 0:
+            continue
+        m = model.get(iid) if model else None
+        paid = led.held_cost / led.held
+        age = (now - led.inventory[0][3]) / DAY if led.inventory else 0
+        inv.append((iid if isinstance(iid, int) else "", led.name, led.held, _gold(paid), _gold(led.held_cost),
+                    _gold(m.market) if m else "", _gold(m.market * (1 - ah_cut) * led.held) if m else "", f"{age:.1f}"))
+    write("inventory.csv", ["item id", "item", "held", "paid each (gold)", "paid total (gold)", "fair value each (gold)",
+                            "worth after cut (gold)", "days held"], inv)
+    rep = weekly_report(ledger, learned, now=now, n=10)
+    rows = [("total", "", _gold(rep["profit"]), f"{rep['sales']} sales, {rep['items']} items")]
+    rows += [("best", w["name"], _gold(w["profit"]), f"{w['sales']} sales") for w in rep["best"]]
+    rows += [("worst", w["name"], _gold(w["profit"]), f"{w['expired']} expired") for w in rep["worst"]]
+    rows += [("fastest", w["name"], _gold(w["profit"]), f"{w['median_days']:.1f} days to sell") for w in rep["fastest"]]
+    rows += [("stop buying", w["name"], _gold(w["profit"]), w["why"]) for w in rep["stop"]]
+    write("weekly_report.csv", ["section", "item", "profit (gold)", "detail"], rows)
+    return out
+
+
 # ============================================================== dashboard numbers
 def goal_text(today: int, week: int, day_gold: int, week_gold: int) -> str:
     """Gold goals (settings goal_day_gold / goal_week_gold, 0 = off): progress as one line, empty when none set."""
