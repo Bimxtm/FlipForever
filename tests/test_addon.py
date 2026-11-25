@@ -4430,6 +4430,21 @@ FlipForeverDB.settings.fallingPrice = nil
 P.Model, FF.Plan = oldModel, oldPlan
 FALLN = table.concat(r, "#")
 """)
+# best day to buy (app setting best_day): cheapest weekday over the last 4 weeks
+import time  # noqa: E402
+_bc = _sqlite3.connect(":memory:")
+_bc.executescript(_store.SCHEMA)
+_bnow = int(time.mktime((2026, 11, 23, 12, 0, 0, 0, 0, -1)))   # a Monday, local time
+for _k in range(21):
+    _bt = _bnow - _k * 86400
+    _wd = time.localtime(_bt).tm_wday
+    _bc.execute("INSERT INTO prices (realm, t, id, min, p25, qty, n, full) VALUES ('R', ?, 7, 80, ?, 50, 5, 1)",
+                (_bt, 80 if _wd == 1 else 100))                        # Tuesdays 20% cheaper
+    _bc.execute("INSERT INTO prices (realm, t, id, min, p25, qty, n, full) VALUES ('R', ?, 8, 98, 100, 50, 5, 1)", (_bt,))
+_bd = _engine.best_days(_bc, "R", now=_bnow + 3600)
+print("best day:", _bd, _engine.best_day_text(_bd.get(7)))
+assert list(_bd) == [7] and _bd[7][0] == 1 and abs(_bd[7][1] - 0.2) < 1e-9
+assert _engine.best_day_text(_bd[7]) == "cheapest on Tuesdays (~20% below usual)"
 print("falling price:", L("FALLN"))
 assert L("FALLN") == "-0.2#nil#nil#-20% in 3 days, sell soon#nil", L("FALLN")
 print("ALL ADDON TESTS PASSED")

@@ -328,6 +328,35 @@ def price_trends(con, realm, days=7):
     return out
 
 
+WEEKDAYS = ("Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays")
+
+
+def best_days(con, realm, days=28, now=None, min_points=8, min_weekdays=3, min_gain=0.05) -> dict[int, tuple[int, float]]:
+    """Best day to buy: per item, the weekday whose typical price (median p25) was lowest over the last
+    `days`, when it is at least 5% below the item's overall median. Needs 8+ snapshots on 3+ weekdays.
+    {item id: (weekday 0=Monday, fraction below usual)}."""
+    now = now or int(time.time())
+    by = defaultdict(lambda: defaultdict(list))
+    for iid, t, p25 in con.execute("SELECT id, t, p25 FROM prices WHERE realm=? AND t>=? AND p25>0",
+                                   (realm, now - days * DAY)):
+        by[iid][time.localtime(t).tm_wday].append(p25)
+    out = {}
+    for iid, wd in by.items():
+        allp = [p for ps in wd.values() for p in ps]
+        if len(allp) < min_points or len(wd) < min_weekdays:
+            continue
+        med = statistics.median(allp)
+        day, low = min(((d, statistics.median(ps)) for d, ps in wd.items()), key=lambda x: (x[1], x[0]))
+        gain = 1 - low / med if med else 0
+        if gain >= min_gain:
+            out[iid] = (day, gain)
+    return out
+
+
+def best_day_text(bd) -> str:
+    return f"cheapest on {WEEKDAYS[bd[0]]} (~{bd[1]:.0%} below usual)" if bd else ""
+
+
 def trend_text(tr):
     """+12% / -8% / steady; "" when unknown."""
     if tr is None:

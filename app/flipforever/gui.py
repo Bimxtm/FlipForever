@@ -1342,7 +1342,8 @@ class App(tk.Tk):
         else:
             self._deal_chart_hist = engine.price_history(self.con, self.realm, d.id)
             self._deal_chart_marks = tuple(x for x in ((d.max_buy, GOLD, "max buy"), (d.market, MUTED, "fair")) if x[0])
-            self.deal_chart_title.set(f"{d.name}: last 14 days (double-click for a larger chart)")
+            bd = engine.best_day_text(getattr(self, "best_days", {}).get(d.id))
+            self.deal_chart_title.set(f"{d.name}: last 14 days" + (f", {bd}" if bd else "") + " (double-click for a larger chart)")
         self._draw_history(self.deal_chart, self._deal_chart_hist, self._deal_chart_marks)
 
     def _fill_deals(self):
@@ -1369,9 +1370,11 @@ class App(tk.Tk):
                 speed = f"~{max(1, round(d.est_days * 24))} h"
             else:
                 speed = f"~{d.est_days:.1f} d"
+            bd = engine.best_day_text(getattr(self, "best_days", {}).get(d.id))
+            reason = "; ".join(x for x in (d.reason, bd) if x)
             rows.append(((d.name, money(d.cur), trend, money(d.market), money(d.max_buy), money(d.profit_unit),
                           f"{d.roi:.0%}", vol, speed, f"{d.p_sell:.0%}", d.qty_cap if d.fast else "-",
-                          f"{d.confidence:.0%}", d.reason),
+                          f"{d.confidence:.0%}", reason),
                          (d.name.lower(), d.cur, tr or 0, d.market, d.max_buy, d.profit_unit, d.roi, d.vol_day or 0,
                           d.est_days if d.est_days is not None else 999, d.p_sell, d.qty_cap, d.confidence, None),
                          "deal" if d.is_deal else ("bad" if not d.fast else "muted")))
@@ -1607,6 +1610,8 @@ class App(tk.Tk):
             hint="the selected item's cheapest and typical price and the amount listed over the last 14 days")
         add("Market flood warning", "flood_warning", "bool",
             hint="items listed at 3x their usual amount or more are marked on Deals and left off the buy list until it clears")
+        add("Best day to buy", "best_day", "bool",
+            hint="Deals and the price chart: the weekday an item was cheapest over the last 4 weeks (5%+ below usual)")
         add("First-scan mode", "starter_mode", "bool", hint="buy right after one scan: deep markets, price judged live in game")
         add("  deep market = units listed", "starter_min_listed", width=12, hint="only items with at least this many listed")
         add("Max units per item", "max_units_per_item", width=12)
@@ -2043,6 +2048,8 @@ class App(tk.Tk):
         self.learned = engine.learn(self.con, realm, self.settings, self.ledger_all, self.model, commit_tuning=commit_tuning)
         self.deals = engine.recommend(self.settings, self.model, self.learned, self.ledger_all, names, holder=self.ledger)
         self.trends = engine.price_trends(self.con, realm)
+        # best day to buy (switch best_day): the weekday each item was cheapest lately
+        self.best_days = engine.best_days(self.con, realm) if getattr(self.settings, "best_day", True) else {}
         s = engine.summary(self.con, realm, self.ledger, self.model)
         self.cards["realized"].set(money(s["realized"], True))
         self.realized_note.set(f"+ {money(s['other_income'], True)} loot and older stock" if s.get("other_income") else "")
