@@ -24,6 +24,7 @@ EnemyAlert.lua
 ExpirySaver.lua
 LoginRecap.lua
 WatchList.lua
+AltCounts.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

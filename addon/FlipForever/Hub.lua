@@ -655,6 +655,8 @@ local function build()
     "Crafts the planner's top skill-up or profitable recipe the planned number of times (as many as your materials allow), with the profession window open.")
   feature("profCooldowns", "Overview: profession cooldowns of all my characters", true, function() H:Refresh() end,
     "Transmutes, Mooncloth and other crafts with a cooldown are read when you open the profession window; the Overview and the app show when each is ready again on every character.")
+  feature("altCounts", "Item tooltips: how many my characters hold (bags, bank, mail)", true, nil,
+    "Per character on this realm, from its bags, its bank (read when you open it) and its mailbox (read when you look at it).")
   feature("craftCostTooltip", "Crafting cost in item tooltips for things I can craft", true, nil,
     "For items one of your professions on this character can make: what the materials cost at scanned prices, next to the auction price. Open the profession window once so its recipes are known.")
   feature("bestPostTime","Show the hours my auctions sell best when posting", true, nil,

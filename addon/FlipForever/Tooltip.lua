@@ -58,6 +58,11 @@ function TT:Lines(itemID)
       out[#out + 1] = { FF:T("  crafting cost"), text }
     end
   end
+  -- how many of it your characters hold (switch altCounts)
+  if FF.AltCounts then
+    local ok, l = pcall(FF.AltCounts.TooltipLine, FF.AltCounts, itemID)
+    if ok and l then out[#out + 1] = l end
+  end
   if FF.ExpirySaver then
     local ok, lines = pcall(FF.ExpirySaver.TooltipLines, FF.ExpirySaver, itemID)
     for _, l in ipairs(ok and lines or {}) do out[#out + 1] = l end
