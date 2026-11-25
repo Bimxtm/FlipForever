@@ -643,6 +643,8 @@ local function build()
     "Merchants you visit are remembered with their spot. Their limited items that sell for clearly more on the auction house are named at the merchant; /ff vendors lists the best ones and pins them on the map.")
   feature("ahSummary", "Summary when I close the auction house", true, nil,
     "What you bought, posted and sold while the auction house was open, and how your gold changed, in one chat line.")
+  feature("loginRecap", "Login recap: my auctions that ended while I was away", true, nil,
+    "When you log in after 15 minutes or more: how many of this character's auctions ended while you were away (sold or expired, the mail tells which) and whether new mail waits.")
   feature("goldGoals", "Gold goals on the Overview (/ff goal day|week <gold>)", true, function() H:Refresh() end,
     "Set a daily or weekly profit goal with /ff goal day <gold> or /ff goal week <gold>; the Overview shows how far you are (sales after the cut minus buying).")
   feature("restock", "Restock reminders for crafted items I sell", true, nil,

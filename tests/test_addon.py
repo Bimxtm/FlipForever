@@ -3299,7 +3299,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4180,4 +4180,40 @@ print("craft cost tooltip:", L("CRAFTTT"))
 assert L("CRAFTTT").split("#")[:3] == ["200,Bolt of Linen Cloth,Tailoring,false", "6000,true", "nil"], L("CRAFTTT")
 assert "profit" in L("CRAFTTT").split("#")[3] and "cheaper to buy" in L("CRAFTTT").split("#")[4], L("CRAFTTT")
 assert L("CRAFTTT").split("#")[5] == "none", L("CRAFTTT")
+lua.execute("""
+-- login recap: auctions that ended while away (minus ones settled while playing), mail flag
+local FF, R = FlipForever, FlipForever.LoginRecap
+local me = UnitName("player")
+local log = FF:DB().log
+local saved = {} for i, e in ipairs(log) do saved[i] = e end for k in pairs(log) do log[k] = nil end
+local oMail = HasNewMail
+local NOW, OUT = 1000000, 1000000 - 30 * 3600   -- logged out 30 h ago
+local function add(e) e.char = e.char or me log[#log + 1] = e end
+add({ e = "post", id = 1, p = 100, q = 2, dur = 2, t = OUT - 3600 })      -- ends 23 h after logout -> counted
+add({ e = "post", id = 2, p = 500, q = 1, dur = 1, t = OUT - 3600 })      -- sold before logout -> settled
+add({ e = "sold", id = 2, t = OUT - 600 })
+add({ e = "post", id = 3, p = 900, q = 1, dur = 1, t = OUT - 20 * 3600 }) -- ended before logout -> not counted
+add({ e = "post", id = 4, p = 700, q = 1, dur = 2, t = OUT - 3600, char = "Alt" }) -- other character
+FF:DB().chars[me] = FF:DB().chars[me] or {}
+FF:DB().chars[me].logout = OUT
+local r = {}
+local n, v = R:Ended(me, OUT, NOW)
+r[#r + 1] = n .. "," .. v
+HasNewMail = function() return true end
+r[#r + 1] = R:Line(NOW) or "nil"
+FF:DB().chars[me].logout = NOW - 60                 -- short break -> no recap
+r[#r + 1] = tostring(R:Line(NOW))
+FF:DB().chars[me].logout = OUT
+FlipForeverDB.settings.loginRecap = false
+r[#r + 1] = tostring(R:Line(NOW))
+FlipForeverDB.settings.loginRecap = nil
+LRECAP = table.concat(r, "#")
+HasNewMail = oMail
+FF:DB().chars[me].logout = nil
+for k in pairs(log) do log[k] = nil end for i, e in ipairs(saved) do log[i] = e end
+""")
+print("login recap:", L("LRECAP"))
+lr = L("LRECAP").split("#")
+assert lr[0] == "1,200" and "1 of your auctions ended" in lr[1] and "new mail" in lr[1] and "30 h" in lr[1], lr
+assert lr[2] == "nil" and lr[3] == "nil", lr
 print("ALL ADDON TESTS PASSED")
