@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-24",
+ "updated": "2026-11-25",
  "developers": [
   "Alix"
  ],
@@ -285,44 +285,68 @@
   {
    "r": "idea-20261122223114",
    "text": "New realm head start: rough price estimates from your other realm until the new one is scanned",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   },
   {
    "r": "idea-20261122223717-4",
    "text": "Weekly report in the app: best and worst flips, fastest sellers, what to stop buying",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   },
   {
    "r": "idea-20261122223717",
    "text": "Profession cooldowns for all your characters",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   },
   {
    "r": "idea-20261122223717-2",
    "text": "Expiry saver: better options for items that keep expiring",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   },
   {
    "r": "idea-20261122223114-4",
    "text": "Quiet chat option for role-play realms",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   },
   {
    "r": "idea-20261122223717-3",
    "text": "Crafting cost in item tooltips",
-   "status": "in_progress",
-   "version": ""
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   },
   {
    "r": "talentlevels-20261123",
    "text": "Talents by level: the talent to take at every level for the build you choose",
    "status": "shipped",
    "version": "2.7.1-beta.5"
+  },
+  {
+   "r": "idea-20261124094704",
+   "text": "Watch list price alerts (/ff watch)",
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
+  },
+  {
+   "r": "idea-20261124094705",
+   "text": "Item counts of all your characters in tooltips",
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
+  },
+  {
+   "r": "idea-20261124094705-2",
+   "text": "Login recap: auctions that ended while you were away",
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
+  },
+  {
+   "r": "idea-20261124094705-3",
+   "text": "Aging stock in the app",
+   "status": "shipped",
+   "version": "2.7.1-beta.13"
   }
  ],
  "scores": []

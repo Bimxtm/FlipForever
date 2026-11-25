@@ -2,6 +2,18 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.13] - 2026-11-25 (beta)
+### Added
+- New realm head start: on a realm you haven't scanned yet, tooltips and the profession planner use rough price estimates from your other realm (clearly marked, never bought from) until your first scan there. Own switch in Settings, Features.
+- Weekly report on the app's Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying. Own switch in Settings.
+- Profession cooldowns across characters: transmutes, Mooncloth and other cooldown crafts on the addon's Overview and the app's Dashboard, with when each is ready again. Own switches.
+- Expiry saver: items that expired twice in a row are checked against their merchant and disenchant value before they are posted again. Own switch.
+- Quiet chat on RP realms: FlipForever's messages go to a FlipForever chat tab (/ff chattab) or are kept for /ff log; answers to your own commands, alerts and errors still show. Own switch.
+- Crafting cost in item tooltips: for things you can craft, what the materials cost at your scanned prices, with the profit or "cheaper to buy". Own switch.
+- Login recap: when you log in, one line about your auctions that ended while you were away and whether mail waits. Own switch.
+- Aging stock in the app: the Inventory tab names items you have held for over a week, with today's price against what you paid. Own switch in Settings.
+- Watch list: /ff watch <item> <price> alerts you during scans and while browsing when a watched item is listed at or below your price. Own switch.
+- Item counts in tooltips: how many of an item each of your characters on the realm holds in bags, bank and mail. Own switch.
 ## [2.7.1-beta.12] - 2026-11-24 (beta, hotfix)
 ### Fixed
 - The gold reserve's 20 gold minimum stopped all buying on characters with less gold. The minimum now never takes more than half of your gold.

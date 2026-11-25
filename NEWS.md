@@ -1,3 +1,17 @@
+# FlipForever 2.7.1 Beta 13
+
+- **New realm head start:** price estimates from your other realm until you scan the new one.
+- **Weekly report in the app:** best and worst flips, fastest sellers, what to stop buying.
+- **Profession cooldowns:** transmutes and other cooldowns of all your characters at a glance.
+- **Expiry saver:** items that keep expiring are checked against merchant and disenchant value.
+- **Quiet chat on RP realms:** FlipForever's messages stay out of the shared chat.
+- **Crafting cost in tooltips:** material cost and profit for things you can craft.
+- **Login recap:** what ended while you were away and whether mail waits.
+- **Aging stock in the app:** items held over a week, today's price against what you paid.
+- **Watch list:** /ff watch <item> <price> tells you when it's listed cheap.
+- **Item counts in tooltips:** how many each of your characters holds.
+
+Every new feature has its own switch.
 # FlipForever 2.7.1 Beta 12 (hotfix)
 
 - **Gold reserve fits small purses:** the 20 gold minimum never takes more than half your gold, so characters with little gold can buy again. Set the share and minimum (down to silver) with the new buttons in the addon's Settings window, or /ff reserve 10 50s.
