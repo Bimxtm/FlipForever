@@ -347,6 +347,66 @@
    "text": "Aging stock in the app",
    "status": "shipped",
    "version": "2.7.1-beta.13"
+  },
+  {
+   "r": "idea-20261125062656",
+   "text": "Find an item across your characters (/ff find)",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125062656-2",
+   "text": "Market flood warning: skip items listed far above their usual amount",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125062656-3",
+   "text": "Deposit for 12, 24 and 48 hours in tooltips at the auction house",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125062657",
+   "text": "Export trades, inventory and the weekly report to CSV",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125062657-2",
+   "text": "Risky gathering spots on PvP realms",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125062657-3",
+   "text": "Sell-now signal for items priced well above usual",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125155719",
+   "text": "Falling price warning for items you hold",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125155719-2",
+   "text": "Best day to buy: the weekday an item is cheapest",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125155719-3",
+   "text": "Materials for the top recipe added to the shopping list",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125155720",
+   "text": "Rising markets on the Dashboard",
+   "status": "shipped",
+   "version": "2.7.1-beta.14"
   }
  ],
  "scores": []

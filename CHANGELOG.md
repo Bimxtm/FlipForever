@@ -2,6 +2,18 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.14] - 2026-11-25 (beta)
+### Added
+- /ff find <item>: lists which of your characters on the realm hold an item, with bags, bank and mail. Own switch in Settings, Features.
+- Market flood warning: when a scan finds an item listed at 3 times its usual amount or more, the app's Deals page marks it and it stays off the buy list (app and in-game planner) until it clears; the addon names skipped items in chat. Own switches in the app and the addon.
+- Deposit in tooltips: while the auction house is open, item tooltips show the deposit for posting one for 12, 24 and 48 hours. Own switch.
+- Export to CSV in the app: a button on the Inventory tab saves trades, inventory and the weekly report as CSV files for a spreadsheet. Own switch in Settings.
+- Risky gathering spots on PvP realms: after an enemy player alert, gathering spots within about 100 yards are skipped by the next stop for 10 minutes. Own switch.
+- Sell-now signal: items you hold whose cheapest listing is 25% or more above their usual price are marked on the app's Inventory tab, in their tooltip and in chat when you open the auction house. Own switches.
+- Falling price warning: items you hold whose price over the last 3 days is 15% or more below the 14-day price are marked on the Inventory tab and in their tooltip. Own switches.
+- Best day to buy: the Deals page and the price chart name the weekday an item was cheapest over the last 4 weeks. Own switch in Settings.
+- Materials shopping list: when you open the auction house, the missing materials for the profession planner's top recipe are added to your shopping list. Own switch.
+- Rising markets on the app's Dashboard: items whose price went up most in the last 3 days, with real sales, as ideas to post or craft. Own switch in Settings.
 ## [2.7.1-beta.13] - 2026-11-25 (beta)
 ### Added
 - New realm head start: on a realm you haven't scanned yet, tooltips and the profession planner use rough price estimates from your other realm (clearly marked, never bought from) until your first scan there. Own switch in Settings, Features.

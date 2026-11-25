@@ -1,3 +1,17 @@
+# FlipForever 2.7.1 Beta 14
+
+- **Find an item:** /ff find <item> shows which of your characters hold it.
+- **Market flood warning:** items suddenly listed far above their usual amount are not bought until it clears.
+- **Deposit in tooltips:** the deposit for 12, 24 and 48 hours at the auction house.
+- **Export to CSV:** trades, inventory and the weekly report for your spreadsheet.
+- **Risky gathering spots (PvP realms):** spots near recent enemy players are skipped for 10 minutes.
+- **Sell-now signal:** items you hold that are priced well above usual right now.
+- **Falling price warning:** items you hold whose price is dropping.
+- **Best day to buy:** the weekday an item has been cheapest.
+- **Materials shopping list:** the top recipe's missing materials join your shopping list.
+- **Rising markets in the app:** items whose price went up most in the last 3 days.
+
+Every new feature has its own switch.
 # FlipForever 2.7.1 Beta 13
 
 - **New realm head start:** price estimates from your other realm until you scan the new one.
