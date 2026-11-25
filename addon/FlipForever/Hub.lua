@@ -659,6 +659,8 @@ local function build()
     "Set a daily or weekly profit goal with /ff goal day <gold> or /ff goal week <gold>; the Overview shows how far you are (sales after the cut minus buying).")
   feature("restock", "Restock reminders for crafted items I sell", true, nil,
     "When an item you craft and posted in the last two weeks is gone from the auction house and your bags, the auction house reminds you once a day to craft and post it again.")
+  feature("matsList", "Profession planner: add the top recipe's missing materials to my shopping list", true, nil,
+    "When you open the auction house, the materials you still need for the planner's top skill-up or profitable craft are added to the shopping list at up to 25% over their scanned price, so they are bought in one go.")
   feature("craftButton", "Profession planner: Craft button for the top recipe", true, function() if FF.Professions then pcall(FF.Professions.Refresh, FF.Professions) end end,
     "Crafts the planner's top skill-up or profitable recipe the planned number of times (as many as your materials allow), with the profession window open.")
   feature("profCooldowns", "Overview: profession cooldowns of all my characters", true, function() H:Refresh() end,

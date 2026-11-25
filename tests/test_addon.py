@@ -2783,7 +2783,9 @@ C_AuctionHouse.QueryOwnedAuctions = function() OWNED_QUERIED = OWNED_QUERIED + 1
 C_AuctionHouse.GetNumOwnedAuctions = function() return #OWNED end
 C_AuctionHouse.GetOwnedAuctionInfo = function(i) return OWNED[i] end
 printed = {}
+FlipForeverDB.settings.matsList = false   -- only the undercut lines are counted here
 Fire("AUCTION_HOUSE_SHOW")
+FlipForeverDB.settings.matsList = nil
 Fire("OWNED_AUCTIONS_UPDATED")
 Fire("OWNED_AUCTIONS_UPDATED")   -- a second update in the same visit stays quiet
 OWN_MSGS = #printed
@@ -3340,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4430,6 +4432,28 @@ FlipForeverDB.settings.fallingPrice = nil
 P.Model, FF.Plan = oldModel, oldPlan
 FALLN = table.concat(r, "#")
 """)
+# materials shopping list (switch matsList): the top recipe's missing mats join the shopping list at the AH
+lua.execute("""
+local FF, PR = FlipForever, FlipForever.Professions
+local oldPlan, oldBuy, oldCur, oldMode = FF.Plan, PR.BuyList, PR.current, PR.mode
+local plan = { buy = { { id = 2589, qty = 5, max = 60 }, { id = 900, qty = 1, max = 1, mats = true } } }
+FF.Plan = function() return plan end
+PR.current, PR.mode = "Tailoring", "skill"
+PR.BuyList = function() return { { id = 2589, qty = 3, max = 70 }, { id = 2320, qty = 4, max = 125 } } end
+local r = { PR:AddMatsToPlan() }
+local ids = {}
+for _, b in ipairs(plan.buy) do ids[#ids + 1] = b.id .. (b.mats and "m" or "") end
+r[#r + 1] = table.concat(ids, ",")
+r[#r + 1] = PR:AddMatsToPlan() .. ":" .. #plan.buy          -- refreshed, not doubled
+FlipForeverDB.settings.matsList = false
+r[#r + 1] = PR:AddMatsToPlan() .. ":" .. #plan.buy          -- off: old mats entries removed
+FlipForeverDB.settings.matsList = nil
+FF.Plan, PR.BuyList, PR.current, PR.mode = oldPlan, oldBuy, oldCur, oldMode
+MATSL = table.concat(r, "#")
+""")
+print("mats list:", L("MATSL"))
+assert L("MATSL") == "1#2589,2320m#1:2#0:1", L("MATSL")
+
 # best day to buy (app setting best_day): cheapest weekday over the last 4 weeks
 import time  # noqa: E402
 _bc = _sqlite3.connect(":memory:")

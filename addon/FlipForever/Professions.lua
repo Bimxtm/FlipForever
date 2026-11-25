@@ -648,6 +648,40 @@ function P:QueueMats()
   if FF.UI then FF.UI:Refresh() end
 end
 
+-- Materials shopping list (switch matsList): when the auction house opens, the missing materials of
+-- the planner's top recipe (skill-up or profitable craft, whichever mode is set) join the shopping
+-- list, so they are bought together with everything else. Entries are refreshed on every open.
+function P:MatsListOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.matsList ~= false end
+
+function P:AddMatsToPlan()
+  local plan = FF:Plan()
+  if not (plan and plan.buy) then return 0 end
+  for i = #plan.buy, 1, -1 do if plan.buy[i].mats then table.remove(plan.buy, i) end end
+  if not self:MatsListOn() then return 0 end
+  if not self.current then for name in pairs(self:Store()) do self.current = name break end end
+  local mode = self.mode or FlipForeverDB.settings.profMode or "skill"
+  local ok, list = pcall(function()
+    if mode == "profit" then return self:ProfitBuyList(nil, 1) end
+    return self.current and self:BuyList(self.current, 1) or {}
+  end)
+  if not ok or type(list) ~= "table" then return 0 end
+  local onList = {}
+  for _, b in ipairs(plan.buy) do onList[b.id] = true end
+  local added = 0
+  for _, m in ipairs(list) do
+    if not onList[m.id] and (m.qty or 0) > 0 and (m.max or 0) > 0 then
+      plan.buy[#plan.buy + 1] = { id = m.id, name = FF:ItemName(m.id), qty = m.qty, max = m.max, mats = true }
+      added = added + 1
+    end
+  end
+  if added > 0 then
+    FF:Print(FF:T("Added %d crafting material%s to your shopping list."):format(added, FF:Plural(added)))
+  end
+  return added
+end
+
+FF:On("AUCTION_HOUSE_SHOW", function() pcall(P.AddMatsToPlan, P) end)
+
 function P:BuyPending()
   if not self.pendingMats then return end
   local list = self.pendingMats
