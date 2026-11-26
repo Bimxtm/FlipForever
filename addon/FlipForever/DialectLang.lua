@@ -225,9 +225,13 @@ add("pt", "Português", {
   },
 })
 
--- The extra voices (switch dialectVoices): Forsaken, Tauren, Night Elf in every language
+-- The extra voices (switch dialectVoices): Forsaken, Tauren, Night Elf, Skyborne in every language
 local EXTRA = {
   de = {
+    skyborne = { hallo = "Gute Winde", hi = "Gute Winde", ["tschüss"] = "Mögen die Winde dich tragen",
+      freund = "Windgeschwister", freunde = "Windsippe", ja = "Wie der Wind es will", nein = "Der Wind sagt nein",
+      danke = "Die Winde danken dir", schnell = "schnell wie der Sturm", himmel = "weiter Himmel",
+      wind = "die Geister der Luft", sturm = "Al'Akirs Zorn", gut = "windgesegnet", toll = "himmelhoch" },
     forsaken = { hallo = "Sei gegrüßt, Sterblicher", hi = "Sei gegrüßt", freund = "Mitverlassener",
       leben = "Unleben", tot = "wahrhaft tot", gut = "herrlich düster", danke = "Mein Dank, so viel er wert ist",
       ja = "Gewiss", nein = "Niemals", ["tschüss"] = "Sieg für Sylvanas", hoffnung = "Verzweiflung", warm = "kalt" },
@@ -239,6 +243,10 @@ local EXTRA = {
       nacht = "Sternennacht", wald = "uralter Wald", schnell = "flink", gut = "anmutig" },
   },
   fr = {
+    skyborne = { bonjour = "Bons vents", salut = "Bons vents", adieu = "Que les vents te portent",
+      ami = "frère des vents", oui = "Comme le vent le veut", non = "Le vent dit non",
+      merci = "Les vents te remercient", rapide = "vif comme la bourrasque", ciel = "ciel sans fin",
+      vent = "les esprits de l'air", ["tempête"] = "fureur d'Al'Akir", bon = "béni des vents" },
     forsaken = { bonjour = "Salutations, mortel", salut = "Salutations", ami = "compagnon réprouvé",
       vie = "non-vie", mort = "vraiment mort", bon = "délicieusement sinistre",
       merci = "Ma gratitude, pour ce qu'elle vaut", oui = "Certes", non = "Jamais",
@@ -251,6 +259,11 @@ local EXTRA = {
       nuit = "nuit étoilée", ["forêt"] = "forêt ancestrale", rapide = "vif", bon = "gracieux" },
   },
   es = {
+    skyborne = { hola = "Buenos vientos", ["adiós"] = "Que los vientos te lleven", adios = "Que los vientos te lleven",
+      amigo = "hermano del viento", ["sí"] = "Como el viento quiera", no = "El viento dice que no",
+      gracias = "Los vientos te lo agradecen", ["rápido"] = "veloz como el vendaval", rapido = "veloz como el vendaval",
+      cielo = "cielo infinito", viento = "los espíritus del aire", tormenta = "furia de Al'Akir",
+      bueno = "bendecido por el viento" },
     forsaken = { hola = "Saludos, mortal", amigo = "compañero renegado", vida = "no-vida",
       muerto = "muerto de verdad", bueno = "deliciosamente lúgubre", gracias = "Mi gratitud, lo que valga",
       ["sí"] = "Ciertamente", no = "Jamás", ["adiós"] = "Victoria para Sylvanas", adios = "Victoria para Sylvanas",
@@ -263,6 +276,10 @@ local EXTRA = {
       noche = "noche estrellada", bosque = "bosque ancestral", bueno = "grácil" },
   },
   it = {
+    skyborne = { ciao = "Buoni venti", arrivederci = "Che i venti ti portino", amico = "fratello del vento",
+      ["sì"] = "Come vuole il vento", no = "Il vento dice di no", grazie = "I venti ti ringraziano",
+      veloce = "rapido come la burrasca", cielo = "cielo infinito", vento = "gli spiriti dell'aria",
+      tempesta = "furia di Al'Akir", buono = "benedetto dal vento" },
     forsaken = { ciao = "Salute, mortale", amico = "compagno reietto", vita = "non-vita", morto = "morto davvero",
       buono = "deliziosamente cupo", grazie = "La mia gratitudine, per quel che vale", ["sì"] = "Certo",
       no = "Mai", arrivederci = "Vittoria per Sylvanas", speranza = "disperazione", caldo = "freddo" },
@@ -274,6 +291,11 @@ local EXTRA = {
       foresta = "foresta antica", buono = "aggraziato" },
   },
   pt = {
+    skyborne = { ["olá"] = "Bons ventos", oi = "Bons ventos", tchau = "Que os ventos o levem",
+      amigo = "irmão do vento", sim = "Como o vento quiser", ["não"] = "O vento diz que não",
+      obrigado = "Os ventos agradecem", ["rápido"] = "veloz como a ventania", rapido = "veloz como a ventania",
+      ["céu"] = "céu sem fim", vento = "os espíritos do ar", tempestade = "fúria de Al'Akir",
+      bom = "abençoado pelo vento" },
     forsaken = { ["olá"] = "Saudações, mortal", oi = "Saudações", amigo = "companheiro renegado",
       vida = "morte-vida", morto = "morto de verdade", bom = "deliciosamente sombrio",
       obrigado = "Minha gratidão, pelo que vale", sim = "Certamente", ["não"] = "Jamais",

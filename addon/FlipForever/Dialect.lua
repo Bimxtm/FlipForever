@@ -52,12 +52,14 @@ D.WORDS = {
   },
 }
 
--- More voices (switch dialectVoices): Forsaken, Tauren, Night Elf (races of the original game)
-D.EXTRA = { "forsaken", "tauren", "nightelf" }
-D.NAMES.forsaken, D.NAMES.tauren, D.NAMES.nightelf = "Forsaken", "Tauren", "Night Elf"
+-- More voices (switch dialectVoices): Forsaken, Tauren, Night Elf and WoW Forever's Skyborne
+D.EXTRA = { "forsaken", "tauren", "nightelf", "skyborne" }
+D.NAMES.forsaken, D.NAMES.tauren, D.NAMES.nightelf, D.NAMES.skyborne = "Forsaken", "Tauren", "Night Elf", "Skyborne"
 D.RACE.Scourge, D.RACE.Undead, D.RACE.Tauren = "forsaken", "forsaken", "tauren"
 D.RACE.NightElf = "nightelf"
-D.IS_EXTRA = { forsaken = true, tauren = true, nightelf = true }
+-- WoW Forever's Skyborne (High Order and Windshaper); the race token is not documented, so the likely ones
+for _, r in ipairs({ "Skyborne", "SkyborneElf", "HighOrder", "Windshaper", "Shendorei" }) do D.RACE[r] = "skyborne" end
+D.IS_EXTRA = { forsaken = true, tauren = true, nightelf = true, skyborne = true }
 D.WORDS.forsaken = {
   hello = "Greetings, mortal", hi = "Hail", friend = "fellow Forsaken", friends = "fellow Forsaken",
   life = "unlife", alive = "undying", dead = "truly dead", die = "rot", food = "flesh", eat = "feast on",
@@ -80,12 +82,24 @@ D.WORDS.nightelf = {
   young = "young one", fast = "swift", quiet = "silent as shadow", good = "graceful", great = "blessed",
   hurry = "have patience",
 }
+-- Skyborne: shen'dorei of Zephras Isle, bound to the wind spirits (flavour from their lore themes)
+D.WORDS.skyborne = {
+  hello = "Fair winds", hi = "Fair winds", goodbye = "May the winds carry you", bye = "Ride the winds",
+  friend = "wind-sibling", friends = "wind-kin", yes = "As the wind wills", no = "The wind says no",
+  thanks = "The winds thank you", fast = "swift as the gale", quick = "swift as a gale", home = "Valanaar",
+  sky = "open sky", wind = "the spirits of the air", storm = "Al'Akir's fury", lucky = "wind-blessed",
+  calm = "still as a windless sky", ancestors = "the elder shen'dorei", family = "kin", good = "wind-blessed",
+  great = "soaring", bad = "stormy", angry = "stormy", fly = "soar", hurry = "catch the wind",
+  wait = "let the wind settle",
+}
 
 -- whole phrases, changed before single words
 D.PHRASES = {
   forsaken = { { "thank you", "my thanks, such as they are" }, { "good morning", "another grim morning" },
     { "for the horde", "For the Dark Lady" } },
   tauren = { { "thank you", "the Earth Mother thanks you" }, { "for the horde", "For Thunder Bluff and the Horde" } },
+  skyborne = { { "thank you", "the winds thank you" }, { "good luck", "may the winds favour you" },
+    { "good morning", "clear skies this morning" } },
   nightelf = { { "thank you", "Elune be praised" }, { "good night", "Elune guide you through the night" } },
   troll = { { "thank you", "tanks, mon" }, { "going to", "gonna" }, { "want to", "wanna" } },
   orc = { { "thank you", "Aka'magosh" }, { "for the horde", "For da Horde" } },
@@ -161,7 +175,7 @@ Deathwing Ragnaros Onyxia Nefarian Hakkar Elune Sen'jin Orgrimmar Darnassus Gadg
 Ratchet Everlook Dalaran Karazhan Zul'Gurub Stratholme Scholomance Gnomeregan Uldaman Maraudon Ahn'Qiraj
 Naxxramas Durotar Mulgore Tirisfal Elwynn Westfall Duskwood Stranglethorn Tanaris Feralas Ashenvale Winterspring
 Silithus Azshara Darkshore Teldrassil Frostmourne Ashbringer Doomhammer Gorehowl Sulfuras Thunderfury Atiesh
-Lok'tar]]
+Lok'tar Zephras Skywall Valanaar Al'Akir Eldre'Thalas Windshaper Windshapers]]
 D.LORE = {}
 for name in LORE:gmatch("%S+") do D.LORE[lower(name)] = name end
 for wrong, right in pairs({ orgrimar = "Orgrimmar", orgrimmer = "Orgrimmar", silvanas = "Sylvanas",
