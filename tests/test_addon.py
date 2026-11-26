@@ -4392,6 +4392,12 @@ assert _engine.merge_notes(_nc, "R", {5: {"text": "older", "t": 50}, 6: {"text":
 assert _engine.notes_text(_nc, "R") == {5: "buy under 2g", 6: "game note"}
 assert _engine.merge_notes(_nc, "R", {5: {"text": "", "t": 200}}) == 1   # removed in game
 assert _engine.notes_text(_nc, "R") == {6: "game note"} and list(_engine.all_notes(_nc)) == ["R"]
+# budget split across characters (app setting budget_split): half even, half by 14-day flip profit
+_bs = _engine.budget_split([{"char": "A", "profit14": 30000}, {"char": "B", "profit14": 10000}, {"char": "C", "profit14": -5000}],
+                           {"A": 500, "B": 500, "C": 500})
+assert [(s["char"], s["suggest"]) for s in _bs] == [("A", 810), ("B", 440), ("C", 250)], _bs
+_bs = _engine.budget_split([{"char": "A", "profit14": 0}, {"char": "B", "profit14": -1}], {"A": 300, "B": 100})
+assert [s["suggest"] for s in _bs] == [200, 200] and _engine.budget_split([{"char": "A"}], {"A": 1}) == [], _bs
 print("last sale:", L("LASTS"))
 _ls = L("LASTS").split("#")
 assert "each, 2 h ago" in _ls[0] and "x" not in _ls[0].split("each")[1] and "x2, 3 days ago" in _ls[1] and _ls[2] == "nil" and _ls[3] == "nil", _ls

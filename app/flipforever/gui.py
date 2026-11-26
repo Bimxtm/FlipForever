@@ -1115,6 +1115,12 @@ class App(tk.Tk):
         frame, self.char_tree = self._tree(self.char_frame, ("Character", "Realized profit", "Last 7 days", "Stock (cost)", "Sales", "Bought"),
                                            (180, 120, 110, 110, 70, 80), height=4)
         frame.pack(fill="x")
+        # budget split across characters (switch budget_split): a suggestion with an Apply button
+        self.split_row = ttk.Frame(self.char_frame)
+        self.split_var = tk.StringVar()
+        ttk.Button(self.split_row, text="Apply", command=self._apply_budget_split).pack(side="right")
+        ttk.Label(self.split_row, textvariable=self.split_var, style="Muted.TLabel", wraplength=620,
+                  justify="left").pack(side="left", anchor="w")
         # every realm side by side (shown with two or more realms); double-click a row to switch
         self.realm_frame = ttk.Frame(left)
         ttk.Label(self.realm_frame, text="Realm overview", style="H.TLabel").pack(anchor="w", pady=(12, 0))
@@ -1177,6 +1183,35 @@ class App(tk.Tk):
              (r["char"].lower(), r["realized"], r["week"], r["held_cost"], r["sold"], r["bought"]),
              "deal" if r["realized"] > 0 else "bad" if r["realized"] < 0 else None)
             for r in rows])
+        self._fill_budget_split(realm, rows)
+
+    def _fill_budget_split(self, realm, rows):
+        """Budget split (switch budget_split): share the characters' total budget by recent results."""
+        self.split_row.pack_forget()
+        self._split = []
+        if not getattr(self.settings, "budget_split", True):
+            return
+        budgets = {r["char"]: self.settings.budget_for(engine.char_key(r["char"], realm)) for r in rows}
+        split = engine.budget_split(rows, budgets)
+        if not split or all(abs(s["suggest"] - s["now"]) < 10 for s in split):
+            return
+        self._split = [(engine.char_key(s["char"], realm), s["suggest"]) for s in split]
+        self.split_row.pack(fill="x", pady=(4, 0))
+        total = sum(s["now"] for s in split)
+        self.split_var.set("Budget split (by flip profit over the last 14 days, same total of "
+                           f"{total:,.0f}g): " + ", ".join(f"{s['char']} {s['suggest']:,.0f}g (now {s['now']:,.0f}g)"
+                                                          for s in split) + ".")
+
+    def _apply_budget_split(self):
+        if not getattr(self, "_split", None):
+            return
+        for key, gold in self._split:
+            self.settings.budgets[key] = float(gold)
+        self.settings.save()
+        key = self._char_key()
+        if key and hasattr(self, "budget_var"):
+            self.budget_var.set(f"{self.settings.budget_for(key):g}")
+        self.refresh()
 
     def _fill_realm_overview(self):
         """Realm overview on the Dashboard: only with the switch on and two or more realms."""
@@ -1725,6 +1760,8 @@ class App(tk.Tk):
             hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
         add("Rising markets", "rising_markets", "bool",
             hint="Dashboard: items whose price went up 15% or more in the last 3 days, with real sales, as ideas to post or craft")
+        add("Budget split across characters", "budget_split", "bool",
+            hint="Dashboard, Profit per character: how to share the same total budget by each character's flip profit over 14 days (Apply sets it)")
         add("Item notes", "item_notes", "bool",
             hint="Deals and Inventory: your own short note per item (Edit note button, or /ff note in game); notes sync with the game")
         add("Auction fees report", "fees_report", "bool",

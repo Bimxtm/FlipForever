@@ -1059,8 +1059,31 @@ def profit_by_char(con, realm) -> list[dict]:
             "held_cost": sum(l.held_cost for l in led.items.values()),
             "sold": sum(l.sold_lots for l in led.items.values()),
             "bought": sum(l.bought_units for l in led.items.values()),
+            # flips of the last 14 days (for the budget split): profit and what those units cost
+            "profit14": sum(o[1] for l in led.items.values() for o in l.flip_outcomes if now - o[0] < 14 * DAY),
+            "cost14": sum(o[2] for l in led.items.values() for o in l.flip_outcomes if now - o[0] < 14 * DAY),
         })
     out.sort(key=lambda r: -r["realized"])
+    return out
+
+
+def budget_split(rows: list[dict], budgets: dict, step=10) -> list[dict]:
+    """Budget split across characters: the same total gold, shared by how well each list did.
+    Half the total is split evenly (every character keeps trading); the other half goes by each
+    character's flip profit over the last 14 days (losses count as nothing). Without any profit the
+    split stays even. budgets = {char: current gold}. [{char, now, suggest, profit14}], biggest first."""
+    chars = [r for r in rows if r["char"] in budgets]
+    if len(chars) < 2:
+        return []
+    total = sum(float(budgets[r["char"]]) for r in chars)
+    gains = {r["char"]: max(0, r.get("profit14") or 0) for r in chars}
+    gain_sum = sum(gains.values())
+    out = []
+    for r in chars:
+        share = 1 / len(chars) if not gain_sum else 0.5 / len(chars) + 0.5 * gains[r["char"]] / gain_sum
+        out.append({"char": r["char"], "now": float(budgets[r["char"]]),
+                    "suggest": max(step, round(total * share / step) * step), "profit14": r.get("profit14") or 0})
+    out.sort(key=lambda x: (-x["suggest"], x["char"]))
     return out
 
 
