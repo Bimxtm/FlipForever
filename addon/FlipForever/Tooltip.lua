@@ -104,6 +104,9 @@ function TT:Lines(itemID)
   if okF and trend then
     out[#out + 1] = { FF:T("  |cffff8800price falling|r"), FF:T("-%d%% in 3 days, sell soon"):format(math.floor(-trend * 100 + 0.5)) }
   end
+  -- your last sale of it on this realm (switch lastSale)
+  local okL, sale = pcall(TT.LastSaleLine, TT, itemID)
+  if okL and sale then out[#out + 1] = sale end
   if entry and entry.sell then
     out[#out + 1] = { FF:T("  you post at"), FF:T("%s (never below %s)"):format(FF:Money(entry.sell.normal), FF:Money(entry.sell.floor)) }
   end
@@ -114,6 +117,47 @@ function TT:Lines(itemID)
     if up.diff and up.diff ~= "" then out[#out + 1] = { " ", up.diff } end
   end
   return out
+end
+
+-- Your last sale (switch lastSale) ---------------------------------------------------------
+-- From the sale mails in this realm's log: when you last sold the item and for how much each
+-- (before the auction house cut). The index is rebuilt only when the log grows.
+local sales, salesLog, salesN = {}, nil, -1
+function TT:LastSaleEnabled() return FlipForeverDB ~= nil and FlipForeverDB.settings.lastSale ~= false end
+
+function TT:LastSale(itemID)
+  local log = FF:DB().log or {}
+  if log ~= salesLog or #log ~= salesN then
+    sales, salesLog, salesN = {}, log, #log
+    for _, e in ipairs(log) do
+      if e.e == "invoice" and (e.gross or 0) > 0 then
+        local key = e.id or e.name
+        local old = key and sales[key]
+        if key and (not old or (e.t or 0) >= (old.t or 0)) then sales[key] = e end
+      end
+    end
+  end
+  local e = sales[itemID]
+  local name = FF:ItemName(itemID)
+  local byName = name and sales[name]
+  if byName and (not e or (byName.t or 0) > (e.t or 0)) then e = byName end
+  return e
+end
+
+function TT:Ago(t, now)
+  local s = math.max(0, (now or time()) - (t or 0))
+  if s < 3600 then return FF:T("%d min ago"):format(math.max(1, math.floor(s / 60))) end
+  if s < 2 * 86400 then return FF:T("%d h ago"):format(math.floor(s / 3600)) end
+  return FF:T("%d days ago"):format(math.floor(s / 86400))
+end
+
+function TT:LastSaleLine(itemID, now)
+  if not self:LastSaleEnabled() then return nil end
+  local e = self:LastSale(itemID)
+  if not e then return nil end
+  local each = math.floor((e.gross or 0) / math.max(1, e.q or 1))
+  local qty = (e.q or 1) > 1 and (" x" .. e.q) or ""
+  return { FF:T("  your last sale"), FF:T("%s each%s, %s"):format(FF:Money(each), qty, self:Ago(e.t, now)) }
 end
 
 -- Deposit in tooltips ----------------------------------------------------------------------

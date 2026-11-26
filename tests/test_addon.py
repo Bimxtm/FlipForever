@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4334,6 +4334,31 @@ FlipForeverDB.settings.watchSell = nil
 sell[2589] = nil
 WSELL = table.concat(r, "#")
 """)
+lua.execute("""
+-- your last sale in tooltips (switch lastSale): newest invoice by id or by name, price each before the cut
+local FF, TT = FlipForever, FlipForever.Tooltip
+local log = FF:DB().log
+local n0 = #log
+FF:DB().names[77001] = "Test Silk"
+FF:DB().names[77002] = "Test Wool"
+log[#log + 1] = { e = "invoice", id = 77001, name = "Test Silk", q = 4, gross = 2000, cut = 100, t = 1000 }
+log[#log + 1] = { e = "invoice", name = "Test Silk", q = 1, gross = 700, cut = 35, t = 5000 }
+log[#log + 1] = { e = "invoice", id = 77002, name = "Test Wool", q = 2, gross = 3000, cut = 150, t = 4000 }
+local r = {}
+local l = TT:LastSaleLine(77001, 5000 + 7200)
+r[#r + 1] = l and l[2] or "nil"
+l = TT:LastSaleLine(77002, 4000 + 3 * 86400)
+r[#r + 1] = l and l[2] or "nil"
+r[#r + 1] = tostring(TT:LastSaleLine(12345))
+FlipForeverDB.settings.lastSale = false
+r[#r + 1] = tostring(TT:LastSaleLine(77001))
+FlipForeverDB.settings.lastSale = nil
+for i = #log, n0 + 1, -1 do log[i] = nil end
+LASTS = table.concat(r, "#")
+""")
+print("last sale:", L("LASTS"))
+_ls = L("LASTS").split("#")
+assert "each, 2 h ago" in _ls[0] and "x" not in _ls[0].split("each")[1] and "x2, 3 days ago" in _ls[1] and _ls[2] == "nil" and _ls[3] == "nil", _ls
 print("sell alerts:", L("WSELL"))
 ws = L("WSELL").split("#")
 assert ws[0] == "20000" and ws[1] == "nil" and ws[2] == "nil" and ws[3] == "nil|nil" and ws[4] == "true" and ws[5] == "nil" and ws[6] == "nil", ws
