@@ -25,6 +25,7 @@ ExpirySaver.lua
 LoginRecap.lua
 WatchList.lua
 AltCounts.lua
+Dialect.lua
 Tooltip.lua
 Planner.lua
 Merchant.lua

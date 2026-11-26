@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4484,6 +4484,66 @@ PROFAL = table.concat(r, "#")
 """)
 print("profit alert:", L("PROFAL"))
 assert L("PROFAL") == "0#1#0#nil#1:true", L("PROFAL")
+
+# speak in dialect (switch chatDialect): translation, links kept, sending, window, /ff talk and /fft
+lua.execute("""
+local FF, D = FlipForever, FlipForever.Dialect
+local T = function(d, s) return (D:Translate(d, s)) end
+local link = "|cff1eff00|Hitem:2589::::::::|h[Linen Cloth]|h|r"
+DLG = table.concat({
+  T("troll", "Hello my friend, this is the best " .. link .. "!"),
+  T("troll", "Thank you"),
+  T("dwarf", "I don't know, little boy."),
+  T("orc", "Yes, thank you."),
+  T("pirate", "Hello friend, the gold is mine"),
+  T("goblin", "How much for the gold, friend?"),
+  T("troll", ""),
+}, "#")
+local sent = {}
+local oldSend = SendChatMessage
+SendChatMessage = function(msg, kind, lang, target) sent[#sent + 1] = kind .. ":" .. tostring(target) .. ":" .. msg end
+local r = {}
+r[#r + 1] = D:Send("troll", "you are", "GUILD")
+r[#r + 1] = D:Send("dwarf", "hi", "WHISPER")                         -- no target: not sent
+r[#r + 1] = D:Send("dwarf", "hi", "WHISPER", "Bob")
+r[#r + 1] = D:Send("goblin", string.rep("word ", 80), "SAY")          -- 400 letters: two lines
+D:SetCurrent("orc")
+SlashCmdList.FLIPFOREVER("talk dwarf yes please")                     -- sets dwarf, sends in Say
+SLASH_RES = D:Current()
+SlashCmdList.FLIPFOREVERTALK("hello there")
+local w = D:Open()
+r[#r + 1] = tostring(w ~= nil and w:IsShown())
+FlipForeverDB.settings.chatDialect = false
+SlashCmdList.FLIPFOREVER("talk troll hey")                             -- off: falls through to help, nothing sent
+FlipForeverDB.settings.chatDialect = nil
+SendChatMessage = oldSend
+ChatFrame1 = ChatFrame1 or CreateFrame("Frame")
+local b = D:UpdateChatButton()
+r[#r + 1] = tostring(b ~= nil and b:IsShown())
+FlipForeverDB.settings.dialectChatButton = false
+D:UpdateChatButton()
+r[#r + 1] = tostring(b:IsShown())
+FlipForeverDB.settings.dialectChatButton = nil
+D:UpdateChatButton()
+r[#r + 1] = SLASH_RES
+DLS = table.concat(r, "#") .. "|" .. table.concat(sent, "/")
+""")
+print("dialect:", L("DLG"))
+print("dialect send:", L("DLS")[:300])
+_dl = L("DLG").split("#")
+assert _dl[0] == "Hey dere me mon, dis be da best |cff1eff00|Hitem:2589::::::::|h[Linen Cloth]|h|r!", _dl[0]
+assert _dl[1] == "Tanks, mon", _dl[1]
+assert _dl[2] == "I dinnae ken, wee lad.", _dl[2]
+assert _dl[3] == "Zug zug, Aka'magosh.", _dl[3]
+assert _dl[4] == "Arr, ahoy matey, th' doubloons be mine", _dl[4]
+assert _dl[5] == "What's it gonna cost me for the moolah, pal?", _dl[5]
+assert _dl[6] == "", _dl
+_dr, _ds = L("DLS").split("|", 1)
+assert _dr == "1#0#1#2#true#true#false#dwarf", _dr
+_dsl = _ds.split("/")
+assert _dsl[0] == "GUILD:nil:ya be, mon" and _dsl[1] == "WHISPER:Bob:Well met", _dsl
+assert len(_dsl[2]) <= 4 + 4 + 255 and _dsl[4] == "SAY:nil:aye please" and not _dsl[3].endswith(" ") and _dsl[5].startswith("SAY:nil:"), _dsl
+assert len(_dsl) == 6, _dsl
 
 # best day to buy (app setting best_day): cheapest weekday over the last 4 weeks
 import time  # noqa: E402
