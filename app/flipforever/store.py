@@ -136,7 +136,8 @@ class Settings:
     rising_markets: bool = True   # Dashboard: items whose price went up most in the last 3 days (with sales)
     budget_split: bool = True    # Dashboard: suggested share of the total budget per character (last 14 days)
     item_notes: bool = True     # Deals + Inventory: your own short note per item (also /ff note in game)
-    fees_report: bool = True    # Dashboard: AH cut and lost deposits per week and per item (last 4 weeks)
+    gold_per_hour: bool = True  # Dashboard: gold made per hour played per character (last 24 h and 7 days)
+    fees_report: bool = True   # Dashboard: AH cut and lost deposits per week and per item (last 4 weeks)
     best_day: bool = True       # Deals + price chart: the weekday an item was cheapest over the last 4 weeks
     falling_warning: bool = True # Inventory tab: held items whose price dropped clearly in the last 3 days
     sell_now: bool = True        # Inventory tab: held items whose cheapest listing is well above usual

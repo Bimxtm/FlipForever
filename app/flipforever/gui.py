@@ -1137,6 +1137,15 @@ class App(tk.Tk):
         self.rise_var = tk.StringVar()
         ttk.Label(self.rise_frame, textvariable=self.rise_var, style="Muted.TLabel", wraplength=700,
                   justify="left").pack(anchor="w", pady=(0, 4))
+        # gold per hour (switch gold_per_hour): gold change per hour played, per character
+        self.gph_frame = ttk.Frame(left)
+        ttk.Label(self.gph_frame, text="Gold per hour", style="H.TLabel").pack(anchor="w", pady=(12, 0))
+        self.gph_var = tk.StringVar()
+        ttk.Label(self.gph_frame, textvariable=self.gph_var, style="Muted.TLabel", wraplength=700,
+                  justify="left").pack(anchor="w", pady=(0, 4))
+        frame, self.gph_tree = self._tree(self.gph_frame, ("Character", "Last 24 h", "Played", "Last 7 days", "Played",
+                                                           "Auction sales"), (180, 110, 70, 110, 70, 110), height=4)
+        frame.pack(fill="x")
         # fees report (switch fees_report): AH cut and lost deposits per week and per item
         self.fees_frame = ttk.Frame(left)
         ttk.Label(self.fees_frame, text="Auction fees", style="H.TLabel").pack(anchor="w", pady=(12, 0))
@@ -1240,6 +1249,32 @@ class App(tk.Tk):
         self.rise_frame.pack(fill="x")   # packed last: below the weekly report
         self.rise_var.set("Up most in the last 3 days (good to post or craft now): " + ", ".join(
             f"{r['name']} +{r['trend']:.0%} ({money(r['price'])}, ~{r['vol']:.0f}/day)" for r in rows) + ".")
+
+    def _fill_gold_per_hour(self, realm):
+        """Gold per hour played on the Dashboard (switch gold_per_hour), every character of the realm."""
+        self.gph_frame.pack_forget()
+        if not getattr(self.settings, "gold_per_hour", True) or not realm:
+            return
+        rows = engine.gold_per_hour(self.con, realm)
+        if not rows:
+            return
+        self.gph_frame.pack(fill="x")   # packed last: below the other Dashboard reports
+
+        def rate(v):
+            return "-" if v is None else money(v, True) + "/h"
+
+        def played(secs):
+            h, m = divmod(int(secs) // 60, 60)
+            return f"{h}h {m:02d}m" if h else f"{m}m"
+
+        self.gph_var.set("Your gold change per hour played (everything earned minus everything spent, from login "
+                         "to logout), and the auction sales part of it. Compare characters to see what pays best.")
+        self._fill(self.gph_tree, [
+            ((r["char"], rate(r["day_rate"]), played(r["day_secs"]), rate(r["week_rate"]), played(r["week_secs"]),
+              rate(r["sales_rate"])),
+             (r["char"].lower(), r["day_rate"] or 0, r["day_secs"], r["week_rate"] or 0, r["week_secs"], r["sales_rate"] or 0),
+             "deal" if (r["week_rate"] or 0) > 0 else "bad" if (r["week_rate"] or 0) < 0 else None)
+            for r in rows])
 
     def _fill_fees(self, realm, char):
         """Auction fees on the Dashboard (switch fees_report), for the shown character (or all)."""
@@ -1764,6 +1799,8 @@ class App(tk.Tk):
             hint="Dashboard, Profit per character: how to share the same total budget by each character's flip profit over 14 days (Apply sets it)")
         add("Item notes", "item_notes", "bool",
             hint="Deals and Inventory: your own short note per item (Edit note button, or /ff note in game); notes sync with the game")
+        add("Gold per hour", "gold_per_hour", "bool",
+            hint="Dashboard: gold made per hour played on each character (last 24 hours and 7 days) and how much of it came from auction sales")
         add("Auction fees report", "fees_report", "bool",
             hint="Dashboard: the auction house cut and the deposits lost on expired auctions, per week and per item, over the last 4 weeks")
         add("Profession cooldowns", "prof_cooldowns", "bool",
@@ -2201,6 +2238,7 @@ class App(tk.Tk):
         self._fill_realm_overview()
         self._fill_weekly_report()
         self._fill_rising()
+        self._fill_gold_per_hour(realm)
         self._fill_fees(realm, char)
         self._fill_cooldowns()
         self._fill_steps(installed, s)

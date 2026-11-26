@@ -77,6 +77,8 @@ def import_savedvars(con, path: Path) -> dict:
             set_param(con, realm, "chars", known)
         if r.get("notes"):
             merge_notes(con, realm, r.get("notes"))
+        if r.get("sessions"):
+            merge_sessions(con, realm, r.get("sessions"))
         for sc in _as_list(r.get("scans")):
             try:
                 t, src = int(sc["t"]), str(sc.get("src", "full"))
@@ -1267,6 +1269,66 @@ def fees_report(con, realm, ledger: Ledger, char: str | None = None, now=None, w
     items = [dict(r, total=r["cut"] + r["lost"]) for r in per.values()]
     items.sort(key=lambda r: (-r["total"], r["name"]))
     return {"weeks": wk, "items": items[:top], "cut": sum(w["cut"] for w in wk), "lost": sum(w["lost"] for w in wk)}
+
+
+def merge_sessions(con, realm, incoming, now=None, keep_days=60) -> int:
+    """Play sessions from the addon ({c, s, e, m0, m1}: character, login, logout, gold at both ends),
+    kept per realm in params["sessions"] by character and login time. Returns how many were new."""
+    now = int(now or time.time())
+    known = get_param(con, realm, "sessions", {}) or {}
+    new = 0
+    for s in _as_list(incoming):
+        if not isinstance(s, dict):
+            continue
+        try:
+            c, st, en = str(s["c"]), int(s["s"]), int(s["e"])
+            m0, m1 = int(s.get("m0") or 0), int(s.get("m1") or 0)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if en <= st:
+            continue
+        key = f"{c}|{st}"
+        if key not in known:
+            new += 1
+        known[key] = [c, st, en, m0, m1]
+    known = {k: v for k, v in known.items() if v[2] >= now - keep_days * DAY}
+    set_param(con, realm, "sessions", known)
+    return new
+
+
+def gold_per_hour(con, realm, now=None) -> list[dict]:
+    """Gold per hour played, per character: the gold change over its play sessions (all income minus
+    spending) in the last 24 hours and the last 7 days, and its auction sales income (after the cut)
+    in those 7 days. A session counts in the window its logout falls in. Best week first."""
+    now = int(now or time.time())
+    rows: dict = {}
+    for c, st, en, m0, m1 in (get_param(con, realm, "sessions", {}) or {}).values():
+        r = rows.setdefault(c, {"char": c, "day_secs": 0, "day_gold": 0, "week_secs": 0, "week_gold": 0, "week_sales": 0})
+        if en > now - 7 * DAY and en <= now:
+            r["week_secs"] += en - st
+            r["week_gold"] += m1 - m0
+            if en > now - DAY:
+                r["day_secs"] += en - st
+                r["day_gold"] += m1 - m0
+    for c, income in con.execute("SELECT char, SUM(COALESCE(gross,0) - COALESCE(cut,0)) FROM events "
+                                 "WHERE realm=? AND e='invoice' AND t>? AND t<=? GROUP BY char",
+                                 (realm, now - 7 * DAY, now)):
+        if c in rows:
+            rows[c]["week_sales"] = int(income or 0)
+
+    def per_hour(gold, secs):
+        return round(gold * 3600 / secs) if secs >= 600 else None
+
+    out = []
+    for r in rows.values():
+        if not r["week_secs"]:
+            continue
+        r["day_rate"] = per_hour(r["day_gold"], r["day_secs"])
+        r["week_rate"] = per_hour(r["week_gold"], r["week_secs"])
+        r["sales_rate"] = per_hour(r["week_sales"], r["week_secs"])
+        out.append(r)
+    out.sort(key=lambda r: (-(r["week_rate"] if r["week_rate"] is not None else -10**12), r["char"].lower()))
+    return out
 
 
 def _gold(copper):

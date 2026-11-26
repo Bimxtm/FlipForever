@@ -23,6 +23,7 @@ Restock.lua
 EnemyAlert.lua
 ExpirySaver.lua
 LoginRecap.lua
+Sessions.lua
 WatchList.lua
 AltCounts.lua
 Dialect.lua

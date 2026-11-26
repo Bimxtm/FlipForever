@@ -4392,6 +4392,40 @@ assert _engine.merge_notes(_nc, "R", {5: {"text": "older", "t": 50}, 6: {"text":
 assert _engine.notes_text(_nc, "R") == {5: "buy under 2g", 6: "game note"}
 assert _engine.merge_notes(_nc, "R", {5: {"text": "", "t": 200}}) == 1   # removed in game
 assert _engine.notes_text(_nc, "R") == {6: "game note"} and list(_engine.all_notes(_nc)) == ["R"]
+# gold per hour (app setting gold_per_hour): play sessions from the addon, gold change per hour played
+lua.execute("""
+local FF, S = FlipForever, FlipForever.Sessions
+local oldMoney = GetMoney
+local m = 1000
+GetMoney = function() return m end
+FF:DB().sessions = nil
+S:Start(10000); m = 51000
+local a = S:Stop(10000 + 3600)                 -- one hour, +4g
+S:Start(20000)
+local b = S:Stop(20000 + 60)                   -- a quick relog: not kept
+S:Stop(30000)                                  -- not started: nothing
+GetMoney = oldMoney
+local list = FF:DB().sessions
+SESS = #list .. "#" .. a.c .. "#" .. (a.m1 - a.m0) .. "#" .. (a.e - a.s) .. "#" .. tostring(b)
+""")
+print("sessions:", L("SESS"))
+assert L("SESS").split("#")[0] == "1" and L("SESS").split("#")[2:] == ["50000", "3600", "nil"], L("SESS")
+_gc = _sqlite3.connect(":memory:")
+_gc.executescript(_store.SCHEMA)
+_now = 2_000_000
+_ses = [{"c": "A", "s": _now - 3 * 3600, "e": _now - 2 * 3600, "m0": 0, "m1": 100000},        # today: +10g in 1 h
+        {"c": "A", "s": _now - 3 * 86400, "e": _now - 3 * 86400 + 7200, "m0": 0, "m1": -20000},  # week: -2g in 2 h
+        {"c": "B", "s": _now - 600, "e": _now - 300, "m0": 0, "m1": 5000},                       # 5 min: too short for a rate
+        {"c": "C", "s": _now - 20 * 86400, "e": _now - 20 * 86400 + 3600, "m0": 0, "m1": 1},     # older than a week
+        {"c": "D", "s": 5, "e": 4}, "junk"]
+assert _engine.merge_sessions(_gc, "R", _ses, now=_now) == 4
+assert _engine.merge_sessions(_gc, "R", _ses[:2], now=_now) == 0           # same sessions again: not doubled
+_gc.execute("INSERT INTO events VALUES ('u1','R',?, 'invoice', 1, 'Item', 1, 0, 0, 33000, 3000, 0, 'A')", (_now - 3600,))
+_gph = _engine.gold_per_hour(_gc, "R", now=_now)
+print("gold per hour:", _gph)
+assert [r["char"] for r in _gph] == ["A", "B"], _gph
+assert (_gph[0]["day_rate"], _gph[0]["week_rate"], _gph[0]["sales_rate"], _gph[0]["week_secs"]) == (100000, 26667, 10000, 10800), _gph[0]
+assert _gph[1]["week_rate"] is None and _gph[1]["day_secs"] == 300, _gph[1]
 # budget split across characters (app setting budget_split): half even, half by 14-day flip profit
 _bs = _engine.budget_split([{"char": "A", "profit14": 30000}, {"char": "B", "profit14": 10000}, {"char": "C", "profit14": -5000}],
                            {"A": 500, "B": 500, "C": 500})
