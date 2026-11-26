@@ -672,7 +672,7 @@ FF.HELP = {
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },
-  { "Chat", "log (messages kept by quiet chat on RP realms) | chattab (a FlipForever chat tab) | talk [troll|orc|dwarf|goblin|pirate|forsaken|tauren|nightelf|draenei] [text] (speak in dialect; /fft <text> sends in your dialect)" },
+  { "Chat", "log (messages kept by quiet chat on RP realms) | chattab (a FlipForever chat tab) | talk [troll|orc|dwarf|goblin|pirate|forsaken|tauren|nightelf] [text] (speak in dialect; /fft <text> sends in your dialect)" },
 }
 function FF:Help()
   FF:Print(FF:T("Commands (type /ff and the word):"))

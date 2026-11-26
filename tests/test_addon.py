@@ -4679,13 +4679,13 @@ local r = {}
 r[#r + 1] = (D:Translate("forsaken", "hello friend, thank you", "en"))
 r[#r + 1] = (D:Translate("tauren", "goodbye brother", "en"))
 r[#r + 1] = (D:Translate("nightelf", "hallo freund", "de"))
-r[#r + 1] = (D:Translate("draenei", "merci", "fr"))
+r[#r + 1] = (D:Translate("tauren", "merci", "fr"))
 D:SetCurrent("tauren")
 r[#r + 1] = D:Current()
 FlipForeverDB.settings.dialectVoices = false
 r[#r + 1] = D:Current()                         -- tauren not available: falls back
-D:SetCurrent("draenei")
-r[#r + 1] = tostring(D:Available("draenei"))
+D:SetCurrent("nightelf")
+r[#r + 1] = tostring(D:Available("nightelf")) .. "," .. tostring(D:Available("draenei"))
 FlipForeverDB.settings.dialectVoices = nil
 local sent = {}
 local oldSend = SendChatMessage
@@ -4707,8 +4707,8 @@ _dv = _dv.split("#")
 assert _dv[0] == "Greetings, mortal fellow Forsaken, my thanks, such as they are", _dv[0]
 assert _dv[1] == "Walk with the Earth Mother brother", _dv[1]
 assert _dv[2] == "Ishnu-alah Gefährte", _dv[2]
-assert _dv[3] == "Bénédictions sur vous", _dv[3]
-assert _dv[4:] == ["tauren", "troll", "false", "forsaken", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER,EMOTE", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER", "1"], _dv
+assert _dv[3] == "La Terre-Mère te remercie", _dv[3]
+assert _dv[4:] == ["tauren", "troll", "false,false", "forsaken", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER,EMOTE", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER", "1"], _dv
 assert _dvs == "SAY:Indeed/EMOTE:waves Greetings, mortal", _dvs
 print("dialect autocorrect:", L("DFIX"))
 _df = L("DFIX").split("#")

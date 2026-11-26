@@ -225,7 +225,7 @@ add("pt", "Português", {
   },
 })
 
--- The extra voices (switch dialectVoices): Forsaken, Tauren, Night Elf, Draenei in every language
+-- The extra voices (switch dialectVoices): Forsaken, Tauren, Night Elf in every language
 local EXTRA = {
   de = {
     forsaken = { hallo = "Sei gegrüßt, Sterblicher", hi = "Sei gegrüßt", freund = "Mitverlassener",
@@ -237,9 +237,6 @@ local EXTRA = {
     nightelf = { hallo = "Ishnu-alah", hi = "Ishnu-alah", ["tschüss"] = "Elune-adore", freund = "Gefährte",
       ja = "Gewiss", nein = "Wohl kaum", danke = "Elune sei gepriesen", mond = "Elunes Licht",
       nacht = "Sternennacht", wald = "uralter Wald", schnell = "flink", gut = "anmutig" },
-    draenei = { hallo = "Archenon poros", hi = "Viel Glück", ["tschüss"] = "Möge das Licht dich umarmen",
-      ja = "Natürlich", nein = "Leider nein", danke = "Segen über dich", licht = "Licht der Naaru",
-      gut = "gesegnet", ["dämon"] = "Eredar", ["dämonen"] = "Brennende Legion", kristall = "heiliger Kristall" },
   },
   fr = {
     forsaken = { bonjour = "Salutations, mortel", salut = "Salutations", ami = "compagnon réprouvé",
@@ -252,9 +249,6 @@ local EXTRA = {
     nightelf = { bonjour = "Ishnu-alah", salut = "Ishnu-alah", adieu = "Elune-adore", ami = "compagnon",
       oui = "Certes", non = "Je ne crois pas", merci = "Loué soit Élune", lune = "lumière d'Élune",
       nuit = "nuit étoilée", ["forêt"] = "forêt ancestrale", rapide = "vif", bon = "gracieux" },
-    draenei = { bonjour = "Archenon poros", salut = "Bonne fortune", adieu = "Que la Lumière vous étreigne",
-      oui = "Bien sûr", non = "Hélas non", merci = "Bénédictions sur vous", ["lumière"] = "Lumière des naaru",
-      bon = "béni", ["démon"] = "érédar", ["démons"] = "Légion ardente", cristal = "cristal sacré" },
   },
   es = {
     forsaken = { hola = "Saludos, mortal", amigo = "compañero renegado", vida = "no-vida",
@@ -267,9 +261,6 @@ local EXTRA = {
     nightelf = { hola = "Ishnu-alah", ["adiós"] = "Elune-adore", adios = "Elune-adore", amigo = "compañero",
       ["sí"] = "Desde luego", no = "Creo que no", gracias = "Alabada sea Elune", luna = "luz de Elune",
       noche = "noche estrellada", bosque = "bosque ancestral", bueno = "grácil" },
-    draenei = { hola = "Archenon poros", ["adiós"] = "Que la Luz te abrace", adios = "Que la Luz te abrace",
-      ["sí"] = "Por supuesto", no = "Me temo que no", gracias = "Bendiciones", luz = "Luz de los naaru",
-      bueno = "bendito", demonio = "eredar", demonios = "Legión Ardiente", cristal = "cristal sagrado" },
   },
   it = {
     forsaken = { ciao = "Salute, mortale", amico = "compagno reietto", vita = "non-vita", morto = "morto davvero",
@@ -281,9 +272,6 @@ local EXTRA = {
     nightelf = { ciao = "Ishnu-alah", arrivederci = "Elune-adore", amico = "compagno", ["sì"] = "Certamente",
       no = "Non credo", grazie = "Sia lodata Elune", luna = "luce di Elune", notte = "notte stellata",
       foresta = "foresta antica", buono = "aggraziato" },
-    draenei = { ciao = "Archenon poros", arrivederci = "Che la Luce ti abbracci", ["sì"] = "Ma certo",
-      no = "Temo di no", grazie = "Benedizioni su di te", luce = "Luce dei Naaru", buono = "benedetto",
-      demone = "eredar", demoni = "Legione Infuocata", cristallo = "cristallo sacro" },
   },
   pt = {
     forsaken = { ["olá"] = "Saudações, mortal", oi = "Saudações", amigo = "companheiro renegado",
@@ -296,9 +284,6 @@ local EXTRA = {
     nightelf = { ["olá"] = "Ishnu-alah", oi = "Ishnu-alah", tchau = "Elune-adore", amigo = "companheiro",
       sim = "Certamente", ["não"] = "Creio que não", obrigado = "Louvada seja Eluna", lua = "luz de Eluna",
       noite = "noite estrelada", floresta = "floresta ancestral", bom = "gracioso" },
-    draenei = { ["olá"] = "Archenon poros", oi = "Boa sorte", tchau = "Que a Luz o abrace", sim = "Claro",
-      ["não"] = "Receio que não", obrigado = "Bênçãos sobre você", luz = "Luz dos Naaru", bom = "abençoado",
-      ["demônio"] = "eredar", ["demônios"] = "Legião Ardente", cristal = "cristal sagrado" },
   },
 }
 for code, voices in pairs(EXTRA) do

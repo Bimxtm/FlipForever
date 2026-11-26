@@ -52,12 +52,12 @@ D.WORDS = {
   },
 }
 
--- More voices (switch dialectVoices): Forsaken, Tauren, Night Elf, Draenei
-D.EXTRA = { "forsaken", "tauren", "nightelf", "draenei" }
-D.NAMES.forsaken, D.NAMES.tauren, D.NAMES.nightelf, D.NAMES.draenei = "Forsaken", "Tauren", "Night Elf", "Draenei"
-D.RACE.Scourge, D.RACE.Undead, D.RACE.Tauren, D.RACE.HighmountainTauren = "forsaken", "forsaken", "tauren", "tauren"
-D.RACE.NightElf, D.RACE.Nightborne, D.RACE.Draenei, D.RACE.LightforgedDraenei = "nightelf", "nightelf", "draenei", "draenei"
-D.IS_EXTRA = { forsaken = true, tauren = true, nightelf = true, draenei = true }
+-- More voices (switch dialectVoices): Forsaken, Tauren, Night Elf (races of the original game)
+D.EXTRA = { "forsaken", "tauren", "nightelf" }
+D.NAMES.forsaken, D.NAMES.tauren, D.NAMES.nightelf = "Forsaken", "Tauren", "Night Elf"
+D.RACE.Scourge, D.RACE.Undead, D.RACE.Tauren = "forsaken", "forsaken", "tauren"
+D.RACE.NightElf = "nightelf"
+D.IS_EXTRA = { forsaken = true, tauren = true, nightelf = true }
 D.WORDS.forsaken = {
   hello = "Greetings, mortal", hi = "Hail", friend = "fellow Forsaken", friends = "fellow Forsaken",
   life = "unlife", alive = "undying", dead = "truly dead", die = "rot", food = "flesh", eat = "feast on",
@@ -80,13 +80,6 @@ D.WORDS.nightelf = {
   young = "young one", fast = "swift", quiet = "silent as shadow", good = "graceful", great = "blessed",
   hurry = "have patience",
 }
-D.WORDS.draenei = {
-  hello = "Archenon poros", hi = "Good fortune to you", goodbye = "May the Light embrace you",
-  bye = "Light be with you", yes = "Of course", no = "I am afraid not", thanks = "Blessings upon you",
-  light = "Light of the Naaru", home = "the Exodar", demon = "eredar", demons = "Burning Legion",
-  hope = "hope of the Naaru", good = "blessed", great = "radiant", fight = "cleanse", kill = "purge",
-  crystal = "sacred crystal", magic = "crystal magic",
-}
 
 -- whole phrases, changed before single words
 D.PHRASES = {
@@ -94,7 +87,6 @@ D.PHRASES = {
     { "for the horde", "For the Dark Lady" } },
   tauren = { { "thank you", "the Earth Mother thanks you" }, { "for the horde", "For Thunder Bluff and the Horde" } },
   nightelf = { { "thank you", "Elune be praised" }, { "good night", "Elune guide you through the night" } },
-  draenei = { { "thank you", "the Light bless you" }, { "oh my god", "by the Naaru" } },
   troll = { { "thank you", "tanks, mon" }, { "going to", "gonna" }, { "want to", "wanna" } },
   orc = { { "thank you", "Aka'magosh" }, { "for the horde", "For da Horde" } },
   dwarf = { { "thank you", "thank ye kindly" }, { "going to", "gonnae" }, { "want to", "wantae" } },
@@ -162,22 +154,22 @@ D.TYPOS = {
 function D:AutocorrectOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.dialectAutocorrect ~= false end
 
 -- RP words: lore names and places, written right (and fixed when misspelled) in every language
-local LORE = [[Azeroth Kalimdor Northrend Outland Draenor Pandaria Lordaeron Quel'Thalas Gilneas Zandalar Zandalari
-Thrall Jaina Sylvanas Arthas Illidan Garrosh Varian Anduin Vol'jin Baine Cairne Tyrande Malfurion Khadgar Medivh
-Gul'dan Ner'zhul Kel'thas Kel'Thuzad Zul'jin Rexxar Saurfang Grommash Magni Velen Sargeras Kil'jaeden Archimonde
-Deathwing Ragnaros Onyxia Nefarian Hakkar Elune Naaru A'dal Bwonsamdi Sen'jin Orgrimmar Darnassus Gadgetzan
-Ratchet Everlook Shattrath Dalaran Karazhan Zul'Gurub Stratholme Scholomance Gnomeregan Uldaman Maraudon Ahn'Qiraj
+local LORE = [[Azeroth Kalimdor Northrend Outland Draenor Lordaeron Quel'Thalas Gilneas Zandalari
+Thrall Jaina Sylvanas Arthas Illidan Varian Anduin Vol'jin Baine Cairne Tyrande Malfurion Khadgar Medivh
+Gul'dan Ner'zhul Kael'thas Kel'Thuzad Zul'jin Rexxar Saurfang Grommash Magni Sargeras Kil'jaeden Archimonde
+Deathwing Ragnaros Onyxia Nefarian Hakkar Elune Sen'jin Orgrimmar Darnassus Gadgetzan
+Ratchet Everlook Dalaran Karazhan Zul'Gurub Stratholme Scholomance Gnomeregan Uldaman Maraudon Ahn'Qiraj
 Naxxramas Durotar Mulgore Tirisfal Elwynn Westfall Duskwood Stranglethorn Tanaris Feralas Ashenvale Winterspring
 Silithus Azshara Darkshore Teldrassil Frostmourne Ashbringer Doomhammer Gorehowl Sulfuras Thunderfury Atiesh
-Lok'tar Exodar]]
+Lok'tar]]
 D.LORE = {}
 for name in LORE:gmatch("%S+") do D.LORE[lower(name)] = name end
 for wrong, right in pairs({ orgrimar = "Orgrimmar", orgrimmer = "Orgrimmar", silvanas = "Sylvanas",
   sylvannas = "Sylvanas", sylvanes = "Sylvanas", thral = "Thrall", iliden = "Illidan", illadan = "Illidan",
   ilidan = "Illidan", arthus = "Arthas", azaroth = "Azeroth", azerot = "Azeroth", darnasus = "Darnassus",
-  voljin = "Vol'jin", guldan = "Gul'dan", nerzhul = "Ner'zhul", kelthas = "Kel'thas", kelthuzad = "Kel'Thuzad",
+  voljin = "Vol'jin", guldan = "Gul'dan", nerzhul = "Ner'zhul", kelthas = "Kael'thas", kaelthas = "Kael'thas", ["kel'thas"] = "Kael'thas", kelthuzad = "Kel'Thuzad",
   zuljin = "Zul'jin", kiljaeden = "Kil'jaeden", ahnqiraj = "Ahn'Qiraj", zulgurub = "Zul'Gurub",
-  quelthalas = "Quel'Thalas", senjin = "Sen'jin", naxramas = "Naxxramas", shatrath = "Shattrath",
+  quelthalas = "Quel'Thalas", senjin = "Sen'jin", naxramas = "Naxxramas",
   gadgetzam = "Gadgetzan", stratholm = "Stratholme", loktar = "Lok'tar", karazan = "Karazhan" }) do
   D.LORE[wrong] = right
 end
