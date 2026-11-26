@@ -4660,6 +4660,11 @@ r[#r + 1] = (D:Translate("troll", "thx friend", "en"))
 r[#r + 1] = (D:Correct("ca va tres bien", "fr"))
 r[#r + 1] = (D:Correct("vc nao sabe", "pt"))
 r[#r + 1] = (D:Translate("goblin", "q tal |cff1eff00|Hitem:2589::::::::|h[q]|h|r", "es"))
+r[#r + 1] = (D:Correct("hi there. how are u? fine... ok", "en"))
+r[#r + 1] = (D:Correct("ich habe gold für die gilde. wo ist der händler? über sturmwind", "de"))
+r[#r + 1] = (D:Correct("thrall and silvanas met in orgrimar near booty bay, for the horde", "en"))
+r[#r + 1] = (D:Correct("pour la horde, à hurlevent et lune-d'argent", "fr"))
+r[#r + 1] = (D:Correct("THRALL Thrall", "en"))
 FlipForeverDB.settings.dialectAutocorrect = false
 r[#r + 1] = (D:Translate("orc", "teh", "en"))
 FlipForeverDB.settings.dialectAutocorrect = nil
@@ -4669,14 +4674,19 @@ DFIX = table.concat(r, "#")
 """)
 print("dialect autocorrect:", L("DFIX"))
 _df = L("DFIX").split("#")
-assert _df[0] == "the gold is mine, I don't know you", _df[0]
+assert _df[0] == "The gold is mine, I don't know you", _df[0]
 assert _df[1] == "Don't SELL IT", _df[1]
 assert _df[2] == "Tanks mon", _df[2]
-assert _df[3] == "ça va très bien", _df[3]
-assert _df[4] == "você não sabe", _df[4]
+assert _df[3] == "Ça va très bien", _df[3]
+assert _df[4] == "Você não sabe", _df[4]
 assert "|h[q]|h|r" in _df[5] and not _df[5].startswith("q "), _df[5]
-assert _df[6] == "teh", _df[6]
-assert _df[7] == "true", _df
+assert _df[6] == "Hi there. How are you? Fine... ok", _df[6]
+assert _df[7] == "Ich habe Gold für die Gilde. Wo ist der Händler? Über Sturmwind", _df[7]
+assert _df[8] == "Thrall and Sylvanas met in Orgrimmar near Booty Bay, for the Horde", _df[8]
+assert _df[9] == "Pour la Horde, à Hurlevent et Lune-d'Argent", _df[9]
+assert _df[10] == "THRALL Thrall", _df[10]
+assert _df[11] == "teh", _df[11]
+assert _df[12] == "true", _df
 print("dialect languages:", L("DLANG"))
 _dg = L("DLANG").split("#")
 assert _dg[0] == "Hey Mon mei Mon, dat sein gut", _dg[0]
@@ -4699,8 +4709,8 @@ assert _dl[6] == "", _dl
 _dr, _ds = L("DLS").split("|", 1)
 assert _dr == "1#0#1#2#true#true#false#dwarf", _dr
 _dsl = _ds.split("/")
-assert _dsl[0] == "GUILD:nil:ya be, mon" and _dsl[1] == "WHISPER:Bob:Well met", _dsl
-assert len(_dsl[2]) <= 4 + 4 + 255 and _dsl[4] == "SAY:nil:aye please" and not _dsl[3].endswith(" ") and _dsl[5].startswith("SAY:nil:"), _dsl
+assert _dsl[0] == "GUILD:nil:Ya be, mon" and _dsl[1] == "WHISPER:Bob:Well met", _dsl
+assert len(_dsl[2]) <= 4 + 4 + 255 and _dsl[4] == "SAY:nil:Aye please" and not _dsl[3].endswith(" ") and _dsl[5].startswith("SAY:nil:"), _dsl
 assert len(_dsl) == 6, _dsl
 
 # best day to buy (app setting best_day): cheapest weekday over the last 4 weeks

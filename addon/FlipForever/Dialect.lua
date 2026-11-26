@@ -114,17 +114,114 @@ D.TYPOS = {
 
 function D:AutocorrectOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.dialectAutocorrect ~= false end
 
+-- RP words: lore names and places, written right (and fixed when misspelled) in every language
+local LORE = [[Azeroth Kalimdor Northrend Outland Draenor Pandaria Lordaeron Quel'Thalas Gilneas Zandalar Zandalari
+Thrall Jaina Sylvanas Arthas Illidan Garrosh Varian Anduin Vol'jin Baine Cairne Tyrande Malfurion Khadgar Medivh
+Gul'dan Ner'zhul Kel'thas Kel'Thuzad Zul'jin Rexxar Saurfang Grommash Magni Velen Sargeras Kil'jaeden Archimonde
+Deathwing Ragnaros Onyxia Nefarian Hakkar Elune Naaru A'dal Bwonsamdi Sen'jin Orgrimmar Darnassus Gadgetzan
+Ratchet Everlook Shattrath Dalaran Karazhan Zul'Gurub Stratholme Scholomance Gnomeregan Uldaman Maraudon Ahn'Qiraj
+Naxxramas Durotar Mulgore Tirisfal Elwynn Westfall Duskwood Stranglethorn Tanaris Feralas Ashenvale Winterspring
+Silithus Azshara Darkshore Teldrassil Frostmourne Ashbringer Doomhammer Gorehowl Sulfuras Thunderfury Atiesh
+Lok'tar Exodar]]
+D.LORE = {}
+for name in LORE:gmatch("%S+") do D.LORE[lower(name)] = name end
+for wrong, right in pairs({ orgrimar = "Orgrimmar", orgrimmer = "Orgrimmar", silvanas = "Sylvanas",
+  sylvannas = "Sylvanas", sylvanes = "Sylvanas", thral = "Thrall", iliden = "Illidan", illadan = "Illidan",
+  ilidan = "Illidan", arthus = "Arthas", azaroth = "Azeroth", azerot = "Azeroth", darnasus = "Darnassus",
+  voljin = "Vol'jin", guldan = "Gul'dan", nerzhul = "Ner'zhul", kelthas = "Kel'thas", kelthuzad = "Kel'Thuzad",
+  zuljin = "Zul'jin", kiljaeden = "Kil'jaeden", ahnqiraj = "Ahn'Qiraj", zulgurub = "Zul'Gurub",
+  quelthalas = "Quel'Thalas", senjin = "Sen'jin", naxramas = "Naxxramas", shatrath = "Shattrath",
+  gadgetzam = "Gadgetzan", stratholm = "Stratholme", loktar = "Lok'tar", karazan = "Karazhan" }) do
+  D.LORE[wrong] = right
+end
+-- places and factions with their own names per language
+D.LORE_LANG = {
+  en = { stormwind = "Stormwind", ironforge = "Ironforge", undercity = "Undercity", silvermoon = "Silvermoon",
+    stormwnd = "Stormwind", ironforg = "Ironforge", horde = "Horde", alliance = "Alliance" },
+  de = { sturmwind = "Sturmwind", eisenschmiede = "Eisenschmiede", unterstadt = "Unterstadt",
+    silbermond = "Silbermond", donnerfels = "Donnerfels", beutebucht = "Beutebucht", stormwind = "Sturmwind",
+    ironforge = "Eisenschmiede" },
+  fr = { hurlevent = "Hurlevent", forgefer = "Forgefer", fossoyeuse = "Fossoyeuse", horde = "Horde",
+    alliance = "Alliance" },
+  es = { ventormenta = "Ventormenta", forjaz = "Forjaz", ["entrañas"] = "Entrañas", entranas = "Entrañas",
+    lunargenta = "Lunargenta", horda = "Horda", alianza = "Alianza" },
+  it = { roccavento = "Roccavento", forgiardente = "Forgiardente", orda = "Orda", alleanza = "Alleanza" },
+  pt = { ventobravo = "Ventobravo", altaforja = "Altaforja", luaprata = "Luaprata", horda = "Horda",
+    ["aliança"] = "Aliança", alianca = "Aliança" },
+}
+-- names of more than one word (only fixed when typed all in small letters)
+D.LORE_PHRASES = {
+  en = { "Booty Bay", "Thunder Bluff", "Blackrock Mountain", "Molten Core", "Blackwing Lair", "Kul Tiras",
+    "Loch Modan", "Dun Morogh", "Burning Legion", "Scourge" },
+  de = { "Brennende Legion", "Geschmolzener Kern", "Pechschwingenhort", "Kul Tiras", "Loch Modan", "Dun Morogh" },
+  fr = { "Baie-du-Butin", "Pitons-du-Tonnerre", "Lune-d'Argent", "Cœur du Magma", "Légion ardente", "Kul Tiras" },
+  es = { "Bahía del Botín", "Cima del Trueno", "Núcleo de Magma", "Legión Ardiente", "Kul Tiras" },
+  it = { "Baia del Bottino", "Picco del Tuono", "Nucleo Ardente", "Legione Infuocata", "Kul Tiras" },
+  pt = { "Angra do Butim", "Penhasco do Trovão", "Núcleo Derretido", "Legião Ardente", "Kul Tiras", "Cidade Baixa" },
+}
+
+-- German nouns written with a capital letter (common chat and game words; not every noun)
+local DE_NOUNS = [[gold silber kupfer gilde gilden gruppe gruppen raid raids instanz instanzen dungeon dungeons
+auktionshaus händler händlerin bank post briefkasten tasche taschen rüstung waffe waffen schwert schild stab
+bogen ring ringe kette umhang helm handschuhe stiefel gürtel hose brust schultern quest quests aufgabe aufgaben
+stufe level erfahrung beruf berufe kräuter erz erze leder stoff stoffe rezept rezepte tränke elixier zauber
+fähigkeit fähigkeiten talent talente klasse klassen rasse krieger magier priester jäger schurke druide schamane
+hexenmeister paladin heiler tank boss bosse mob mobs gegner feind feinde horde allianz orc orcs troll trolle
+zwerg zwerge gnom gnome mensch menschen elfen tauren untote goblin goblins pirat piraten reittier reittiere
+flugpunkt hauptstadt stadt dorf gasthaus wirt taverne zone gebiet karte server realm handel preis preise angebot
+auktion auktionen gebot gewinn verlust geld münze münzen beute loot item items gegenstand gegenstände freund
+freunde freundin leute mann frau kind kinder bruder schwester vater mutter familie name zeit tag tage woche monat
+jahr stunde stunden minute minuten sekunde nacht abend mittag antwort hilfe problem probleme idee ideen grund
+spaß spieler spielerin glück pech hand hände kopf auge augen herz bier wein wasser met brot fleisch fisch haus
+welt land meer berg wald himmel sonne mond feuer eis sturm frieden ehre blut tod mut kraft ruhm sieg niederlage
+ziel plan sache dinge ding wort worte sprache moment ahnung lust hunger durst arbeit chef meister lehrer
+schamanen ahnen geister geist götter gott loa schicksal legende held helden schlacht]]
+D.DE_NOUNS = {}
+for w in DE_NOUNS:gmatch("%S+") do D.DE_NOUNS[w] = true end
+
+-- one letter (a-z or a two-byte Latin letter such as ä, é, ñ) as a capital
+local function capLetter(ch)
+  if ch:find("^[a-z]$") then return upper(ch) end
+  local b1, b2 = ch:byte(1, 2)
+  if b1 == 195 and b2 and b2 >= 160 and b2 <= 190 and b2 ~= 183 then return string.char(195, b2 - 32) end
+  return ch
+end
+
+local function capFirst(w)
+  local first = w:match("^\195[\128-\191]") or w:sub(1, 1)
+  return capLetter(first) .. w:sub(#first + 1)
+end
+
 function D:Correct(text, lang)
-  local typos = self.TYPOS[lang or self:Lang()] or self.TYPOS.en
+  lang = lang or self:Lang()
+  local typos = self.TYPOS[lang] or self.TYPOS.en
+  local lore = self.LORE_LANG[lang] or self.LORE_LANG.en
   local fixed = 0
-  local s = (text or ""):gsub("[%a\128-\255']+", function(w)
-    local to = typos[lower(w)]
+  local s = text or ""
+  for _, name in ipairs(self.LORE_PHRASES[lang] or {}) do
+    local pat = caseless((name:gsub("[%-%.%+%*%?%^%$%(%)%[%]%%]", "%%%0")))
+    s = s:gsub("%f[%a\128-\255]" .. pat .. "%f[^%a\128-\255]", function(found)
+      if found ~= name and not found:find("[A-Z]") then fixed = fixed + 1 return name end
+    end)
+  end
+  s = s:gsub("[%a\128-\255']+", function(w)
+    local lw = lower(w)
+    local to = typos[lw] or lore[lw] or self.LORE[lw]
+    if not to and lang == "de" and self.DE_NOUNS[lw] and w == lw then to = capFirst(w) end
     if to and to ~= w then
       local out = matchCase(w, to)
       if out ~= w then fixed = fixed + 1 return out end
     end
     return w
   end)
+  -- a capital letter at the start of each sentence (not after "...")
+  local function cap(pre, ch)
+    local up = capLetter(ch)
+    if up ~= ch then fixed = fixed + 1 end
+    return pre .. up
+  end
+  s = s:gsub("^(%s*)([a-z])", cap):gsub("^(%s*)(\195[\160-\190])", cap)
+  s = s:gsub("([^%.][%.!%?]%s+)([a-z])", cap):gsub("([^%.][%.!%?]%s+)(\195[\160-\190])", cap)
   return s, fixed
 end
 
