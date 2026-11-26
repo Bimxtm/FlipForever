@@ -668,7 +668,7 @@ FF.HELP = {
   { "/ff", "open the FlipForever window (or click the gold coin on the minimap)" },
   { "Leveling", "guide (Advisor) | quest (arrow to the next quest spot) | talents | /ffway x y (arrow)" },
   { "Combat helper", "combat | combatkey <KEY> | combatmode | emergencykey <KEY> | fights" },
-  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | goal day|week <gold> (profit goals) | bags <slots> (free bag slots kept while buying) | disenchant (buy items worth more disenchanted) | vendors (vendor items that resell for more) | watch <item> <price> (alert when listed at or below) | watch sell <item> <price> (alert when it sells at or above) | find <item> (which characters hold it) | reset" },
+  { "Auction house", "scan | buy | sell | stop | auto | key <KEY> | reserve <percent> <gold> | goal day|week <gold> (profit goals) | bags <slots> (free bag slots kept while buying) | disenchant (buy items worth more disenchanted) | vendors (vendor items that resell for more) | watch <item> <price> (alert when listed at or below) | watch sell <item> <price> (alert when it sells at or above) | find <item> (which characters hold it) | note <item> <text> (your note in its tooltip) | reset" },
   { "Gathering", "gather" },
   { "Controller", "Key Bindings, FlipForever: combat helper, emergency, arrow (gamepad buttons work too)" },
   { "Reports", "bug <text> | suggest <text> | errors" },

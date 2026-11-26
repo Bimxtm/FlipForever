@@ -75,6 +75,8 @@ def import_savedvars(con, path: Path) -> dict:
                             {"name": str(e.get("name")), "ready": int(e.get("ready") or 0)}
                             for e in vals if isinstance(e, dict) and e.get("name") and e.get("ready")]
             set_param(con, realm, "chars", known)
+        if r.get("notes"):
+            merge_notes(con, realm, r.get("notes"))
         for sc in _as_list(r.get("scans")):
             try:
                 t, src = int(sc["t"]), str(sc.get("src", "full"))
@@ -897,9 +899,63 @@ def build_plan(settings: Settings, deals: list[Deal], model: dict, learned: Lear
 PLANS_PATH = DATA_DIR / "plans.json"
 
 
-def write_plan(settings: Settings, key: str, plan: dict) -> Path:
+# ============================================================== item notes
+# A short personal note per item and realm (switch item_notes / itemNotes in game). Kept in the app as
+# {item id: {"text", "t"}}; an empty text with a time means removed, so a removal syncs too. Notes typed
+# in game come in with the import, the app's notes go to the game with the shopping list file; the newer
+# side wins.
+def realm_notes(con, realm) -> dict:
+    raw = get_param(con, realm, "notes", {}) or {}
+    return {int(k): v for k, v in raw.items() if isinstance(v, dict)}
+
+
+def notes_text(con, realm) -> dict:
+    """{item id: text} of the notes that are set (removed ones left out)."""
+    return {k: str(v.get("text")) for k, v in realm_notes(con, realm).items() if v.get("text")}
+
+
+def set_note(con, realm, item_id: int, text: str, t=None):
+    notes = realm_notes(con, realm)
+    notes[int(item_id)] = {"text": (text or "").strip()[:200], "t": int(t or time.time())}
+    set_param(con, realm, "notes", {str(k): v for k, v in notes.items()})
+
+
+def merge_notes(con, realm, incoming) -> int:
+    """Notes from the game: each one replaces the app's when it is newer. Returns how many changed."""
+    if isinstance(incoming, list):
+        incoming = {i + 1: v for i, v in enumerate(incoming)}
+    if not isinstance(incoming, dict):
+        return 0
+    notes, changed = realm_notes(con, realm), 0
+    for k, v in incoming.items():
+        try:
+            iid = int(k)
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(v, dict):
+            continue
+        t = int(v.get("t") or 0)
+        if iid not in notes or t > int(notes[iid].get("t") or 0):
+            notes[iid] = {"text": str(v.get("text") or "")[:200], "t": t}
+            changed += 1
+    if changed:
+        set_param(con, realm, "notes", {str(k): v for k, v in notes.items()})
+    return changed
+
+
+def all_notes(con) -> dict:
+    """Every realm's notes for the addon: {realm: {item id: {"text", "t"}}}."""
+    out = {}
+    for (realm,) in con.execute("SELECT DISTINCT realm FROM params WHERE key='notes'"):
+        notes = realm_notes(con, realm)
+        if notes:
+            out[realm] = notes
+    return out
+
+
+def write_plan(settings: Settings, key: str, plan: dict, notes: dict | None = None) -> Path:
     """Store this character's plan and write every character's plan into the addon,
-    so each character finds its own list when logged in."""
+    so each character finds its own list when logged in. Item notes from the app ride along."""
     target = settings.addon_path()
     if not target or not target.exists():
         raise FileNotFoundError("The FlipForever addon isn't installed yet (Settings -> Install addon).")
@@ -914,6 +970,8 @@ def write_plan(settings: Settings, key: str, plan: dict) -> Path:
     PLANS_PATH.write_text(json.dumps(plans), encoding="utf-8")
     text = ("-- Written by the FlipForever app (one list per character). Type /reload in game to load it.\n"
             "FlipForever_Plans = " + luaio.to_lua(plans) + "\n")
+    if notes:
+        text += "FlipForever_Notes = " + luaio.to_lua(notes) + "\n"
     out = target / "ShoppingList.lua"
     out.write_text(text, encoding="utf-8")
     return out

@@ -656,6 +656,8 @@ local function build()
     "When an item you hold has been 15% or more cheaper over the last 3 days than over the last 2 weeks, its tooltip says so, so you can sell before it drops further.")
   feature("depositTooltip", "Item tooltips at the auction house: deposit for 12, 24 and 48 hours", true, nil,
     "While the auction house is open, item tooltips show what posting one costs in deposit for each duration: from your own last posting of it, else the game's figure or the usual rate.")
+  feature("itemNotes", "Item notes in tooltips (/ff note <item> <text>)", true, nil,
+    "Your own short note per item on this realm, shown in its tooltip. /ff note <item> <text> sets it, /ff note remove <item> removes it, /ff note lists them. Notes also show in the app's Deals and Inventory tabs and can be edited there.")
   feature("lastSale", "Item tooltips: my last sale (price each and when)", true, nil,
     "From your sale mails on this realm: when you last sold the item and what you got for each one before the auction house cut, so you can tell if today's price is good.")
   feature("ahSummary", "Summary when I close the auction house", true, nil,

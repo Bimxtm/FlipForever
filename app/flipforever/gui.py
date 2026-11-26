@@ -10,7 +10,7 @@ import threading
 import time
 import tkinter as tk
 import traceback
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import sys
 import webbrowser
@@ -1351,6 +1351,8 @@ class App(tk.Tk):
         e.pack(side="left", padx=4)
         self.deal_filter.trace_add("write", lambda *a: self._fill_deals())
         ttk.Button(top, text="Never buy selected", command=self._blacklist_selected).pack(side="right")
+        self.deal_note_btn = ttk.Button(top, text="Edit note", command=lambda: self._edit_note(self.deal_tree))
+        self.deal_note_btn.pack(side="right", padx=(0, 6))
         self.deal_info = tk.StringVar()
         ttk.Label(self.tab_deals, textvariable=self.deal_info, style="Muted.TLabel", wraplength=1100,
                   justify="left").pack(anchor="w", pady=(0, 6))
@@ -1400,6 +1402,7 @@ class App(tk.Tk):
             min_profit = 0
         shown = engine.filter_deals(self.deals, self.only_deals.get(), self.fast_only.get(), min_profit,
                                     self.deal_filter.get())
+        notes = self._notes()
         for d in shown:
             tr = self.trends.get(d.id)
             trend = engine.trend_text(tr)
@@ -1416,7 +1419,8 @@ class App(tk.Tk):
             else:
                 speed = f"~{d.est_days:.1f} d"
             bd = engine.best_day_text(getattr(self, "best_days", {}).get(d.id))
-            reason = "; ".join(x for x in (d.reason, bd) if x)
+            own = notes.get(d.id)
+            reason = "; ".join(x for x in ((f"Your note: {own}" if own else ""), d.reason, bd) if x)
             rows.append(((d.name, money(d.cur), trend, money(d.market), money(d.max_buy), money(d.profit_unit),
                           f"{d.roi:.0%}", vol, speed, f"{d.p_sell:.0%}", d.qty_cap if d.fast else "-",
                           f"{d.confidence:.0%}", reason),
@@ -1435,6 +1439,44 @@ class App(tk.Tk):
                            f"{len(self.deals)} items pass the speed rules (at least {self.settings.min_sales_per_day:g} "
                            f"sales/day, sold within ~{self.settings.hold_days:g} days); red items are never bought. "
                            f"Required margin: {margin:.0%}. Double-click an item for its price history.")
+
+    def _notes(self) -> dict:
+        """Item notes of the shown realm (switch item_notes); empty when off."""
+        on = getattr(self.settings, "item_notes", True)
+        for b in (getattr(self, "deal_note_btn", None), getattr(self, "sell_note_btn", None)):
+            if b is not None:
+                b.configure(state="normal" if on else "disabled")
+        if not on or not getattr(self, "realm", None):
+            return {}
+        return engine.notes_text(self.con, self.realm)
+
+    def _game_notes(self):
+        """Every realm's item notes for the addon (with the shopping list file); none when the switch is off."""
+        return engine.all_notes(self.con) if getattr(self.settings, "item_notes", True) else None
+
+    def _edit_note(self, tree):
+        """Edit note: a short note for the selected item; empty removes it. Reaches the game with the next list."""
+        sel = tree.selection()
+        if not sel or not self.realm:
+            messagebox.showinfo("FlipForever", "Select an item first.")
+            return
+        if tree is self.deal_tree:
+            d = self._deal_ids.get(sel[0])
+            iid, name = (d.id, d.name) if d else (None, None)
+        else:
+            e = getattr(self, "_sell_ids", {}).get(sel[0])
+            iid, name = (e[0], e[1]) if e else (None, None)
+        if iid is None:
+            return
+        cur = engine.notes_text(self.con, self.realm).get(iid, "")
+        text = simpledialog.askstring("Item note", f"Your note for {name} (leave empty to remove):",
+                                      initialvalue=cur, parent=self)
+        if text is None:
+            return
+        engine.set_note(self.con, self.realm, iid, text)
+        self.con.commit()
+        self._fill_deals()
+        self._fill_sell()
 
     def _blacklist_selected(self):
         sel = self.deal_tree.selection()
@@ -1546,11 +1588,14 @@ class App(tk.Tk):
         # CSV export (switch csv_export): trades, inventory and the weekly report for a spreadsheet
         self.csv_button = ttk.Button(hint_row, text="Export to CSV", command=self._export_csv)
         self.csv_button.pack(side="right")
+        self.sell_note_btn = ttk.Button(hint_row, text="Edit note", command=lambda: self._edit_note(self.sell_tree))
+        self.sell_note_btn.pack(side="right", padx=(0, 6))
         self.aging_info = tk.StringVar()
         self.aging_label = ttk.Label(self.tab_sell, textvariable=self.aging_info, wraplength=1000)
         self.aging_label.pack(anchor="w", pady=(0, 6))
-        cols = ("Item", "Holding", "Days held", "Avg cost", "Fair value", "Floor", "Target price", "Unrealized", "Expired in a row")
-        widths = (230, 70, 80, 95, 95, 95, 100, 105, 115)
+        cols = ("Item", "Holding", "Days held", "Avg cost", "Fair value", "Floor", "Target price", "Unrealized", "Expired in a row",
+                "Your note")
+        widths = (230, 70, 80, 95, 95, 95, 100, 105, 115, 200)
         frame, self.sell_tree = self._tree(self.tab_sell, cols, widths)
         frame.pack(fill="both", expand=True)
         self.sell_tree.bind("<Double-1>", lambda e: self._show_held())
@@ -1680,6 +1725,8 @@ class App(tk.Tk):
             hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
         add("Rising markets", "rising_markets", "bool",
             hint="Dashboard: items whose price went up 15% or more in the last 3 days, with real sales, as ideas to post or craft")
+        add("Item notes", "item_notes", "bool",
+            hint="Deals and Inventory: your own short note per item (Edit note button, or /ff note in game); notes sync with the game")
         add("Auction fees report", "fees_report", "bool",
             hint="Dashboard: the auction house cut and the deposits lost on expired auctions, per week and per item, over the last 4 weeks")
         add("Profession cooldowns", "prof_cooldowns", "bool",
@@ -1900,7 +1947,7 @@ class App(tk.Tk):
             plan, spent = engine.build_plan(self.settings, self.deals, self.model, self.learned, self.ledger,
                                             engine.item_names(self.con, self.realm), self.realm, budget)
             plan["ctx"] = engine.planner_context(self.settings, self.learned, self.ledger_all, self.ledger, budget)
-            engine.write_plan(self.settings, key, plan)
+            engine.write_plan(self.settings, key, plan, self._game_notes())
         except Exception:  # noqa: BLE001
             traceback.print_exc()
             return
@@ -1952,7 +1999,7 @@ class App(tk.Tk):
                                         engine.item_names(self.con, self.realm), self.realm, budget)
         plan["ctx"] = engine.planner_context(self.settings, self.learned, self.ledger_all, self.ledger, budget)
         try:
-            out = engine.write_plan(self.settings, key, plan)
+            out = engine.write_plan(self.settings, key, plan, self._game_notes())
         except Exception as e:  # noqa: BLE001
             messagebox.showerror("FlipForever", str(e))
             return
@@ -2168,6 +2215,7 @@ class App(tk.Tk):
         hot = engine.sell_now(self.ledger, self.model) if getattr(self.settings, "sell_now", True) else {}
         # falling price warning (switch falling_warning): held items whose price dropped lately
         falling = engine.falling_prices(self.ledger, self.model) if getattr(self.settings, "falling_warning", True) else {}
+        notes = self._notes()
         for iid, led in self.ledger.items.items():
             if led.held <= 0:
                 continue
@@ -2184,9 +2232,11 @@ class App(tk.Tk):
             name = led.name + (f"  - SELL NOW (+{hot[iid]:.0%})" if iid in hot else "")
             if iid in falling and iid not in hot:
                 name += f"  - price falling ({falling[iid]:.0%} in 3 days)"
+            note = notes.get(iid, "")
             rows.append(((name, led.held, f"{age:.1f}" + (" (slow!)" if slow else ""), money(cost), money(fair),
-                          money(floor), money(target), money(unreal, True), led.last_expired_streak),
-                         (led.name.lower(), led.held, age, cost, fair, floor, target, unreal, led.last_expired_streak),
+                          money(floor), money(target), money(unreal, True), led.last_expired_streak, note),
+                         (led.name.lower(), led.held, age, cost, fair, floor, target, unreal, led.last_expired_streak,
+                          note.lower()),
                          "deal" if iid in hot else ("bad" if unreal < 0 or slow or iid in falling else None)))
             held.append((iid, led.name, cost, floor, fair))
         self._fill(self.sell_tree, rows)

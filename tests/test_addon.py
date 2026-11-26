@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,itemNotes=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4356,6 +4356,42 @@ FlipForeverDB.settings.lastSale = nil
 for i = #log, n0 + 1, -1 do log[i] = nil end
 LASTS = table.concat(r, "#")
 """)
+lua.execute("""
+-- item notes (switch itemNotes): /ff note sets, tooltip line, app notes newer win, remove, switch off
+local FF, N = FlipForever, FlipForever.Notes
+local store = N:Store()
+FF:DB().names[77001] = "Test Silk"
+FF:DB().names[77003] = "Big Iron Bar"
+local r = {}
+SlashCmdList.FLIPFOREVER("note test silk sells on weekends")
+r[#r + 1] = tostring(N:Get(77001))
+SlashCmdList.FLIPFOREVER("note |cffffffff|Hitem:77003::::|h[Big Iron Bar]|h|r keep 20")
+r[#r + 1] = tostring(N:Get(77003))
+local l = FF.Tooltip:Lines(77001)
+local seen = false
+for _, x in ipairs(l) do if x[2] == "sells on weekends" then seen = true end end
+r[#r + 1] = tostring(seen)
+FlipForever_Notes = { [FF:RealmKey()] = { [77001] = { text = "from the app", t = store[77001].t + 10 },
+                                          [77003] = { text = "old app note", t = 1 } } }
+r[#r + 1] = N:Get(77001) .. "|" .. N:Get(77003)
+SlashCmdList.FLIPFOREVER("note remove 77003")
+r[#r + 1] = tostring(N:Get(77003)) .. "|" .. tostring(store[77003].text)
+FlipForeverDB.settings.itemNotes = false
+r[#r + 1] = tostring(N:TooltipLine(77001))
+FlipForeverDB.settings.itemNotes = nil
+FlipForever_Notes = nil
+store[77001], store[77003] = nil, nil
+NOTES = table.concat(r, "#")
+""")
+print("item notes:", L("NOTES"))
+assert L("NOTES") == "sells on weekends#keep 20#true#from the app|keep 20#nil|#nil", L("NOTES")
+_nc = _sqlite3.connect(":memory:")
+_nc.executescript(_store.SCHEMA)
+_engine.set_note(_nc, "R", 5, "buy under 2g", t=100)
+assert _engine.merge_notes(_nc, "R", {5: {"text": "older", "t": 50}, 6: {"text": "game note", "t": 70}}) == 1
+assert _engine.notes_text(_nc, "R") == {5: "buy under 2g", 6: "game note"}
+assert _engine.merge_notes(_nc, "R", {5: {"text": "", "t": 200}}) == 1   # removed in game
+assert _engine.notes_text(_nc, "R") == {6: "game note"} and list(_engine.all_notes(_nc)) == ["R"]
 print("last sale:", L("LASTS"))
 _ls = L("LASTS").split("#")
 assert "each, 2 h ago" in _ls[0] and "x" not in _ls[0].split("each")[1] and "x2, 3 days ago" in _ls[1] and _ls[2] == "nil" and _ls[3] == "nil", _ls

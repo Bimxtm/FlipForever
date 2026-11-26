@@ -104,6 +104,11 @@ function TT:Lines(itemID)
   if okF and trend then
     out[#out + 1] = { FF:T("  |cffff8800price falling|r"), FF:T("-%d%% in 3 days, sell soon"):format(math.floor(-trend * 100 + 0.5)) }
   end
+  -- your own note for it (switch itemNotes)
+  if FF.Notes then
+    local okN, nl = pcall(FF.Notes.TooltipLine, FF.Notes, itemID)
+    if okN and nl then out[#out + 1] = nl end
+  end
   -- your last sale of it on this realm (switch lastSale)
   local okL, sale = pcall(TT.LastSaleLine, TT, itemID)
   if okL and sale then out[#out + 1] = sale end
