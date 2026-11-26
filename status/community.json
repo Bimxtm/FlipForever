@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25",
+ "updated": "2026-11-26",
  "developers": [
   "Alix"
  ],
@@ -407,6 +407,66 @@
    "text": "Rising markets on the Dashboard",
    "status": "shipped",
    "version": "2.7.1-beta.14"
+  },
+  {
+   "r": "idea-20261125173818-4",
+   "text": "Profitable recipe alert: after a scan, the addon names recipes you know that became clearly profitable to craft and sell.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261125173818-3",
+   "text": "Auction fees report in the app: the auction house cut and lost deposits per week and per item.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261125173818-2",
+   "text": "Sell alerts on the watch list: /ff watch sell tells you when an item you hold is listed at or above your price.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261125173818",
+   "text": "Your last sale in item tooltips: when you last sold an item and for how much each.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261125173818-5",
+   "text": "Item notes: a short personal note per item, shown in its tooltip and in the app.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261125173819",
+   "text": "Budget split across characters: the app suggests how to share your flipping gold between your characters.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "20e508da",
+   "text": "Speak in dialect: a chat tool that rewrites what you type in a lore dialect, in six languages, with autocorrect.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261126114509",
+   "text": "More voices for the dialect chat tool (Forsaken, Tauren, Night Elf, Skyborne) and an Emote channel for roleplay.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261126114509-2",
+   "text": "Gold per hour: the app shows how much gold each character makes per hour played, over the last day and week, and how much of it comes from auction sales.",
+   "status": "shipped",
+   "version": "2.7.1-beta.15"
+  },
+  {
+   "r": "idea-20261126114510",
+   "text": "Relist helper: at the auction house, one button reposts every expired auction from the mailbox and bags at today's sell price (never below the floor), so expire",
+   "status": "planned",
+   "version": ""
   }
  ],
  "scores": []

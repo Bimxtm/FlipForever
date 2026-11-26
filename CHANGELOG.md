@@ -2,6 +2,18 @@
 
 All notable changes to FlipForever. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/).
 
+## [2.7.1-beta.15] - 2026-11-26 (beta)
+### Added
+- Speak in dialect: a chat window (/ff talk, /fft, the Dialect button on the Overview or a button next to the chat window) that rewrites what you type as a troll, orc, dwarf, goblin or pirate, with a live preview, the channel to send to and item links kept as they are. Works in English, German, French, Spanish, Italian and Portuguese (the game's language, or picked in the window). Own switches in Settings, Features.
+- Autocorrect in the dialect window: common typos and chat shorthand are fixed, each sentence starts with a capital letter, common German nouns get their capital letter and lore names and places are spelled right, in all six languages. Own switch and a button in the window.
+- More dialect voices: Forsaken, Tauren, Night Elf and Skyborne, in all six languages; characters of those races start with their own voice. Plus an Emote channel so roleplay emotes can use the dialect too. Own switches.
+- Profitable recipe alert: after a scan, the addon names recipes you know that became clearly profitable to craft and sell. Own switch.
+- Sell alerts on the watch list: /ff watch sell <item> <price> tells you during scans and while browsing when an item you hold is listed at or above your price. Own switch.
+- Your last sale in item tooltips: when you last sold an item and for how much each, from your sale mails. Own switch.
+- Item notes: a short note per item (/ff note <item> <text>, or Edit note in the app) shown in its tooltip and on the app's Deals and Inventory tabs; notes sync both ways. Own switches.
+- Auction fees report on the app's Dashboard: the auction house cut and the deposits lost on expired auctions, per week and per item, over the last 4 weeks. Own switch in Settings.
+- Budget split across characters on the app's Dashboard: how to share the same total budget between your characters by their flip profit over 14 days, with an Apply button. Own switch in Settings.
+- Gold per hour on the app's Dashboard: how much gold each character made per hour played over the last 24 hours and 7 days, and how much of it came from auction sales. Own switch in Settings.
 ## [2.7.1-beta.14] - 2026-11-25 (beta)
 ### Added
 - /ff find <item>: lists which of your characters on the realm hold an item, with bags, bank and mail. Own switch in Settings, Features.

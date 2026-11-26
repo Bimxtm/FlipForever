@@ -1,3 +1,17 @@
+# FlipForever 2.7.1 Beta 15
+
+- **Speak in dialect:** type in chat as a troll, orc, dwarf, goblin or pirate, in six languages.
+- **Autocorrect for the dialect tool:** typos, capital letters and lore names fixed as you type.
+- **More voices and emotes:** Forsaken, Tauren, Night Elf and Skyborne voices, plus an Emote channel.
+- **Profitable recipe alert:** recipes you know that became worth crafting after a scan.
+- **Sell alerts:** /ff watch sell tells you when an item you hold sells high.
+- **Your last sale in tooltips:** when you last sold an item and for how much.
+- **Item notes:** your own note per item, in tooltips and in the app.
+- **Auction fees report in the app:** auction house cut and lost deposits per week and per item.
+- **Budget split across characters:** share your flipping gold by how well each character does.
+- **Gold per hour in the app:** gold made per hour played on each character.
+
+Every new feature has its own switch.
 # FlipForever 2.7.1 Beta 14
 
 - **Find an item:** /ff find <item> shows which of your characters hold it.
