@@ -52,8 +52,49 @@ D.WORDS = {
   },
 }
 
+-- More voices (switch dialectVoices): Forsaken, Tauren, Night Elf, Draenei
+D.EXTRA = { "forsaken", "tauren", "nightelf", "draenei" }
+D.NAMES.forsaken, D.NAMES.tauren, D.NAMES.nightelf, D.NAMES.draenei = "Forsaken", "Tauren", "Night Elf", "Draenei"
+D.RACE.Scourge, D.RACE.Undead, D.RACE.Tauren, D.RACE.HighmountainTauren = "forsaken", "forsaken", "tauren", "tauren"
+D.RACE.NightElf, D.RACE.Nightborne, D.RACE.Draenei, D.RACE.LightforgedDraenei = "nightelf", "nightelf", "draenei", "draenei"
+D.IS_EXTRA = { forsaken = true, tauren = true, nightelf = true, draenei = true }
+D.WORDS.forsaken = {
+  hello = "Greetings, mortal", hi = "Hail", friend = "fellow Forsaken", friends = "fellow Forsaken",
+  life = "unlife", alive = "undying", dead = "truly dead", die = "rot", food = "flesh", eat = "feast on",
+  good = "delightfully grim", great = "exquisitely grim", happy = "less miserable", love = "tolerate",
+  yes = "Indeed", no = "Never", thanks = "My gratitude, such as it is", goodbye = "Victory for Sylvanas",
+  bye = "The Dark Lady watches", hope = "despair", warm = "cold", sun = "cursed sun", human = "living one",
+  humans = "the living", wait = "be patient, the dead have time",
+}
+D.WORDS.tauren = {
+  hello = "Peace, friend", hi = "Peace", goodbye = "Walk with the Earth Mother", bye = "Earth Mother guide you",
+  friend = "brother", friends = "the tribe", yes = "It is so", no = "It is not so",
+  thanks = "The Earth Mother thanks you", earth = "Earth Mother", sun = "An'she", moon = "Mu'sha",
+  home = "Mulgore", fight = "defend", kill = "hunt", food = "kodo stew", run = "stampede", old = "ancient",
+  good = "honorable", great = "noble", angry = "restless", wise = "wise as the elders",
+}
+D.WORDS.nightelf = {
+  hello = "Ishnu-alah", hi = "Ishnu-alah", goodbye = "Elune-adore", bye = "Elune-adore", friend = "dear one",
+  yes = "Indeed", no = "I think not", thanks = "Elune be praised", moon = "Elune's light",
+  night = "starlit night", forest = "ancient forest", tree = "ancient", magic = "arcane meddling",
+  young = "young one", fast = "swift", quiet = "silent as shadow", good = "graceful", great = "blessed",
+  hurry = "have patience",
+}
+D.WORDS.draenei = {
+  hello = "Archenon poros", hi = "Good fortune to you", goodbye = "May the Light embrace you",
+  bye = "Light be with you", yes = "Of course", no = "I am afraid not", thanks = "Blessings upon you",
+  light = "Light of the Naaru", home = "the Exodar", demon = "eredar", demons = "Burning Legion",
+  hope = "hope of the Naaru", good = "blessed", great = "radiant", fight = "cleanse", kill = "purge",
+  crystal = "sacred crystal", magic = "crystal magic",
+}
+
 -- whole phrases, changed before single words
 D.PHRASES = {
+  forsaken = { { "thank you", "my thanks, such as they are" }, { "good morning", "another grim morning" },
+    { "for the horde", "For the Dark Lady" } },
+  tauren = { { "thank you", "the Earth Mother thanks you" }, { "for the horde", "For Thunder Bluff and the Horde" } },
+  nightelf = { { "thank you", "Elune be praised" }, { "good night", "Elune guide you through the night" } },
+  draenei = { { "thank you", "the Light bless you" }, { "oh my god", "by the Naaru" } },
   troll = { { "thank you", "tanks, mon" }, { "going to", "gonna" }, { "want to", "wanna" } },
   orc = { { "thank you", "Aka'magosh" }, { "for the horde", "For da Horde" } },
   dwarf = { { "thank you", "thank ye kindly" }, { "going to", "gonnae" }, { "want to", "wantae" } },
@@ -68,6 +109,12 @@ D.WRAP = {
 }
 
 function D:Enabled() return FlipForeverDB ~= nil and FlipForeverDB.settings.chatDialect ~= false end
+function D:VoicesOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.dialectVoices ~= false end
+function D:EmoteOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.dialectEmote ~= false end
+-- a voice that can be picked now (the four extra ones only with their switch on)
+function D:Available(d)
+  return d ~= nil and self.WORDS[d] ~= nil and (not self.IS_EXTRA[d] or self:VoicesOn())
+end
 
 -- ASCII-only case changes: string.lower/upper may follow the system locale and break UTF-8 letters
 local function lower(s) return (s:gsub("[A-Z]", function(c) return string.char(c:byte() + 32) end)) end
@@ -262,11 +309,13 @@ function D:Translate(dialect, text, lang)
   s = s:gsub("{.-}", function(mark) kept[#kept + 1] = mark return "\1" .. #kept .. "\2" end)
   if self:AutocorrectOn() then s = self:Correct(s, lang or self:Lang()) end
   local changed = false
+  -- phrase results are held back so the word pass below doesn't change them again
+  local said = {}
   for _, p in ipairs(phrases[dialect] or {}) do
     s = s:gsub("%f[%a]" .. caseless(p[1]) .. "%f[%A]", function(found)
       changed = true
-      local to = p[2]:gsub("%%", "%%%%")
-      return matchCase(found, to)
+      said[#said + 1] = matchCase(found, p[2])
+      return "\3" .. #said .. "\4"
     end)
   end
   -- words: letters, apostrophes and UTF-8 letters (ä, é, ñ...)
@@ -275,6 +324,7 @@ function D:Translate(dialect, text, lang)
     if to and lower(to) ~= lower(w) then changed = true return matchCase(w, to) end
     return w
   end)
+  s = s:gsub("\3(%d+)\4", function(i) return said[tonumber(i)] end)
   local wrap = wraps[dialect]
   if wrap and s:find("%a") and not lower(s):find(wrap[3]) then
     if wrap[1] then
@@ -294,13 +344,14 @@ end
 function D:Current()
   local store = FF.Advisor and FF.Advisor.CharStore and FF.Advisor:CharStore()
   local d = store and store.dialect
-  if d and self.WORDS[d] then return d end
+  if self:Available(d) then return d end
   local _, race = UnitRace and UnitRace("player")
-  return self.RACE[race or ""] or "troll"
+  local byRace = self.RACE[race or ""]
+  return self:Available(byRace) and byRace or "troll"
 end
 
 function D:SetCurrent(d)
-  if not self.WORDS[d] then return end
+  if not self:Available(d) then return end
   local store = FF.Advisor and FF.Advisor.CharStore and FF.Advisor:CharStore()
   if store then store.dialect = d end
 end
@@ -309,6 +360,15 @@ D.CHANNELS = { "SAY", "YELL", "PARTY", "RAID", "INSTANCE_CHAT", "GUILD", "WHISPE
 D.CHANNEL_NAMES = { SAY = "Say", YELL = "Yell", PARTY = "Party", RAID = "Raid", INSTANCE_CHAT = "Instance",
   GUILD = "Guild", OFFICER = "Officer", WHISPER = "Whisper", EMOTE = "Emote", CHANNEL = "Channel" }
 
+-- channels the window cycles through; Emote (switch dialectEmote) sends roleplay emotes in the dialect
+function D:Channels()
+  if not self:EmoteOn() then return self.CHANNELS end
+  local list = {}
+  for _, k in ipairs(self.CHANNELS) do list[#list + 1] = k end
+  list[#list + 1] = "EMOTE"
+  return list
+end
+
 -- The chat line you were typing in (the channel /fft was typed in), else Say.
 function D:ChatTarget()
   local eb = (ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow())
@@ -316,6 +376,7 @@ function D:ChatTarget()
   local kind = eb and eb.GetAttribute and eb:GetAttribute("chatType")
   if kind == "WHISPER" then return kind, eb:GetAttribute("tellTarget") end
   if kind == "CHANNEL" then return kind, eb:GetAttribute("channelTarget") end
+  if kind == "EMOTE" and not self:EmoteOn() then return "SAY" end
   if kind and self.CHANNEL_NAMES[kind] then return kind end
   return "SAY"
 end
@@ -324,6 +385,10 @@ end
 function D:Send(dialect, text, kind, target)
   local out = self:Translate(dialect, text)
   if not out or not out:find("%S") then return 0 end
+  -- an emote follows your character's name ("Alix waves..."): keep its first letter small
+  if kind == "EMOTE" and (text or ""):match("^%s*[a-z]") then
+    out = out:gsub("^(%s*)([A-Z])", function(sp, c) return sp .. lower(c) end)
+  end
   if (kind == "WHISPER" or kind == "CHANNEL") and not (target and tostring(target) ~= "") then
     FF:Print(FF:T("Pick who to whisper first."))
     return 0
@@ -353,7 +418,9 @@ function D:Refresh()
   local cur = self:Current()
   for d, b in pairs(win.dialectButtons) do
     if d == cur then b:LockHighlight() else b:UnlockHighlight() end
+    if self.IS_EXTRA[d] then if self:VoicesOn() then b:Show() else b:Hide() end end
   end
+  if win.kind == "EMOTE" and not self:EmoteOn() then win.kind = "SAY" end
   local langName = self.LANG_NAMES[self:Lang()] or "English"
   win.lang:SetText(FlipForeverDB.settings.dialectLang and FF:T("Language: %s"):format(langName)
     or FF:T("Language: Auto (%s)"):format(langName))
@@ -366,7 +433,7 @@ function D:Refresh()
 end
 
 local function build()
-  local f = FF:Window("FlipForeverTalk", 440, 230, { pos = "talkPos", default = { "CENTER", 0, 140 } })
+  local f = FF:Window("FlipForeverTalk", 440, 256, { pos = "talkPos", default = { "CENTER", 0, 140 } })
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOPLEFT", 14, -12)
   title:SetText(FF:T("Speak in dialect"))
@@ -395,9 +462,20 @@ local function build()
     f.dialectButtons[d] = b
     prev = b
   end
+  -- second row: the extra voices (shown while their switch is on)
+  prev = nil
+  for _, d in ipairs(D.EXTRA) do
+    local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    b:SetSize(78, 22)
+    if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 14, -64) end
+    b:SetText(FF:T(D.NAMES[d]))
+    b:SetScript("OnClick", function() D:SetCurrent(d) D:Refresh() end)
+    f.dialectButtons[d] = b
+    prev = b
+  end
   local input = CreateFrame("EditBox", "FlipForeverTalkInput", f, "InputBoxTemplate")
   input:SetSize(404, 22)
-  input:SetPoint("TOPLEFT", 20, -74)
+  input:SetPoint("TOPLEFT", 20, -98)
   input:SetAutoFocus(false)
   input:SetMaxLetters(500)
   input:SetScript("OnTextChanged", function() D:Refresh() end)
@@ -405,7 +483,7 @@ local function build()
   input:SetScript("OnEscapePressed", function(self) self:ClearFocus() f:Hide() end)
   f.input = input
   local preview = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  preview:SetPoint("TOPLEFT", 16, -104)
+  preview:SetPoint("TOPLEFT", 16, -128)
   preview:SetWidth(408)
   preview:SetJustifyH("LEFT")
   if preview.SetWordWrap then preview:SetWordWrap(true) end
@@ -415,8 +493,9 @@ local function build()
   channel:SetPoint("BOTTOMLEFT", 14, 14)
   channel:SetScript("OnClick", function()
     local i = 1
-    for n, k in ipairs(D.CHANNELS) do if k == f.kind then i = n end end
-    f.kind = D.CHANNELS[i % #D.CHANNELS + 1]
+    local list = D:Channels()
+    for n, k in ipairs(list) do if k == f.kind then i = n end end
+    f.kind = list[i % #list + 1]
     FlipForeverDB.settings.talkChannel = f.kind
     D:Refresh()
   end)
@@ -526,7 +605,9 @@ FF:On("PLAYER_LOGIN", function() pcall(D.UpdateChatButton, D) end)
 -- /ff talk [dialect] [text]: window (or send right away with text); /fft <text>: send in your dialect
 function D:Command(rest)
   local first, more = (rest or ""):match("^(%S*)%s*(.-)%s*$")
-  local d = self.WORDS[(first or ""):lower()] and first:lower()
+  local name = (first or ""):lower():gsub("[%s_%-]", "")
+  if name == "undead" then name = "forsaken" elseif name == "elf" then name = "nightelf" end
+  local d = self:Available(name) and name or nil
   if d then self:SetCurrent(d) else more = rest or "" end
   if more == "" then return self:Open() end
   local kind, target = self:ChatTarget()

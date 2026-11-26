@@ -686,6 +686,10 @@ local function build()
     "A small speech-bubble button at the top right of the main chat window opens the dialect window. Turn this off to hide the button; /ff talk and /fft still work.")
   feature("dialectAutocorrect", "Speak in dialect: autocorrect typos, capital letters and RP names", true, function() if FF.Dialect then pcall(FF.Dialect.Refresh, FF.Dialect) end end,
     "Before the dialect is applied, in the language you type: common typos (teh, dont, recieve) and shorthand (u, pls, thx) are fixed, each sentence starts with a capital letter, German nouns from a list of common chat and game words get their capital letter, and lore names and places are spelled right (Thrall, Sylvanas, Orgrimmar, Sturmwind, Hurlevent). Also on the Autocorrect button in the dialect window.")
+  feature("dialectVoices", "Speak in dialect: Forsaken, Tauren, Night Elf and Draenei voices", true, function() if FF.Dialect then pcall(FF.Dialect.Refresh, FF.Dialect) end end,
+    "Four more voices in the dialect window (second row of buttons) and for /ff talk forsaken|tauren|nightelf|draenei, in every language of the tool. Characters of those races start with their own voice.")
+  feature("dialectEmote", "Speak in dialect: Emote channel for roleplay emotes", true, function() if FF.Dialect then pcall(FF.Dialect.Refresh, FF.Dialect) end end,
+    "Adds Emote to the channels of the dialect window, so /e style roleplay emotes can be sent in your dialect too. /fft typed in an emote line sends as an emote.")
   feature("craftCostTooltip", "Crafting cost in item tooltips for things I can craft", true, nil,
     "For items one of your professions on this character can make: what the materials cost at scanned prices, next to the auction price. Open the profession window once so its recipes are known.")
   feature("bestPostTime","Show the hours my auctions sell best when posting", true, nil,

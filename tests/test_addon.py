@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,itemNotes=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,dialectAutocorrect=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,itemNotes=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,dialectAutocorrect=true,dialectVoices=true,dialectEmote=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4672,6 +4672,44 @@ local w = D:Open()
 r[#r + 1] = tostring(w.autocorrect ~= nil)
 DFIX = table.concat(r, "#")
 """)
+lua.execute("""
+-- more voices (switch dialectVoices) and the Emote channel (switch dialectEmote)
+local FF, D = FlipForever, FlipForever.Dialect
+local r = {}
+r[#r + 1] = (D:Translate("forsaken", "hello friend, thank you", "en"))
+r[#r + 1] = (D:Translate("tauren", "goodbye brother", "en"))
+r[#r + 1] = (D:Translate("nightelf", "hallo freund", "de"))
+r[#r + 1] = (D:Translate("draenei", "merci", "fr"))
+D:SetCurrent("tauren")
+r[#r + 1] = D:Current()
+FlipForeverDB.settings.dialectVoices = false
+r[#r + 1] = D:Current()                         -- tauren not available: falls back
+D:SetCurrent("draenei")
+r[#r + 1] = tostring(D:Available("draenei"))
+FlipForeverDB.settings.dialectVoices = nil
+local sent = {}
+local oldSend = SendChatMessage
+SendChatMessage = function(msg, kind) sent[#sent + 1] = kind .. ":" .. msg end
+SlashCmdList.FLIPFOREVER("talk undead yes")
+r[#r + 1] = D:Current()
+r[#r + 1] = table.concat(D:Channels(), ",")
+FlipForeverDB.settings.dialectEmote = false
+r[#r + 1] = table.concat(D:Channels(), ",")
+FlipForeverDB.settings.dialectEmote = nil
+r[#r + 1] = tostring(D:Send("forsaken", "waves hello", "EMOTE"))
+SendChatMessage = oldSend
+D:SetCurrent("troll")
+DVOICE = table.concat(r, "#") .. "|" .. table.concat(sent, "/")
+""")
+print("dialect voices:", L("DVOICE"))
+_dv, _dvs = L("DVOICE").split("|", 1)
+_dv = _dv.split("#")
+assert _dv[0] == "Greetings, mortal fellow Forsaken, my thanks, such as they are", _dv[0]
+assert _dv[1] == "Walk with the Earth Mother brother", _dv[1]
+assert _dv[2] == "Ishnu-alah Gefährte", _dv[2]
+assert _dv[3] == "Bénédictions sur vous", _dv[3]
+assert _dv[4:] == ["tauren", "troll", "false", "forsaken", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER,EMOTE", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER", "1"], _dv
+assert _dvs == "SAY:Indeed/EMOTE:waves Greetings, mortal", _dvs
 print("dialect autocorrect:", L("DFIX"))
 _df = L("DFIX").split("#")
 assert _df[0] == "The gold is mine, I don't know you", _df[0]

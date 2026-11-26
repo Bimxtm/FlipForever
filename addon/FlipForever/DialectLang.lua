@@ -224,3 +224,86 @@ add("pt", "Português", {
     pirate = { "Arr, ", nil, "^%W*arr" },
   },
 })
+
+-- The extra voices (switch dialectVoices): Forsaken, Tauren, Night Elf, Draenei in every language
+local EXTRA = {
+  de = {
+    forsaken = { hallo = "Sei gegrüßt, Sterblicher", hi = "Sei gegrüßt", freund = "Mitverlassener",
+      leben = "Unleben", tot = "wahrhaft tot", gut = "herrlich düster", danke = "Mein Dank, so viel er wert ist",
+      ja = "Gewiss", nein = "Niemals", ["tschüss"] = "Sieg für Sylvanas", hoffnung = "Verzweiflung", warm = "kalt" },
+    tauren = { hallo = "Friede, Freund", hi = "Friede", ["tschüss"] = "Wandle mit der Erdmutter", freund = "Bruder",
+      ja = "So sei es", nein = "Dem ist nicht so", danke = "Die Erdmutter dankt dir", erde = "Erdmutter",
+      sonne = "An'she", mond = "Mu'sha", gut = "ehrenhaft", alt = "uralt" },
+    nightelf = { hallo = "Ishnu-alah", hi = "Ishnu-alah", ["tschüss"] = "Elune-adore", freund = "Gefährte",
+      ja = "Gewiss", nein = "Wohl kaum", danke = "Elune sei gepriesen", mond = "Elunes Licht",
+      nacht = "Sternennacht", wald = "uralter Wald", schnell = "flink", gut = "anmutig" },
+    draenei = { hallo = "Archenon poros", hi = "Viel Glück", ["tschüss"] = "Möge das Licht dich umarmen",
+      ja = "Natürlich", nein = "Leider nein", danke = "Segen über dich", licht = "Licht der Naaru",
+      gut = "gesegnet", ["dämon"] = "Eredar", ["dämonen"] = "Brennende Legion", kristall = "heiliger Kristall" },
+  },
+  fr = {
+    forsaken = { bonjour = "Salutations, mortel", salut = "Salutations", ami = "compagnon réprouvé",
+      vie = "non-vie", mort = "vraiment mort", bon = "délicieusement sinistre",
+      merci = "Ma gratitude, pour ce qu'elle vaut", oui = "Certes", non = "Jamais",
+      adieu = "Victoire pour Sylvanas", espoir = "désespoir", chaud = "froid" },
+    tauren = { bonjour = "Paix, ami", salut = "Paix", adieu = "Marche avec la Terre-Mère", ami = "frère",
+      oui = "Ainsi soit-il", non = "Il n'en est rien", merci = "La Terre-Mère te remercie", terre = "Terre-Mère",
+      soleil = "An'she", lune = "Mu'sha", bon = "honorable" },
+    nightelf = { bonjour = "Ishnu-alah", salut = "Ishnu-alah", adieu = "Elune-adore", ami = "compagnon",
+      oui = "Certes", non = "Je ne crois pas", merci = "Loué soit Élune", lune = "lumière d'Élune",
+      nuit = "nuit étoilée", ["forêt"] = "forêt ancestrale", rapide = "vif", bon = "gracieux" },
+    draenei = { bonjour = "Archenon poros", salut = "Bonne fortune", adieu = "Que la Lumière vous étreigne",
+      oui = "Bien sûr", non = "Hélas non", merci = "Bénédictions sur vous", ["lumière"] = "Lumière des naaru",
+      bon = "béni", ["démon"] = "érédar", ["démons"] = "Légion ardente", cristal = "cristal sacré" },
+  },
+  es = {
+    forsaken = { hola = "Saludos, mortal", amigo = "compañero renegado", vida = "no-vida",
+      muerto = "muerto de verdad", bueno = "deliciosamente lúgubre", gracias = "Mi gratitud, lo que valga",
+      ["sí"] = "Ciertamente", no = "Jamás", ["adiós"] = "Victoria para Sylvanas", adios = "Victoria para Sylvanas",
+      esperanza = "desesperación", caliente = "frío" },
+    tauren = { hola = "Paz, amigo", ["adiós"] = "Camina con la Madre Tierra", adios = "Camina con la Madre Tierra",
+      amigo = "hermano", ["sí"] = "Así es", no = "No es así", gracias = "La Madre Tierra te lo agradece",
+      tierra = "Madre Tierra", sol = "An'she", luna = "Mu'sha", bueno = "honorable" },
+    nightelf = { hola = "Ishnu-alah", ["adiós"] = "Elune-adore", adios = "Elune-adore", amigo = "compañero",
+      ["sí"] = "Desde luego", no = "Creo que no", gracias = "Alabada sea Elune", luna = "luz de Elune",
+      noche = "noche estrellada", bosque = "bosque ancestral", bueno = "grácil" },
+    draenei = { hola = "Archenon poros", ["adiós"] = "Que la Luz te abrace", adios = "Que la Luz te abrace",
+      ["sí"] = "Por supuesto", no = "Me temo que no", gracias = "Bendiciones", luz = "Luz de los naaru",
+      bueno = "bendito", demonio = "eredar", demonios = "Legión Ardiente", cristal = "cristal sagrado" },
+  },
+  it = {
+    forsaken = { ciao = "Salute, mortale", amico = "compagno reietto", vita = "non-vita", morto = "morto davvero",
+      buono = "deliziosamente cupo", grazie = "La mia gratitudine, per quel che vale", ["sì"] = "Certo",
+      no = "Mai", arrivederci = "Vittoria per Sylvanas", speranza = "disperazione", caldo = "freddo" },
+    tauren = { ciao = "Pace, amico", arrivederci = "Cammina con la Madre Terra", amico = "fratello",
+      ["sì"] = "Così sia", no = "Non è così", grazie = "La Madre Terra ti ringrazia", terra = "Madre Terra",
+      sole = "An'she", luna = "Mu'sha", buono = "onorevole" },
+    nightelf = { ciao = "Ishnu-alah", arrivederci = "Elune-adore", amico = "compagno", ["sì"] = "Certamente",
+      no = "Non credo", grazie = "Sia lodata Elune", luna = "luce di Elune", notte = "notte stellata",
+      foresta = "foresta antica", buono = "aggraziato" },
+    draenei = { ciao = "Archenon poros", arrivederci = "Che la Luce ti abbracci", ["sì"] = "Ma certo",
+      no = "Temo di no", grazie = "Benedizioni su di te", luce = "Luce dei Naaru", buono = "benedetto",
+      demone = "eredar", demoni = "Legione Infuocata", cristallo = "cristallo sacro" },
+  },
+  pt = {
+    forsaken = { ["olá"] = "Saudações, mortal", oi = "Saudações", amigo = "companheiro renegado",
+      vida = "morte-vida", morto = "morto de verdade", bom = "deliciosamente sombrio",
+      obrigado = "Minha gratidão, pelo que vale", sim = "Certamente", ["não"] = "Jamais",
+      tchau = "Vitória para Sylvanas", ["esperança"] = "desespero", quente = "frio" },
+    tauren = { ["olá"] = "Paz, amigo", oi = "Paz", tchau = "Caminhe com a Mãe Terra", amigo = "irmão",
+      sim = "Assim é", ["não"] = "Não é assim", obrigado = "A Mãe Terra agradece", terra = "Mãe Terra",
+      sol = "An'she", lua = "Mu'sha", bom = "honrado" },
+    nightelf = { ["olá"] = "Ishnu-alah", oi = "Ishnu-alah", tchau = "Elune-adore", amigo = "companheiro",
+      sim = "Certamente", ["não"] = "Creio que não", obrigado = "Louvada seja Eluna", lua = "luz de Eluna",
+      noite = "noite estrelada", floresta = "floresta ancestral", bom = "gracioso" },
+    draenei = { ["olá"] = "Archenon poros", oi = "Boa sorte", tchau = "Que a Luz o abrace", sim = "Claro",
+      ["não"] = "Receio que não", obrigado = "Bênçãos sobre você", luz = "Luz dos Naaru", bom = "abençoado",
+      ["demônio"] = "eredar", ["demônios"] = "Legião Ardente", cristal = "cristal sagrado" },
+  },
+}
+for code, voices in pairs(EXTRA) do
+  local L = D.LANG[code]
+  if L then
+    for d, words in pairs(voices) do L.WORDS[d] = words end
+  end
+end
