@@ -1156,6 +1156,38 @@ def rising_markets(model: dict, names: dict | None = None, n=5, min_trend=0.15, 
     return out[:n]
 
 
+def fees_report(con, realm, ledger: Ledger, char: str | None = None, now=None, weeks=4, top=5) -> dict:
+    """Auction fees: the AH cut taken from sales and the deposits lost on expired auctions, per week
+    (newest first, `weeks` 7-day windows ending now) and per item over that time (most first).
+    {"weeks": [{"start", "cut", "lost"}], "items": [{"name", "cut", "lost", "total"}], "cut", "lost"}."""
+    now = int(now or time.time())
+    since = now - weeks * 7 * DAY
+    wk = [{"start": now - (i + 1) * 7 * DAY, "cut": 0, "lost": 0} for i in range(weeks)]
+    per: dict = {}
+    names = item_names(con, realm)
+
+    def add(t, name, key, amount):
+        if not amount or t is None or t < since or t > now:
+            return
+        wk[min(weeks - 1, int((now - t) // (7 * DAY)))][key] += amount
+        row = per.setdefault(name, {"name": name, "cut": 0, "lost": 0})
+        row[key] += amount
+
+    sql = "SELECT t, id, name, cut FROM events WHERE realm=? AND e='invoice' AND t>=?"
+    args = [realm, since]
+    if char:
+        sql += " AND char=?"
+        args.append(char)
+    for t, iid, name, cut in con.execute(sql, args):
+        add(t, name or names.get(iid) or f"item {iid}", "cut", int(cut or 0))
+    for tr in (ledger.trades if ledger else []):
+        if tr[1] == "Expired" and tr[5]:
+            add(tr[0], tr[2], "lost", -int(tr[5]))
+    items = [dict(r, total=r["cut"] + r["lost"]) for r in per.values()]
+    items.sort(key=lambda r: (-r["total"], r["name"]))
+    return {"weeks": wk, "items": items[:top], "cut": sum(w["cut"] for w in wk), "lost": sum(w["lost"] for w in wk)}
+
+
 def _gold(copper):
     """Copper as gold for spreadsheets (12.3456 = 12g 34s 56c); empty when unknown."""
     return "" if copper is None else f"{copper / 10000:.4f}"

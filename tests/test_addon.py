@@ -4500,6 +4500,22 @@ _bd = _engine.best_days(_bc, "R", now=_bnow + 3600)
 print("best day:", _bd, _engine.best_day_text(_bd.get(7)))
 assert list(_bd) == [7] and _bd[7][0] == 1 and abs(_bd[7][1] - 0.2) < 1e-9
 assert _engine.best_day_text(_bd[7]) == "cheapest on Tuesdays (~20% below usual)"
+# fees report (app setting fees_report): AH cut per week and item, deposits lost on expired auctions
+_bc.row_factory = _sqlite3.Row
+for _u, _t, _e, _id, _q, _p, _dep, _g, _cut, _ch in (
+        ("a", _bnow - 2 * 86400, "post", 7, 1, 1000, 50, None, None, "A"),
+        ("b", _bnow - 1 * 86400, "invoice", 7, 1, None, None, 1000, 50, "A"),
+        ("c", _bnow - 9 * 86400, "post", 8, 1, 500, 200, None, None, "A"),
+        ("d", _bnow - 8 * 86400, "expired", 8, 1, None, None, None, None, "A"),
+        ("e", _bnow - 3 * 86400, "invoice", 7, 1, None, None, 400, 20, "B"),
+        ("f", _bnow - 40 * 86400, "invoice", 7, 1, None, None, 9000, 450, "A")):
+    _bc.execute("INSERT INTO events (uniq, realm, t, e, id, name, q, p, dep, gross, cut, char) VALUES (?,'R',?,?,?,?,?,?,?,?,?,?)",
+                (_u, _t, _e, _id, f"Item{_id}", _q, _p, _dep, _g, _cut, _ch))
+_fr = _engine.fees_report(_bc, "R", _engine.build_ledger(_bc, "R", "A"), "A", now=_bnow)
+print("fees:", _fr["cut"], _fr["lost"], [(w["cut"], w["lost"]) for w in _fr["weeks"]], _fr["items"])
+assert _fr["cut"] == 50 and _fr["lost"] == 200 and [(w["cut"], w["lost"]) for w in _fr["weeks"]] == [(50, 0), (0, 200), (0, 0), (0, 0)]
+assert [(r["name"], r["total"]) for r in _fr["items"]] == [("Item8", 200), ("Item7", 50)], _fr["items"]
+assert _engine.fees_report(_bc, "R", _engine.build_ledger(_bc, "R"), now=_bnow)["cut"] == 70
 print("falling price:", L("FALLN"))
 assert L("FALLN") == "-0.2#nil#nil#-20% in 3 days, sell soon#nil", L("FALLN")
 print("ALL ADDON TESTS PASSED")

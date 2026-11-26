@@ -1131,6 +1131,15 @@ class App(tk.Tk):
         self.rise_var = tk.StringVar()
         ttk.Label(self.rise_frame, textvariable=self.rise_var, style="Muted.TLabel", wraplength=700,
                   justify="left").pack(anchor="w", pady=(0, 4))
+        # fees report (switch fees_report): AH cut and lost deposits per week and per item
+        self.fees_frame = ttk.Frame(left)
+        ttk.Label(self.fees_frame, text="Auction fees", style="H.TLabel").pack(anchor="w", pady=(12, 0))
+        self.fees_var = tk.StringVar()
+        ttk.Label(self.fees_frame, textvariable=self.fees_var, style="Muted.TLabel", wraplength=700,
+                  justify="left").pack(anchor="w", pady=(0, 4))
+        frame, self.fees_tree = self._tree(self.fees_frame, ("Item", "AH cut", "Lost deposits", "Total"),
+                                           (280, 110, 110, 110), height=5)
+        frame.pack(fill="x")
         self.week_frame = ttk.Frame(left)
         ttk.Label(self.week_frame, text="Weekly report", style="H.TLabel").pack(anchor="w", pady=(12, 0))
         self.week_var = tk.StringVar()
@@ -1196,6 +1205,23 @@ class App(tk.Tk):
         self.rise_frame.pack(fill="x")   # packed last: below the weekly report
         self.rise_var.set("Up most in the last 3 days (good to post or craft now): " + ", ".join(
             f"{r['name']} +{r['trend']:.0%} ({money(r['price'])}, ~{r['vol']:.0f}/day)" for r in rows) + ".")
+
+    def _fill_fees(self, realm, char):
+        """Auction fees on the Dashboard (switch fees_report), for the shown character (or all)."""
+        self.fees_frame.pack_forget()
+        if not getattr(self.settings, "fees_report", True) or not realm:
+            return
+        rep = engine.fees_report(self.con, realm, getattr(self, "ledger", None), char)
+        if not (rep["cut"] or rep["lost"]):
+            return
+        self.fees_frame.pack(fill="x")   # packed last: below the other Dashboard reports
+        weeks = "; ".join(f"{money(w['cut'] + w['lost'], True)}" for w in rep["weeks"])
+        self.fees_var.set(f"Last 4 weeks: {money(rep['cut'], True)} auction house cut and {money(rep['lost'], True)} "
+                          f"in deposits lost on expired auctions. Per week, newest first: {weeks}.")
+        self._fill(self.fees_tree, [
+            ((r["name"], money(r["cut"], True), money(r["lost"], True), money(r["total"], True)),
+             (r["name"].lower(), r["cut"], r["lost"], r["total"]), "bad" if r["lost"] > r["cut"] else None)
+            for r in rep["items"]])
 
     def _fill_weekly_report(self):
         """Weekly report on the Dashboard (switch weekly_report), from the shown character's ledger."""
@@ -1654,6 +1680,8 @@ class App(tk.Tk):
             hint="Dashboard: your best and worst flips of the last 7 days, what sold fastest and what to stop buying")
         add("Rising markets", "rising_markets", "bool",
             hint="Dashboard: items whose price went up 15% or more in the last 3 days, with real sales, as ideas to post or craft")
+        add("Auction fees report", "fees_report", "bool",
+            hint="Dashboard: the auction house cut and the deposits lost on expired auctions, per week and per item, over the last 4 weeks")
         add("Profession cooldowns", "prof_cooldowns", "bool",
             hint="Dashboard: when transmutes and other cooldown crafts are ready again on each character")
         add("Aging stock", "aging_stock", "bool",
@@ -2089,6 +2117,7 @@ class App(tk.Tk):
         self._fill_realm_overview()
         self._fill_weekly_report()
         self._fill_rising()
+        self._fill_fees(realm, char)
         self._fill_cooldowns()
         self._fill_steps(installed, s)
         self._fill_deals()
