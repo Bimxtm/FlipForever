@@ -4733,7 +4733,17 @@ r[#r + 1] = table.concat(D:Channels(), ",")
 FlipForeverDB.settings.dialectEmote = nil
 r[#r + 1] = tostring(D:Send("forsaken", "waves hello", "EMOTE"))
 SendChatMessage = oldSend
+-- "Put in chat box": only the text goes to the chat box, with a real chat frame (a boolean broke it in game)
+local opened = {}
+local oldOpen, oldDefault = ChatFrame_OpenChat, DEFAULT_CHAT_FRAME
+DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME or CreateFrame("Frame")
+ChatFrame_OpenChat = function(text, frame) opened[#opened + 1] = tostring(text) .. "~" .. type(frame) end
 D:SetCurrent("troll")
+local w = D:Open("hello")
+w.input.GetText = function() return "hello" end
+w.put.OnClick(w.put)
+ChatFrame_OpenChat, DEFAULT_CHAT_FRAME = oldOpen, oldDefault
+r[#r + 1] = table.concat(opened, ",")
 DVOICE = table.concat(r, "#") .. "|" .. table.concat(sent, "/")
 """)
 print("dialect voices:", L("DVOICE"))
@@ -4744,7 +4754,7 @@ assert _dv[1] == "Walk with the Earth Mother brother", _dv[1]
 assert _dv[2] == "Ishnu-alah Gefährte", _dv[2]
 assert _dv[3] == "La Terre-Mère te remercie", _dv[3]
 assert _dv[4] == "Fair winds wind-sibling, the winds thank you~Die Winde danken dir Windgeschwister", _dv[4]
-assert _dv[5:] == ["tauren", "troll", "false,false", "forsaken", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER,EMOTE", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER", "1"], _dv
+assert _dv[5:] == ["tauren", "troll", "false,false", "forsaken", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER,EMOTE", "SAY,YELL,PARTY,RAID,INSTANCE_CHAT,GUILD,WHISPER", "1", "Hey dere, mon~table"], _dv
 assert _dvs == "SAY:Indeed/EMOTE:waves Greetings, mortal", _dvs
 print("dialect autocorrect:", L("DFIX"))
 _df = L("DFIX").split("#")

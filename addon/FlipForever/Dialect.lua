@@ -435,7 +435,7 @@ function D:Refresh()
   win.channel:SetText(FF:T("Channel: %s"):format(FF:T(self.CHANNEL_NAMES[kind] or kind)))
   if kind == "WHISPER" then win.target:Show() win.targetLabel:Show() else win.target:Hide() win.targetLabel:Hide() end
   local text = win.input.GetText and win.input:GetText() or ""
-  win.preview:SetText(text ~= "" and self:Translate(cur, text) or FF:T("|cff888888Type above - the dialect version shows here.|r"))
+  win.preview:SetText(text ~= "" and (self:Translate(cur, text)) or FF:T("|cff888888Type above - the dialect version shows here.|r"))
 end
 
 local function build()
@@ -525,9 +525,12 @@ local function build()
   put:SetSize(130, 22)
   put:SetPoint("RIGHT", send, "LEFT", -6, 0)
   put:SetText(FF:T("Put in chat box"))
+  f.put = put
   put:SetScript("OnClick", function()
     local text = input:GetText() or ""
-    if text ~= "" and ChatFrame_OpenChat then ChatFrame_OpenChat(D:Translate(D:Current(), text)) end
+    -- only the text: Translate also returns whether anything changed, which OpenChat would take as the chat frame
+    local out = (D:Translate(D:Current(), text))
+    if text ~= "" and ChatFrame_OpenChat then ChatFrame_OpenChat(out, DEFAULT_CHAT_FRAME) end
   end)
   -- autocorrect on/off (the same setting as the switch in Settings, Features)
   local fix = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
