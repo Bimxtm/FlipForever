@@ -682,6 +682,33 @@ end
 
 FF:On("AUCTION_HOUSE_SHOW", function() pcall(P.AddMatsToPlan, P) end)
 
+-- Profitable recipe alert (switch profitAlert): after a scan, name the known recipes that became
+-- profitable to craft since the last scan (same rules as the planner's profit list). The first scan
+-- only remembers the current set, so a character is not flooded with every recipe at once.
+function P:ProfitAlertOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.profitAlert ~= false end
+
+function P:ProfitAlert()
+  if not self:ProfitAlertOn() then return nil end
+  local store = FF.Advisor:CharStore()
+  local before = store.profitAlerted
+  local now, fresh = {}, {}
+  for _, e in ipairs(self:ProfitList()) do
+    now[e.recipe.id] = true
+    if before and not before[e.recipe.id] then fresh[#fresh + 1] = e end
+  end
+  store.profitAlerted = now
+  if #fresh == 0 then return 0 end
+  local parts = {}
+  for i = 1, math.min(3, #fresh) do
+    local e = fresh[i]
+    local name = (e.recipe.out and FF:ItemName(e.recipe.out)) or e.recipe.name or "?"
+    parts[#parts + 1] = ("%s (%s profit each)"):format(name, FF:Money(e.profit))
+  end
+  local more = #fresh > 3 and (FF:T(" and %d more"):format(#fresh - 3)) or ""
+  FF:Print(FF:T("Now profitable to craft: %s%s. See the profession planner's profit mode."):format(table.concat(parts, ", "), more))
+  return #fresh
+end
+
 function P:BuyPending()
   if not self.pendingMats then return end
   local list = self.pendingMats

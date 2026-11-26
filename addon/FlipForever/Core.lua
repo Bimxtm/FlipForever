@@ -825,6 +825,7 @@ function FF:ScanFinished(items)
   if self.Gear and not self.Gear.running then C_Timer.After(2, function() pcall(self.Gear.Search, self.Gear, nil, true) end) end
   -- Beta 4: rebuild the list in game from the new scan - no reload needed
   local live = self.Planner and self.Planner:Rebuild()
+  if self.Professions and self.Professions.ProfitAlert then pcall(self.Professions.ProfitAlert, self.Professions) end
   if live then
     self.needReload = nil
     if self.Alert then

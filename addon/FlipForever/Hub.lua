@@ -661,6 +661,8 @@ local function build()
     "When an item you craft and posted in the last two weeks is gone from the auction house and your bags, the auction house reminds you once a day to craft and post it again.")
   feature("matsList", "Profession planner: add the top recipe's missing materials to my shopping list", true, nil,
     "When you open the auction house, the materials you still need for the planner's top skill-up or profitable craft are added to the shopping list at up to 25% over their scanned price, so they are bought in one go.")
+  feature("profitAlert", "Profession planner: tell me after a scan when a known recipe becomes profitable", true, nil,
+    "After each scan, the chat names the recipes you know that turned profitable to craft since the last scan (same rules as the planner's profit mode: margin and sales per day).")
   feature("craftButton", "Profession planner: Craft button for the top recipe", true, function() if FF.Professions then pcall(FF.Professions.Refresh, FF.Professions) end end,
     "Crafts the planner's top skill-up or profitable recipe the planned number of times (as many as your materials allow), with the profession window open.")
   feature("profCooldowns", "Overview: profession cooldowns of all my characters", true, function() H:Refresh() end,

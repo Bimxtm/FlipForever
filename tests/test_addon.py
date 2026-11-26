@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4458,6 +4458,32 @@ MATSL = table.concat(r, "#")
 """)
 print("mats list:", L("MATSL"))
 assert L("MATSL") == "1#2589,2320m#1:2#0:1", L("MATSL")
+
+# profitable recipe alert (switch profitAlert): only recipes that became profitable since the last scan are named
+lua.execute("""
+local FF, PR = FlipForever, FlipForever.Professions
+local oldList, oldPrint = PR.ProfitList, FF.Print
+local store = FF.Advisor:CharStore()
+local oldSet = store.profitAlerted
+store.profitAlerted = nil
+local said = {}
+FF.Print = function(_, msg) said[#said + 1] = msg end
+local list = { { recipe = { id = 1, out = 2589, name = "A" }, profit = 500 } }
+PR.ProfitList = function() return list end
+local r = { tostring(PR:ProfitAlert()) }                        -- first scan: remembered only
+list = { list[1], { recipe = { id = 2, name = "Bolt" }, profit = 12000 } }
+r[#r + 1] = tostring(PR:ProfitAlert())                          -- recipe 2 is new
+r[#r + 1] = tostring(PR:ProfitAlert())                          -- nothing new
+FlipForeverDB.settings.profitAlert = false
+list = { { recipe = { id = 3, name = "C" }, profit = 1 } }
+r[#r + 1] = tostring(PR:ProfitAlert())                          -- off
+FlipForeverDB.settings.profitAlert = nil
+r[#r + 1] = #said .. ":" .. tostring(said[1] and said[1]:find("Bolt") ~= nil)
+PR.ProfitList, FF.Print, store.profitAlerted = oldList, oldPrint, oldSet
+PROFAL = table.concat(r, "#")
+""")
+print("profit alert:", L("PROFAL"))
+assert L("PROFAL") == "0#1#0#nil#1:true", L("PROFAL")
 
 # best day to buy (app setting best_day): cheapest weekday over the last 4 weeks
 import time  # noqa: E402
