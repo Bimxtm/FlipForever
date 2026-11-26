@@ -84,6 +84,50 @@ local function matchCase(src, word)
   return word
 end
 
+-- Autocorrect (switch dialectAutocorrect): common typos and chat shorthand in the language you type
+-- are fixed first, so the dialect words match and the message reads well.
+D.TYPOS = {
+  en = { teh = "the", hte = "the", adn = "and", taht = "that", waht = "what", jsut = "just", knwo = "know",
+    yuo = "you", wich = "which", thier = "their", becuase = "because", beacuse = "because", recieve = "receive",
+    definately = "definitely", wierd = "weird", alot = "a lot", untill = "until", seperate = "separate",
+    occured = "occurred", tommorow = "tomorrow", tomorow = "tomorrow", freind = "friend", beleive = "believe",
+    dont = "don't", cant = "can't", wont = "won't", didnt = "didn't", doesnt = "doesn't", isnt = "isn't",
+    wasnt = "wasn't", arent = "aren't", couldnt = "couldn't", shouldnt = "shouldn't", wouldnt = "wouldn't",
+    havent = "haven't", im = "I'm", ive = "I've", youre = "you're", theyre = "they're", thats = "that's",
+    whats = "what's", i = "I", u = "you", ur = "your", r = "are", pls = "please", plz = "please",
+    thx = "thanks", ty = "thank you", np = "no problem", idk = "I don't know", btw = "by the way" },
+  de = { nciht = "nicht", nich = "nicht", dsa = "das", udn = "und", ihc = "ich", vieleicht = "vielleicht",
+    garnicht = "gar nicht", wiso = "wieso", warscheinlich = "wahrscheinlich", ["nähmlich"] = "nämlich",
+    ["bitteschön"] = "bitte schön", thx = "danke",
+    pls = "bitte", plz = "bitte", vllt = "vielleicht", evtl = "eventuell", iwie = "irgendwie", ka = "keine Ahnung" },
+  fr = { ca = "ça", tres = "très", deja = "déjà", voila = "voilà", apres = "après", meme = "même",
+    etre = "être", pk = "pourquoi", pq = "pourquoi", stp = "s'il te plaît", svp = "s'il vous plaît",
+    mdr = "haha", jsp = "je sais pas", bcp = "beaucoup", tjrs = "toujours", qd = "quand" },
+  es = { q = "que", xq = "porque", pq = "porque", tmb = "también", tb = "también", aki = "aquí", aqui = "aquí",
+    tambien = "también", despues = "después", asi = "así", ahi = "ahí", pls = "por favor",
+    porfa = "por favor", grax = "gracias", xfa = "por favor" },
+  it = { xke = "perché", ["xché"] = "perché", perche = "perché", cmq = "comunque", nn = "non", ke = "che",
+    pk = "perché", qlc = "qualcosa", tt = "tutto", sn = "sono", gia = "già", piu = "più", pero = "però" },
+  pt = { vc = "você", voce = "você", tb = "também", tbm = "também", nao = "não", entao = "então", q = "que",
+    pq = "porque", obg = "obrigado", vlw = "valeu", blz = "beleza", tmj = "tamo junto", ja = "já" },
+}
+
+function D:AutocorrectOn() return FlipForeverDB ~= nil and FlipForeverDB.settings.dialectAutocorrect ~= false end
+
+function D:Correct(text, lang)
+  local typos = self.TYPOS[lang or self:Lang()] or self.TYPOS.en
+  local fixed = 0
+  local s = (text or ""):gsub("[%a\128-\255']+", function(w)
+    local to = typos[lower(w)]
+    if to and to ~= w then
+      local out = matchCase(w, to)
+      if out ~= w then fixed = fixed + 1 return out end
+    end
+    return w
+  end)
+  return s, fixed
+end
+
 -- Languages (DialectLang.lua adds the others): the one picked in the window, else the game's language.
 -- Without word lists for a language (Russian, Korean, Chinese) the English lists are used.
 D.LANGS = { "en" }
@@ -119,6 +163,7 @@ function D:Translate(dialect, text, lang)
   local s = text:gsub("|c%x+|H.-|h.-|h|r", function(link) kept[#kept + 1] = link return "\1" .. #kept .. "\2" end)
   s = s:gsub("|H.-|h.-|h", function(link) kept[#kept + 1] = link return "\1" .. #kept .. "\2" end)
   s = s:gsub("{.-}", function(mark) kept[#kept + 1] = mark return "\1" .. #kept .. "\2" end)
+  if self:AutocorrectOn() then s = self:Correct(s, lang or self:Lang()) end
   local changed = false
   for _, p in ipairs(phrases[dialect] or {}) do
     s = s:gsub("%f[%a]" .. caseless(p[1]) .. "%f[%A]", function(found)
@@ -215,6 +260,7 @@ function D:Refresh()
   local langName = self.LANG_NAMES[self:Lang()] or "English"
   win.lang:SetText(FlipForeverDB.settings.dialectLang and FF:T("Language: %s"):format(langName)
     or FF:T("Language: Auto (%s)"):format(langName))
+  win.autocorrect:SetText(self:AutocorrectOn() and FF:T("Autocorrect: On") or FF:T("Autocorrect: Off"))
   local kind = win.kind or "SAY"
   win.channel:SetText(FF:T("Channel: %s"):format(FF:T(self.CHANNEL_NAMES[kind] or kind)))
   if kind == "WHISPER" then win.target:Show() win.targetLabel:Show() else win.target:Hide() win.targetLabel:Hide() end
@@ -301,6 +347,15 @@ local function build()
     local text = input:GetText() or ""
     if text ~= "" and ChatFrame_OpenChat then ChatFrame_OpenChat(D:Translate(D:Current(), text)) end
   end)
+  -- autocorrect on/off (the same setting as the switch in Settings, Features)
+  local fix = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+  fix:SetSize(130, 22)
+  fix:SetPoint("BOTTOMRIGHT", -14, 40)
+  fix:SetScript("OnClick", function()
+    FlipForeverDB.settings.dialectAutocorrect = not D:AutocorrectOn()
+    D:Refresh()
+  end)
+  f.autocorrect = fix
   f.kind = FlipForeverDB.settings.talkChannel or "SAY"
   return f
 end

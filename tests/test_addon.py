@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,itemNotes=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,itemNotes=true,lastSale=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,dialectAutocorrect=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4650,6 +4650,33 @@ GetLocale = oldLocale
 r[#r + 1] = #D.LANGS
 DLANG = table.concat(r, "#")
 """)
+lua.execute("""
+-- autocorrect (switch dialectAutocorrect): typos and shorthand fixed before the dialect, per language
+local FF, D = FlipForever, FlipForever.Dialect
+local r = {}
+r[#r + 1] = (D:Correct("teh gold is mine, i dont know u", "en"))
+r[#r + 1] = (D:Correct("Dont SELL IT", "en"))
+r[#r + 1] = (D:Translate("troll", "thx friend", "en"))
+r[#r + 1] = (D:Correct("ca va tres bien", "fr"))
+r[#r + 1] = (D:Correct("vc nao sabe", "pt"))
+r[#r + 1] = (D:Translate("goblin", "q tal |cff1eff00|Hitem:2589::::::::|h[q]|h|r", "es"))
+FlipForeverDB.settings.dialectAutocorrect = false
+r[#r + 1] = (D:Translate("orc", "teh", "en"))
+FlipForeverDB.settings.dialectAutocorrect = nil
+local w = D:Open()
+r[#r + 1] = tostring(w.autocorrect ~= nil)
+DFIX = table.concat(r, "#")
+""")
+print("dialect autocorrect:", L("DFIX"))
+_df = L("DFIX").split("#")
+assert _df[0] == "the gold is mine, I don't know you", _df[0]
+assert _df[1] == "Don't SELL IT", _df[1]
+assert _df[2] == "Tanks mon", _df[2]
+assert _df[3] == "ça va très bien", _df[3]
+assert _df[4] == "você não sabe", _df[4]
+assert "|h[q]|h|r" in _df[5] and not _df[5].startswith("q "), _df[5]
+assert _df[6] == "teh", _df[6]
+assert _df[7] == "true", _df
 print("dialect languages:", L("DLANG"))
 _dg = L("DLANG").split("#")
 assert _dg[0] == "Hey Mon mei Mon, dat sein gut", _dg[0]

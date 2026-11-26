@@ -684,6 +684,8 @@ local function build()
     "Open it with the Dialect button on the Overview, /ff talk or /fft. Type, see the dialect version, pick the channel and send. /fft <text> sends straight away in your character's dialect, in the chat channel you are typing in. Works in English, German, French, Spanish, Italian and Portuguese (the game's language, or pick one in the window). Item links stay as they are.")
   feature("dialectChatButton", "Speak in dialect: button next to the chat window", true, function() if FF.Dialect then pcall(FF.Dialect.UpdateChatButton, FF.Dialect) end end,
     "A small speech-bubble button at the top right of the main chat window opens the dialect window. Turn this off to hide the button; /ff talk and /fft still work.")
+  feature("dialectAutocorrect", "Speak in dialect: autocorrect typos and chat shorthand", true, function() if FF.Dialect then pcall(FF.Dialect.Refresh, FF.Dialect) end end,
+    "Before the dialect is applied, common typos (teh, dont, recieve) and shorthand (u, pls, thx) are fixed in the language you type. Also on the Autocorrect button in the dialect window.")
   feature("craftCostTooltip", "Crafting cost in item tooltips for things I can craft", true, nil,
     "For items one of your professions on this character can make: what the materials cost at scanned prices, next to the auction price. Open the profession window once so its recipes are known.")
   feature("bestPostTime","Show the hours my auctions sell best when posting", true, nil,
