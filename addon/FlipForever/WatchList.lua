@@ -45,8 +45,73 @@ function W:ItemOf(text)
   end
 end
 
+-- Sell alerts (switch watchSell): /ff watch sell <item> <price>. When the cheapest listing is at or
+-- above your price, the item sells well right now: one chat line and a sound (same 10-minute quiet).
+function W:SellEnabled() return FlipForeverDB ~= nil and FlipForeverDB.settings.watchSell ~= false end
+
+function W:SellList()
+  local db = FF:DB()
+  db.watchSell = db.watchSell or {}
+  return db.watchSell
+end
+
+function W:SeenSell(id, price, now)
+  if not (self:SellEnabled() and id and price and price > 0) then return nil end
+  local limit = self:SellList()[id]
+  if not limit or price < limit then return nil end
+  now = now or ((GetTime and GetTime()) or time())
+  local key = "sell" .. id
+  if told[key] and now - told[key] < QUIET then return nil end
+  told[key] = now
+  local have = GetItemCount and GetItemCount(id, true) or 0
+  local line = FF:T("Sell alert: %s now sells at %s (your sell price %s)."):format(FF:ItemName(id), FF:Money(price), FF:Money(limit))
+  if have and have > 0 then line = line .. " " .. FF:T("You have %d."):format(have) end
+  local say = FF.Loud or FF.Print
+  say(FF, "|cffffd200" .. line .. "|r")
+  if PlaySound then pcall(PlaySound, SOUNDKIT and SOUNDKIT.AUCTION_WINDOW_OPEN or 5274, "Master") end
+  return line
+end
+
+function W:SellCommand(rest)
+  local list = self:SellList()
+  if rest == "" then
+    local rows = {}
+    for id, limit in pairs(list) do rows[#rows + 1] = { FF:ItemName(id), limit } end
+    table.sort(rows, function(a, b) return a[1] < b[1] end)
+    if #rows == 0 then
+      FF:Print(FF:T("No sell alerts. Add: /ff watch sell <item> <price>, for example /ff watch sell [Linen Cloth] 2g."))
+    else
+      FF:Print(FF:T("Sell alerts (%d): when the cheapest listing is at or above the price. Remove: /ff watch sell remove <item>."):format(#rows))
+      for _, r in ipairs(rows) do FF:Print(("  %s: %s"):format(r[1], FF:Money(r[2]))) end
+    end
+    return
+  end
+  local removeArg = rest:match("^remove%s+(.+)$")
+  if removeArg then
+    local id = self:ItemOf(removeArg)
+    if id and list[id] then
+      list[id] = nil
+      FF:Print(FF:T("Removed the sell alert for %s."):format(FF:ItemName(id)))
+    else
+      FF:Print(FF:T("That item has no sell alert."))
+    end
+    return
+  end
+  local itemText, priceText = rest:match("^(.-)%s+(%S+)$")
+  local price = self:ParseMoney(priceText)
+  local id = price and self:ItemOf(itemText)
+  if not id then
+    FF:Print(FF:T("Use /ff watch sell <item> <price>: shift-click the item (or type its name or ID), then the price like 2g, 1.5 or 50s."))
+    return
+  end
+  list[id] = price
+  told["sell" .. id] = nil
+  FF:Print(FF:T("Sell alert for %s: you'll hear when it's listed at %s or more."):format(FF:ItemName(id), FF:Money(price)))
+end
+
 -- a price seen on the auction house; returns the alert line when it fires
 function W:Seen(id, price, now)
+  if id and price and price > 0 then pcall(self.SeenSell, self, id, price, now) end
   if not (self:Enabled() and id and price and price > 0) then return nil end
   local limit = self:List()[id]
   if not limit or price > limit then return nil end
@@ -65,6 +130,8 @@ function W:Reset() told = {} end
 function W:Command(rest)
   rest = rest or ""
   local list = self:List()
+  local sellArg = rest:match("^sell%s*(.-)$")
+  if sellArg and self:SellEnabled() then return self:SellCommand(sellArg) end
   if rest == "" then
     local rows = {}
     for id, limit in pairs(list) do rows[#rows + 1] = { FF:ItemName(id), limit } end
@@ -109,6 +176,12 @@ function FF:AddScan(src, items)
     for id in pairs(W:List()) do
       local a = items[id]
       if a and a.min then pcall(W.Seen, W, id, a.min) end
+    end
+  end
+  if W:SellEnabled() and type(items) == "table" then
+    for id in pairs(W:SellList()) do
+      local a = items[id]
+      if a and a.min then pcall(W.SeenSell, W, id, a.min) end
     end
   end
   return n

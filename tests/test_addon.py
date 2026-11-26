@@ -3342,7 +3342,7 @@ for _, c in ipairs(f.features) do s[c.key] = nil end
 FF.Hub:Toggle()
 """)
 print("feature switches:", L("SW"), "| off:", L("SW_OFF"), "| strip:", L("SW_STRIP"), "| mail button:", L("SW_MAIL"), "| tooltip upgrade calls:", L("UPCALLS"))
-assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
+assert L("SW") == "merchantStrip=true,autoJunk=false,autoRepair=false,undercutCheck=true,undercutFix=true,goldReserve=true,bagSpace=true,fastFlips=true,expirySaver=true,disenchant=true,vendorResale=true,watchList=true,watchSell=true,floodWarning=true,sellNow=true,fallingPrice=true,depositTooltip=true,ahSummary=true,loginRecap=true,goldGoals=true,restock=true,matsList=true,profitAlert=true,craftButton=true,profCooldowns=true,altCounts=true,findItem=true,chatDialect=true,dialectChatButton=true,craftCostTooltip=true,bestPostTime=true,headStart=true,mailButton=true,mailOpenAll=true,sendToAlt=true,nodeTimers=true,riskySpots=true,quietChat=true,enemyAlert=true,bagValue=true,trainerReminder=true,levelInfo=true,talentOverlay=true,talentLevels=true,questHelper=true,advisorPins=true,questLogPin=true,levelRoute=true,dungeonAdvisor=true,advisorQuestSpots=true,combatBuffs=true,threatWarning=true,combatLearn=true,combatTips=true,combatGuide=true,combatTutorial=true,controller=true,combatShare=true,gearTooltip=true,gearStats=true"
 assert L("SW_OFF") == "false,false,false,false,false,false"
 assert not L("SW_STRIP") and not L("SW_MAIL") and L("UPCALLS") == 0
 
@@ -4305,6 +4305,38 @@ print("watch list:", L("WATCHL"))
 wl = L("WATCHL").split("#")
 assert wl[0] == "20000,15000,5000,15000,nil" and wl[1] == "5000" and wl[2] == "10000", wl
 assert wl[3] == "nil" and wl[4] == "alert" and wl[5] == "nil" and wl[7] == "nil" and wl[8] == "nil", wl
+lua.execute("""
+-- sell alerts (switch watchSell): /ff watch sell adds, alert at or above the price, quiet 10 min, scans too
+local FF, W = FlipForever, FlipForever.WatchList
+local sell = W:SellList()
+for k in pairs(sell) do sell[k] = nil end
+W:Reset()
+local r = {}
+SlashCmdList.FLIPFOREVER("watch sell linen cloth 2g")
+r[#r + 1] = tostring(sell[2589])
+r[#r + 1] = tostring(W:List()[2589])                             -- the buy watch list is untouched
+r[#r + 1] = tostring(W:SeenSell(2589, 15000, 100))              -- below the sell price
+r[#r + 1] = (W:Seen(2589, 25000, 100) or "nil") .. "|" .. tostring(W:SeenSell(2589, 30000, 200))
+local said = {}
+local oldLoud = FF.Loud
+FF.Loud = function(_, m) said[#said + 1] = m end
+W:Reset()
+FF:AddScan("full", { [2589] = { min = 22000, p25 = 22000, qty = 5, n = 1 } })
+FF.Loud = oldLoud
+r[#r + 1] = tostring(#said == 1 and said[1]:find("Sell alert: Linen Cloth now sells at") ~= nil)
+SlashCmdList.FLIPFOREVER("watch sell remove linen cloth")
+r[#r + 1] = tostring(sell[2589])
+sell[2589] = 1
+FlipForeverDB.settings.watchSell = false
+W:Reset()
+r[#r + 1] = tostring(W:SeenSell(2589, 99999, 1))
+FlipForeverDB.settings.watchSell = nil
+sell[2589] = nil
+WSELL = table.concat(r, "#")
+""")
+print("sell alerts:", L("WSELL"))
+ws = L("WSELL").split("#")
+assert ws[0] == "20000" and ws[1] == "nil" and ws[2] == "nil" and ws[3] == "nil|nil" and ws[4] == "true" and ws[5] == "nil" and ws[6] == "nil", ws
 lua.execute("""
 -- alt item counts: per character bags/bank/mail, tooltip line, switch
 local FF, A = FlipForever, FlipForever.AltCounts
