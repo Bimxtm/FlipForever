@@ -681,7 +681,7 @@ local function build()
   feature("findItem", "/ff find <item>: which of my characters hold an item", true, nil,
     "Lists every character on this realm that holds the item, with bags, bank and mail, as last seen by the item counts.")
   feature("chatDialect", "Speak in dialect: a chat window that rewrites what I type as a troll, orc, dwarf, goblin or pirate", true, function() if FF.Dialect then pcall(FF.Dialect.UpdateChatButton, FF.Dialect) end end,
-    "Open it with the Dialect button on the Overview, /ff talk or /fft. Type, see the dialect version, pick the channel and send. /fft <text> sends straight away in your character's dialect, in the chat channel you are typing in. Item links stay as they are.")
+    "Open it with the Dialect button on the Overview, /ff talk or /fft. Type, see the dialect version, pick the channel and send. /fft <text> sends straight away in your character's dialect, in the chat channel you are typing in. Works in English, German, French, Spanish, Italian and Portuguese (the game's language, or pick one in the window). Item links stay as they are.")
   feature("dialectChatButton", "Speak in dialect: button next to the chat window", true, function() if FF.Dialect then pcall(FF.Dialect.UpdateChatButton, FF.Dialect) end end,
     "A small speech-bubble button at the top right of the main chat window opens the dialect window. Turn this off to hide the button; /ff talk and /fft still work.")
   feature("craftCostTooltip", "Crafting cost in item tooltips for things I can craft", true, nil,

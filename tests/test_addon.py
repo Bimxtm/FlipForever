@@ -4627,6 +4627,38 @@ D:UpdateChatButton()
 r[#r + 1] = SLASH_RES
 DLS = table.concat(r, "#") .. "|" .. table.concat(sent, "/")
 """)
+lua.execute("""
+-- dialects in other languages: picked language, the game's language (auto), UTF-8 words
+local FF, D = FlipForever, FlipForever.Dialect
+local oldLocale = GetLocale
+local r = {}
+r[#r + 1] = (D:Translate("troll", "Hallo mein Freund, das ist gut", "de"))
+r[#r + 1] = (D:Translate("dwarf", "Ja, Tschüss!", "de"))
+r[#r + 1] = (D:Translate("orc", "Merci, au revoir", "fr"))
+r[#r + 1] = (D:Translate("goblin", "Sí, adiós amigo", "es"))
+r[#r + 1] = (D:Translate("pirate", "Ciao amico", "it"))
+r[#r + 1] = (D:Translate("orc", "Olá, obrigado", "pt"))
+GetLocale = function() return "deDE" end
+r[#r + 1] = D:Lang()
+D:SetLang("fr")
+r[#r + 1] = D:Lang()
+D:SetLang("auto")
+r[#r + 1] = D:Lang() .. "," .. tostring(FlipForeverDB.settings.dialectLang)
+GetLocale = function() return "ruRU" end
+r[#r + 1] = D:Lang()
+GetLocale = oldLocale
+r[#r + 1] = #D.LANGS
+DLANG = table.concat(r, "#")
+""")
+print("dialect languages:", L("DLANG"))
+_dg = L("DLANG").split("#")
+assert _dg[0] == "Hey Mon mei Mon, dat sein gut", _dg[0]
+assert _dg[1] == "Jo, Pfiat di!", _dg[1]
+assert _dg[2] == "Aka'magosh, Lok'tar", _dg[2]
+assert _dg[3] == "Trato hecho, El tiempo es oro, amigo colega", _dg[3]
+assert _dg[4] == "Arr, ahoy mozzo", _dg[4]
+assert _dg[5] == "Throm-ka, Aka'magosh", _dg[5]
+assert _dg[6:] == ["de", "fr", "de,nil", "en", "6"], _dg
 print("dialect:", L("DLG"))
 print("dialect send:", L("DLS")[:300])
 _dl = L("DLG").split("#")

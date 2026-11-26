@@ -67,21 +67,52 @@ D.WRAP = {
   pirate = { "Arr, ", nil, "^%W*arr" },
 }
 
-local function caseless(phrase)
-  return (phrase:gsub("%a", function(c) return "[" .. c:lower() .. c:upper() .. "]" end))
-end
-
 function D:Enabled() return FlipForeverDB ~= nil and FlipForeverDB.settings.chatDialect ~= false end
 
+-- ASCII-only case changes: string.lower/upper may follow the system locale and break UTF-8 letters
+local function lower(s) return (s:gsub("[A-Z]", function(c) return string.char(c:byte() + 32) end)) end
+local function upper(s) return (s:gsub("[a-z]", function(c) return string.char(c:byte() - 32) end)) end
+D.lower = lower
+
+local function caseless(phrase)
+  return (phrase:gsub("[A-Za-z]", function(c) return "[" .. lower(c) .. upper(c) .. "]" end))
+end
+
 local function matchCase(src, word)
-  if src:upper() == src and #src > 1 then return word:upper() end
-  if src:sub(1, 1):match("%u") then return word:sub(1, 1):upper() .. word:sub(2) end
+  if src:find("[A-Z].*[A-Z]") and not src:find("[a-z]") then return upper(word) end
+  if src:sub(1, 1):find("^[A-Z]") then return upper(word:sub(1, 1)) .. word:sub(2) end
   return word
 end
 
+-- Languages (DialectLang.lua adds the others): the one picked in the window, else the game's language.
+-- Without word lists for a language (Russian, Korean, Chinese) the English lists are used.
+D.LANGS = { "en" }
+D.LANG_NAMES = { en = "English" }
+D.LANG = {}
+D.LOCALES = { deDE = "de", frFR = "fr", esES = "es", esMX = "es", itIT = "it", ptBR = "pt", ptPT = "pt" }
+
+function D:Lang()
+  local pick = FlipForeverDB and FlipForeverDB.settings.dialectLang
+  if pick and (pick == "en" or self.LANG[pick]) then return pick end
+  local auto = self.LOCALES[(GetLocale and GetLocale()) or ""]
+  return (auto and self.LANG[auto]) and auto or "en"
+end
+
+-- "auto" (nil) follows the game's language
+function D:SetLang(lang)
+  FlipForeverDB.settings.dialectLang = (lang ~= nil and lang ~= "auto") and lang or nil
+end
+
+function D:Tables(lang)
+  local L = lang and lang ~= "en" and self.LANG[lang]
+  if L then return L.WORDS, L.PHRASES or {}, L.WRAP or {} end
+  return self.WORDS, self.PHRASES, self.WRAP
+end
+
 -- The dialect text; item links, spell links and colour codes are kept as they are.
-function D:Translate(dialect, text)
-  local words = self.WORDS[dialect]
+function D:Translate(dialect, text, lang)
+  local allWords, phrases, wraps = self:Tables(lang or self:Lang())
+  local words = allWords[dialect]
   text = text or ""
   if not words or text == "" then return text end
   local kept = {}
@@ -89,22 +120,23 @@ function D:Translate(dialect, text)
   s = s:gsub("|H.-|h.-|h", function(link) kept[#kept + 1] = link return "\1" .. #kept .. "\2" end)
   s = s:gsub("{.-}", function(mark) kept[#kept + 1] = mark return "\1" .. #kept .. "\2" end)
   local changed = false
-  for _, p in ipairs(self.PHRASES[dialect] or {}) do
+  for _, p in ipairs(phrases[dialect] or {}) do
     s = s:gsub("%f[%a]" .. caseless(p[1]) .. "%f[%A]", function(found)
       changed = true
       local to = p[2]:gsub("%%", "%%%%")
       return matchCase(found, to)
     end)
   end
-  s = s:gsub("[%a']+", function(w)
-    local to = words[w:lower()]
-    if to and to:lower() ~= w:lower() then changed = true return matchCase(w, to) end
+  -- words: letters, apostrophes and UTF-8 letters (ä, é, ñ...)
+  s = s:gsub("[%a\128-\255']+", function(w)
+    local to = words[lower(w)]
+    if to and lower(to) ~= lower(w) then changed = true return matchCase(w, to) end
     return w
   end)
-  local wrap = self.WRAP[dialect]
-  if wrap and s:find("%a") and not s:lower():find(wrap[3]) then
+  local wrap = wraps[dialect]
+  if wrap and s:find("%a") and not lower(s):find(wrap[3]) then
     if wrap[1] then
-      local lead = s:match("^%s*\1") and "" or s:sub(1, 1):lower()
+      local lead = s:match("^%s*\1") and "" or lower(s:sub(1, 1))
       s = wrap[1] .. (lead ~= "" and lead .. s:sub(2) or s)
     end
     if wrap[2] then
@@ -180,6 +212,9 @@ function D:Refresh()
   for d, b in pairs(win.dialectButtons) do
     if d == cur then b:LockHighlight() else b:UnlockHighlight() end
   end
+  local langName = self.LANG_NAMES[self:Lang()] or "English"
+  win.lang:SetText(FlipForeverDB.settings.dialectLang and FF:T("Language: %s"):format(langName)
+    or FF:T("Language: Auto (%s)"):format(langName))
   local kind = win.kind or "SAY"
   win.channel:SetText(FF:T("Channel: %s"):format(FF:T(self.CHANNEL_NAMES[kind] or kind)))
   if kind == "WHISPER" then win.target:Show() win.targetLabel:Show() else win.target:Hide() win.targetLabel:Hide() end
@@ -192,6 +227,20 @@ local function build()
   local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   title:SetPoint("TOPLEFT", 14, -12)
   title:SetText(FF:T("Speak in dialect"))
+  -- language of what you type: Auto (the game's language), English, Deutsch, Français, Español...
+  local lang = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+  lang:SetSize(140, 22)
+  lang:SetPoint("TOPRIGHT", -30, -10)
+  lang:SetScript("OnClick", function()
+    local order = { "auto" }
+    for _, code in ipairs(D.LANGS) do order[#order + 1] = code end
+    local cur = FlipForeverDB.settings.dialectLang or "auto"
+    local i = 1
+    for n, code in ipairs(order) do if code == cur then i = n end end
+    D:SetLang(order[i % #order + 1])
+    D:Refresh()
+  end)
+  f.lang = lang
   f.dialectButtons = {}
   local prev
   for _, d in ipairs(D.ORDER) do

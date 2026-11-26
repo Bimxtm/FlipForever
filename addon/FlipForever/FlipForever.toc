@@ -26,6 +26,7 @@ LoginRecap.lua
 WatchList.lua
 AltCounts.lua
 Dialect.lua
+DialectLang.lua
 Notes.lua
 Tooltip.lua
 Planner.lua
